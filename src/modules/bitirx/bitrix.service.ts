@@ -1,5 +1,5 @@
 import {Inject, Injectable} from "@nestjs/common";
-import {B24Hook, Result} from "@bitrix24/b24jssdk";
+import type {B24Hook, Result} from "@bitrix24/b24jssdk";
 
 @Injectable()
 export class BitrixService {
