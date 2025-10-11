@@ -1,19 +1,41 @@
-import {Controller, Get, HttpException, HttpStatus, Param, ParseIntPipe} from "@nestjs/common";
-import {BitrixService} from "./bitrix.service";
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
+import { BitrixService } from './bitrix.service';
+import { BitrixUserService } from './methods/user/user.service';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller("/users")
+@Controller()
 export class BitrixController {
-	constructor(
-		private readonly bitrixService: BitrixService,
-	) {
-	}
+  constructor(
+    private readonly bitrixService: BitrixService,
+    private readonly bitrixUserService: BitrixUserService,
+  ) {}
 
-	@Get("/:userId")
-	async getUserById(@Param("userId", ParseIntPipe) userId: number) {
-		try {
-			return await this.bitrixService.getUserById(userId);
-		} catch (e) {
-			throw new HttpException(e, HttpStatus.BAD_REQUEST);
-		}
-	}
+  @ApiTags('Users')
+  @Get('/users/:userId')
+  async getUserById(@Param('userId') userId: string) {
+    try {
+      return await this.bitrixUserService.getUserById(userId);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @ApiTags('Departments')
+  @Get('/departments/:departmentId')
+  async getDepartmentById(
+    @Param('departmentId', ParseIntPipe) departmentId: number,
+  ) {
+    try {
+      return await this.bitrixUserService.getUsersByDepartment(departmentId);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

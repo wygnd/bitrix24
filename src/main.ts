@@ -1,24 +1,26 @@
-import {NestFactory} from '@nestjs/core';
-import {AppModule} from './app.module';
-import {ConfigService} from "@nestjs/config";
-import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-	const config = app.get(ConfigService);
+  const config = app.get(ConfigService);
 
-	const PORT = config.get<number>('PORT') ?? 3000;
+  const PORT = config.get<number>('PORT') ?? 3000;
 
-	// Swagger API
-	const swaggerConfig = new DocumentBuilder()
-		.setTitle('Grampus Bitrix24')
-		.setDescription('The automatization process in bitrix24 for Grampus')
-		.setVersion('1.0')
-		.build();
-	SwaggerModule.setup('api', app, () => SwaggerModule.createDocument(app, swaggerConfig));
+  // Swagger API
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Grampus Bitrix24')
+    .setDescription('The automatization process in bitrix24 for Grampus')
+    .setVersion('1.0')
+    .build();
+  SwaggerModule.setup('api', app, () =>
+    SwaggerModule.createDocument(app, swaggerConfig),
+  );
 
-	await app.listen(PORT);
+  await app.listen(PORT);
 }
 
 bootstrap();

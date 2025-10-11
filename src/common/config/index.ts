@@ -1,3 +1,3 @@
-import bitrixConfig from "./bitrix.config";
+import bitrixConfig from './bitrix.config';
 
 export const configList = [bitrixConfig];
