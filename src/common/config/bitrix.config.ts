@@ -1,5 +1,5 @@
 import {BitrixModule} from "../../modules/bitirx/bitrix.module";
-import {B24HookParams} from "@bitrix24/b24jssdk";
+import type {B24HookParams} from "@bitrix24/b24jssdk";
 
 export default (): { bitrixConfig: B24HookParams } => ({
 	bitrixConfig: {
