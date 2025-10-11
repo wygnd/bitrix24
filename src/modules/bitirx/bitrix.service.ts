@@ -10,7 +10,7 @@ export class BitrixService {
 	}
 
 	async getUserById(userId: number, full = false) {
-		const result: Result = await this.bx24.callMethod('user.ger', {
+		const result: Result = await this.bx24.callMethod('user.get', {
 			filter: {
 				'ID': userId,
 			}
