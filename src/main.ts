@@ -16,8 +16,24 @@ async function bootstrap() {
     .setDescription('The automatization process in bitrix24 for Grampus')
     .setVersion('1.0')
     .build();
-  SwaggerModule.setup('api', app, () =>
-    SwaggerModule.createDocument(app, swaggerConfig),
+  SwaggerModule.setup(
+    'api',
+    app,
+    () => SwaggerModule.createDocument(app, swaggerConfig),
+    {
+      swaggerOptions: {
+        filter: true,
+        docExpansion: 'none',
+        showExtensions: false,
+        showCommonExtensions: false,
+        displayRequestDuration: true,
+        operationsSorter: 'alpha',
+        tagsSorter: 'alpha',
+        defaultModelsExpandDepth: -1,
+        defaultModelExpandDepth: 0,
+        tryItOutEnabled: true,
+      },
+    },
   );
 
   await app.listen(PORT);
