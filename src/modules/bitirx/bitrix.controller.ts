@@ -94,8 +94,6 @@ export class BitrixController {
         batchCommandsGetUsersMap.set(batchCommandsIndex, currentBatchCommands);
       });
 
-
-
       // return await this.bitrixService.callBatch(batchCommandsGetUsersMap);
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
