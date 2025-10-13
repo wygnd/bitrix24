@@ -4,8 +4,10 @@ import { BitrixController } from './bitrix.controller';
 import { BitrixService } from './bitrix.service';
 import { BitrixUserService } from './methods/user/user.service';
 import { BitrixLeadService } from './methods/lead/lead.service';
+import { ApplicationLoggerModule } from '../logger/logger.module';
 
 @Module({
+  imports: [ApplicationLoggerModule],
   controllers: [BitrixController],
   providers: [
     ...bitrixProviders,

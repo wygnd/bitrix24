@@ -7,7 +7,8 @@ type B24AvailableMethods =
   | 'crm.lead.update'
   | 'crm.lead.add'
   | 'tasks.task.list'
-  | 'department.get';
+  | 'department.get'
+  | 'tasks.task.delete';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

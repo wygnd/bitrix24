@@ -9,6 +9,7 @@ export class BitrixPlacementService {
     private readonly bx24: B24Hook,
   ) {}
 
+  // todo: type response
   async bind(params: PlacementBindOptions) {
     return this.bx24
       .callMethod('placement.bind', params)
