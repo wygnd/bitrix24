@@ -3,6 +3,6 @@ import { ApplicationLoggerService } from './logger.service';
 
 @Module({
   providers: [ApplicationLoggerService],
-  exports: [ApplicationLoggerService]
+  exports: [ApplicationLoggerService],
 })
 export class ApplicationLoggerModule {}

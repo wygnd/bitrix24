@@ -4,16 +4,17 @@ import { BitrixController } from './bitrix.controller';
 import { BitrixService } from './bitrix.service';
 import { BitrixUserService } from './methods/user/user.service';
 import { BitrixLeadService } from './methods/lead/lead.service';
-import { ApplicationLoggerModule } from '../logger/logger.module';
+import { BitrixMessageService } from './methods/im/im.service';
 
 @Module({
-  imports: [ApplicationLoggerModule],
+  imports: [],
   controllers: [BitrixController],
   providers: [
     ...bitrixProviders,
     BitrixService,
     BitrixUserService,
     BitrixLeadService,
+    BitrixMessageService,
   ],
 })
 export class BitrixModule {}

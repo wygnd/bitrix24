@@ -6,7 +6,7 @@ export interface PlacementBindOptions {
   title: string;
   description: string;
   group_name: string;
-  lang_all: Record<B24LangList, LanguageOptions>;
+  lang_all: Record<B24LangList, LanguageOptions>[];
 }
 
 type LanguageOptions = {

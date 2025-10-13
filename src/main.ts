@@ -2,15 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ApplicationLoggerService } from './modules/logger/logger.service';
+import { ValidationPipe } from '@nestjs/common';
 
+// todo: add queue module
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-  });
+  const app = await NestFactory.create(AppModule, {});
 
   const config = app.get(ConfigService);
 
   const PORT = config.get<number>('PORT') ?? 3000;
+
+  app.useGlobalPipes(new ValidationPipe());
 
   // Swagger API
   const swaggerConfig = new DocumentBuilder()

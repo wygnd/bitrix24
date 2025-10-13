@@ -8,7 +8,11 @@ type B24AvailableMethods =
   | 'crm.lead.add'
   | 'tasks.task.list'
   | 'department.get'
-  | 'tasks.task.delete';
+  | 'tasks.task.delete'
+  | 'crm.deal.list'
+  | 'crm.deal.add'
+  | 'crm.deal.get'
+  | 'im.message.add';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
@@ -73,4 +77,9 @@ interface B24BatchCommand {
 
 export type B24BatchCommands = {
   [key: string]: B24BatchCommand;
+};
+
+//todo type batch response
+export type B24BatchResponse<T> = {
+  [key: string]: B24SuccessResponse<T>;
 };
