@@ -329,4 +329,9 @@ export class BitrixController {
   async installApp(@Body() data: any) {
     console.log('Bro, i get data', data);
   }
+
+  @Post('/app/handler');
+  async handleApp(@Body() data: any) {
+    console.log('Bro, i handle data', data);
+  }
 }
