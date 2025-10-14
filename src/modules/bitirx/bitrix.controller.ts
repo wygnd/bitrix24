@@ -330,8 +330,8 @@ export class BitrixController {
     console.log('Bro, i get data', data);
   }
 
-  @Post('/app/handler');
+  @Post('/app/handle')
   async handleApp(@Body() data: any) {
-    console.log('Bro, i handle data', data);
+    console.log('Get data', data);
   }
 }
