@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { B24Hook, Result } from '@bitrix24/b24jssdk';
-import { B24Response } from './interfaces/bitrix.interface';
+import {
+  B24AvailableMethods,
+  B24Response,
+} from './interfaces/bitrix.interface';
 
 @Injectable()
 export class BitrixService {
@@ -9,12 +12,12 @@ export class BitrixService {
     private readonly bx24: B24Hook,
   ) {}
 
-  async call<T = any>(
-    method: string,
-    params?: Record<string, any>,
-  ): Promise<B24Response<T>> {
+  async call<T = Record<string, any>, K = any>(
+    method: B24AvailableMethods,
+    params?: T,
+  ): Promise<B24Response<K>> {
     const result = await this.bx24.callMethod(method, { ...params });
-    return result.getData() as B24Response<T>;
+    return result.getData() as B24Response<K>;
   }
 
   // todo: handle batch response

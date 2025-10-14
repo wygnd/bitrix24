@@ -1,6 +1,6 @@
 import { ISODate } from '@bitrix24/b24jssdk';
 
-type B24AvailableMethods =
+export type B24AvailableMethods =
   | 'user.get'
   | 'crm.lead.get'
   | 'crm.lead.list'
@@ -12,7 +12,9 @@ type B24AvailableMethods =
   | 'crm.deal.list'
   | 'crm.deal.add'
   | 'crm.deal.get'
-  | 'im.message.add';
+  | 'im.message.add'
+  | 'imbot.command.register'
+  | 'imbot.command.unregister';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
@@ -83,3 +85,18 @@ export type B24BatchCommands = {
 export type B24BatchResponse<T> = {
   [key: string]: B24SuccessResponse<T>;
 };
+
+export interface B24AuthOptions {
+  access_token: string;
+  expires: number;
+  expires_in: number;
+  scope: string;
+  domain: string;
+  server_endpoint: string;
+  status: string;
+  client_endpoint: string;
+  member_id: string;
+  user_id: number;
+  refresh_token: string;
+  application_token: string;
+}

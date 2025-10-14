@@ -4,11 +4,14 @@ import { B24Lead } from './lead.interface';
 
 @Injectable()
 export class BitrixLeadService {
-  constructor(private readonly bitirxService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixService) {}
 
   async getLeadById(id: string) {
-    return await this.bitirxService.call<B24Lead>('crm.lead.get', {
-      id: id,
-    });
+    return await this.bitrixService.call<Partial<B24Lead>, B24Lead>(
+      'crm.lead.get',
+      {
+        ID: id,
+      },
+    );
   }
 }

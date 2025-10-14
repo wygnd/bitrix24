@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
-// todo: add queue module
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {});
 
@@ -35,7 +34,6 @@ async function bootstrap() {
         tagsSorter: 'alpha',
         defaultModelsExpandDepth: -1,
         defaultModelExpandDepth: 0,
-        tryItOutEnabled: true,
       },
     },
   );

@@ -1,17 +1,27 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
   ParseIntPipe,
+  Post,
+  Query,
 } from '@nestjs/common';
 import { BitrixUserService } from './methods/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { BitrixLeadService } from './methods/lead/lead.service';
 import { BitrixService } from './bitrix.service';
 import { B24BatchCommands } from './interfaces/bitrix.interface';
+import { SendMessageDto } from './methods/im/dtos/im.dto';
+import { BitrixMessageService } from './methods/im/im.service';
+import { BitrixImBotService } from './methods/imbot/imbot.service';
+import { ImbotRegisterCommandDto } from './methods/imbot/dtos/imbot-register-command.dto';
+import { ImbotUnregisterCommandDto } from './methods/imbot/dtos/imbot-unregister-command.dto';
+import { B24ApiTags } from './interfaces/bitrix-api.interface';
+import { OnImCommandAddDto } from './dtos/bitrix-on-im-command-add.dto';
 
 @ApiTags('All methods')
 @Controller()
@@ -20,14 +30,16 @@ export class BitrixController {
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly bitrixService: BitrixService,
+    private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixImbotService: BitrixImBotService,
   ) {}
 
   /**
    * USERS
    */
-  @ApiTags('Users')
+  @ApiTags(B24ApiTags.USERS)
   @Get('/users/:userId')
-  async getUserById(@Param('userId') userId: string) {
+  async getUserById(@Param('userId', ParseIntPipe) userId: number) {
     try {
       return await this.bitrixUserService.getUserById(userId);
     } catch (error) {
@@ -39,7 +51,7 @@ export class BitrixController {
    * DEPARTMENTS
    */
 
-  @ApiTags('Departments')
+  @ApiTags(B24ApiTags.DEAPRTMENTS)
   @Get('/departments/:departmentId')
   async getDepartmentById(
     @Param('departmentId', ParseIntPipe) departmentId: number,
@@ -51,54 +63,54 @@ export class BitrixController {
     }
   }
 
-  @Get('/test')
-  async test() {
-    try {
-      const getUsers = await this.bitrixUserService.getUsers({
-        filter: {
-          ACTIVE: false,
-          '%WORK_POSITION': 'маркет',
-        },
-      });
-
-      if (!getUsers.result || getUsers.result.length === 0)
-        return 'Users not found';
-
-      const batchCommandsGetUsersMap = new Map<number, B24BatchCommands>();
-      let batchCommandsIndex = 0;
-      getUsers.result.forEach((user) => {
-        let currentBatchCommands =
-          batchCommandsGetUsersMap.get(batchCommandsIndex) ?? {};
-
-        if (Object.keys(currentBatchCommands).length === 50) {
-          batchCommandsGetUsersMap.set(
-            batchCommandsIndex,
-            currentBatchCommands,
-          );
-
-          batchCommandsIndex++;
-          currentBatchCommands =
-            batchCommandsGetUsersMap.get(batchCommandsIndex) ?? {};
-        }
-
-        currentBatchCommands[`get_user_tasks-${user.ID}`] = {
-          method: 'tasks.task.list',
-          params: {
-            filter: {
-              RESPONSIBLE_ID: user.ID,
-              '@REAL_STATUS': [1, 2, 3, 4, -1, -2, -3],
-            },
-          },
-        };
-
-        batchCommandsGetUsersMap.set(batchCommandsIndex, currentBatchCommands);
-      });
-
-      // return await this.bitrixService.callBatch(batchCommandsGetUsersMap);
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
-    }
-  }
+  // @Get('/test')
+  // async test() {
+  //   try {
+  //     const getUsers = await this.bitrixUserService.getUsers({
+  //       filter: {
+  //         ACTIVE: false,
+  //         '%WORK_POSITION': 'маркет',
+  //       },
+  //     });
+  //
+  //     if (!getUsers.result || getUsers.result.length === 0)
+  //       return 'Users not found';
+  //
+  //     const batchCommandsGetUsersMap = new Map<number, B24BatchCommands>();
+  //     let batchCommandsIndex = 0;
+  //     getUsers.result.forEach((user) => {
+  //       let currentBatchCommands =
+  //         batchCommandsGetUsersMap.get(batchCommandsIndex) ?? {};
+  //
+  //       if (Object.keys(currentBatchCommands).length === 50) {
+  //         batchCommandsGetUsersMap.set(
+  //           batchCommandsIndex,
+  //           currentBatchCommands,
+  //         );
+  //
+  //         batchCommandsIndex++;
+  //         currentBatchCommands =
+  //           batchCommandsGetUsersMap.get(batchCommandsIndex) ?? {};
+  //       }
+  //
+  //       currentBatchCommands[`get_user_tasks-${user.ID}`] = {
+  //         method: 'tasks.task.list',
+  //         params: {
+  //           filter: {
+  //             RESPONSIBLE_ID: user.ID,
+  //             '@REAL_STATUS': [1, 2, 3, 4, -1, -2, -3],
+  //           },
+  //         },
+  //       };
+  //
+  //       batchCommandsGetUsersMap.set(batchCommandsIndex, currentBatchCommands);
+  //     });
+  //
+  //     // return await this.bitrixService.callBatch(batchCommandsGetUsersMap);
+  //   } catch (error) {
+  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 
   // async testRoute() {
   //   try {
@@ -247,7 +259,7 @@ export class BitrixController {
   /**
    * LEADS
    */
-  @ApiTags('Leads')
+  @ApiTags(B24ApiTags.LEADS)
   @Get('/leads/:leadId')
   async getLeadById(@Param('leadId') leadId: string) {
     try {
@@ -257,5 +269,58 @@ export class BitrixController {
     }
   }
 
+  /**
+   * IMBOT
+   */
+  @ApiTags(B24ApiTags.IMBOT)
+  @Post('/imbot/commands/register')
+  async addBotCommand(@Body() fields: ImbotRegisterCommandDto) {
+    try {
+      return await this.bitrixImbotService.addCommand(fields);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @ApiTags(B24ApiTags.IMBOT)
+  @Delete('/imbot/commands/unregister/:commandId')
+  async removeBotCommand(
+    @Param('commandId', ParseIntPipe) commandId: number,
+    @Query('clientId') clientId?: string,
+  ) {
+    try {
+      return await this.bitrixImbotService.removeCommand({
+        COMMAND_ID: commandId,
+        CLIENT_ID: clientId,
+      });
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @ApiTags(B24ApiTags.TEST)
+  @Post('/test/message/send')
+  async testSendMessage(@Body() fields: SendMessageDto) {
+    try {
+      return await this.bitrixMessageService.sendPrivateMessage(fields);
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
   // todo: create lead for new wiki
+  /**
+   * EVENTS
+   */
+  @ApiTags(B24ApiTags.EVENTS)
+  @Post('/events/onimcommandadd')
+  async hanleOnImCommandAdd(@Body() body: OnImCommandAddDto) {
+    try {
+      console.log('New update', body);
+
+      return true;
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

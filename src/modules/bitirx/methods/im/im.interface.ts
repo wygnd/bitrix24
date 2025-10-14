@@ -7,7 +7,7 @@ enum KeyboardBgColorToken {
   BASE = 'base',
 }
 
-interface B24ImKeyboardOptions {
+export interface B24ImKeyboardOptions {
   TEXT: string;
   LINK?: string;
   COMMAND: string;
@@ -24,7 +24,7 @@ interface B24ImKeyboardOptions {
 export interface B24ImSendMessage {
   DIALOG_ID: string;
   MESSAGE: string;
-  SYSTEM: boolean;
-  URL_PREVIEW: BoolString;
-  KEYBOARD: B24ImKeyboardOptions;
+  SYSTEM?: boolean;
+  URL_PREVIEW?: BoolString;
+  KEYBOARD?: B24ImKeyboardOptions;
 }

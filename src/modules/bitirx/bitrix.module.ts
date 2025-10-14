@@ -5,6 +5,7 @@ import { BitrixService } from './bitrix.service';
 import { BitrixUserService } from './methods/user/user.service';
 import { BitrixLeadService } from './methods/lead/lead.service';
 import { BitrixMessageService } from './methods/im/im.service';
+import { BitrixImBotService } from './methods/imbot/imbot.service';
 
 @Module({
   imports: [],
@@ -15,6 +16,7 @@ import { BitrixMessageService } from './methods/im/im.service';
     BitrixUserService,
     BitrixLeadService,
     BitrixMessageService,
+    BitrixImBotService,
   ],
 })
 export class BitrixModule {}

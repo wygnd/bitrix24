@@ -7,13 +7,12 @@ import { B24ImSendMessage } from './im.interface';
 export class BitrixMessageService {
   constructor(private readonly bitrixService: BitrixService) {}
 
-  // todo: type response
   async sendPrivateMessage(fields: SendMessageDto) {
-    const { dialogId, message } = fields;
-
-    return await this.bitrixService.call<B24ImSendMessage>('im.message.add', {
-      DIALOG_ID: dialogId,
-      MESSAGE: message,
-    });
+    return await this.bitrixService.call<B24ImSendMessage, number>(
+      'im.message.add',
+      {
+        ...fields,
+      },
+    );
   }
 }
