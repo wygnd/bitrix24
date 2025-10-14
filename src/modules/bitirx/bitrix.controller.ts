@@ -14,12 +14,10 @@ import { BitrixUserService } from './methods/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { BitrixLeadService } from './methods/lead/lead.service';
 import { BitrixService } from './bitrix.service';
-import { B24BatchCommands } from './interfaces/bitrix.interface';
 import { SendMessageDto } from './methods/im/dtos/im.dto';
 import { BitrixMessageService } from './methods/im/im.service';
 import { BitrixImBotService } from './methods/imbot/imbot.service';
 import { ImbotRegisterCommandDto } from './methods/imbot/dtos/imbot-register-command.dto';
-import { ImbotUnregisterCommandDto } from './methods/imbot/dtos/imbot-unregister-command.dto';
 import { B24ApiTags } from './interfaces/bitrix-api.interface';
 import { OnImCommandAddDto } from './dtos/bitrix-on-im-command-add.dto';
 
@@ -273,7 +271,7 @@ export class BitrixController {
    * IMBOT
    */
   @ApiTags(B24ApiTags.IMBOT)
-  @Post('/imbot/commands/register')
+  @Post('/imbot/commands/add')
   async addBotCommand(@Body() fields: ImbotRegisterCommandDto) {
     try {
       return await this.bitrixImbotService.addCommand(fields);
@@ -283,7 +281,7 @@ export class BitrixController {
   }
 
   @ApiTags(B24ApiTags.IMBOT)
-  @Delete('/imbot/commands/unregister/:commandId')
+  @Delete('/imbot/commands/remove/:commandId')
   async removeBotCommand(
     @Param('commandId', ParseIntPipe) commandId: number,
     @Query('clientId') clientId?: string,
@@ -322,5 +320,13 @@ export class BitrixController {
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  /**
+   * Install app
+   */
+  @Post('/app/install')
+  async installApp(@Body() data: any) {
+    console.log('Bro, i get data', data);
   }
 }

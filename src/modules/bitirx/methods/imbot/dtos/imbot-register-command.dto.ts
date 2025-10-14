@@ -38,6 +38,16 @@ export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
 
   @ApiProperty({
     type: String,
+    description: 'client id ',
+    required: true,
+    example: '1',
+  })
+  @IsNotEmpty()
+  @IsString()
+  CLIENT_ID: string;
+
+  @ApiProperty({
+    type: String,
     description: 'Handler command url',
     required: true,
     example: 'https://example.com/handler',
