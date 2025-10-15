@@ -6,14 +6,9 @@ import { redisOptions } from './redis.config-factory';
 export const redisProviders = [
   {
     provide: REDIS_CLIENT,
-    useFactory: async (configService: ConfigService) => {
+    useFactory: (configService: ConfigService) => {
       const client = new Redis(redisOptions(configService));
-      client.on('error', (e) => console.error(`REDIS: Error connecting: ${e}`));
-      try {
-        await client?.connect?.();
-      } catch (error) {
-        console.error(`REDIS: Failed to connect: ${error}`);
-      }
+      client.on('error', (e) => console.error(`REDIS: Error execute: ${e}`));
       return client;
     },
     inject: [ConfigService],

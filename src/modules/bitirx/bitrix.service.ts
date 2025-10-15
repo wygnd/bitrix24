@@ -4,13 +4,23 @@ import {
   B24AvailableMethods,
   B24Response,
 } from './interfaces/bitrix.interface';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BitrixService {
+  private readonly bitrixAuthUrl: string;
+
   constructor(
     @Inject('BITRIX24')
     private readonly bx24: B24Hook,
-  ) {}
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    const bitrixConfig = configService.get<string>('bitrixConfig');
+
+    if (!bitrixConfig) throw new Error('Invalid bitrix config');
+  }
 
   async call<T = Record<string, any>, K = any>(
     method: B24AvailableMethods,
@@ -18,6 +28,13 @@ export class BitrixService {
   ): Promise<B24Response<K>> {
     const result = await this.bx24.callMethod(method, { ...params });
     return result.getData() as B24Response<K>;
+  }
+
+  async callTest<T = Record<string, any>, K = any>(
+    method: B24AvailableMethods,
+    params?: T,
+  ) {
+    return await this.callMethod(method, { ...params });
   }
 
   // todo: handle batch response
@@ -37,4 +54,10 @@ export class BitrixService {
 
     return response;
   }
+
+  // todo
+  private async callMethod(method: string, params: any = {}) {}
+
+  // todo
+  private async refreshAccessToken() {}
 }

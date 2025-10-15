@@ -6,6 +6,7 @@ import { BitrixUserService } from './methods/user/user.service';
 import { BitrixLeadService } from './methods/lead/lead.service';
 import { BitrixMessageService } from './methods/im/im.service';
 import { BitrixImBotService } from './methods/imbot/imbot.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [],

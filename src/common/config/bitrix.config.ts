@@ -1,9 +1,9 @@
-import type { B24HookParams } from '@bitrix24/b24jssdk';
+import { BitrixConfig } from '../interfaces/bitrix-config.interface';
 
-export default (): { bitrixConfig: B24HookParams } => ({
+export default (): { bitrixConfig: BitrixConfig } => ({
   bitrixConfig: {
-    b24Url: process.env.BITRIX_URL ?? '',
-    userId: process.env.BITRIX_USER_ID ? +process.env.BITRIX_USER_ID : 0,
-    secret: process.env.BITRIX_SECRET ?? '',
+    bitrixDomain: process.env.BITRIX_URL ?? '',
+    bitrixClientId: process.env.BITRIX_CLIENT_ID ?? '',
+    bitrixClientSecret: process.env.BITRIX_CLIENT_SECRET ?? '',
   },
 });
