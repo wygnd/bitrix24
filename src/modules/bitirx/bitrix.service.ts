@@ -6,16 +6,25 @@ import {
 } from './interfaces/bitrix.interface';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../redis/redis.service';
+import { REDIS_CLIENT, REDIS_KEYS } from '../redis/redis.constants';
+import { AppHttpService } from '../http/http.service';
 
 @Injectable()
 export class BitrixService {
   private readonly bitrixAuthUrl: string;
+  private accessToken: string | null = null;
+  private refreshToken: string | null = null;
+  private expiresAt: number = 0;
 
   constructor(
     @Inject('BITRIX24')
     private readonly bx24: B24Hook,
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    @Inject(REDIS_CLIENT)
+    private readonly redisService: RedisService,
+    private readonly http: AppHttpService,
   ) {
     const bitrixConfig = configService.get<string>('bitrixConfig');
 
@@ -56,8 +65,41 @@ export class BitrixService {
   }
 
   // todo
-  private async callMethod(method: string, params: any = {}) {}
+  private async callMethod(method: string, params: any = {}) {
+    this.http.post(
+      `/rest/${method}`,
+      {},
+      {
+        headers: {
+          auth: await this.getRefreshToken(),
+        },
+      },
+    );
+  }
 
   // todo
-  private async refreshAccessToken() {}
+  public async refreshAccessToken() {}
+
+  private async getAccessToken(): Promise<string> {
+    if(this.accessToken !== null && Date.now() < this.expiresAt) return this.accessToken;
+
+    const accessTokenFromCache = await this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN);
+
+    // if(!accessTokenFromCache) {}
+  }
+
+  private async getRefreshToken() {
+    // if()
+
+    const tokenFromCache = await this.redisService.get<string>(
+      REDIS_KEYS.BITRIX_REFRESH_TOKEN,
+    );
+
+    if (!tokenFromCache) {
+      console.log('Failed to get refresh token');
+      return '';
+    }
+
+    return tokenFromCache;
+  }
 }

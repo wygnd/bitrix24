@@ -2,6 +2,7 @@ import { REDIS_CLIENT } from './redis.constants';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { redisOptions } from './redis.config-factory';
+import { AuthModel } from './redis.entity';
 
 export const redisProviders = [
   {
@@ -12,5 +13,9 @@ export const redisProviders = [
       return client;
     },
     inject: [ConfigService],
+  },
+  {
+    provide: 'AuthRepository',
+    useValue: AuthModel,
   },
 ];

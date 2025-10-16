@@ -1,9 +1,9 @@
 import { Optional } from 'sequelize';
 
-export interface IAuthAttributes {
+export interface IRedisAttributes {
   id: number;
   refresh_token: string;
   application_token: string;
 }
 
-export type IAuthCreationAttributes = Optional<IAuthAttributes, 'id'>;
+export type IRedisCreationAttributes = Optional<IRedisAttributes, 'id'>;

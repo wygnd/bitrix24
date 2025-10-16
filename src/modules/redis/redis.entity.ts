@@ -1,12 +1,12 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
-import {
-  IAuthAttributes,
-  IAuthCreationAttributes,
-} from './interfaces/auth.interface';
+import { IRedisAttributes, IRedisCreationAttributes } from './redis.interface';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Table({ tableName: 'auth' })
-export class AuthModel extends Model<IAuthAttributes, IAuthCreationAttributes> {
+export class AuthModel extends Model<
+  IRedisAttributes,
+  IRedisCreationAttributes
+> {
   @ApiProperty({
     type: Number,
     description: 'Unique identifier',
