@@ -1,4 +1,4 @@
-import { ISODate } from '@bitrix24/b24jssdk';
+import { B24SuccessResponse } from './bitrix-api.interface';
 
 export type B24AvailableMethods =
   | 'user.get'
@@ -17,30 +17,6 @@ export type B24AvailableMethods =
   | 'imbot.command.unregister';
 
 export type B24ListOrder = 'ASC' | 'DESC';
-
-interface B24Timestamp {
-  start: number;
-  finish: number;
-  duration: number;
-  processing: number;
-  date_start: ISODate;
-  date_finish: ISODate;
-  operating_reset_at: number;
-  operating: number;
-}
-
-export interface B24SuccessResponse<T> {
-  result?: T;
-  total?: number;
-  time: B24Timestamp;
-}
-
-export interface B24ErrorResponse {
-  error: string;
-  error_description: string;
-}
-
-export type B24Response<T> = B24SuccessResponse<T>;
 
 export interface B24ListParams<
   TFilter extends Record<string, any> = Record<string, any>,

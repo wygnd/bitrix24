@@ -8,7 +8,7 @@ export class BitrixImBotService {
   constructor(private readonly bitrixService: BitrixService) {}
 
   async addCommand(fields: ImbotRegisterCommandDto) {
-    return await this.bitrixService.call<ImbotRegisterCommandDto, number>(
+    return await this.bitrixService.callMethod<ImbotRegisterCommandDto, number>(
       'imbot.command.register',
       {
         ...fields,
@@ -17,9 +17,9 @@ export class BitrixImBotService {
   }
 
   async removeCommand(fields: ImbotUnregisterCommandDto) {
-    return await this.bitrixService.call<ImbotUnregisterCommandDto, boolean>(
-      'imbot.command.unregister',
-      { ...fields },
-    );
+    return await this.bitrixService.callMethod<
+      ImbotUnregisterCommandDto,
+      boolean
+    >('imbot.command.unregister', { ...fields });
   }
 }

@@ -12,7 +12,7 @@ export const redisOptions = (configService: ConfigService): RedisOptions => {
 
   return {
     host,
-    port: port ? +port : 6379,
+    port: port ? port : 6379,
     username: username,
     password: password,
     showFriendlyErrorStack: true,

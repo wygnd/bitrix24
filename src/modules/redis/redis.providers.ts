@@ -7,9 +7,14 @@ import { AuthModel } from './redis.entity';
 export const redisProviders = [
   {
     provide: REDIS_CLIENT,
-    useFactory: (configService: ConfigService) => {
+    useFactory: async (configService: ConfigService) => {
       const client = new Redis(redisOptions(configService));
-      client.on('error', (e) => console.error(`REDIS: Error execute: ${e}`));
+      client.on('error', (e) => console.error(`REDIS: Error connecting: ${e}`));
+      try {
+        await client?.connect?.();
+      } catch (error) {
+        console.error(`REDIS: Failed to connect: ${error}`);
+      }
       return client;
     },
     inject: [ConfigService],

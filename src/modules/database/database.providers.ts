@@ -1,6 +1,5 @@
 import { ConfigService } from '@nestjs/config';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
-import { AuthModel } from '../auth/auth.entity';
 
 export const databaseProviders = [
   {
@@ -10,7 +9,7 @@ export const databaseProviders = [
       const sequelize = new Sequelize(
         configService.get<SequelizeOptions>('databaseConfig'),
       );
-      sequelize.addModels([AuthModel]);
+      sequelize.addModels([]);
       await sequelize.sync({
         force: false,
         alter: false,

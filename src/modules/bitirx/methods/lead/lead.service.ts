@@ -7,7 +7,7 @@ export class BitrixLeadService {
   constructor(private readonly bitrixService: BitrixService) {}
 
   async getLeadById(id: string) {
-    return await this.bitrixService.call<Partial<B24Lead>, B24Lead>(
+    return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
       'crm.lead.get',
       {
         ID: id,

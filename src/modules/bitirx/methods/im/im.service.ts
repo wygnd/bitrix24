@@ -8,7 +8,7 @@ export class BitrixMessageService {
   constructor(private readonly bitrixService: BitrixService) {}
 
   async sendPrivateMessage(fields: SendMessageDto) {
-    return await this.bitrixService.call<B24ImSendMessage, number>(
+    return await this.bitrixService.callMethod<B24ImSendMessage, number>(
       'im.message.add',
       {
         ...fields,

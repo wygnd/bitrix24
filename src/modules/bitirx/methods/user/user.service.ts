@@ -8,7 +8,7 @@ export class BitrixUserService {
   constructor(private readonly bitrixService: BitrixService) {}
 
   async getUserById(userId: number) {
-    return await this.bitrixService.call<
+    return await this.bitrixService.callMethod<
       B24ListParams<Partial<B24User>>,
       B24User
     >('user.get', {
@@ -19,7 +19,7 @@ export class BitrixUserService {
   }
 
   async getUsers(params: B24UserListParams) {
-    return await this.bitrixService.call<
+    return await this.bitrixService.callMethod<
       B24ListParams<Partial<B24User>>,
       B24User[]
     >('user.get', { ...params });
@@ -30,7 +30,7 @@ export class BitrixUserService {
     orders: string[][] = [],
     sort: string[] = [],
   ) {
-    return await this.bitrixService.call('department.get', {
+    return await this.bitrixService.callMethod('department.get', {
       id: departmentId,
       orders: orders,
       sort: sort,
