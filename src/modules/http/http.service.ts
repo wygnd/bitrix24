@@ -16,17 +16,12 @@ export class AppHttpService {
       const response = await firstValueFrom(
         this.http.post<U, T>(url, body, config).pipe(
           catchError((error: AxiosError) => {
-            // console.log('HTTP MODULE: Get error: ', error);
             throw error.response?.data;
           }),
         ),
       );
 
-      const { data } = response;
-
-      console.log('HttpModule: Response: ', data);
-
-      return data;
+      return response.data;
     } catch (error) {
       if (isAxiosError(error)) throw error;
 

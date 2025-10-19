@@ -51,53 +51,23 @@ export class BitrixService {
     };
   }
 
-  // async call<T = Record<string, any>, K = any>(
-  //   method: B24AvailableMethods,
-  //   params?: T,
-  // ): Promise<B24Response<K>> {
-  //   const result = await this.bx24.callMethod(method, { ...params });
-  //   return result.getData() as B24Response<K>;
-  // }
-  //
-  // // todo: handle batch response
-  // async callBatch(commands: any[] | object, halt = false) {
-  //   const result = await this.bx24.callBatch(commands, halt, true);
-  //
-  //   if (!result.isSuccess) {
-  //     console.error(result.getErrors());
-  //     throw new Error('Failed to call batch');
-  //   }
-  //
-  //   const response = {};
-  //
-  //   for (const [key, value] of Object.entries(result.getData() as object)) {
-  //     response[key] = value.getData() as Result;
-  //   }
-  //
-  //   return response;
-  // }
-
   async callMethod<
     T extends Record<string, any> = Record<string, any>,
     U = any,
   >(method: string, params: Partial<T> = {}) {
-    console.log('Start calling');
-
     const { access_token } = await this.getTokens();
-    const data = await this.http.post<
-      Partial<T> & { auth?: string },
-      B24Response<U>
-    >(`/rest/${method}`, {
-      ...params,
-      auth: access_token,
-    });
-
-    console.log('TRY SEND REQUEST TO BITRIX', data);
-
-    return data;
+    return await this.http.post<Partial<T> & { auth?: string }, B24Response<U>>(
+      `/rest/${method}`,
+      {
+        ...params,
+        auth: access_token,
+      },
+    );
   }
 
-  public async getTokens(): Promise<BitrixTokens> {
+  // todo: call batch
+
+  private async getTokens(): Promise<BitrixTokens> {
     if (!this.tokens.refresh_token || !this.tokens.access_token) {
       const accessToken =
         (await this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN)) ??
