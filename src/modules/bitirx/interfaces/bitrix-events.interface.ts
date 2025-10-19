@@ -1,7 +1,7 @@
 import { B24AuthOptions } from './bitrix.interface';
-import { GenderString } from '@bitrix24/b24jssdk';
+import { BoolString, GenderString } from '@bitrix24/b24jssdk';
 
-export type B24Event = 'ONIMCOMMANDADD';
+export type B24EventList = 'ONIMCOMMANDADD' | 'ONAPPINSTALL';
 
 export interface B24EventCommand {
   [key: number]: B24EventCommandOptions;
@@ -44,4 +44,21 @@ export interface B24EventData {
   COMMAND: B24EventCommand;
   PARAMS: B24EventParams;
   USER: B24EventUser;
+}
+
+export interface B24EventBody {
+  event: B24EventList;
+  event_handler_id: number;
+  data: {
+    VERSION: number;
+    ACTIVE: BoolString;
+    INSTALLED: BoolString;
+    LANGUAGE_ID: string;
+  };
+  ts: number;
+  auth: B24AuthOptions;
+}
+
+export interface B24EventBodyOnInstallApp extends Omit<B24EventBody, 'event'> {
+  event: 'ONAPPINSTALL';
 }

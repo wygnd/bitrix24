@@ -1,5 +1,5 @@
 import type {
-  B24Event,
+  B24EventList,
   B24EventCommand,
   B24EventData,
   B24EventParams,
@@ -97,7 +97,7 @@ export class OnImCommandAddDto {
     required: true,
   })
   @IsNotEmpty()
-  event: B24Event;
+  event: B24EventList;
 
   @ApiProperty({
     type: Number,
