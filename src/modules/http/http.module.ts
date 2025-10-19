@@ -1,20 +1,14 @@
-import {
-  HttpException,
-  HttpStatus,
-  Module,
-  OnModuleInit,
-} from '@nestjs/common';
-import { HttpModule, HttpService } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
 import { AppHttpService } from './http.service';
-import { B24Response } from '../bitirx/interfaces/bitrix-api.interface';
-import { AxiosResponse } from 'axios';
+import { httpProviders } from './http.providers';
 
 @Module({
   imports: [
     HttpModule.registerAsync({
-      useFactory: async (configService: ConfigService) => {
+      useFactory: (configService: ConfigService) => {
         const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
 
         if (!bitrixConfig) throw new Error('Invalid bitrix config');
@@ -30,7 +24,7 @@ import { AxiosResponse } from 'axios';
       inject: [ConfigService],
     }),
   ],
-  providers: [AppHttpService],
+  providers: [...httpProviders, AppHttpService],
   exports: [AppHttpService],
 })
 export class AppHttpModule {}
