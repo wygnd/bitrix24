@@ -42,7 +42,7 @@ export class BitrixController {
     try {
       return await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
-        MESSAGE: `Событие приложения [b](Node)[/b]![br]${JSON.stringify(data)}`,
+        MESSAGE: `Событие приложения [b](Node)[/b]![br][br]${JSON.stringify(data) ?? ''}`,
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
@@ -57,7 +57,7 @@ export class BitrixController {
     try {
       return await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
-        MESSAGE: `Установка приложения [b](Node)[/b]![br]${JSON.stringify(data)}`,
+        MESSAGE: `Установка приложения [b](Node)[/b]![br][br]${JSON.stringify(data) ?? ''}`,
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
@@ -69,7 +69,7 @@ export class BitrixController {
     try {
       return await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
-        MESSAGE: `Обработка приложения [b](Node)[/b]![br]${JSON.stringify(data)}`,
+        MESSAGE: `Обработка приложения [b](Node)[/b]![br][br]${JSON.stringify(data) ?? ''}`,
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);

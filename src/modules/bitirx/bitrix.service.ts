@@ -69,7 +69,6 @@ export class BitrixService {
     );
   }
 
-  // todo: call batch
   async callBatch<T>(commands: B24BatchCommands, halt: false) {
     const { access_token } = await this.getTokens();
 
@@ -102,6 +101,8 @@ export class BitrixService {
       );
 
       if (!refreshToken) throw new Error('Failed to refresh token');
+
+      if (!accessToken) return this.updateAccessToken(refreshToken);
 
       if (Date.now() < expiresAccessToken * 1000) {
         const tokens = {
