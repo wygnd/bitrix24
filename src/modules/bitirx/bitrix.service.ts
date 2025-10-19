@@ -15,6 +15,10 @@ import {
 } from './interfaces/bitrix-auth.interface';
 import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
 import { B24Response } from './interfaces/bitrix-api.interface';
+import {
+  B24AvailableMethods,
+  B24BatchCommands,
+} from './interfaces/bitrix.interface';
 
 @Injectable()
 export class BitrixService {
@@ -54,7 +58,7 @@ export class BitrixService {
   async callMethod<
     T extends Record<string, any> = Record<string, any>,
     U = any,
-  >(method: string, params: Partial<T> = {}) {
+  >(method: B24AvailableMethods, params: Partial<T> = {}) {
     const { access_token } = await this.getTokens();
     return await this.http.post<Partial<T> & { auth?: string }, B24Response<U>>(
       `/rest/${method}`,
@@ -66,6 +70,23 @@ export class BitrixService {
   }
 
   // todo: call batch
+  async callBatch<T>(commands: B24BatchCommands, halt: false) {
+    const { access_token } = await this.getTokens();
+
+    const cmd = Object.entries(commands).reduce(
+      (acc, [key, { method, params }]) => {
+        acc[key] = `${method}?${new URLSearchParams(params).toString()}`;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    return (await this.http.post('/rest/batch.json', {
+      cmd: cmd,
+      halt: halt,
+      auth: access_token,
+    })) as T;
+  }
 
   private async getTokens(): Promise<BitrixTokens> {
     if (!this.tokens.refresh_token || !this.tokens.access_token) {

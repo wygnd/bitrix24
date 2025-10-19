@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { B24Lead } from './lead.interface';
+import {
+  B24DuplicateFindByComm,
+  B24DuplicateFindByCommResponse,
+  B24Lead,
+} from './lead.interface';
 
 @Injectable()
 export class BitrixLeadService {
@@ -13,5 +17,16 @@ export class BitrixLeadService {
         ID: id,
       },
     );
+  }
+
+  async getDuplicateLeadsByPhone(phone: string) {
+    return await this.bitrixService.callMethod<
+      B24DuplicateFindByComm,
+      B24DuplicateFindByCommResponse
+    >('crm.duplicate.findbycomm', {
+      type: 'PHONE',
+      values: [phone],
+      entity_type: 'LEAD',
+    });
   }
 }

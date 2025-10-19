@@ -7,10 +7,11 @@ import { BitrixMessageService } from './methods/im/im.service';
 import { BitrixImBotService } from './methods/imbot/imbot.service';
 import { AppHttpModule } from '../http/http.module';
 import { RedisModule } from '../redis/redis.module';
+import { BitrixAvitoController } from './controllers/bitrix-avito.controller';
 
 @Module({
   imports: [forwardRef(() => AppHttpModule), RedisModule],
-  controllers: [BitrixController],
+  controllers: [BitrixController, BitrixAvitoController],
   providers: [
     BitrixService,
     BitrixUserService,

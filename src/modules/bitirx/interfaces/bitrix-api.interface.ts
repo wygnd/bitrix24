@@ -1,4 +1,3 @@
-import { B24ListOrder } from './bitrix.interface';
 import { ISODate } from '@bitrix24/b24jssdk';
 
 export enum B24ApiTags {
@@ -10,6 +9,7 @@ export enum B24ApiTags {
   DEAPRTMENTS = 'Departments',
   TEST = 'Test',
   EVENTS = 'Events',
+  AVITO = 'Avito',
 }
 
 interface B24Timestamp {
@@ -35,3 +35,16 @@ export interface B24ErrorResponse {
 }
 
 export type B24Response<T> = B24SuccessResponse<T> | B24ErrorResponse;
+
+export interface B24BatchResponseMap<T extends Record<string, any>> {
+  result: {
+    result: {
+      [K in keyof T]: T[K];
+    };
+    result_error: Record<string, B24ErrorResponse>;
+    result_total: Record<string, number>;
+    result_next: Record<string, number>;
+    result_time: Record<string, B24Timestamp>;
+  };
+  time: B24Timestamp;
+}

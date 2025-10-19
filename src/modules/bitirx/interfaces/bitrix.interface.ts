@@ -1,6 +1,5 @@
-import { B24SuccessResponse } from './bitrix-api.interface';
-
 export type B24AvailableMethods =
+  | 'user.current'
   | 'user.get'
   | 'crm.lead.get'
   | 'crm.lead.list'
@@ -14,7 +13,8 @@ export type B24AvailableMethods =
   | 'crm.deal.get'
   | 'im.message.add'
   | 'imbot.command.register'
-  | 'imbot.command.unregister';
+  | 'imbot.command.unregister'
+  | 'crm.duplicate.findbycomm';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
@@ -48,19 +48,12 @@ export type B24FilterOptions<T> = {
 
 export type B24SelectOptions<T> = (keyof T)[];
 
-interface B24BatchCommand {
+export interface B24BatchCommand {
   method: B24AvailableMethods;
-  params: {};
+  params: Record<string, any>;
 }
 
-export type B24BatchCommands = {
-  [key: string]: B24BatchCommand;
-};
-
-//todo type batch response
-export type B24BatchResponse<T> = {
-  [key: string]: B24SuccessResponse<T>;
-};
+export type B24BatchCommands = Record<string, B24BatchCommand>;
 
 export interface B24AuthOptions {
   access_token: string;
