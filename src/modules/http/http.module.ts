@@ -5,6 +5,7 @@ import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
 import { AppHttpService } from './http.service';
 import { httpProviders } from './http.providers';
 
+// todo: Add upadte token on 401 error
 @Module({
   imports: [
     HttpModule.registerAsync({

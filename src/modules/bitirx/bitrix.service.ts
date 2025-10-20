@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Inject,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
@@ -19,6 +20,7 @@ import {
   B24AvailableMethods,
   B24BatchCommands,
 } from './interfaces/bitrix.interface';
+import qs from 'qs';
 
 @Injectable()
 export class BitrixService {
@@ -69,16 +71,18 @@ export class BitrixService {
     );
   }
 
-  async callBatch<T>(commands: B24BatchCommands, halt: false) {
+  async callBatch<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
     const cmd = Object.entries(commands).reduce(
       (acc, [key, { method, params }]) => {
-        acc[key] = `${method}?${new URLSearchParams(params).toString()}`;
+        acc[key] = `${method}?${qs.stringify(params)}`;
         return acc;
       },
       {} as Record<string, string>,
     );
+
+    console.log('BATCH: before send request: ', cmd);
 
     return (await this.http.post('/rest/batch.json', {
       cmd: cmd,
@@ -88,40 +92,34 @@ export class BitrixService {
   }
 
   private async getTokens(): Promise<BitrixTokens> {
-    if (!this.tokens.refresh_token || !this.tokens.access_token) {
-      const accessToken =
-        (await this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN)) ??
-        '';
-      const expiresAccessToken =
-        (await this.redisService.get<number>(
-          REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-        )) ?? 0;
-      const refreshToken = await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_REFRESH_TOKEN,
-      );
-
-      if (!refreshToken) throw new Error('Failed to refresh token');
-
-      if (!accessToken) return this.updateAccessToken(refreshToken);
-
-      if (Date.now() < expiresAccessToken * 1000) {
-        const tokens = {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          expires: expiresAccessToken ?? 0,
-        };
-
-        this.tokens = { ...tokens };
-        return tokens;
-      }
-
-      return await this.updateAccessToken(refreshToken);
-    }
-
-    if (this.tokens.access_token && Date.now() < this.tokens.expires * 1000)
+    if (
+      this.tokens &&
+      this.tokens?.access_token &&
+      Date.now() < this.tokens?.expires * 1000
+    )
       return this.tokens;
 
-    return await this.updateAccessToken(this.tokens.access_token);
+    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
+      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
+      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
+      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
+    ]);
+
+    if (!refreshToken) throw new UnauthorizedException('Invalid refresh token');
+
+    if (!accessToken) return this.updateAccessToken(refreshToken);
+
+    if (Date.now() < (expiresAccessToken ?? 0) * 1000) {
+      this.tokens = {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires: expiresAccessToken ? +expiresAccessToken : 0,
+      };
+
+      return this.tokens;
+    }
+
+    return this.updateAccessToken(refreshToken);
   }
 
   /**

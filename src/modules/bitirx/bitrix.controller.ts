@@ -9,10 +9,10 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import { BitrixUserService } from './methods/user/user.service';
+import { BitrixUserService } from './modules/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { OnImCommandAddDto } from './dtos/bitrix-on-im-command-add.dto';
-import { BitrixMessageService } from './methods/im/im.service';
+import { BitrixMessageService } from './modules/im/im.service';
 import { REDIS_CLIENT, REDIS_KEYS } from '../redis/redis.constants';
 import { RedisService } from '../redis/redis.service';
 import type { B24EventBodyOnInstallApp } from './interfaces/bitrix-events.interface';
