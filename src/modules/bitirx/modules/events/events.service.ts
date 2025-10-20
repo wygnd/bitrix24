@@ -43,8 +43,7 @@ export class BitrixEventService {
         method: 'im.message.update',
         params: {
           MESSAGE_ID: MESSAGE_ID,
-          MESSAGE: '[b]Обработано[/b][br][br]' + MESSAGE,
-          KEYBOARD: [],
+          MESSAGE: `[b]Обработано[/b][br][br]${MESSAGE}`,
         },
       },
     };
@@ -70,9 +69,14 @@ export class BitrixEventService {
       }>
     >(commands);
 
-    const errors = Object.keys(response.result.result_error);
-    if (errors.length !== 0)
-      throw new Error(`Invalid on batch request: ${errors.join(' | ')}`);
+    const errors = Object.values(response.result.result_error);
+    if (errors.length !== 0) {
+      const message = errors.reduce((acc, { error, error_description }) => {
+        acc += `${error}---${error_description}|||`;
+        return acc;
+      }, '');
+      throw new Error(`Invalid on batch request: ${message}`);
+    }
 
     console.log('Batch response: ', response);
     return true;
