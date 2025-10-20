@@ -41,7 +41,7 @@ export class BitrixEventService {
       DIALOG_ID: '220', // Ирина Новолоцкая
       MESSAGE:
         `Сделка завершена. Проект менеджер отметил, ` +
-        `что он соответствует тербониям для кейса[br][br]` +
+        `что сайт соответствует тербониям для кейса[br][br]` +
         this.bitrixService.generateDealUrl(dealId),
     });
   }

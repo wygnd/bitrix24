@@ -27,11 +27,7 @@ export class BitrixEventsController {
   @Post('onimcommandadd')
   async handleCommand(@Body() data: OnImCommandAddDto) {
     try {
-      console.log(data);
-      return await this.bitrixMessageService.sendPrivateMessage({
-        DIALOG_ID: 'chat77152',
-        MESSAGE: `Событие приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,
-      });
+      return this.bitrixEventService.handleEvent(data);
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }

@@ -19,7 +19,7 @@ export interface B24ImbotCommandLanguageOptions {
 
 export interface B24ImbotSendMessageOptions {
   BOT_ID: number;
-  DIALOG_ID: string;
+  DIALOG_ID: string | number;
   MESSAGE: string;
   KEYBOARD?: B24ImKeyboardOptions[];
   SYSTEM?: BoolString;

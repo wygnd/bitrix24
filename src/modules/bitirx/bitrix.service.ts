@@ -184,7 +184,7 @@ export class BitrixService {
    * @return string
    */
   public generateLeadUrl(leadId: number, label?: string) {
-    const url = `${leadId}`;
+    const url = `${this.bitrixDomain}/crm/lead/details/${leadId}/`;
 
     if (label) return `[url=${url}]${label}[/url]`;
 
@@ -198,7 +198,7 @@ export class BitrixService {
    * @return string
    */
   public generateDealUrl(dealId: number, label?: string) {
-    const url = `${dealId}`;
+    const url = `${this.bitrixDomain}/crm/deal/details/${dealId}/`;
 
     if (label) return `[url=${url}]${label}[/url]`;
 

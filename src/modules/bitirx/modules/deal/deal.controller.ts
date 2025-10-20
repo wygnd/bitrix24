@@ -3,12 +3,13 @@ import {
   Controller,
   HttpException,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
-import { NotifyConvertedDeal } from '../events/interfaces/events-handle.interface';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -16,17 +17,21 @@ export class BitrixDealController {
   constructor(private readonly bitrixImbotService: BitrixImBotService) {}
 
   @Post('notify-about-converted-deal')
-  async notifyAboutConvertedSiteDeal(@Body() body: BitrixOutcomingWebhookDto) {
+  async notifyAboutConvertedSiteDeal(
+    @Body() body: BitrixOutcomingWebhookDto,
+    @Param('assigned_id') assigned_id: string,
+  ) {
     try {
       console.log('Check data: ', body);
       const [, dealId] = body.document_id[2].split('_');
+      const [, userId] = assigned_id.split('_');
       return this.bitrixImbotService.sendMessage({
         BOT_ID: 1264,
-        DIALOG_ID: 'chat77152',
+        DIALOG_ID: userId,
         MESSAGE:
           '[b]Сайты для кейсов[/b][br][br]' +
           'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br]' +
-          '[b]Критерии отбора сайтов для кейсов:[/b][br]' +
+          '[b]Критерии отбора сайтов для кейсов:[/b][br][br]' +
           '- Яркий, запоминающийся, нетипичный дизайн (не все подряд индивиды, ' +
           'а когда наши дизайнеры прыгнули выше головы и сделали очень крутой дизайн). ' +
           'Если есть сомнения по этому пункту, то всё равно отправляйте Ирине на согласование.[br]' +
