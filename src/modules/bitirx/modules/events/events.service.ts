@@ -47,7 +47,7 @@ export class BitrixEventService {
           BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
           MESSAGE:
-            `[b]Обработано ${isFits ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
+            `[b]Обработано: ${isFits ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
             Buffer.from(oldMessage).toString('utf8'),
           KEYBOARD: '',
         },
@@ -58,11 +58,9 @@ export class BitrixEventService {
       commands['send_message'] = {
         method: 'im.message.add',
         params: {
-          // DIALOG_ID: '220', // Ирина Новолоцкая
-          DIALOG_ID: 376,
+          DIALOG_ID: 220, // Ирина Новолоцкая
           MESSAGE:
-            `Сделка завершена. Проект менеджер отметил, ` +
-            `что сайт соответствует тербованиям для кейса[br][br]` +
+            'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
             this.bitrixService.generateDealUrl(dealId),
         },
       };
@@ -84,7 +82,6 @@ export class BitrixEventService {
       throw new Error(`Invalid on batch request: ${message}`);
     }
 
-    console.log('Batch response: ', response);
     return true;
   }
 }
