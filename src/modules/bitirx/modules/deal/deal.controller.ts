@@ -53,7 +53,7 @@ export class BitrixDealController {
             COMMAND_PARAMS: JSON.stringify({
               dealId: dealId,
               isFit: true,
-              oldMessage: message,
+              oldMessage: Buffer.from(message, 'utf8'),
             }),
             BG_COLOR_TOKEN: 'primary',
             DISPLAY: 'LINE',
@@ -64,7 +64,7 @@ export class BitrixDealController {
             COMMAND_PARAMS: JSON.stringify({
               dealId: dealId,
               isFit: false,
-              oldMessage: message,
+              oldMessage: Buffer.from(message, 'utf8'),
             }),
             BG_COLOR_TOKEN: 'alert',
             DISPLAY: 'LINE',

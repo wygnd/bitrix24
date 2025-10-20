@@ -47,7 +47,7 @@ export class BitrixEventService {
         params: {
           BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
-          MESSAGE: `[b]Обработано[/b][br][br]${oldMessage}`,
+          MESSAGE: `[b]Обработано[/b][br][br]${Buffer.from(oldMessage).toString('utf8')}`,
           KEYBOARD: '',
         },
       },
@@ -58,7 +58,7 @@ export class BitrixEventService {
         method: 'im.message.add',
         params: {
           // DIALOG_ID: '220', // Ирина Новолоцкая
-          DIALOG_ID: '376',
+          DIALOG_ID: 376,
           MESSAGE:
             `Сделка завершена. Проект менеджер отметил, ` +
             `что сайт соответствует тербониям для кейса[br][br]` +
