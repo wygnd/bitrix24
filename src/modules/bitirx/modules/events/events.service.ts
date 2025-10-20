@@ -22,7 +22,10 @@ export class BitrixEventService {
 
     switch (command) {
       case '/choiceManagerForNewDeal':
-        return await this.notifyAboutConvertedDeal(fields);
+        return {
+          message: 'Was handled',
+          status: await this.notifyAboutConvertedDeal(fields),
+        };
 
       default:
         return {
@@ -35,7 +38,7 @@ export class BitrixEventService {
   async notifyAboutConvertedDeal(fields: string) {
     const { dealId, isFits } = JSON.parse(fields) as NotifyConvertedDeal;
 
-    if (!isFits) return;
+    if (!isFits) return false;
 
     await this.bitrixMessageService.sendPrivateMessage({
       DIALOG_ID: '220', // Ирина Новолоцкая
@@ -44,5 +47,7 @@ export class BitrixEventService {
         `что сайт соответствует тербониям для кейса[br][br]` +
         this.bitrixService.generateDealUrl(dealId),
     });
+
+    return true;
   }
 }

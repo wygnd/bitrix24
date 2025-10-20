@@ -11,11 +11,15 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
+import { BitrixService } from '../../bitrix.service';
 
 @ApiTags('Deals')
 @Controller('deals')
 export class BitrixDealController {
-  constructor(private readonly bitrixImbotService: BitrixImBotService) {}
+  constructor(
+    private readonly bitrixImbotService: BitrixImBotService,
+    private readonly bitrixService: BitrixService,
+  ) {}
 
   @Post('notify-about-converted-deal')
   async notifyAboutConvertedSiteDeal(
@@ -40,7 +44,9 @@ export class BitrixDealController {
           '- ВСЕ сайты на Bitrix (вне зависимости от дизайна и тех.особенностей)[br]' +
           '- ВСЕ индивидуальные сайты Вологодских заказчиков (вне зависимости от дизайна и тех.особенностей)[br]' +
           '- Нетиповые некоммерческие проекты (например, новостной портал).[br]' +
-          '- Сайты, которые делали для гос.структур (больницы и прочее)',
+          '- Сайты, которые делали для гос.структур (больницы и прочее)[br][br]' +
+          'Сделка: ' +
+          this.bitrixService.generateDealUrl(dealId),
         KEYBOARD: [
           {
             TEXT: 'Сайт подходит',

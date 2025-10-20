@@ -27,6 +27,7 @@ export class BitrixEventsController {
   @Post('onimcommandadd')
   async handleCommand(@Body() data: OnImCommandAddDto) {
     try {
+      console.log('ONIMCOMMANDADD: Handle event: ', data);
       return this.bitrixEventService.handleEvent(data);
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
