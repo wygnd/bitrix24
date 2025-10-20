@@ -11,6 +11,7 @@ export type B24AvailableMethods =
   | 'crm.deal.list'
   | 'crm.deal.add'
   | 'crm.deal.get'
+  | 'crm.deal.update'
   | 'im.message.add'
   | 'imbot.command.register'
   | 'im.message.delete'

@@ -52,6 +52,15 @@ export class BitrixEventService {
           KEYBOARD: '',
         },
       },
+      update_deal: {
+        method: 'crm.deal.update',
+        params: {
+          id: dealId,
+          fields: {
+            UF_CRM_1760972834021: '1',
+          },
+        },
+      },
     };
 
     if (isFits) {
@@ -70,6 +79,7 @@ export class BitrixEventService {
       B24BatchResponseMap<{
         update_message: boolean;
         send_message: number;
+        update_deal: boolean;
       }>
     >(commands);
 

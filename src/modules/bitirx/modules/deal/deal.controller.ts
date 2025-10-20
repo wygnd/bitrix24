@@ -1,16 +1,19 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
 import { BitrixService } from '../../bitrix.service';
-import { ApiExceptions } from '../../../../common/decorators/api-exceptions.decorator';
+import { BitrixDealService } from './deal.service';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -18,8 +21,11 @@ export class BitrixDealController {
   constructor(
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
+    private readonly bitrixDealService: BitrixDealService,
   ) {}
 
+  // todo: Notice project manage about ignore message
+  // todo: Was added new custom field: UF_CRM_1760972834021 need check this field and notice project manager
   @ApiOperation({
     summary: 'Webhook from bitrix for check site',
     description:
@@ -80,6 +86,15 @@ export class BitrixDealController {
           },
         ],
       });
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Get(':dealId')
+  async getDealById(@Param('dealId', ParseIntPipe) dealId: number) {
+    try {
+      return this.bitrixDealService.getDealById(dealId);
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
