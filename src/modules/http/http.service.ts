@@ -12,21 +12,14 @@ export class AppHttpService {
     body?: T,
     config?: AxiosRequestConfig<T>,
   ) {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<U, T>(url, body, config).pipe(
-          catchError((error: AxiosError) => {
-            throw error.response?.data;
-          }),
-        ),
-      );
+    const response = await firstValueFrom(
+      this.http.post<U, T>(url, body, config).pipe(
+        catchError((error: AxiosError) => {
+          throw error.response?.data;
+        }),
+      ),
+    );
 
-      return response.data;
-    } catch (error) {
-      if (isAxiosError(error)) throw error;
-
-      console.error('HttpModule: UnHandling error exception: ', error);
-      throw error;
-    }
+    return response.data;
   }
 }

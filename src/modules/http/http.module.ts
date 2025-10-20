@@ -4,10 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
 import { AppHttpService } from './http.service';
 import { httpProviders } from './http.providers';
+import { BitrixModule } from '../bitirx/bitrix.module';
 
-// todo: Add upadte token on 401 error
 @Module({
   imports: [
+    BitrixModule,
     HttpModule.registerAsync({
       useFactory: (configService: ConfigService) => {
         const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');

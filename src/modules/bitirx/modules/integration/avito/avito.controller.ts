@@ -65,7 +65,7 @@ export class BitrixAvitoController {
 
       const { result } = batchResponseFindDuplicates.result;
 
-      const chats = Object.entries(result)
+      return Object.entries(result)
         .map(([key, response]) => {
           const [, phone, chatId] = key.split('_');
 
@@ -79,10 +79,6 @@ export class BitrixAvitoController {
           };
         })
         .filter((item) => item) as AvitoChatInfo[];
-
-      console.log(chats);
-
-      return chats;
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }

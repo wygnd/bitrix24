@@ -29,8 +29,15 @@ export interface B24SuccessResponse<T> {
   time: B24Timestamp;
 }
 
+export type B24ErrorType =
+  | 'invalid_client'
+  | 'invalid_request'
+  | 'insufficient_scope'
+  | 'invalid_grant'
+  | 'invalid_scope';
+
 export interface B24ErrorResponse {
-  error: string;
+  error: B24ErrorType;
   error_description: string;
 }
 

@@ -92,7 +92,7 @@ export class BitrixService {
     })) as T;
   }
 
-  private async getTokens(): Promise<BitrixTokens> {
+  public async getTokens(): Promise<BitrixTokens> {
     if (
       this.tokens &&
       this.tokens?.access_token &&
