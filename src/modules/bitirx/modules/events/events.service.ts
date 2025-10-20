@@ -46,7 +46,9 @@ export class BitrixEventService {
         params: {
           BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
-          MESSAGE: `[b]Обработано[/b][br][br]${Buffer.from(oldMessage).toString('utf8')}`,
+          MESSAGE:
+            `[b]Обработано ${isFits ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
+            Buffer.from(oldMessage).toString('utf8'),
           KEYBOARD: '',
         },
       },
