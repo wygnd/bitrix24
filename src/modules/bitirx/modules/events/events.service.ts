@@ -3,6 +3,7 @@ import { OnImCommandAddDto } from './events.dto';
 import { NotifyConvertedDeal } from './interfaces/events-handle.interface';
 import { BitrixService } from '../../bitrix.service';
 import { B24BatchCommands } from '../../interfaces/bitrix.interface';
+import { B24BatchResponseMap } from '../../interfaces/bitrix-api.interface';
 
 @Injectable()
 export class BitrixEventService {
@@ -17,8 +18,9 @@ export class BitrixEventService {
 
     const [command] = MESSAGE.split(' ', 2);
 
+    console.log('CHECK COMMAND: ', command);
     switch (command) {
-      case '/choiceManagerForNewDeal':
+      case '/checkSiteForCase':
         return {
           message: 'Was handled',
           status: await this.notifyAboutConvertedDeal(eventData),
@@ -62,7 +64,10 @@ export class BitrixEventService {
       };
     }
 
+    console.log('CHECK BATCH COMMANDS: ', commands);
+
     const response = await this.bitrixService.callBatch(commands);
+
     console.log('Batch response: ', response);
     return true;
   }
