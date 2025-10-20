@@ -36,6 +36,7 @@ export class BitrixEventService {
   async notifyAboutConvertedDeal(eventData: OnImCommandAddDto) {
     const { MESSAGE, MESSAGE_ID } = eventData.data.PARAMS;
     const [, fields] = MESSAGE.split(' ', 2);
+    console.log('Check decoded fields: ', fields);
     const { dealId, isFits, oldMessage } = JSON.parse(
       fields,
     ) as NotifyConvertedDeal;
@@ -47,6 +48,7 @@ export class BitrixEventService {
           BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
           MESSAGE: `[b]Обработано[/b][br][br]${oldMessage}`,
+          KEYBOARD: '',
         },
       },
     };
