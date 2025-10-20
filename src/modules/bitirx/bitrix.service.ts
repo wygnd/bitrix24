@@ -176,4 +176,32 @@ export class BitrixService {
 
     return this.tokens;
   }
+
+  /**
+   * Return string url lead
+   * @param leadId
+   * @param label
+   * @return string
+   */
+  public generateLeadUrl(leadId: number, label?: string) {
+    const url = `${leadId}`;
+
+    if (label) return `[url=${url}]${label}[/url]`;
+
+    return url;
+  }
+
+  /**
+   * Return string url deal
+   * @param dealId
+   * @param label
+   * @return string
+   */
+  public generateDealUrl(dealId: number, label?: string) {
+    const url = `${dealId}`;
+
+    if (label) return `[url=${url}]${label}[/url]`;
+
+    return url;
+  }
 }

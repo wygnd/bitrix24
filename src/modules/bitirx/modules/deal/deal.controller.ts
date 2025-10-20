@@ -6,21 +6,20 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { BitrixDealService } from './deal.service';
 import { BitrixImBotService } from '../imbot/imbot.service';
+import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
+import { NotifyConvertedDeal } from '../events/interfaces/events-handle.interface';
 
 @ApiTags('Deals')
 @Controller('deals')
 export class BitrixDealController {
-  constructor(
-    private readonly bitrixDealService: BitrixDealService,
-    private readonly bitrixImbotService: BitrixImBotService,
-  ) {}
+  constructor(private readonly bitrixImbotService: BitrixImBotService) {}
 
   @Post('notify-about-converted-deal')
-  async notifyAboutConvertedSiteDeal(@Body() body: any) {
+  async notifyAboutConvertedSiteDeal(@Body() body: BitrixOutcomingWebhookDto) {
     try {
       console.log('Check data: ', body);
+      const [, dealId] = body.document_id[2].split('_');
       return this.bitrixImbotService.sendMessage({
         BOT_ID: 1264,
         DIALOG_ID: 'chat77152',
@@ -40,14 +39,14 @@ export class BitrixDealController {
           {
             TEXT: 'Сайт подходит',
             COMMAND: 'checkSiteForCase',
-            COMMAND_PARAMS: '',
+            COMMAND_PARAMS: JSON.stringify({ dealId: dealId, isFit: true }),
             BG_COLOR_TOKEN: 'primary',
             DISPLAY: 'LINE',
           },
           {
             TEXT: 'Сайт не подходит',
             COMMAND: 'checkSiteForCase',
-            COMMAND_PARAMS: '',
+            COMMAND_PARAMS: JSON.stringify({ dealId: dealId, isFit: false }),
             BG_COLOR_TOKEN: 'alert',
             DISPLAY: 'LINE',
           },

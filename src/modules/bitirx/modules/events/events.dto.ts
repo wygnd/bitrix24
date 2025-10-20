@@ -8,7 +8,7 @@ import type {
   B24EventList,
   B24EventParams,
   B24EventUser,
-} from './events.interface';
+} from './interfaces/events.interface';
 
 class OnImCommandAddEventDataDto implements B24EventData {
   COMMAND: B24EventCommand;

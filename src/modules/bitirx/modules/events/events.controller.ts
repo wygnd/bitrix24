@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { BitrixMessageService } from '../im/im.service';
 import { OnImCommandAddDto } from './events.dto';
-import type { B24EventBodyOnInstallApp } from './events.interface';
+import type { B24EventBodyOnInstallApp } from './interfaces/events.interface';
 import { REDIS_CLIENT, REDIS_KEYS } from '../../../redis/redis.constants';
 import { RedisService } from '../../../redis/redis.service';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
