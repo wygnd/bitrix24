@@ -6,7 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import type { B24ImKeyboardOptions, B24ImSendMessage } from '../im.interface';
+import type { B24ImKeyboardOptions, B24ImSendMessage } from '../interfaces/im.interface';
 
 class B24KeyboardOptions {}
 

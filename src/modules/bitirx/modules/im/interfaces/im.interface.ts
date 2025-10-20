@@ -23,3 +23,15 @@ export interface B24ImSendMessage {
   URL_PREVIEW?: BoolString;
   KEYBOARD?: B24ImKeyboardOptions[];
 }
+
+export interface B24ImRemoveMessage {
+  MESSAGE_ID: string | number;
+}
+
+export interface B24ImUpdateMessage {
+  MESSAGE_ID: string | number;
+  MESSAGE: string;
+  ATTACH?: string;
+  URL_PREVIEW?: BoolString;
+  KEYBOARD?: B24ImKeyboardOptions[];
+}

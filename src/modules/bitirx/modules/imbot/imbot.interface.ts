@@ -1,5 +1,5 @@
 import { B24LangList, BoolString } from '@bitrix24/b24jssdk';
-import { B24ImKeyboardOptions } from '../im/im.interface';
+import { B24ImKeyboardOptions } from '../im/interfaces/im.interface';
 
 export interface B24ImbotRegisterCommand {
   BOT_ID: number;

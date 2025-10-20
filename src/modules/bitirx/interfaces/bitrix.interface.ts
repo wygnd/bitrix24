@@ -13,6 +13,8 @@ export type B24AvailableMethods =
   | 'crm.deal.get'
   | 'im.message.add'
   | 'imbot.command.register'
+  | 'im.message.delete'
+  | 'im.message.update'
   | 'imbot.command.unregister'
   | 'crm.duplicate.findbycomm'
   | 'imbot.message.add';
