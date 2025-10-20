@@ -27,7 +27,7 @@ async function bootstrap() {
       swaggerOptions: {
         filter: true,
         docExpansion: 'none',
-        showExtensions: false,
+        showExtensions: true,
         showCommonExtensions: false,
         displayRequestDuration: true,
         operationsSorter: 'alpha',

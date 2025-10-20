@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { SendMessageDto } from './dtos/im.dto';
 import { B24ImSendMessage } from './im.interface';
 
 @Injectable()

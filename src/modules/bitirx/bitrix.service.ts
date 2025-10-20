@@ -15,7 +15,10 @@ import {
   BitrixTokens,
 } from './interfaces/bitrix-auth.interface';
 import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
-import { B24Response } from './interfaces/bitrix-api.interface';
+import {
+  B24Response,
+  B24SuccessResponse,
+} from './interfaces/bitrix-api.interface';
 import {
   B24AvailableMethods,
   B24BatchCommands,
@@ -62,13 +65,13 @@ export class BitrixService {
     U = any,
   >(method: B24AvailableMethods, params: Partial<T> = {}) {
     const { access_token } = await this.getTokens();
-    return await this.http.post<Partial<T> & { auth?: string }, B24Response<U>>(
-      `/rest/${method}`,
-      {
-        ...params,
-        auth: access_token,
-      },
-    );
+    return await this.http.post<
+      Partial<T> & { auth?: string },
+      B24SuccessResponse<U>
+    >(`/rest/${method}`, {
+      ...params,
+      auth: access_token,
+    });
   }
 
   async callBatch<T>(commands: B24BatchCommands, halt = false) {
@@ -81,8 +84,6 @@ export class BitrixService {
       },
       {} as Record<string, string>,
     );
-
-    console.log('BATCH: before send request: ', cmd);
 
     return (await this.http.post('/rest/batch.json', {
       cmd: cmd,
