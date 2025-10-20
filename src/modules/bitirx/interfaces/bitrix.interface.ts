@@ -17,7 +17,8 @@ export type B24AvailableMethods =
   | 'im.message.update'
   | 'imbot.command.unregister'
   | 'crm.duplicate.findbycomm'
-  | 'imbot.message.add';
+  | 'imbot.message.add'
+  | 'imbot.message.update';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

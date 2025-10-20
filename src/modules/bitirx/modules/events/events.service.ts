@@ -40,8 +40,9 @@ export class BitrixEventService {
 
     const commands: B24BatchCommands = {
       update_message: {
-        method: 'im.message.update',
+        method: 'imbot.message.update',
         params: {
+          BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
           MESSAGE: `[b]Обработано[/b][br][br]${MESSAGE}`,
         },
