@@ -6,10 +6,11 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
 import { BitrixService } from '../../bitrix.service';
+import { ApiExceptions } from '../../../../common/decorators/api-exceptions.decorator';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -19,6 +20,14 @@ export class BitrixDealController {
     private readonly bitrixService: BitrixService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Webhook from bitrix for check site',
+    description:
+      'When deal translate in <b>CONVERTED</b> status bitrix send webhook with data<br/>' +
+      'This endpoint sending message to project manager and Irina Novolockaya with two buttons<br/>' +
+      'Project manager check site and choice button<br/>' +
+      'If site is fit for our library - backend send message Irina with deal link',
+  })
   @Post('notify-about-converted-deal')
   async notifyAboutConvertedSiteDeal(
     @Body() body: BitrixOutcomingWebhookDto,
