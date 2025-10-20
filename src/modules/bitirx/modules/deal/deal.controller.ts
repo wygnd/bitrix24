@@ -3,8 +3,6 @@ import {
   Controller,
   HttpException,
   HttpStatus,
-  Param,
-  ParseIntPipe,
   Post,
   Query,
 } from '@nestjs/common';

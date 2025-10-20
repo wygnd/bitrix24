@@ -52,7 +52,8 @@ export class BitrixEventService {
       commands['send_message'] = {
         method: 'im.message.add',
         params: {
-          DIALOG_ID: '220', // Ирина Новолоцкая
+          // DIALOG_ID: '220', // Ирина Новолоцкая
+          DIALOG_ID: '376',
           MESSAGE:
             `Сделка завершена. Проект менеджер отметил, ` +
             `что сайт соответствует тербониям для кейса[br][br]` +
@@ -61,7 +62,8 @@ export class BitrixEventService {
       };
     }
 
-    await this.bitrixService.callBatch(commands);
+    const response = await this.bitrixService.callBatch(commands);
+    console.log('Batch response: ', response);
     return true;
   }
 }
