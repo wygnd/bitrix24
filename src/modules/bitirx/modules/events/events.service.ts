@@ -36,7 +36,6 @@ export class BitrixEventService {
   async notifyAboutConvertedDeal(eventData: OnImCommandAddDto) {
     const { MESSAGE, MESSAGE_ID } = eventData.data.PARAMS;
     const [, fields] = MESSAGE.split(' ', 2);
-    console.log('Check decoded fields: ', fields);
     const { dealId, isFits, oldMessage } = JSON.parse(
       fields,
     ) as NotifyConvertedDeal;

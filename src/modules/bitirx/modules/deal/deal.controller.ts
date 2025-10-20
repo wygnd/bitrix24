@@ -52,7 +52,7 @@ export class BitrixDealController {
             COMMAND: 'checkSiteForCase',
             COMMAND_PARAMS: JSON.stringify({
               dealId: dealId,
-              isFit: true,
+              isFits: true,
               oldMessage: Buffer.from(message, 'utf8'),
             }),
             BG_COLOR_TOKEN: 'primary',
@@ -63,7 +63,7 @@ export class BitrixDealController {
             COMMAND: 'checkSiteForCase',
             COMMAND_PARAMS: JSON.stringify({
               dealId: dealId,
-              isFit: false,
+              isFits: false,
               oldMessage: Buffer.from(message, 'utf8'),
             }),
             BG_COLOR_TOKEN: 'alert',
