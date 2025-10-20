@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
@@ -19,7 +20,7 @@ export class BitrixDealController {
   @Post('notify-about-converted-deal')
   async notifyAboutConvertedSiteDeal(
     @Body() body: BitrixOutcomingWebhookDto,
-    @Param('assigned_id') assigned_id: string,
+    @Query('assigned_id') assigned_id: string,
   ) {
     try {
       console.log('Check data: ', body);
