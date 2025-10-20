@@ -60,7 +60,7 @@ export class BitrixEventService {
           DIALOG_ID: 376,
           MESSAGE:
             `Сделка завершена. Проект менеджер отметил, ` +
-            `что сайт соответствует тербониям для кейса[br][br]` +
+            `что сайт соответствует тербованиям для кейса[br][br]` +
             this.bitrixService.generateDealUrl(dealId),
         },
       };
