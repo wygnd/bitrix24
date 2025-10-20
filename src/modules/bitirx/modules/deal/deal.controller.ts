@@ -29,8 +29,8 @@ export class BitrixDealController {
       const [, userId] = assigned_id.split('_');
       const message =
         '[b]Сайты для кейсов[/b][br][br]' +
-        'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br]' +
-        '[b]Критерии отбора сайтов для кейсов:[/b][br][br]' +
+        'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br][br]' +
+        '[b]Критерии отбора сайтов для кейсов:[/b][br]' +
         '- Яркий, запоминающийся, нетипичный дизайн (не все подряд индивиды, ' +
         'а когда наши дизайнеры прыгнули выше головы и сделали очень крутой дизайн). ' +
         'Если есть сомнения по этому пункту, то всё равно отправляйте Ирине на согласование.[br]' +
@@ -75,30 +75,4 @@ export class BitrixDealController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
-
-  // @Post('register-command')
-  // async registerCommand() {
-  //   try {
-  //     return await this.bitrixImbotService.addCommand({
-  //       BOT_ID: 1264,
-  //       COMMAND: 'checkSiteForCase',
-  //       EVENT_COMMAND_ADD:
-  //         'https://bitrix24-production.up.railway.app/events/onimcommandadd',
-  //       LANG: [
-  //         {
-  //           LANGUAGE_ID: 'ru',
-  //           TITLE: 'Проверка сайта для кейса',
-  //           PARAMS: '',
-  //         },
-  //         {
-  //           LANGUAGE_ID: 'en',
-  //           TITLE: 'Check site case',
-  //           PARAMS: '',
-  //         },
-  //       ],
-  //     });
-  //   } catch (error) {
-  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
 }
