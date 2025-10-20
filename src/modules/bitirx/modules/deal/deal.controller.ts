@@ -27,7 +27,7 @@ export class BitrixDealController {
     @Query('assigned_id') assigned_id: string,
   ) {
     try {
-      console.log('Check data: ', body);
+      console.log('Check data: ', { ...body, assigned_id });
       const [, dealId] = body.document_id[2].split('_');
       const [, userId] = assigned_id.split('_');
       return this.bitrixImbotService.sendMessage({
