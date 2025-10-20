@@ -48,5 +48,5 @@ export class SendMessageDto implements B24ImSendMessage {
   })
   @IsOptional()
   @IsArray()
-  KEYBOARD: B24ImKeyboardOptions;
+  KEYBOARD: B24ImKeyboardOptions[];
 }

@@ -1,16 +1,11 @@
 import { BoolString } from '@bitrix24/b24jssdk';
 
-enum KeyboardBgColorToken {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-  ALERT = 'alert',
-  BASE = 'base',
-}
+type KeyboardBgColorToken = 'primary' | 'secondary' | 'alert' | 'base';
 
 export interface B24ImKeyboardOptions {
   TEXT: string;
   LINK?: string;
-  COMMAND: string;
+  COMMAND?: string;
   COMMAND_PARAMS?: string;
   BG_COLOR_TOKEN?: KeyboardBgColorToken;
   BG_COLOR?: string;
@@ -26,5 +21,5 @@ export interface B24ImSendMessage {
   MESSAGE: string;
   SYSTEM?: boolean;
   URL_PREVIEW?: BoolString;
-  KEYBOARD?: B24ImKeyboardOptions;
+  KEYBOARD?: B24ImKeyboardOptions[];
 }

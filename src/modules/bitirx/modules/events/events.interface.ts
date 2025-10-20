@@ -1,5 +1,5 @@
-import { B24AuthOptions } from './bitrix.interface';
 import { BoolString, GenderString } from '@bitrix24/b24jssdk';
+import { B24AuthOptions } from '../../interfaces/bitrix.interface';
 
 export type B24EventList = 'ONIMCOMMANDADD' | 'ONAPPINSTALL';
 

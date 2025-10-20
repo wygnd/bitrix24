@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import { ImbotRegisterCommandDto } from './dtos/imbot-register-command.dto';
 import { ImbotUnregisterCommandDto } from './dtos/imbot-unregister-command.dto';
+import { B24ImbotSendMessageOptions } from './imbot.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -20,6 +21,13 @@ export class BitrixImBotService {
     return await this.bitrixService.callMethod<
       ImbotUnregisterCommandDto,
       boolean
-    >('imbot.command.unregister', { ...fields });
+    >('imbot.command.unregister', fields);
+  }
+
+  async sendMessage(fields: B24ImbotSendMessageOptions) {
+    return await this.bitrixService.callMethod<
+      B24ImbotSendMessageOptions,
+      number
+    >('imbot.message.add', fields);
   }
 }

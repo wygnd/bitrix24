@@ -11,6 +11,7 @@ import {
   B24SuccessResponse,
 } from '../../modules/bitirx/interfaces/bitrix-api.interface';
 import { catchError, map, Observable, throwError } from 'rxjs';
+import { isObject } from 'class-validator';
 
 @Injectable()
 export class BitrixResponseInterceptor<T>
@@ -24,6 +25,8 @@ export class BitrixResponseInterceptor<T>
       map((data: B24Response<T>) => {
         if (!data)
           throw new HttpException('Response is empty', HttpStatus.BAD_GATEWAY);
+
+        if (!isObject(data)) return data;
 
         if ('error' in data) {
           throw new HttpException(

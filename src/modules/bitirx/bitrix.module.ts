@@ -8,16 +8,27 @@ import { BitrixImBotService } from './modules/imbot/imbot.service';
 import { AppHttpModule } from '../http/http.module';
 import { RedisModule } from '../redis/redis.module';
 import { BitrixAvitoController } from './modules/integration/avito/avito.controller';
+import { BitrixDealController } from './modules/deal/deal.controller';
+import { BitrixDealService } from './modules/deal/deal.service';
+import { BitrixEventsController } from './modules/events/events.controller';
+import { BitrixEventService } from './modules/events/events.service';
 
 @Module({
   imports: [forwardRef(() => AppHttpModule), RedisModule],
-  controllers: [BitrixController, BitrixAvitoController],
+  controllers: [
+    BitrixController,
+    BitrixAvitoController,
+    BitrixDealController,
+    BitrixEventsController,
+  ],
   providers: [
     BitrixService,
     BitrixUserService,
     BitrixLeadService,
     BitrixMessageService,
     BitrixImBotService,
+    BitrixDealService,
+    BitrixEventService,
   ],
   exports: [BitrixService],
 })

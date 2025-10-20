@@ -1,14 +1,14 @@
-import type {
-  B24EventList,
-  B24EventCommand,
-  B24EventData,
-  B24EventParams,
-  B24EventUser,
-} from '../interfaces/bitrix-events.interface';
-import type { B24AuthOptions } from '../interfaces/bitrix.interface';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import type { B24AuthOptions } from '../../interfaces/bitrix.interface';
+import type {
+  B24EventCommand,
+  B24EventData,
+  B24EventList,
+  B24EventParams,
+  B24EventUser,
+} from './events.interface';
 
 class OnImCommandAddEventDataDto implements B24EventData {
   COMMAND: B24EventCommand;

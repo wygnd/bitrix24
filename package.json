@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "",
   "author": "",
+  "type": "commonjs",
+  "main": "dist/main.js",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -89,5 +91,6 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "exports": {}
 }

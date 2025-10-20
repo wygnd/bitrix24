@@ -44,7 +44,7 @@ export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
   })
   @IsNotEmpty()
   @IsString()
-  CLIENT_ID: string;
+  CLIENT_ID?: string;
 
   @ApiProperty({
     type: String,
