@@ -36,7 +36,9 @@ export class BitrixEventService {
   async notifyAboutConvertedDeal(eventData: OnImCommandAddDto) {
     const { MESSAGE, MESSAGE_ID } = eventData.data.PARAMS;
     const [, fields] = MESSAGE.split(' ', 2);
-    const { dealId, isFits } = JSON.parse(fields) as NotifyConvertedDeal;
+    const { dealId, isFits, oldMessage } = JSON.parse(
+      fields,
+    ) as NotifyConvertedDeal;
 
     const commands: B24BatchCommands = {
       update_message: {
@@ -44,7 +46,7 @@ export class BitrixEventService {
         params: {
           BOT_ID: 1264,
           MESSAGE_ID: MESSAGE_ID,
-          MESSAGE: `[b]Обработано[/b][br][br]${MESSAGE}`,
+          MESSAGE: `[b]Обработано[/b][br][br]${oldMessage}`,
         },
       },
     };
