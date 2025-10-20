@@ -18,7 +18,6 @@ export class BitrixEventService {
 
     const [command] = MESSAGE.split(' ', 2);
 
-    console.log('CHECK COMMAND: ', command);
     switch (command) {
       case '/checkSiteForCase':
         return {
@@ -64,9 +63,16 @@ export class BitrixEventService {
       };
     }
 
-    console.log('CHECK BATCH COMMANDS: ', commands);
+    const response = await this.bitrixService.callBatch<
+      B24BatchResponseMap<{
+        update_message: boolean;
+        send_message: number;
+      }>
+    >(commands);
 
-    const response = await this.bitrixService.callBatch(commands);
+    const errors = Object.keys(response.result.result_error);
+    if (errors.length !== 0)
+      throw new Error(`Invalid on batch request: ${errors.join(' | ')}`);
 
     console.log('Batch response: ', response);
     return true;
