@@ -12,6 +12,7 @@ import { BitrixDealController } from './modules/deal/deal.controller';
 import { BitrixDealService } from './modules/deal/deal.service';
 import { BitrixEventsController } from './modules/events/events.controller';
 import { BitrixEventService } from './modules/events/events.service';
+import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 
 @Module({
   imports: [forwardRef(() => AppHttpModule), RedisModule],
@@ -29,6 +30,7 @@ import { BitrixEventService } from './modules/events/events.service';
     BitrixImBotService,
     BitrixDealService,
     BitrixEventService,
+    BitrixIntegrationAvitoService,
   ],
   exports: [BitrixService],
 })
