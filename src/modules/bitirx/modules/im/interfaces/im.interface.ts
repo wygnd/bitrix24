@@ -19,7 +19,7 @@ export interface B24ImKeyboardOptions {
 export interface B24ImSendMessage {
   DIALOG_ID: string;
   MESSAGE: string;
-  SYSTEM?: boolean;
+  SYSTEM?: string;
   URL_PREVIEW?: BoolString;
   KEYBOARD?: B24ImKeyboardOptions[];
 }

@@ -57,6 +57,7 @@ export class BitrixEventsController {
       return await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
         MESSAGE: `Установка приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,
+        SYSTEM: 'Y',
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);

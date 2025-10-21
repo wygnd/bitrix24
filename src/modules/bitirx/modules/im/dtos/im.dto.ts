@@ -6,7 +6,11 @@ import {
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import type { B24ImKeyboardOptions, B24ImSendMessage } from '../interfaces/im.interface';
+import type {
+  B24ImKeyboardOptions,
+  B24ImSendMessage,
+} from '../interfaces/im.interface';
+import { BoolString } from '@bitrix24/b24jssdk';
 
 class B24KeyboardOptions {}
 
@@ -38,8 +42,8 @@ export class SendMessageDto implements B24ImSendMessage {
     required: false,
   })
   @IsOptional()
-  @IsBoolean()
-  SYSTEM: boolean = false;
+  @IsString()
+  SYSTEM: string = 'N';
 
   @ApiProperty({
     type: B24KeyboardOptions,

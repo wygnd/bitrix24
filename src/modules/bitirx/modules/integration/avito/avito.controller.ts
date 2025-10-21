@@ -124,25 +124,32 @@ export class BitrixAvitoController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Create lead from avito chats',
+  })
+  @ApiBody({ type: AvitoCreateLeadDto })
   @Post('/create-lead')
   async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
     try {
-      const { users, phone, avito_number } = fields;
-      const minWorkflowUser =
-        this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
-
-      const duplicateLeads =
-        await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
-
-      if (
-        isArray(duplicateLeads.result) &&
-        duplicateLeads.result.length === 0
-      ) {
-        //   todo: create lead
-      }
-
-      //   todo: update lead
+      // const { users, phone, avito_number } = fields;
+      return fields.users;
+      // const minWorkflowUser =
+      //   await this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
+      // return minWorkflowUser;
+      //
+      // const duplicateLeads =
+      //   await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+      //
+      // if (
+      //   isArray(duplicateLeads.result) &&
+      //   duplicateLeads.result.length === 0
+      // ) {
+      //   //   todo: create lead
+      // }
+      //
+      // //   todo: update lead
     } catch (error) {
+      console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
