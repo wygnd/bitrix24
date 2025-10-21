@@ -34,9 +34,6 @@ export class BitrixIntegrationAvitoService {
       .reduce(
         (acc, [command, totalLeads]) => {
           const [commandName, userId] = command.split('-');
-
-          if (commandName !== 'get_leads') return acc;
-
           acc.push({
             user_id: userId,
             count_leads: totalLeads,

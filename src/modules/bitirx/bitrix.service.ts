@@ -105,6 +105,18 @@ export class BitrixService {
     return response as T;
   }
 
+  public isAvailableToDistributeOnManager() {
+    const now = new Date();
+
+    if (
+      (now.getDay() > 0 && now.getDay() < 6 && now.getHours() < 17) ||
+      (now.getHours() > 17 && now.getMinutes() < 30)
+    )
+      return true;
+
+    return false;
+  }
+
   public async getTokens(): Promise<BitrixTokens> {
     if (
       this.tokens &&

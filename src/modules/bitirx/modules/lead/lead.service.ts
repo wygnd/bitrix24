@@ -29,4 +29,11 @@ export class BitrixLeadService {
       entity_type: 'LEAD',
     });
   }
+
+  async createLead(fields: Partial<B24Lead>) {
+    return this.bitrixService.callMethod<Partial<B24Lead>, number>(
+      'crm.lead.add',
+      fields,
+    );
+  }
 }
