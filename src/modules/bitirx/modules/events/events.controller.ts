@@ -13,6 +13,7 @@ import { REDIS_CLIENT, REDIS_KEYS } from '../../../redis/redis.constants';
 import { RedisService } from '../../../redis/redis.service';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
 import { BitrixEventService } from './events.service';
+import { BitrixService } from '@/modules/bitirx/bitrix.service';
 
 @ApiTags('Events')
 @Controller('events')
@@ -22,6 +23,7 @@ export class BitrixEventsController {
     @Inject(REDIS_CLIENT)
     private readonly redisService: RedisService,
     private readonly bitrixEventService: BitrixEventService,
+    private readonly bitrixService: BitrixService,
   ) {}
 
   @Post('onimcommandadd')
@@ -37,7 +39,6 @@ export class BitrixEventsController {
   @Post('/app/install')
   async installApp(@Body() data: B24EventBodyOnInstallApp) {
     try {
-      console.log('Get data on install event: ', data);
       const { auth } = data;
       await this.redisService.set<string>(
         REDIS_KEYS.BITRIX_ACCESS_TOKEN,
@@ -51,6 +52,7 @@ export class BitrixEventsController {
         REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
         auth.expires_in,
       );
+      await this.bitrixService.updateTokens();
       return await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
         MESSAGE: `Установка приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,

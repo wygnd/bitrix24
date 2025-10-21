@@ -204,4 +204,23 @@ export class BitrixService {
 
     return url;
   }
+
+  public async updateTokens() {
+    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
+      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
+      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
+      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
+    ]);
+
+    if (!accessToken || !expiresAccessToken || !refreshToken)
+      throw new UnauthorizedException('Invalid update tokens');
+
+    this.tokens = {
+      access_token: accessToken,
+      expires: expiresAccessToken,
+      refresh_token: refreshToken,
+    };
+
+    return this.tokens;
+  }
 }

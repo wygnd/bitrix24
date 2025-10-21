@@ -114,7 +114,7 @@ export class BitrixDealController {
     required: true,
   })
   @ApiHeader({
-    name: 'Auth',
+    name: 'authorization',
     description: 'api key',
     example: 'bga token',
     required: true,

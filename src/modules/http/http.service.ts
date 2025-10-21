@@ -13,11 +13,7 @@ export class AppHttpService {
     config?: AxiosRequestConfig<T>,
   ) {
     const response = await firstValueFrom(
-      this.http.post<U, T>(url, body, config).pipe(
-        catchError((error: AxiosError) => {
-          throw error.response?.data;
-        }),
-      ),
+      this.http.post<U, T>(url, body, config),
     );
 
     return response.data;
