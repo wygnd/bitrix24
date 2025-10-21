@@ -1,27 +1,41 @@
-import { Injectable, LoggerService } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 
 @Injectable()
-export class ApplicationLoggerService implements LoggerService {
+export class LoggerService extends Logger {
   private readonly logger: winston.Logger;
 
-  constructor() {
+  constructor(context: string) {
+    super(context);
+
     this.logger = winston.createLogger({
-      level: 'info', // Set desired log level
+      level: 'info',
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json(),
+        winston.format.simple(),
       ),
       transports: [
-        new winston.transports.Console(), // Log to console
         new winston.transports.DailyRotateFile({
-          filename: 'application-%DATE%.log',
-          dirname: 'logs', // Directory for log files
+          dirname: `logs/${context}/info`,
+          filename: '%DATE%.log',
           datePattern: 'YYYY-MM-DD',
+          level: 'info',
           zippedArchive: true,
-          maxSize: '20m', // Max size of each log file
-          maxFiles: '14d', // Keep logs for 14 days
+        }),
+        new winston.transports.DailyRotateFile({
+          dirname: `logs/${context}/debug`,
+          filename: '%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
+          level: 'info',
+          zippedArchive: true,
+        }),
+        new winston.transports.DailyRotateFile({
+          dirname: `logs/${context}/error`,
+          filename: '%DATE%-error.log',
+          datePattern: 'YYYY-MM-DD',
+          level: 'error',
+          zippedArchive: true,
         }),
       ],
     });
@@ -31,19 +45,11 @@ export class ApplicationLoggerService implements LoggerService {
     this.logger.info(message, { context });
   }
 
-  error(message: string, trace?: string, context?: string) {
+  error(message: string, trace: string, context?: string) {
     this.logger.error(message, { trace, context });
-  }
-
-  warn(message: string, context?: string) {
-    this.logger.warn(message, { context });
   }
 
   debug(message: string, context?: string) {
     this.logger.debug(message, { context });
-  }
-
-  verbose(message: string, context?: string) {
-    this.logger.verbose(message, { context });
   }
 }
