@@ -23,7 +23,7 @@ export class BitrixResponseInterceptor<T>
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       catchError((error: AxiosError) => {
-        if (!error.response) return throwError(() => error);
+        if (!error.response) return throwError(() => error.message);
 
         if ('error' in error.response) {
           const { error: errorName } = error as unknown as B24ErrorResponse;
@@ -48,7 +48,7 @@ export class BitrixResponseInterceptor<T>
           }
         }
 
-        return throwError(() => error);
+        return throwError(() => error.message);
       }),
     );
   }

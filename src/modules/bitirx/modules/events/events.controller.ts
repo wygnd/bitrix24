@@ -51,7 +51,7 @@ export class BitrixEventsController {
       );
       await this.redisService.set<number>(
         REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-        auth.expires_in,
+        auth.expires,
       );
       await this.bitrixService.updateTokens();
       return await this.bitrixMessageService.sendPrivateMessage({
