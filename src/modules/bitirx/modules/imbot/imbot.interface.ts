@@ -1,4 +1,9 @@
-import { B24LangList, BoolString } from '@bitrix24/b24jssdk';
+import {
+  B24LangList,
+  BoolString,
+  GenderString,
+  ISODate,
+} from '@bitrix24/b24jssdk';
 import { B24ImKeyboardOptions } from '../im/interfaces/im.interface';
 
 export interface B24ImbotRegisterCommand {
@@ -24,4 +29,30 @@ export interface B24ImbotSendMessageOptions {
   KEYBOARD?: B24ImKeyboardOptions[];
   SYSTEM?: BoolString;
   URL_PREVIEW?: BoolString;
+}
+
+export interface B24ImbotRegisterOptions {
+  CODE: string;
+  TYPE: 'B' | 'O' | 'S';
+  EVENT: string;
+  OPENLINE?: BoolString;
+  CLIENT_ID?: string;
+  PROPERTIES: B24BotProperties;
+}
+
+interface B24BotProperties {
+  NAME: string;
+  LAST_NAME: string;
+  COLOR: string;
+  EMAIL: string;
+  PERSONAL_BIRTHDAY: ISODate;
+  WORK_POSITION: string;
+  PERSONAL_WWW: string;
+  PERSONAL_GENDER: GenderString;
+  PERSONAL_PHOTO: string;
+}
+
+export interface B24ImbotUnRegisterOptions {
+  BOT_ID: number;
+  CLIENT_ID?: string;
 }

@@ -13,6 +13,7 @@ import { BitrixUserService } from './modules/user/user.service';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
@@ -21,6 +22,7 @@ export class BitrixController {
   constructor(
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixImbotService: BitrixImBotService,
   ) {}
 
   /**

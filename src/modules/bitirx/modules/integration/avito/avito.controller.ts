@@ -107,7 +107,7 @@ export class BitrixAvitoController {
 
       const sendMessageResult =
         await this.bitrixMessageService.sendPrivateMessage({
-          DIALOG_ID: 'chat77152',
+          DIALOG_ID: 'chat17030', // Авито
           MESSAGE: notifyMessage,
         });
 
