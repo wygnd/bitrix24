@@ -8,14 +8,16 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
 import { BitrixService } from '../../bitrix.service';
 import { BitrixDealService } from './deal.service';
 import { NotifyAboutConvertedDealDto } from './dtos/notify-about-converted-deal.dto';
 import { BitrixMessageService } from '../im/im.service';
+import { AuthGuard } from '@/common/guards/auth.guard';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -104,8 +106,22 @@ export class BitrixDealController {
     }
   }
 
-  @Get(':dealId')
-  async getDealById(@Param('dealId', ParseIntPipe) dealId: number) {
+  @ApiQuery({
+    type: Number,
+    name: 'deal_id',
+    description: 'deal id',
+    example: 49146,
+    required: true,
+  })
+  @ApiHeader({
+    name: 'Auth',
+    description: 'api key',
+    example: 'bga token',
+    required: true,
+  })
+  @UseGuards(AuthGuard)
+  @Get(':deal_id')
+  async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
     try {
       return this.bitrixDealService.getDealById(dealId);
     } catch (error) {

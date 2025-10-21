@@ -37,6 +37,7 @@ export class BitrixEventsController {
   @Post('/app/install')
   async installApp(@Body() data: B24EventBodyOnInstallApp) {
     try {
+      console.log('Get data on install event: ', data);
       const { auth } = data;
       await this.redisService.set<string>(
         REDIS_KEYS.BITRIX_ACCESS_TOKEN,

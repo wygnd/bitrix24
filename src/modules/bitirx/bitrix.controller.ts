@@ -12,7 +12,7 @@ import {
 import { BitrixUserService } from './modules/user/user.service';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
-import { AuthGuard } from '../../common/guards/auth.guard';
+import { AuthGuard } from '@/common/guards/auth.guard';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
