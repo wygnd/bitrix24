@@ -14,6 +14,8 @@ import { BitrixImBotService } from '../imbot/imbot.service';
 import { BitrixOutcomingWebhookDto } from '../../dtos/bitrix-outcoming-webhook.dto';
 import { BitrixService } from '../../bitrix.service';
 import { BitrixDealService } from './deal.service';
+import { NotifyAboutConvertedDealDto } from './dtos/notify-about-converted-deal.dto';
+import { BitrixMessageService } from '../im/im.service';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -22,6 +24,7 @@ export class BitrixDealController {
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
     private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixMessageService: BitrixMessageService,
   ) {}
 
   // todo: Notice project manage about ignore message
@@ -37,11 +40,21 @@ export class BitrixDealController {
   @Post('notify-about-converted-deal')
   async notifyAboutConvertedSiteDeal(
     @Body() body: BitrixOutcomingWebhookDto,
-    @Query('assigned_id') assigned_id: string,
+    @Query() query: NotifyAboutConvertedDealDto,
   ) {
     try {
       const [, dealId] = body.document_id[2].split('_');
+      const { assigned_id, ignored } = query;
       const [, userId] = assigned_id.split('_');
+
+      if (ignored)
+        return this.bitrixMessageService.sendPrivateMessage({
+          DIALOG_ID: '220',
+          MESSAGE:
+            'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
+            this.bitrixService.generateDealUrl(dealId),
+        });
+
       const message =
         '[b]Сайты для кейсов[/b][br][br]' +
         'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br][br]' +

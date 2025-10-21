@@ -7,10 +7,12 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { BitrixUserService } from './modules/user/user.service';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
+import { AuthGuard } from '../../common/guards/auth.guard';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
@@ -24,6 +26,7 @@ export class BitrixController {
   /**
    * USERS
    */
+  @UseGuards(AuthGuard)
   @Get('/users/:userId')
   async getUserById(@Param('userId', ParseIntPipe) userId: number) {
     try {

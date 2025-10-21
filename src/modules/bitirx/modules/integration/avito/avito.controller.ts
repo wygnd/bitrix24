@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   B24ApiTags,
@@ -18,9 +19,11 @@ import { B24DuplicateFindByComm } from '../../lead/lead.interface';
 import { AvitoChatInfo } from './avito.interface';
 import { isArray } from 'class-validator';
 import { BitrixMessageService } from '../../im/im.service';
-import { ApiExceptions } from '../../../../../common/decorators/api-exceptions.decorator';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { AuthGuard } from '@/common/guards/auth.guard';
 
 @ApiTags(B24ApiTags.AVITO)
+@UseGuards(AuthGuard)
 @Controller('integration/avito')
 export class BitrixAvitoController {
   constructor(

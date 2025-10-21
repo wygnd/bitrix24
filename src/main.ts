@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 
+// todo: Update refresh and access token from bitrix24.grampus-server.ru
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {});
 
