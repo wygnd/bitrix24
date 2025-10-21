@@ -3,7 +3,7 @@ import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 
 @Injectable()
-export class LoggerService extends Logger {
+export class ApplicationLoggerService extends Logger {
   private readonly logger: winston.Logger;
 
   constructor(context: string) {
