@@ -130,7 +130,6 @@ export class BitrixAvitoController {
     }
   }
 
-  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: 'Create lead from avito chats',
   })
@@ -159,9 +158,8 @@ export class BitrixAvitoController {
 
       if (isArray(result) && result.length === 0) {
         //   todo: create lead
-
         const batchCommands: B24BatchCommands = {
-          crate_lead: {
+          create_lead: {
             method: 'crm.lead.add',
             params: {
               fields: {
@@ -194,6 +192,8 @@ export class BitrixAvitoController {
             },
           },
         };
+
+        return;
       }
       //   todo: update lead
 

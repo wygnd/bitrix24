@@ -85,10 +85,10 @@ export class AvitoCreateLeadDto {
   city: string = '';
 
   @ApiProperty({
-    type: Number,
+    type: String,
     description: 'Is ai get answer',
     required: false,
-    default: 0,
+    default: '0',
     example: '1',
   })
   @IsOptional()

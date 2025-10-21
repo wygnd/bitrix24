@@ -58,7 +58,6 @@ export class BitrixIntegrationAvitoService {
         },
       );
 
-    console.log(usersLeadsCount);
     return usersLeadsCount[0].user_id;
   }
 }
