@@ -17,12 +17,13 @@ import { BitrixService } from '../../../bitrix.service';
 import { B24BatchCommands } from '../../../interfaces/bitrix.interface';
 import { B24DuplicateFindByComm } from '../../lead/lead.interface';
 import { AvitoChatInfo } from './interfaces/avito.interface';
-import { isArray } from 'class-validator';
+import { isArray, isObject } from 'class-validator';
 import { BitrixMessageService } from '../../im/im.service';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
+import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
 
 @ApiTags(B24ApiTags.AVITO)
 @UseGuards(AuthGuard)
@@ -49,7 +50,6 @@ export class BitrixAvitoController {
   @HttpCode(HttpStatus.OK)
   async findDuplicateLeadsByPhone(@Body() body: AvitoFindDuplicateLeadsDto[]) {
     try {
-      console.log('AVITO: DUPLICATE LEADS REQUEST: ', JSON.stringify(body));
       const batchCommands = body.reduce((acc, { phone, chat_id }) => {
         acc[`getDuplicateLeads_${phone}_${chat_id}`] = {
           method: 'crm.duplicate.findbycomm',
@@ -72,21 +72,18 @@ export class BitrixAvitoController {
 
       const { result } = batchResponseFindDuplicates.result;
 
-      console.log('AVITO: DUPLICATE LEADS RESPONSE: ', JSON.stringify(result));
-      return Object.entries(result)
-        .map(([key, response]) => {
-          const [, phone, chatId] = key.split('_');
+      return Object.entries(result).reduce((acc, [command, response]) => {
+        if (isArray(response)) return acc;
 
-          console.log('Check', response, phone, chatId);
+        const [, phone, chatId] = command.split('_');
 
-          if (!isArray(response)) return null;
+        acc.push({
+          phone: phone,
+          chat_id: chatId,
+        });
 
-          return {
-            phone: phone,
-            chat_id: chatId,
-          };
-        })
-        .filter((item) => item) as AvitoChatInfo[];
+        return acc;
+      }, [] as AvitoChatInfo[]);
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
@@ -103,7 +100,7 @@ export class BitrixAvitoController {
   @ApiExceptions()
   @ApiBody({ type: String, isArray: true })
   @Post('/notify-about-unread-chats')
-  async sendMessage(@Body() accountNames: string[]) {
+  async notifyAboutUnreadChats(@Body() accountNames: string[]) {
     try {
       console.log('AVITO: NOTIFY UNREAD CHAT REQUEST: ', accountNames);
       const notifyMessage = accountNames.reduce((acc, accountName) => {
@@ -127,14 +124,26 @@ export class BitrixAvitoController {
     }
   }
 
-  // @Post('/create-lead')
-  // async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
-  //   try {
-  //     const { users } = fields;
-  //     const minWorkflowUser =
-  //       this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
-  //   } catch (error) {
-  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
+  @Post('/create-lead')
+  async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
+    try {
+      const { users, phone, avito_number } = fields;
+      const minWorkflowUser =
+        this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
+
+      const duplicateLeads =
+        await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+
+      if (
+        isArray(duplicateLeads.result) &&
+        duplicateLeads.result.length === 0
+      ) {
+        //   todo: create lead
+      }
+
+      //   todo: update lead
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

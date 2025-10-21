@@ -16,6 +16,7 @@ import {
 } from './interfaces/bitrix-auth.interface';
 import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
 import {
+  B24BatchResponseMap,
   B24Response,
   B24SuccessResponse,
 } from './interfaces/bitrix-api.interface';
@@ -85,11 +86,23 @@ export class BitrixService {
       {} as Record<string, string>,
     );
 
-    return (await this.http.post('/rest/batch.json', {
+    const response = (await this.http.post('/rest/batch.json', {
       cmd: cmd,
       halt: halt,
       auth: access_token,
-    })) as T;
+    })) as B24BatchResponseMap;
+
+    const errors = Object.entries(response.result.result_error).reduce(
+      (acc, [command, errorData]) => {
+        acc += `${command}: ${errorData.error} | `;
+        return acc;
+      },
+      '' as string,
+    );
+
+    if (errors.length !== 0 && halt) throw new Error(errors);
+
+    return response as T;
   }
 
   public async getTokens(): Promise<BitrixTokens> {
@@ -110,7 +123,7 @@ export class BitrixService {
 
     if (!accessToken) return this.updateAccessToken(refreshToken);
 
-    if (Date.now() < (expiresAccessToken ?? 0) * 1000) {
+    if (expiresAccessToken && Date.now() < expiresAccessToken * 1000) {
       this.tokens = {
         access_token: accessToken,
         refresh_token: refreshToken,

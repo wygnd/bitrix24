@@ -43,7 +43,9 @@ export interface B24ErrorResponse {
 
 export type B24Response<T> = B24SuccessResponse<T> | B24ErrorResponse;
 
-export interface B24BatchResponseMap<T extends Record<string, any>> {
+export interface B24BatchResponseMap<
+  T extends Record<string, any> = Record<string, any>,
+> {
   result: {
     result: {
       [K in keyof T]: T[K];
