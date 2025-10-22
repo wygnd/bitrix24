@@ -154,7 +154,6 @@ export class BitrixService {
    * @private
    */
   private async updateAccessToken(refreshToken: string): Promise<BitrixTokens> {
-    console.log("Bro, i' trying update access token");
     const { access_token, refresh_token, expires } = await this.http.post<
       object,
       BitrixOauthResponse
