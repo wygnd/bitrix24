@@ -130,80 +130,80 @@ export class BitrixAvitoController {
     }
   }
 
-  @ApiOperation({
-    summary: 'Create lead from avito chats',
-  })
-  @ApiBody({ type: AvitoCreateLeadDto })
-  @Post('/create-lead')
-  async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
-    try {
-      const {
-        users,
-        phone,
-        avito_number,
-        avito,
-        messages,
-        client_name,
-        region,
-        city,
-        service_text,
-        date,
-        time,
-      } = fields;
-      const minWorkflowUser =
-        await this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
-
-      const { result } =
-        await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
-
-      if (isArray(result) && result.length === 0) {
-        //   todo: create lead
-        const batchCommands: B24BatchCommands = {
-          create_lead: {
-            method: 'crm.lead.add',
-            params: {
-              fields: {
-                ASSIGNED_BY_ID:
-                  this.bitrixService.isAvailableToDistributeOnManager()
-                    ? minWorkflowUser
-                    : '344',
-                UF_CRM_1669804346: avito,
-                UF_CRM_1653291114976: messages.join('[br][br]'),
-                PHONE: [
-                  {
-                    VALUE: phone,
-                  },
-                ],
-                UF_CRM_1651577716: 6856,
-                // Файлы
-                UF_CRM_1692711658572: '',
-                // Новый в работе
-                STATUS_ID: 'UC_GEWKFD',
-                // fixme: ?? idk what is that field
-                UF_CRM_1573459036: '',
-                // С какого авито обращение
-                UF_CRM_1712667568: avito,
-                UF_CRM_1713765220416: avito_number,
-                UF_CRM_1580204442317: city,
-                UF_CRM_1760173920: region,
-                NAME: client_name,
-                UF_CRM_1598441630: '',
-              },
-            },
-          },
-        };
-
-        return;
-      }
-      //   todo: update lead
-
-      return {
-        message: 'need update lead',
-        result: result,
-      };
-    } catch (error) {
-      console.log(error);
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
-    }
-  }
+  // @ApiOperation({
+  //   summary: 'Create lead from avito chats',
+  // })
+  // @ApiBody({ type: AvitoCreateLeadDto })
+  // @Post('/create-lead')
+  // async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
+  //   try {
+  //     const {
+  //       users,
+  //       phone,
+  //       avito_number,
+  //       avito,
+  //       messages,
+  //       client_name,
+  //       region,
+  //       city,
+  //       service_text,
+  //       date,
+  //       time,
+  //     } = fields;
+  //     const minWorkflowUser =
+  //       await this.bitrixIntegrationAvitoService.getMinWorkflowUser(users);
+  //
+  //     const { result } =
+  //       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+  //
+  //     if (isArray(result) && result.length === 0) {
+  //       //   todo: create lead
+  //       const batchCommands: B24BatchCommands = {
+  //         create_lead: {
+  //           method: 'crm.lead.add',
+  //           params: {
+  //             fields: {
+  //               ASSIGNED_BY_ID:
+  //                 this.bitrixService.isAvailableToDistributeOnManager()
+  //                   ? minWorkflowUser
+  //                   : '344',
+  //               UF_CRM_1669804346: avito,
+  //               UF_CRM_1653291114976: messages.join('[br][br]'),
+  //               PHONE: [
+  //                 {
+  //                   VALUE: phone,
+  //                 },
+  //               ],
+  //               UF_CRM_1651577716: 6856,
+  //               // Файлы
+  //               UF_CRM_1692711658572: '',
+  //               // Новый в работе
+  //               STATUS_ID: 'UC_GEWKFD',
+  //               // fixme: ?? idk what is that field
+  //               UF_CRM_1573459036: '',
+  //               // С какого авито обращение
+  //               UF_CRM_1712667568: avito,
+  //               UF_CRM_1713765220416: avito_number,
+  //               UF_CRM_1580204442317: city,
+  //               UF_CRM_1760173920: region,
+  //               NAME: client_name,
+  //               UF_CRM_1598441630: '',
+  //             },
+  //           },
+  //         },
+  //       };
+  //
+  //       return;
+  //     }
+  //     //   todo: update lead
+  //
+  //     return {
+  //       message: 'need update lead',
+  //       result: result,
+  //     };
+  //   } catch (error) {
+  //     console.log(error);
+  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 }
