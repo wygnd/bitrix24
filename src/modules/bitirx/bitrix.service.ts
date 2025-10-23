@@ -1,5 +1,4 @@
 import {
-  forwardRef,
   HttpException,
   HttpStatus,
   Inject,
@@ -9,15 +8,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import { REDIS_CLIENT, REDIS_KEYS } from '../redis/redis.constants';
-import { AppHttpService } from '../http/http.service';
 import {
   BitrixOauthResponse,
   BitrixTokens,
 } from './interfaces/bitrix-auth.interface';
-import { BitrixConfig } from '../../common/interfaces/bitrix-config.interface';
+import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 import {
   B24BatchResponseMap,
-  B24Response,
   B24SuccessResponse,
 } from './interfaces/bitrix-api.interface';
 import {
@@ -25,6 +22,7 @@ import {
   B24BatchCommands,
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 @Injectable()
 export class BitrixService {
@@ -39,8 +37,8 @@ export class BitrixService {
     private readonly configService: ConfigService,
     @Inject(REDIS_CLIENT)
     private readonly redisService: RedisService,
-    @Inject(forwardRef(() => AppHttpService))
-    private readonly http: AppHttpService,
+    @Inject('BitrixApiService')
+    private readonly http: AxiosInstance,
   ) {
     const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
 
@@ -59,20 +57,19 @@ export class BitrixService {
       refresh_token: '',
       expires: 0,
     };
+
+    this.http.defaults.baseURL = bitrixConfig.bitrixDomain;
+    this.http.defaults.headers['Content-Type'] = 'application/json';
   }
 
   async callMethod<
     T extends Record<string, any> = Record<string, any>,
     U = any,
   >(method: B24AvailableMethods, params: Partial<T> = {}) {
-    const { access_token } = await this.getTokens();
-    return await this.http.post<
-      Partial<T> & { auth?: string },
-      B24SuccessResponse<U>
-    >(`/rest/${method}`, {
-      ...params,
-      auth: access_token,
-    });
+    return this.post<Partial<T>, B24SuccessResponse<U>>(
+      `/rest/${method}`,
+      params,
+    );
   }
 
   async callBatch<T>(commands: B24BatchCommands, halt = false) {
@@ -86,7 +83,7 @@ export class BitrixService {
       {} as Record<string, string>,
     );
 
-    const response = (await this.http.post('/rest/batch.json', {
+    const response = (await this.post('/rest/batch.json', {
       cmd: cmd,
       halt: halt,
       auth: access_token,
@@ -154,7 +151,13 @@ export class BitrixService {
    * @private
    */
   private async updateAccessToken(refreshToken: string): Promise<BitrixTokens> {
-    const { access_token, refresh_token, expires } = await this.http.post<
+    console.log(
+      'Trying get new access token: ',
+      this.bitrixClientId,
+      this.bitrixClientSecret,
+      refreshToken,
+    );
+    const { access_token, refresh_token, expires } = await this.post<
       object,
       BitrixOauthResponse
     >(
@@ -247,5 +250,20 @@ export class BitrixService {
     };
 
     return this.tokens;
+  }
+
+  private async post<T, U = any>(
+    url: string,
+    body: T,
+    config?: AxiosRequestConfig<T>,
+  ) {
+    const { access_token } = await this.getTokens();
+    const { data } = await this.http.post<T, AxiosResponse<U>>(
+      url,
+      { ...body, auth: access_token },
+      config,
+    );
+
+    return data;
   }
 }
