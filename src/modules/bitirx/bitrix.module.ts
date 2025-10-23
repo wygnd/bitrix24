@@ -13,6 +13,7 @@ import { BitrixDealService } from './modules/deal/deal.service';
 import { BitrixEventsController } from './modules/events/events.controller';
 import { BitrixEventService } from './modules/events/events.service';
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
+import { BitrixHeadHunterController } from '@/modules/bitirx/modules/integration/headhunter/headhunter.controller';
 
 @Module({
   imports: [forwardRef(() => AppHttpModule), RedisModule],
@@ -21,6 +22,7 @@ import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integrat
     BitrixAvitoController,
     BitrixDealController,
     BitrixEventsController,
+    BitrixHeadHunterController
   ],
   providers: [
     BitrixService,

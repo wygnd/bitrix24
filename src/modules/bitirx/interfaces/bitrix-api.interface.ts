@@ -10,6 +10,7 @@ export enum B24ApiTags {
   TEST = 'Test',
   EVENTS = 'Events',
   AVITO = 'Avito',
+  HEAD_HUNTER = 'Head Hunter'
 }
 
 interface B24Timestamp {

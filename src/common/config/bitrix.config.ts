@@ -7,6 +7,7 @@ export default (): Record<string, any> & { bitrixConfig: BitrixConfig } => ({
     bitrixClientSecret: process.env.BITRIX_CLIENT_SECRET ?? '',
   },
   bitrixConstants: {
-    BOT_ID: process.env.BOT_ID,
+    BOT_ID: process.env.BOT_ID ?? '',
+    TEST_CHAT_ID: process.env.BITRIX_TEST_CHAT_ID ?? '',
   },
 });
