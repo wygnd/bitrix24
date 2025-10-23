@@ -19,7 +19,7 @@ export class BitrixHeadHunterController {
   constructor(
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly configService: ConfigService,
-    // private readonly headHunterApi: HeadHunterService,
+    private readonly headHunterApi: HeadHunterService,
   ) {}
 
   @ApiOperation({ summary: 'Handle hh.ru application' })
@@ -47,10 +47,28 @@ export class BitrixHeadHunterController {
         BOT_ID: 1264,
         DIALOG_ID: 'chat77152',
         MESSAGE:
-          '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' + JSON.stringify(body),
+          '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
+          JSON.stringify(body),
       });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
+
+  // @Post('/create-webhook')
+  // async submitWebhook() {
+  //   try {
+  //     return this.headHunterApi.post('/', {
+  //       actions: [
+  //         {
+  //           settings: {},
+  //           type: 'NEW_RESPONSE_OR_INVITATION_VACANCY',
+  //         },
+  //       ],
+  //       url: 'https://bitrix24-production.up.railway.app/integration/headhunter/webhook',
+  //     });
+  //   } catch (error) {
+  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
+  //   }
+  // }
 }

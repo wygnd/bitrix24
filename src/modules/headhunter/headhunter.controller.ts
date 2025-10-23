@@ -1,4 +1,10 @@
-import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -15,6 +21,4 @@ export class HeadHunterController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
-
-
 }
