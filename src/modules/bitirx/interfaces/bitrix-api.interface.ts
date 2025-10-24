@@ -10,7 +10,7 @@ export enum B24ApiTags {
   TEST = 'Test',
   EVENTS = 'Events',
   AVITO = 'Avito',
-  HEAD_HUNTER = 'Head Hunter'
+  HEAD_HUNTER = 'Head Hunter',
 }
 
 interface B24Timestamp {
@@ -35,7 +35,20 @@ export type B24ErrorType =
   | 'invalid_request'
   | 'insufficient_scope'
   | 'invalid_grant'
-  | 'invalid_scope';
+  | 'invalid_scope'
+  | 'INTERNAL_SERVER_ERROR'
+  | 'ERROR_UNEXPECTED_ANSWER'
+  | 'QUERY_LIMIT_EXCEEDED'
+  | 'ERROR_BATCH_METHOD_NOT_ALLOWED'
+  | 'ERROR_BATCH_LENGTH_EXCEEDED'
+  | 'NO_AUTH_FOUND'
+  | 'INVALID_REQUEST'
+  | 'OVERLOAD_LIMIT'
+  | 'ACCESS_DENIED'
+  | 'INVALID_CREDENTIALS'
+  | 'ERROR_MANIFEST_IS_NOT_AVAILABLE'
+  | 'expired_token'
+  | 'user_access_error';
 
 export interface B24ErrorResponse {
   error: B24ErrorType;

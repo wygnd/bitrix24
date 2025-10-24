@@ -4,5 +4,5 @@ export const headHunterProviders = [
   {
     provide: 'HeadHunterApiService',
     useValue: axios.create({}),
-  },
+  }
 ];

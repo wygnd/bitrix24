@@ -66,10 +66,11 @@ export class BitrixService {
     T extends Record<string, any> = Record<string, any>,
     U = any,
   >(method: B24AvailableMethods, params: Partial<T> = {}) {
-    return this.post<Partial<T>, B24SuccessResponse<U>>(
-      `/rest/${method}`,
-      params,
-    );
+    const { access_token } = await this.getTokens();
+    return this.post<Partial<T>, B24SuccessResponse<U>>(`/rest/${method}`, {
+      ...params,
+      auth: access_token,
+    });
   }
 
   async callBatch<T>(commands: B24BatchCommands, halt = false) {
@@ -257,10 +258,9 @@ export class BitrixService {
     body: T,
     config?: AxiosRequestConfig<T>,
   ) {
-    const { access_token } = await this.getTokens();
     const { data } = await this.http.post<T, AxiosResponse<U>>(
       url,
-      { ...body, auth: access_token },
+      body,
       config,
     );
 
