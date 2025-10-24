@@ -95,6 +95,8 @@ export class BitrixService {
       {} as Record<string, string>,
     );
 
+    console.log(cmd);
+
     const response = (await this.post('/rest/batch.json', {
       cmd: cmd,
       halt: halt,
