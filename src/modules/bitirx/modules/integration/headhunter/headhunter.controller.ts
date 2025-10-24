@@ -6,12 +6,14 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
+import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -23,10 +25,17 @@ export class BitrixHeadHunterController {
   ) {}
 
   @ApiOperation({ summary: 'Handle hh.ru application' })
-  @Post('/redirect_uri')
+  @Get('/redirect_uri')
   @HttpCode(HttpStatus.OK)
-  async handleApp(@Body() fields: any) {
-    console.log('Bro, getting fields from hh.ru: ', fields);
+  async handleApp(@Body() fields: any, @Query() query: HeadhunterRedirectDto) {
+    const params = new URLSearchParams();
+    params.append('authorization_code', query.code);
+    const res = await this.headHunterApi.post('/token', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+
     await this.bitrixImBotService.sendMessage({
       BOT_ID: 1264,
       DIALOG_ID:
@@ -34,7 +43,11 @@ export class BitrixHeadHunterController {
       MESSAGE:
         '[user=376]Денис Некрасов[/user][br]' +
         'HH ru отправил заапрос на /redirect_uri[br]' +
-        JSON.stringify(fields),
+        JSON.stringify(fields) +
+        '[br]' +
+        JSON.stringify(query) +
+        '[br]Ответ авторизации: ' +
+        JSON.stringify(res),
     });
     return true;
   }
