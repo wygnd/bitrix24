@@ -201,17 +201,9 @@ export class BitrixHeadHunterController {
           },
         };
       }
-
       return this.bitrixService.callBatch(batchCommands);
-
-      // return this.bitrixImBotService.sendMessage({
-      //   BOT_ID: this.bitrixService.BOT_ID,
-      //   DIALOG_ID: 'chat77152',
-      //   MESSAGE:
-      //     '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
-      //     JSON.stringify(body),
-      // });
     } catch (error) {
+      console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
