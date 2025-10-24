@@ -7,6 +7,9 @@ import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interfac
 
 @Injectable()
 export class HeadHunterService {
+  private readonly client_id: string;
+  private readonly client_secret: string;
+
   constructor(
     @Inject(REDIS_CLIENT)
     private readonly redisService: Redis,
@@ -27,6 +30,9 @@ export class HeadHunterService {
 
     this.http.defaults.baseURL = baseUrl;
     this.http.defaults.headers['Authorization'] = `Bearer ${applicationToken}`;
+
+    this.client_id = clientId;
+    this.client_secret = clientSecret;
   }
 
   async get<T, U = any>(url: string, config?: AxiosRequestConfig<T>) {
@@ -42,5 +48,13 @@ export class HeadHunterService {
     );
 
     return data;
+  }
+
+  get HH_CLIENT_ID() {
+    return this.client_id;
+  }
+
+  get HH_CLIENT_SECRET() {
+    return this.client_secret;
   }
 }

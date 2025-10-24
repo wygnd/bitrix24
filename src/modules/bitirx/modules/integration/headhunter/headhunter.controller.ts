@@ -29,7 +29,10 @@ export class BitrixHeadHunterController {
   @HttpCode(HttpStatus.OK)
   async handleApp(@Body() fields: any, @Query() query: HeadhunterRedirectDto) {
     const params = new URLSearchParams();
-    params.append('authorization_code', query.code);
+    params.append('grant_type', 'authorization_code');
+    params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
+    params.append('client_secret', this.headHunterApi.HH_CLIENT_SECRET);
+    params.append('code', query.code);
     const res = await this.headHunterApi.post('/token', params, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
