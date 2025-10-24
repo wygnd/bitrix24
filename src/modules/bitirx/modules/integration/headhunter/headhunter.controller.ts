@@ -72,6 +72,14 @@ export class BitrixHeadHunterController {
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     try {
+      await this.bitrixImBotService.sendMessage({
+        BOT_ID: this.bitrixService.BOT_ID,
+        DIALOG_ID: 'chat77152',
+        MESSAGE:
+          '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
+          JSON.stringify(body),
+      });
+
       const { resume_id, vacancy_id } = body.payload;
 
       const [vacancy, resume] = await Promise.all<
@@ -81,7 +89,7 @@ export class BitrixHeadHunterController {
         this.headHunterApi.getResumeById(resume_id),
       ]);
 
-      const candidateName = `${resume.last_name} ${resume.first_name} ${resume.middle_name}`;
+      const candidateName = `${resume.last_name ?? ''} ${resume.first_name ?? ''} ${resume.middle_name ?? ''}`;
       const candidateContacts = resume.contact.reduce(
         (acc, { kind, contact_value }) => {
           switch (kind) {
@@ -95,6 +103,26 @@ export class BitrixHeadHunterController {
         },
         {} as CandidateContactInterface,
       );
+
+      const { phone, email } = candidateContacts;
+
+      const filterPhones = [
+        phone,
+        phone.replace(/[()]/gim, ''),
+        phone.replace(/-/gim, ' '),
+        phone.replace(/[ \-()]/gim, ''),
+      ];
+
+      if (phone[0] == '8') {
+        filterPhones.push(
+          candidateContacts.phone.replace('8 ', '+7 '),
+          candidateContacts.phone.replace('8 ', '+7 ').replace(/[()]/gim, ''),
+          candidateContacts.phone.replace('8 ', '+7 ').replace(/-/gim, ' '),
+          candidateContacts.phone
+            .replace('8 ', '+7 ')
+            .replace(/[ \-()]/gim, ''),
+        );
+      }
 
       const { result: batchResponse } = await this.bitrixService.callBatch<
         B24BatchResponseMap<{
@@ -117,22 +145,7 @@ export class BitrixHeadHunterController {
             params: {
               filter: {
                 CATEGORY_ID: '14',
-                '@UF_CRM_1638524259': [
-                  candidateContacts.phone,
-                  candidateContacts.phone.replace(/[()]/gim, ''),
-                  candidateContacts.phone.replace(/-/gim, ' '),
-                  candidateContacts.phone.replace(/[ \-()]/gim, ''),
-                  candidateContacts.phone.replace('8 ', '+7 '),
-                  candidateContacts.phone
-                    .replace('8 ', '+7 ')
-                    .replace(/[()]/gim, ''),
-                  candidateContacts.phone
-                    .replace('8 ', '+7 ')
-                    .replace(/-/gim, ' '),
-                  candidateContacts.phone
-                    .replace('8 ', '+7 ')
-                    .replace(/[ \-()]/gim, ''),
-                ],
+                '@UF_CRM_1638524259': filterPhones,
               },
             },
           },
@@ -163,14 +176,15 @@ export class BitrixHeadHunterController {
               // Тип поиска: приведи друга
               UF_CRM_1644922120: '6600',
               // Номер телефона
-              UF_CRM_1638524259: candidateContacts.phone ?? '',
+              UF_CRM_1638524259: phone ?? '',
               // Телеграмм
               UF_CRM_1760598515308: candidateContacts.telegram ?? '',
               //  E-mail
-              UF_CRM_1638524275: candidateContacts.email ?? '',
+              UF_CRM_1638524275: email ?? '',
               //  Ссылка на резюме
               UF_CRM_1638524306: vacancy.alternate_url,
               ASSIGNED_BY_ID: '$result[get_user][0][ID]',
+              STATUS_ID: "C14:NEW"
             },
           },
         };
@@ -182,7 +196,7 @@ export class BitrixHeadHunterController {
             DIALOG_ID: 'chat68032',
             MESSAGE:
               `Отклик на вакансию ${vacancy.name}[br]` +
-              `Новая сделка: ${this.bitrixService.BITRIX_DOMAIN}/crm/deal/details/$result[create_deal]/`,
+              `Новая сделка: ${this.bitrixService.BITRIX_DOMAIN}/crm/deal/details/$result[create_deal]\/`,
           },
         };
       } else {
