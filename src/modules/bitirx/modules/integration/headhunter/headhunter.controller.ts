@@ -9,11 +9,23 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import {
+  B24ApiTags,
+  B24BatchResponseMap,
+} from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
+import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
+import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+import { CandidateContactInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
+import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
+import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
+import { B24User } from '@/modules/bitirx/modules/user/user.interface';
+import { B24ImSendMessage } from '@/modules/bitirx/modules/im/interfaces/im.interface';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -22,6 +34,7 @@ export class BitrixHeadHunterController {
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly configService: ConfigService,
     private readonly headHunterApi: HeadHunterService,
+    private readonly bitrixService: BitrixService,
   ) {}
 
   @ApiOperation({ summary: 'Handle hh.ru application' })
@@ -40,7 +53,7 @@ export class BitrixHeadHunterController {
     });
 
     await this.bitrixImBotService.sendMessage({
-      BOT_ID: 1264,
+      BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID:
         this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ?? '376',
       MESSAGE:
@@ -57,34 +70,149 @@ export class BitrixHeadHunterController {
 
   @HttpCode(HttpStatus.OK)
   @Post('/webhook')
-  async receiveWebhook(@Body() body: any) {
+  async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     try {
-      return this.bitrixImBotService.sendMessage({
-        BOT_ID: 1264,
-        DIALOG_ID: 'chat77152',
-        MESSAGE:
-          '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
-          JSON.stringify(body),
-      });
+      const { resume_id, vacancy_id } = body.payload;
+
+      const [vacancy, resume] = await Promise.all<
+        [Promise<HHVacancyInterface>, Promise<HHResumeInterface>]
+      >([
+        this.headHunterApi.getVacancyById(vacancy_id),
+        this.headHunterApi.getResumeById(resume_id),
+      ]);
+
+      const candidateName = `${resume.last_name} ${resume.first_name} ${resume.middle_name}`;
+      const candidateContacts = resume.contact.reduce(
+        (acc, { kind, contact_value }) => {
+          switch (kind) {
+            case 'phone':
+            case 'email':
+              acc[kind] = contact_value;
+              break;
+          }
+
+          return acc;
+        },
+        {} as CandidateContactInterface,
+      );
+
+      const { result: batchResponse } = await this.bitrixService.callBatch<
+        B24BatchResponseMap<{
+          get_deal_by_name: B24Deal[];
+          get_deal_by_phone: B24Deal[];
+        }>
+      >(
+        {
+          get_deal_by_name: {
+            method: 'crm.deal.list',
+            params: {
+              filter: {
+                CATEGORY_ID: '14',
+                TITLE: candidateName,
+              },
+            },
+          },
+          get_deal_by_phone: {
+            method: 'crm.deal.list',
+            params: {
+              filter: {
+                CATEGORY_ID: '14',
+                '@UF_CRM_1638524259': [
+                  candidateContacts.phone,
+                  candidateContacts.phone.replace(/[()]/gim, ''),
+                  candidateContacts.phone.replace(/-/gim, ' '),
+                  candidateContacts.phone.replace(/[ \-()]/gim, ''),
+                  candidateContacts.phone.replace('8 ', '+7 '),
+                  candidateContacts.phone
+                    .replace('8 ', '+7 ')
+                    .replace(/[()]/gim, ''),
+                  candidateContacts.phone
+                    .replace('8 ', '+7 ')
+                    .replace(/-/gim, ' '),
+                  candidateContacts.phone
+                    .replace('8 ', '+7 ')
+                    .replace(/[ \-()]/gim, ''),
+                ],
+              },
+            },
+          },
+        },
+        false,
+      );
+
+      const { get_deal_by_phone: dealByPhone, get_deal_by_name: dealByName } =
+        batchResponse.result;
+
+      const batchCommands: B24BatchCommands = {};
+
+      if (dealByPhone.length === 0 && dealByName.length === 0) {
+        batchCommands['get_user'] = {
+          method: 'user.get',
+          params: {
+            filter: {
+              EMAIL: vacancy.contacts.email,
+            },
+          },
+        };
+
+        batchCommands['create_deal'] = {
+          method: 'crm.deal.add',
+          params: {
+            fields: {
+              TITLE: candidateName,
+              // Тип поиска: приведи друга
+              UF_CRM_1644922120: '6600',
+              // Номер телефона
+              UF_CRM_1638524259: candidateContacts.phone ?? '',
+              // Телеграмм
+              UF_CRM_1760598515308: candidateContacts.telegram ?? '',
+              //  E-mail
+              UF_CRM_1638524275: candidateContacts.email ?? '',
+              //  Ссылка на резюме
+              UF_CRM_1638524306: vacancy.alternate_url,
+              ASSIGNED_BY_ID: '$result[get_user][0][ID]',
+            },
+          },
+        };
+
+        batchCommands['send_message'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.BOT_ID,
+            DIALOG_ID: 'chat68032',
+            MESSAGE:
+              `Отклик на вакансию ${vacancy.name}[br]` +
+              `Новая сделка: ${this.bitrixService.BITRIX_DOMAIN}/crm/deal/details/$result[create_deal]/`,
+          },
+        };
+      } else {
+        const dealObject =
+          dealByPhone.length === 0 ? dealByName[0] : dealByPhone[0];
+
+        batchCommands['send_message'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.BOT_ID,
+            DIALOG_ID: 'chat68032', // HH
+            MESSAGE:
+              `Отклик на вакансию ${vacancy.name}[br]Сделка существует: ` +
+              this.bitrixService.generateDealUrl(dealObject.ID) +
+              '[br]ЗАПЛАНИРУЙ ЗВОНОК!',
+          },
+        };
+      }
+
+      return this.bitrixService.callBatch(batchCommands);
+
+      // return this.bitrixImBotService.sendMessage({
+      //   BOT_ID: this.bitrixService.BOT_ID,
+      //   DIALOG_ID: 'chat77152',
+      //   MESSAGE:
+      //     '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
+      //     JSON.stringify(body),
+      // });
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
-
-  // @Post('/create-webhook')
-  // async submitWebhook() {
-  //   try {
-  //     return this.headHunterApi.post('/', {
-  //       actions: [
-  //         {
-  //           settings: {},
-  //           type: 'NEW_RESPONSE_OR_INVITATION_VACANCY',
-  //         },
-  //       ],
-  //       url: 'https://bitrix24-production.up.railway.app/integration/headhunter/webhook',
-  //     });
-  //   } catch (error) {
-  //     throw new HttpException(error, HttpStatus.BAD_REQUEST);
-  //   }
-  // }
 }

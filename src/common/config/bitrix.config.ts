@@ -1,6 +1,6 @@
-import { BitrixConfig } from '../interfaces/bitrix-config.interface';
+import { BitrixOptions } from '../interfaces/bitrix-config.interface';
 
-export default (): Record<string, any> & { bitrixConfig: BitrixConfig } => ({
+export default (): BitrixOptions => ({
   bitrixConfig: {
     bitrixDomain: process.env.BITRIX_URL ?? '',
     bitrixClientId: process.env.BITRIX_CLIENT_ID ?? '',

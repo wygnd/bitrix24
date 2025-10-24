@@ -4,6 +4,8 @@ import Redis from 'ioredis';
 import { REDIS_CLIENT } from '@/modules/redis/redis.constants';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
+import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
 
 @Injectable()
 export class HeadHunterService {
@@ -56,5 +58,13 @@ export class HeadHunterService {
 
   get HH_CLIENT_SECRET() {
     return this.client_secret;
+  }
+
+  async getResumeById(resumeId: string) {
+    return this.get<null, HHResumeInterface>(`/resumes/${resumeId}`);
+  }
+
+  async getVacancyById(vacancyOd: string) {
+    return this.get<null, HHVacancyInterface>(`/vacancies/${vacancyOd}`);
   }
 }

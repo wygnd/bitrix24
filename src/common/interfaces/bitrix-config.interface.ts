@@ -3,3 +3,13 @@ export interface BitrixConfig {
   bitrixClientId: string;
   bitrixClientSecret: string;
 }
+
+export interface BitrixConstants {
+  BOT_ID: string;
+  TEST_CHAT_ID: string;
+}
+
+export interface BitrixOptions {
+  bitrixConfig: BitrixConfig;
+  bitrixConstants: BitrixConstants;
+}

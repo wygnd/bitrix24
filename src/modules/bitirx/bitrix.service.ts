@@ -12,7 +12,10 @@ import {
   BitrixOauthResponse,
   BitrixTokens,
 } from './interfaces/bitrix-auth.interface';
-import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
+import {
+  BitrixConfig,
+  BitrixConstants,
+} from '@/common/interfaces/bitrix-config.interface';
 import {
   B24BatchResponseMap,
   B24SuccessResponse,
@@ -32,6 +35,7 @@ export class BitrixService {
   private readonly bitrixDomain: string;
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
+  private readonly botId: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -41,8 +45,11 @@ export class BitrixService {
     private readonly http: AxiosInstance,
   ) {
     const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
+    const bitrixConstants =
+      configService.get<BitrixConstants>('bitrixConstants');
 
     if (!bitrixConfig) throw new Error('Invalid bitrix config');
+    if (!bitrixConstants) throw new Error('Invalid bitrix constants');
 
     this.bitrixDomain = bitrixConfig.bitrixDomain;
     this.bitrixClientId = bitrixConfig.bitrixClientId;
@@ -60,6 +67,10 @@ export class BitrixService {
 
     this.http.defaults.baseURL = bitrixConfig.bitrixDomain;
     this.http.defaults.headers['Content-Type'] = 'application/json';
+
+    //   Constants
+    const { BOT_ID } = bitrixConstants;
+    this.botId = BOT_ID;
   }
 
   async callMethod<
@@ -92,13 +103,13 @@ export class BitrixService {
 
     const errors = Object.entries(response.result.result_error).reduce(
       (acc, [command, errorData]) => {
-        acc += `${command}: ${errorData.error} | `;
+        acc += `${command}: ${errorData.error}\n`;
         return acc;
       },
       '' as string,
     );
 
-    if (errors.length !== 0 && halt) throw new Error(errors);
+    if (errors && halt) throw new Error(errors);
 
     return response as T;
   }
@@ -152,12 +163,6 @@ export class BitrixService {
    * @private
    */
   private async updateAccessToken(refreshToken: string): Promise<BitrixTokens> {
-    console.log(
-      'Trying get new access token: ',
-      this.bitrixClientId,
-      this.bitrixClientSecret,
-      refreshToken,
-    );
     const { access_token, refresh_token, expires } = await this.post<
       object,
       BitrixOauthResponse
@@ -265,5 +270,13 @@ export class BitrixService {
     );
 
     return data;
+  }
+
+  get BOT_ID() {
+    return this.botId;
+  }
+
+  get BITRIX_DOMAIN() {
+    return this.bitrixDomain;
   }
 }

@@ -44,7 +44,7 @@ export class BitrixEventService {
       update_message: {
         method: 'imbot.message.update',
         params: {
-          BOT_ID: 1264,
+          BOT_ID: this.bitrixService.BOT_ID,
           MESSAGE_ID: MESSAGE_ID,
           MESSAGE:
             `[b]Обработано: ${isFits ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
