@@ -18,8 +18,8 @@ interface B24Timestamp {
   finish: number;
   duration: number;
   processing: number;
-  date_start: ISODate;
-  date_finish: ISODate;
+  date_start: string;
+  date_finish: string;
   operating_reset_at: number;
   operating: number;
 }

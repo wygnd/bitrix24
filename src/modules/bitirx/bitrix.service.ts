@@ -166,7 +166,8 @@ export class BitrixService {
       const keyWithPrefix = prefix ? `${prefix}[${key}]` : key;
 
       if (typeof value === 'object') {
-        return this.parseToUrlParams(value, keyWithPrefix);
+        acc += this.parseToUrlParams(value, keyWithPrefix);
+        return acc;
       }
 
       if (Array.isArray(value)) {
