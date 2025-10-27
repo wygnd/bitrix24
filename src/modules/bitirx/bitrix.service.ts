@@ -69,7 +69,7 @@ export class BitrixService {
     };
 
     this.http.defaults.baseURL = this.bitrixDomain;
-    // this.http.defaults.headers['Content-Type'] = 'application/json';
+    this.http.defaults.headers['Content-Type'] = 'application/json';
 
     //   Constants
     const { BOT_ID } = bitrixConstants;
@@ -87,7 +87,12 @@ export class BitrixService {
     });
   }
 
-  async callBatch<T>(commands: B24BatchCommands, halt = false) {
+  /**
+   * @deprecated
+   * @param commands
+   * @param halt
+   */
+  async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
     const cmd = Object.entries(commands).reduce(
@@ -126,30 +131,21 @@ export class BitrixService {
     return response as T;
   }
 
-  async callBatchV2<T>(commands: B24BatchCommands, halt = false) {
+  async callBatch<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
     const commandsEncoded = Object.entries(commands).reduce(
-      (acc, [commandName, {method, params}]) => {
-        acc[commandName] = {
-          method: method,
-          params: JSON.stringify(params),
-        };
+      (acc, [commandName, { method, params }]) => {
+        acc[commandName] = `${method}?${this.parseToUrlParams(params)}`;
         return acc;
       },
       {},
     );
 
-    console.log(commandsEncoded);
-
     const response = (await this.post('/rest/batch', {
       cmd: commandsEncoded,
       halt: halt,
       auth: access_token,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      }
     })) as B24BatchResponseMap;
 
     const errors = Object.entries(response.result.result_error).reduce(
@@ -165,22 +161,25 @@ export class BitrixService {
     return response as T;
   }
 
-  private appendFormData(formData: FormData, params: object, prefix = '') {
-    Object.entries(params).forEach(([key, value]) => {
+  private parseToUrlParams(params: object, prefix = '') {
+    return Object.entries(params).reduce((acc, [key, value]) => {
       const keyWithPrefix = prefix ? `${prefix}[${key}]` : key;
 
       if (typeof value === 'object') {
-        return this.appendFormData(formData, value, keyWithPrefix);
+        return this.parseToUrlParams(value, keyWithPrefix);
       }
 
       if (Array.isArray(value)) {
-        return value.forEach((item) =>
-          formData.append(`${keyWithPrefix}[]`, item),
+        value.forEach(
+          (item, index) => (acc += `${keyWithPrefix}[${index}]=${item}&`),
         );
+        return acc;
       }
 
-      return formData.append(keyWithPrefix, value);
-    });
+      acc += `${keyWithPrefix}=${value}&`;
+
+      return acc;
+    }, '');
   }
 
   public isAvailableToDistributeOnManager() {

@@ -8,3 +8,9 @@ export interface HeadHunterAuthResponse {
   access_token: string;
   token_type: string;
 }
+
+export interface HeadHunterAuthData {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}

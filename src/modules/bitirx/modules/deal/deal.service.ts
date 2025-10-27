@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { B24Deal } from './deal.interface';
+import { B24CreateDeal, B24Deal, B24DealListParams } from './deal.interface';
 import { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
@@ -18,10 +18,20 @@ export class BitrixDealService {
     );
   }
 
-  async getDeal(fields: B24ListParams<Partial<B24Deal>>) {
-    return this.bitrixService.callMethod<
-      B24ListParams<Partial<B24Deal>>,
-      B24Deal[]
-    >('crm.deal.list', fields);
+  async getDeal(fields: B24DealListParams) {
+    return this.bitrixService.callMethod<B24DealListParams, B24Deal[]>(
+      'crm.deal.list',
+      fields,
+    );
+  }
+
+  async createDeal(fields: Partial<B24Deal>, options?: object) {
+    return this.bitrixService.callMethod<B24CreateDeal, number>(
+      'crm.deal.add',
+      {
+        fields: fields,
+        options: options,
+      },
+    );
   }
 }

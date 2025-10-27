@@ -1,4 +1,5 @@
 import { BoolString, ISODate } from '@bitrix24/b24jssdk';
+import { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface';
 
 export interface B24Deal extends Record<string, any> {
   ID: string;
@@ -16,7 +17,7 @@ export interface B24Deal extends Record<string, any> {
   QUOTE_ID: string;
   BEGINDATE: ISODate;
   CLOSEDATE: ISODate;
-  ASSIGNED_BY_ID: string;
+  ASSIGNED_BY_ID: string | number;
   CREATED_BY_ID: string;
   MODIFY_BY_ID: string;
   DATE_CREATE: ISODate;
@@ -46,4 +47,11 @@ export interface B24Deal extends Record<string, any> {
   UTM_TERM: null | string;
   PARENT_ID_1220: string;
   LAST_ACTIVITY_BY: string;
+}
+
+export type B24DealListParams = B24ListParams<Partial<B24Deal>>;
+
+export interface B24CreateDeal {
+  fields: Partial<B24Deal>;
+  options?: object;
 }

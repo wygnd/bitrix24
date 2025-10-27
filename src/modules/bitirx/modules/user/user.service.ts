@@ -20,7 +20,7 @@ export class BitrixUserService {
 
   async getUsers(params: B24UserListParams) {
     return await this.bitrixService.callMethod<
-      B24ListParams<Partial<B24User>>,
+      B24UserListParams,
       B24User[]
     >('user.get', { ...params });
   }
