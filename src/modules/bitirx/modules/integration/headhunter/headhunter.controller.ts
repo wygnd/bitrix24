@@ -261,7 +261,7 @@ export class BitrixHeadHunterController {
 
       await this.bitrixImBotService.sendMessage({
         BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID: 'chat77152',
+        DIALOG_ID: 'chat68032',
         MESSAGE: message,
       });
 
