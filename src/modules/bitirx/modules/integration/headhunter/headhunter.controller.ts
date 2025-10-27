@@ -82,13 +82,13 @@ export class BitrixHeadHunterController {
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     try {
-      // await this.bitrixImBotService.sendMessage({
-      //   BOT_ID: this.bitrixService.BOT_ID,
-      //   DIALOG_ID: 'chat77152',
-      //   MESSAGE:
-      //     '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
-      //     JSON.stringify(body),
-      // });
+      await this.bitrixImBotService.sendMessage({
+        BOT_ID: this.bitrixService.BOT_ID,
+        DIALOG_ID: 'chat77152',
+        MESSAGE:
+          '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
+          JSON.stringify(body),
+      });
 
       const { resume_id, vacancy_id } = body.payload;
 
