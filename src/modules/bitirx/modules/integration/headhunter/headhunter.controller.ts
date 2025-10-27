@@ -29,6 +29,7 @@ import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24ImSendMessage } from '@/modules/bitirx/modules/im/interfaces/im.interface';
+import { AbstractB24 } from '@bitrix24/b24jssdk';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -75,13 +76,35 @@ export class BitrixHeadHunterController {
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     try {
-      // await this.bitrixImBotService.sendMessage({
+      // return this.bitrixImBotService.sendMessage({
       //   BOT_ID: this.bitrixService.BOT_ID,
       //   DIALOG_ID: 'chat77152',
       //   MESSAGE:
       //     '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
       //     JSON.stringify(body),
       // });
+
+      return this.bitrixService.callBatchV2({
+        get_user: {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: 376,
+            },
+          },
+        },
+        send_message: {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.BOT_ID,
+            DIALOG_ID: 'chat77152',
+            MESSAGE:
+              '[user=$result[get_user][0][ID]]$result[get_user][0][NAME] $result[get_user][0][LAST_NAME][/user][br]' +
+              'Новое уведомление[br]' +
+              JSON.stringify(body),
+          },
+        },
+      });
 
       const { resume_id, vacancy_id } = body.payload;
 

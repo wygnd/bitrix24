@@ -26,6 +26,9 @@ import {
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import FormData from 'form-data';
+import { query } from 'winston';
+import { combineLatestInit } from 'rxjs/internal/observable/combineLatest';
 
 @Injectable()
 export class BitrixService {
@@ -65,8 +68,8 @@ export class BitrixService {
       expires: 0,
     };
 
-    this.http.defaults.baseURL = bitrixConfig.bitrixDomain;
-    this.http.defaults.headers['Content-Type'] = 'application/json';
+    this.http.defaults.baseURL = this.bitrixDomain;
+    // this.http.defaults.headers['Content-Type'] = 'application/json';
 
     //   Constants
     const { BOT_ID } = bitrixConstants;
@@ -89,15 +92,22 @@ export class BitrixService {
 
     const cmd = Object.entries(commands).reduce(
       (acc, [key, { method, params }]) => {
-        acc[key] = `${method}?${qs.stringify(params)}`;
+        const { MESSAGE, ...otherParams } = params;
+
+        const query = qs.stringify(otherParams);
+
+        if (MESSAGE !== undefined) {
+          acc[key] = `${method}?${query}&MESSAGE=${MESSAGE}`;
+        } else {
+          acc[key] = `${method}?${query}`;
+        }
+
         return acc;
       },
       {} as Record<string, string>,
     );
 
-    console.log(cmd);
-
-    const response = (await this.post('/rest/batch.json', {
+    const response = (await this.post('/rest/batch', {
       cmd: cmd,
       halt: halt,
       auth: access_token,
@@ -114,6 +124,63 @@ export class BitrixService {
     if (errors && halt) throw new Error(errors);
 
     return response as T;
+  }
+
+  async callBatchV2<T>(commands: B24BatchCommands, halt = false) {
+    const { access_token } = await this.getTokens();
+
+    const commandsEncoded = Object.entries(commands).reduce(
+      (acc, [commandName, {method, params}]) => {
+        acc[commandName] = {
+          method: method,
+          params: JSON.stringify(params),
+        };
+        return acc;
+      },
+      {},
+    );
+
+    console.log(commandsEncoded);
+
+    const response = (await this.post('/rest/batch', {
+      cmd: commandsEncoded,
+      halt: halt,
+      auth: access_token,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })) as B24BatchResponseMap;
+
+    const errors = Object.entries(response.result.result_error).reduce(
+      (acc, [command, errorData]) => {
+        acc += `${command}: ${errorData.error}\n`;
+        return acc;
+      },
+      '' as string,
+    );
+
+    if (errors && halt) throw new Error(errors);
+
+    return response as T;
+  }
+
+  private appendFormData(formData: FormData, params: object, prefix = '') {
+    Object.entries(params).forEach(([key, value]) => {
+      const keyWithPrefix = prefix ? `${prefix}[${key}]` : key;
+
+      if (typeof value === 'object') {
+        return this.appendFormData(formData, value, keyWithPrefix);
+      }
+
+      if (Array.isArray(value)) {
+        return value.forEach((item) =>
+          formData.append(`${keyWithPrefix}[]`, item),
+        );
+      }
+
+      return formData.append(keyWithPrefix, value);
+    });
   }
 
   public isAvailableToDistributeOnManager() {
@@ -260,25 +327,25 @@ export class BitrixService {
     return this.tokens;
   }
 
-  private async post<T, U = any>(
-    url: string,
-    body: T,
-    config?: AxiosRequestConfig<T>,
-  ) {
-    const { data } = await this.http.post<T, AxiosResponse<U>>(
-      url,
-      body,
-      config,
-    );
-
-    return data;
-  }
-
   get BOT_ID() {
     return this.botId;
   }
 
   get BITRIX_DOMAIN() {
     return this.bitrixDomain;
+  }
+
+  private async post<T, U = any>(
+    url: string,
+    body: T,
+    config?: AxiosRequestConfig<T>,
+  ) {
+    const response = await this.http.post<T, AxiosResponse<U>>(
+      url,
+      body,
+      config,
+    );
+
+    return response.data;
   }
 }
