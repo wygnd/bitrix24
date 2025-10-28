@@ -26,9 +26,6 @@ import {
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import FormData from 'form-data';
-import { query } from 'winston';
-import { combineLatestInit } from 'rxjs/internal/observable/combineLatest';
 
 @Injectable()
 export class BitrixService {
@@ -87,11 +84,6 @@ export class BitrixService {
     });
   }
 
-  /**
-   * @deprecated
-   * @param commands
-   * @param halt
-   */
   async callBatch<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
@@ -122,6 +114,11 @@ export class BitrixService {
     return response as T;
   }
 
+  /**
+   * @deprecated
+   * @param commands
+   * @param halt
+   */
   async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 

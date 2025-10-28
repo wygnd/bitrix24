@@ -11,23 +11,31 @@ export class RedisService {
   ) {}
 
   async set<T>(key: string, value: T, ttlSecond: number = 0) {
-    await this.redisClient.set(
-      key,
-      isString(value) ? value : JSON.stringify(value),
-      'EX',
-      ttlSecond,
-    );
+    console.log(isString(value));
+    try {
+      await this.redisClient.set(
+        key,
+        isString(value) ? value : JSON.stringify(value),
+        'EX',
+        ttlSecond,
+      );
+      return true;
+    } catch (error) {
+      console.log('REDIS ERROR: ', error);
+      return false;
+    }
   }
 
   async get<T>(key: string): Promise<T | null> {
     const data = await this.redisClient.get(key);
 
+    console.log('Try get data: ', data);
     if (!data) return null;
 
     return isJSON(data) ? (JSON.parse(data) as T) : (data as T);
   }
 
   async del(key: string) {
-    return await this.redisClient.del(key);
+    return this.redisClient.del(key);
   }
 }
