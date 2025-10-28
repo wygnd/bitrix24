@@ -217,7 +217,7 @@ export class BitrixHeadHunterController {
 
       if (dealsFindByPhone.length === 0) {
         message +=
-          '[br][b]Найдены дубли по ФИО: [/b][br]' +
+          '[b]Найдены дубли по ФИО: [/b][br]' +
           dealsByName.reduce((acc, { ID: dealId }) => {
             acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
             return acc;
@@ -229,18 +229,18 @@ export class BitrixHeadHunterController {
             acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
             return acc;
           }, '') +
-          '[br]ЗАПЛАНИРУЙ ЗВОНОК!';
+          'ЗАПЛАНИРУЙ ЗВОНОК!';
       }
     } else if (dealsByPhone.length > 0) {
       // Если нет по ФИО ищем по телефону
 
       message +=
-        '[br]Совпадение со сделкой: ' +
+        'Совпадение со сделкой: ' +
         dealsByPhone.reduce((acc, { ID: dealId }) => {
           acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
           return acc;
         }, '') +
-        '[br]ЗАПЛАНИРУЙ ЗВОНОК';
+        'ЗАПЛАНИРУЙ ЗВОНОК';
     } else {
       const { result: newDealId } = await this.bitrixDealService.createDeal({
         TITLE: candidateName,
