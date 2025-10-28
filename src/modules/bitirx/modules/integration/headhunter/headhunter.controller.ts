@@ -208,11 +208,11 @@ export class BitrixHeadHunterController {
         if (dealsFindByPhone.length === 0) {
           message +=
             '[br][b]Найдены дубли по ФИО: [/b][br]' +
-            `Резюме: ${resume.alternate_url}`;
-          dealsByName.reduce((acc, { ID: dealId }) => {
-            acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-            return acc;
-          }, '');
+            `Резюме: ${resume.alternate_url}[br]` +
+            dealsByName.reduce((acc, { ID: dealId }) => {
+              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+              return acc;
+            }, '');
         } else {
           message +=
             '[b]Совпадение со сделкой: [/b][br]' +
