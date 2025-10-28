@@ -168,7 +168,7 @@ export class BitrixHeadHunterController {
           params: {
             filter: {
               CATEGORY_ID: '14',
-              '%TITLE': candidateName,
+              '%TITLE': candidateName.trim(),
             },
             select: ['ID', 'TITLE', 'UF_CRM_1638524259'],
           },
