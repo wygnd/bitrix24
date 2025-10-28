@@ -92,21 +92,12 @@ export class BitrixService {
    * @param commands
    * @param halt
    */
-  async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
+  async callBatch<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
     const cmd = Object.entries(commands).reduce(
       (acc, [key, { method, params }]) => {
-        const { MESSAGE, ...otherParams } = params;
-
-        const query = qs.stringify(otherParams);
-
-        if (MESSAGE !== undefined) {
-          acc[key] = `${method}?${query}&MESSAGE=${MESSAGE}`;
-        } else {
-          acc[key] = `${method}?${query}`;
-        }
-
+        acc[key] = `${method}?${qs.stringify(params)}`;
         return acc;
       },
       {} as Record<string, string>,
@@ -131,7 +122,7 @@ export class BitrixService {
     return response as T;
   }
 
-  async callBatch<T>(commands: B24BatchCommands, halt = false) {
+  async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
     const commandsEncoded = Object.entries(commands).reduce(

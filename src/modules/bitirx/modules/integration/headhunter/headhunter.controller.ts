@@ -130,7 +130,7 @@ export class BitrixHeadHunterController {
         phone.replace(/[()]/gim, ''),
         phone.replace(/-/gim, ' '),
         phone.replace(/[-()]/gim, ''),
-        phone.replace(/[ -()]/gim, ''),
+        phone.replace(/[ \-()]/gim, ''),
       ];
 
       if (phone[0] == '8') {
@@ -144,8 +144,6 @@ export class BitrixHeadHunterController {
             .replace(/[ \-()]/gim, ''),
         );
       }
-
-      console.log(filterPhones);
 
       const { result: batchResponse } = await this.bitrixService.callBatch<
         B24BatchResponseMap<{
