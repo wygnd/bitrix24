@@ -103,6 +103,7 @@ export class BitrixHeadHunterController {
         '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
         JSON.stringify(body),
     });
+
     const { resume_id, vacancy_id } = payload;
 
     const [vacancy, resume] = await Promise.all<
@@ -207,7 +208,16 @@ export class BitrixHeadHunterController {
       `Кандидат: ${candidateName}[br]` +
       `Резюме: ${resume.alternate_url}[br][br]`;
 
-    if (dealsByName.length > 0) {
+    if (dealsByPhone.length > 0) {
+      // Снчала ищем по телефону
+      message +=
+        'Совпадение со сделкой: ' +
+        dealsByPhone.reduce((acc, { ID: dealId }) => {
+          acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+          return acc;
+        }, '') +
+        'ЗАПЛАНИРУЙ ЗВОНОК';
+    } else if (dealsByName.length > 0) {
       // Сначала ищем по ФИО и телефону
       const dealsFindByPhone = dealsByName.filter((deal) => {
         return !!filterPhones.find(
@@ -231,16 +241,6 @@ export class BitrixHeadHunterController {
           }, '') +
           'ЗАПЛАНИРУЙ ЗВОНОК!';
       }
-    } else if (dealsByPhone.length > 0) {
-      // Если нет по ФИО ищем по телефону
-
-      message +=
-        'Совпадение со сделкой: ' +
-        dealsByPhone.reduce((acc, { ID: dealId }) => {
-          acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-          return acc;
-        }, '') +
-        'ЗАПЛАНИРУЙ ЗВОНОК';
     } else {
       const { result: newDealId } = await this.bitrixDealService.createDeal({
         TITLE: candidateName,
