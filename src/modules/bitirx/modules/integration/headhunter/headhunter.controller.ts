@@ -190,8 +190,6 @@ export class BitrixHeadHunterController {
       const bitrixUser =
         resultGetUser && resultGetUser?.length !== 0 ? resultGetUser[0] : null;
 
-      console.log('Candidate: ', candidateName);
-
       let message =
         (bitrixUser
           ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
@@ -210,13 +208,14 @@ export class BitrixHeadHunterController {
         if (dealsFindByPhone.length === 0) {
           message +=
             '[br][b]Найдены дубли по ФИО: [/b][br]' +
-            dealsByName.reduce((acc, { ID: dealId }) => {
-              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-              return acc;
-            }, '');
+            `Резюме: ${resume.alternate_url}`;
+          dealsByName.reduce((acc, { ID: dealId }) => {
+            acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+            return acc;
+          }, '');
         } else {
           message +=
-            '[b]Совпадение со сделкой: [/b]' +
+            '[b]Совпадение со сделкой: [/b][br]' +
             dealsFindByPhone.reduce((acc, { ID: dealId }) => {
               acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
               return acc;
@@ -253,7 +252,7 @@ export class BitrixHeadHunterController {
 
         newDealId
           ? (message +=
-              'Создана сделка: ' +
+              '[b]Создана сделка:[/b][br]' +
               this.bitrixService.generateDealUrl(newDealId))
           : (message =
               'Сделки не найдено.[br]Что то пошло не так при создании сделки');
