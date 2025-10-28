@@ -205,7 +205,7 @@ export class BitrixHeadHunterController {
         : '') +
       `Отклик на вакансию ${vacancy.name}[br]` +
       `Кандидат: ${candidateName}[br]` +
-      `Резюме: ${resume.alternate_url}[br]`;
+      `Резюме: ${resume.alternate_url}[br][br]`;
 
     if (dealsByName.length > 0) {
       // Сначала ищем по ФИО и телефону

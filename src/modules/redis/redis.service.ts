@@ -11,7 +11,6 @@ export class RedisService {
   ) {}
 
   async set<T>(key: string, value: T, ttlSecond: number = 0) {
-    console.log(isString(value));
     try {
       await this.redisClient.set(
         key,
@@ -29,7 +28,6 @@ export class RedisService {
   async get<T>(key: string): Promise<T | null> {
     const data = await this.redisClient.get(key);
 
-    console.log('Try get data: ', data);
     if (!data) return null;
 
     return isJSON(data) ? (JSON.parse(data) as T) : (data as T);
