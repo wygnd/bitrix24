@@ -88,7 +88,7 @@ export class BitrixHeadHunterController {
       await this.redisService.get<string>(redisNotificationKey);
 
     if (notificationWasReceived)
-      throw new ConflictException({ message: 'Notification was sending' });
+      throw new ConflictException('Notification was received');
 
     await this.redisService.set<string>(
       redisNotificationKey,

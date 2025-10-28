@@ -12,9 +12,9 @@ export class HttpLoggerMiddleware implements NestMiddleware {
     res.on('close', () => {
       const { statusCode } = res;
 
-      this.logger.log(
-        `[${statusCode}] ${method} ${url} - ${userAgent}: ${ip}`,
-      );
+      let message = `[${statusCode}] ${method} ${url} - ${userAgent}: ${ip}`;
+
+      this.logger.log(message);
     });
 
     next();
