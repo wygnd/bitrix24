@@ -10,7 +10,7 @@ import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IncomingWebhookDepartment } from '@/modules/bitirx/modules/webhook/interfaces/webhook.interface';
 
-export class IncomingWebhookDistributeDealDto extends IncomingWebhookDto {
+export class IncomingWebhookDistributeDealDto {
   @ApiProperty({
     type: String,
     description: 'deal id',
