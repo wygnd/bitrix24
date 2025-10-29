@@ -37,6 +37,7 @@ export class BitrixService {
   private readonly bitrixClientSecret: string;
   private readonly botId: string;
   private readonly testChatId: string;
+  private readonly incomingWebhookToken: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -70,9 +71,10 @@ export class BitrixService {
     this.http.defaults.headers['Content-Type'] = 'application/json';
 
     //   Constants
-    const { BOT_ID, TEST_CHAT_ID } = bitrixConstants;
+    const { BOT_ID, TEST_CHAT_ID, WEBHOOK_INCOMING_TOKEN } = bitrixConstants;
     this.botId = BOT_ID;
     this.testChatId = TEST_CHAT_ID;
+    this.incomingWebhookToken = WEBHOOK_INCOMING_TOKEN;
   }
 
   async callMethod<
@@ -327,6 +329,10 @@ export class BitrixService {
 
   get TEST_CHAT_ID() {
     return this.testChatId;
+  }
+
+  get WEBHOOK_INCOMING_TOKEN() {
+    return this.incomingWebhookToken;
   }
 
   private async post<T, U = any>(

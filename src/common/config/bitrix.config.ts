@@ -9,5 +9,6 @@ export default (): BitrixOptions => ({
   bitrixConstants: {
     BOT_ID: process.env.BOT_ID ?? '',
     TEST_CHAT_ID: process.env.BITRIX_TEST_CHAT_ID ?? '',
+    WEBHOOK_INCOMING_TOKEN: process.env.BITRIX_INCOMING_WEBHOOK_TOKEN ?? '',
   },
 });

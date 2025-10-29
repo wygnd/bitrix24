@@ -1,16 +1,23 @@
 import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bullmq';
-import { BitrixSyncProcessor } from './processors/bitrix-sync.processor';
+import { RedisModule } from '@/modules/redis/redis.module';
+import { BitrixSyncProcessor } from '@/modules/queue/processors/bitrix-sync.processor';
+import { BullModule } from '@nestjs/bull';
+import Redis from 'ioredis';
+import { REDIS_CLIENT } from '@/modules/redis/redis.constants';
+import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 
 @Module({
   imports: [
-    BullModule.forRootAsync({}),
-    BullModule.registerQueue(
-      { name: 'bitrix.sync' },
-      // { name: 'bitrix.events' },
-      // { name: 'bitrix.batch' },
-    ),
+    BullModule.forRootAsync({
+      useFactory: (redisClient: Redis) => ({
+        createClient: () => redisClient,
+      }),
+      inject: [{ token: REDIS_CLIENT, optional: false }],
+      imports: [RedisModule],
+    }),
+    BullModule.registerQueueAsync({ name: 'bitrix_sync' }),
   ],
   providers: [BitrixSyncProcessor],
+  exports: [],
 })
 export class QueueModule {}

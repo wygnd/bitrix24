@@ -5,6 +5,7 @@ import { BitrixModule } from './modules/bitirx/bitrix.module';
 import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middleware';
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';
+import { QueueModule } from '@/modules/queue/queue.module';
 
 @Module({
   imports: [ConfigAppModule, RedisModule, BitrixModule, HeadHunterModule],
