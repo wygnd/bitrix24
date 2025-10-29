@@ -22,6 +22,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       catchError((error: AxiosError<B24ErrorResponse>) => {
+          console.log(error);
 
         if (!error.response?.data) return throwError(() => error);
 
@@ -73,13 +74,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        return throwError(
-          () =>
-            new HttpException(
-              `Unknown error: ${error.toJSON()}`,
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            ),
-        );
+        return throwError(() => error);
       }),
     );
   }

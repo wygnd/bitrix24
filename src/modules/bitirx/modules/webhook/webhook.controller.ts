@@ -21,7 +21,7 @@ export class BitrixWebhookController {
     private readonly bitrixImbotService: BitrixImBotService,
   ) {}
 
-  @UseGuards(BitrixWebhookGuard)
+  // @UseGuards(BitrixWebhookGuard)
   @Post('distribute-new-deal')
   async distributeNewDeal(
     @Body() body: IncomingWebhookDto,
