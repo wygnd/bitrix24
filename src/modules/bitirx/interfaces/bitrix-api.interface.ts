@@ -11,6 +11,7 @@ export enum B24ApiTags {
   EVENTS = 'Events',
   AVITO = 'Avito',
   HEAD_HUNTER = 'Head Hunter',
+  WEBHOOK = 'Webhook',
 }
 
 interface B24Timestamp {

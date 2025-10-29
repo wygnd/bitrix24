@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
-import type { B24AuthOptions } from '../../interfaces/bitrix.interface';
+import type { B24AuthOptions } from '../../../interfaces/bitrix.interface';
 import type {
   B24EventCommand,
   B24EventData,
   B24EventList,
   B24EventParams,
   B24EventUser,
-} from './interfaces/events.interface';
+} from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 
 class OnImCommandAddEventDataDto implements B24EventData {
   COMMAND: B24EventCommand;
@@ -90,7 +90,7 @@ class OnImCommandAddEventAuthOptionsDto implements B24AuthOptions {
   application_token: string;
 }
 
-export class OnImCommandAddDto {
+export class OnImCommandAddDto<T> {
   @ApiProperty({
     type: String,
     description: 'Event type',
@@ -110,12 +110,11 @@ export class OnImCommandAddDto {
   event_handler_id: number;
 
   @ApiProperty({
-    type: OnImCommandAddEventDataDto,
     required: true,
     description: 'Event data',
   })
   @IsNotEmpty()
-  data: B24EventData;
+  data: T;
 
   @ApiProperty({
     type: Number,
@@ -134,4 +133,7 @@ export class OnImCommandAddDto {
   })
   @IsNotEmpty()
   auth: B24AuthOptions;
+}
+
+export class OnImCommandKeyboardDto extends OnImCommandAddDto<B24EventData> {
 }

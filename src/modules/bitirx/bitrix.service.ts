@@ -36,6 +36,7 @@ export class BitrixService {
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
   private readonly botId: string;
+  private readonly testChatId: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -69,8 +70,9 @@ export class BitrixService {
     this.http.defaults.headers['Content-Type'] = 'application/json';
 
     //   Constants
-    const { BOT_ID } = bitrixConstants;
+    const { BOT_ID, TEST_CHAT_ID } = bitrixConstants;
     this.botId = BOT_ID;
+    this.testChatId = TEST_CHAT_ID;
   }
 
   async callMethod<
@@ -321,6 +323,10 @@ export class BitrixService {
 
   get BITRIX_DOMAIN() {
     return this.bitrixDomain;
+  }
+
+  get TEST_CHAT_ID() {
+    return this.testChatId;
   }
 
   private async post<T, U = any>(
