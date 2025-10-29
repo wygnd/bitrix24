@@ -271,6 +271,7 @@ export class BitrixHeadHunterController {
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: 'chat68032',
       MESSAGE: message,
+      URL_PREVIEW: 'N'
     });
 
     // const batchCommands: B24BatchCommands = {};
