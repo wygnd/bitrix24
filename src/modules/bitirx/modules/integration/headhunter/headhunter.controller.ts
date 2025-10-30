@@ -89,9 +89,7 @@ export class BitrixHeadHunterController {
 
       await this.bitrixImBotService.sendMessage({
         BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID:
-          this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ??
-          '376',
+        DIALOG_ID: '190',  // Екатерина Туркатова
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
           'HH ru отправил запрос на /redirect_uri[br]' +
