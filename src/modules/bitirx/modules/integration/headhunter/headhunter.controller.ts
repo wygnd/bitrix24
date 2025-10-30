@@ -59,6 +59,7 @@ export class BitrixHeadHunterController {
       params.append('grant_type', 'authorization_code');
       params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
       params.append('client_secret', this.headHunterApi.HH_CLIENT_SECRET);
+      params.append('redirect_uri', this.headHunterApi.REDIRECT_URI);
       params.append('code', query.code);
       const res = await this.headHunterApi.post<object, HeadHunterAuthData>(
         '/token',

@@ -86,6 +86,10 @@ export class HeadHunterService {
     return this.client_secret;
   }
 
+  get REDIRECT_URI() {
+    return this.redirect_uri;
+  }
+
   async getResumeById(resumeId: string) {
     return this.get<null, HHResumeInterface>(`/resumes/${resumeId}`);
   }
