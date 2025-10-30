@@ -6,6 +6,7 @@ import {
   Header,
   HttpCode,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   Query,
 } from '@nestjs/common';
@@ -53,50 +54,56 @@ export class BitrixHeadHunterController {
   @Get('/redirect_uri')
   @HttpCode(HttpStatus.OK)
   async handleApp(@Body() fields: any, @Query() query: HeadhunterRedirectDto) {
-    console.log(fields, query);
-    const params = new URLSearchParams();
-    params.append('grant_type', 'authorization_code');
-    params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
-    params.append('client_secret', this.headHunterApi.HH_CLIENT_SECRET);
-    params.append('code', query.code);
-    const res = await this.headHunterApi.post<object, HeadHunterAuthData>(
-      '/token',
-      params,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+    try {
+      const params = new URLSearchParams();
+      params.append('grant_type', 'authorization_code');
+      params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
+      params.append('client_secret', this.headHunterApi.HH_CLIENT_SECRET);
+      params.append('code', query.code);
+      const res = await this.headHunterApi.post<object, HeadHunterAuthData>(
+        '/token',
+        params,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
         },
-      },
-    );
-    await this.bitrixImBotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
-      DIALOG_ID:
-        this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ?? '',
-      MESSAGE:
-        '[user=376]Денис Некрасов[/user][br]' +
-        'HH ru отправил заапрос на /redirect_uri[br]' +
-        JSON.stringify(fields) +
-        '[br]' +
-        JSON.stringify(query) +
-        '[br]Ответ авторизации: ' +
-        JSON.stringify(res),
-    });
+      );
 
-    const now = new Date();
+      // Save tokens in redis
+      this.redisService
+        .set<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA, {
+          ...res,
+          expires: now.setDate(now.getDate() + 14),
+        })
+        .then((d) => console.log('is save new tokens: ', d))
+        .catch((error) => console.log('invalid save new tokens: ', error));
 
-    // Save tokens in redis
-    this.redisService
-      .set<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA, {
-        ...res,
-        expires: now.setDate(now.getDate() + 14),
-      })
-      .then((d) => console.log('is save new tokens: ', d))
-      .catch((error) => console.log('invalid save new tokens: ', error));
+      // update token on url
+      await this.headHunterApi.updateToken();
 
-    // update token on url
-    await this.headHunterApi.updateToken();
+      await this.bitrixImBotService.sendMessage({
+        BOT_ID: this.bitrixService.BOT_ID,
+        DIALOG_ID:
+          this.configService.get<string>(
+            'bitrixConstants.BITRIX_TEST_CHAT_ID',
+          ) ?? '376',
+        MESSAGE:
+          '[user=376]Денис Некрасов[/user][br]' +
+          'HH ru отправил запрос на /redirect_uri[br]' +
+          JSON.stringify(fields) +
+          '[br]' +
+          JSON.stringify(query) +
+          '[br]Ответ авторизации: ' +
+          JSON.stringify(res),
+      });
 
-    return '<h1>Успех<h1/><script>window.close();</script>';
+      const now = new Date();
+
+      return '<h1>Успех<h1/><script>window.close();</script>';
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
   }
 
   @HttpCode(HttpStatus.OK)
