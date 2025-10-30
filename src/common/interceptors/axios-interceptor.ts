@@ -32,8 +32,6 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       catchError(async (error: AxiosError<B24ErrorResponse>) => {
-        console.log(error.status);
-
         if (
           (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
           HttpStatus.FORBIDDEN

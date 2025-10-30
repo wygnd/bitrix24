@@ -8,13 +8,14 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { HeadHunterAuthTokens } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-auth.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
+import { BitrixService } from '@/modules/bitirx/bitrix.service';
 
 @Injectable()
 export class HeadHunterService {
   private readonly client_id: string;
   private readonly client_secret: string;
   private readonly redirect_uri: string;
-  private readonly auth_data?: HeadHunterAuthTokens;
+  private auth_data?: HeadHunterAuthTokens;
 
   constructor(
     private readonly redisService: RedisService,
@@ -22,6 +23,7 @@ export class HeadHunterService {
     @Inject('HeadHunterApiService')
     private readonly http: AxiosInstance,
     private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixService: BitrixService,
   ) {
     const headHunterConfig =
       configService.get<HeadHunterConfig>('headHunterConfig');
@@ -94,7 +96,7 @@ export class HeadHunterService {
 
   async notifyAboutInvalidCredentials() {
     await this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         'Необходимо обновить авторизацию на hh.ru: [br]' +
         'https://hh.ru/oauth/authorize?' +
@@ -115,20 +117,36 @@ export class HeadHunterService {
 
   private async getAuthData() {
     const now = new Date();
-    if (this.auth_data) {
-      const { expires } = this.auth_data;
+    if (!this.auth_data) {
+      await this.notifyAboutInvalidCredentials();
+      return null;
+    }
 
-      const expiresDate = new Date(expires);
+    const { expires } = this.auth_data;
 
-      if (now.toLocaleDateString() !== expiresDate.toLocaleDateString()) {
+    const expiresDate = new Date(expires);
+
+    if (now.toLocaleDateString() !== expiresDate.toLocaleDateString()) {
+      const tokens = await this.redisService.get<HeadHunterAuthTokens>(
+        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+      );
+
+      if (!tokens || !tokens.expires || !tokens.access_token) {
         await this.notifyAboutInvalidCredentials();
         return null;
       }
 
+      const expiresCacheDate = new Date(tokens.expires);
+
+      if (expiresCacheDate.toLocaleDateString() !== now.toLocaleDateString()) {
+        await this.notifyAboutInvalidCredentials();
+        return null;
+      }
+
+      this.auth_data = tokens;
       return this.auth_data;
     }
 
-    await this.notifyAboutInvalidCredentials();
-    return null;
+    return this.auth_data;
   }
 }

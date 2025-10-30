@@ -9,7 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import {
+  B24ApiTags,
+  B24BatchResponseMap,
+} from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
@@ -21,11 +24,16 @@ import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { RedisService } from '@/modules/redis/redis.service';
 import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
-import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+import {
+  ContactPhone,
+  HHResumeInterface,
+} from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 import {
   HeadHunterAuthData,
   HeadHunterAuthTokens,
 } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-auth.interface';
+import { CandidateContactInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
+import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -76,10 +84,13 @@ export class BitrixHeadHunterController {
     const now = new Date();
 
     // Save tokens in redis
-    await this.redisService.set<HeadHunterAuthTokens>(
-      REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-      { ...res, expires: now.setDate(now.getDate() + 14) },
-    );
+    this.redisService
+      .set<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA, {
+        ...res,
+        expires: now.setDate(now.getDate() + 14),
+      })
+      .then((d) => console.log('is save new tokens: ', d))
+      .catch((error) => console.log('invalid save new tokens: ', error));
 
     // update token on url
     await this.headHunterApi.updateToken();
@@ -123,8 +134,6 @@ export class BitrixHeadHunterController {
       this.headHunterApi.getResumeById(resume_id),
     ]);
 
-    return;
-    /*
     const candidateName = `${resume.last_name ?? ''} ${resume.first_name ?? ''} ${resume.middle_name ?? ''}`;
     const candidateContacts = resume.contact.reduce(
       (acc, { kind, contact_value, value }) => {
