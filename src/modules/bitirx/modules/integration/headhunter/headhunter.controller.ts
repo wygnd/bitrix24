@@ -75,13 +75,14 @@ export class BitrixHeadHunterController {
 
       const now = new Date();
       // Save tokens in redis
-      this.redisService
-        .set<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA, {
+      await this.redisService.set<HeadHunterAuthTokens>(
+        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+        {
           ...res,
           expires: now.setDate(now.getDate() + 14),
-        })
-        .then((d) => console.log('is save new tokens: ', d))
-        .catch((error) => console.log('invalid save new tokens: ', error));
+        },
+        1209600,
+      );
 
       // update token on url
       await this.headHunterApi.updateToken();
@@ -89,9 +90,8 @@ export class BitrixHeadHunterController {
       await this.bitrixImBotService.sendMessage({
         BOT_ID: this.bitrixService.BOT_ID,
         DIALOG_ID:
-          this.configService.get<string>(
-            'bitrixConstants.BITRIX_TEST_CHAT_ID',
-          ) ?? '376',
+          this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ??
+          '376',
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
           'HH ru отправил запрос на /redirect_uri[br]' +
