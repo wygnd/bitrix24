@@ -34,7 +34,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
       catchError(async (error: AxiosError<B24ErrorResponse>) => {
         if (
           (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
-          HttpStatus.FORBIDDEN
+          error.status === HttpStatus.FORBIDDEN
         ) {
           const { host } = error.request as Request;
 
@@ -51,7 +51,10 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        if (!error.response?.data) return throwError(() => error);
+        if (!error.response?.data)
+          return throwError(
+            () => new HttpException(error, HttpStatus.BAD_REQUEST),
+          );
 
         const { data } = error.response;
 

@@ -3,6 +3,7 @@ import {
   ConflictException,
   Controller,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Post,
@@ -52,6 +53,7 @@ export class BitrixHeadHunterController {
   @Get('/redirect_uri')
   @HttpCode(HttpStatus.OK)
   async handleApp(@Body() fields: any, @Query() query: HeadhunterRedirectDto) {
+    console.log(fields, query);
     const params = new URLSearchParams();
     params.append('grant_type', 'authorization_code');
     params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
@@ -66,7 +68,6 @@ export class BitrixHeadHunterController {
         },
       },
     );
-
     await this.bitrixImBotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID:
@@ -95,7 +96,7 @@ export class BitrixHeadHunterController {
     // update token on url
     await this.headHunterApi.updateToken();
 
-    return true;
+    return '<h1>Успех<h1/><script>window.close();</script>';
   }
 
   @HttpCode(HttpStatus.OK)
