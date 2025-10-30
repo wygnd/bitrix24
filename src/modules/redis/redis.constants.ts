@@ -7,6 +7,7 @@ export const REDIS_KEYS = {
   HEADHUNTER_ACCESS_TOKEN: 'hh:access_token',
   HEADHUNTER_WEBHOOK_NOTIFICATION: 'hh:webhook:',
   HEADHUNTER_AUTH_DATA: 'hh:auth:data',
+  HEADHUNTER_NEED_UPDATE_AUTH_SENDING: 'hh:auth:notification'
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

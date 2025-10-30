@@ -95,6 +95,12 @@ export class HeadHunterService {
   }
 
   async notifyAboutInvalidCredentials() {
+    const wasSendingNotification = await this.redisService.get<boolean>(
+      REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
+    );
+
+    if (wasSendingNotification) return;
+
     await this.bitrixMessageService.sendPrivateMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
@@ -104,6 +110,12 @@ export class HeadHunterService {
         `client_id=${this.client_id}` +
         `&redirect_uri=${this.redirect_uri}`,
     });
+
+    await this.redisService.set<boolean>(
+      REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
+      true,
+      3600,
+    );
   }
 
   async updateToken() {
