@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { BitrixController } from './bitrix.controller';
 import { BitrixService } from './bitrix.service';
 import { BitrixUserService } from './modules/user/user.service';
@@ -18,7 +18,7 @@ import { BitrixImbotController } from '@/modules/bitirx/modules/imbot/imbot.cont
 import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhook.controller';
 
 @Module({
-  imports: [HttpModule, RedisModule, HeadHunterModule],
+  imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],
   controllers: [
     BitrixController,
     BitrixAvitoController,
@@ -37,6 +37,6 @@ import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhoo
     BitrixDealService,
     BitrixIntegrationAvitoService,
   ],
-  exports: [BitrixService],
+  exports: [BitrixService, BitrixMessageService],
 })
 export class BitrixModule {}

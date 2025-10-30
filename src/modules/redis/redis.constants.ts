@@ -5,7 +5,8 @@ export const REDIS_KEYS = {
   BITRIX_ACCESS_TOKEN: 'bitrix:access_token',
   BITRIX_ACCESS_EXPIRES: 'bitrix:access_expires',
   HEADHUNTER_ACCESS_TOKEN: 'hh:access_token',
-  HEADHUNTER_WEBHOOK_NOTIFICATION: 'hh:webhook:'
+  HEADHUNTER_WEBHOOK_NOTIFICATION: 'hh:webhook:',
+  HEADHUNTER_AUTH_DATA: 'hh:auth:data',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

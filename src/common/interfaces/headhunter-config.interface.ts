@@ -3,4 +3,5 @@ export interface HeadHunterConfig {
   clientSecret: string;
   clientId: string;
   applicationToken: string;
+  redirectUri: string;
 }

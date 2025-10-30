@@ -13,16 +13,45 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { catchError, Observable, throwError } from 'rxjs';
+import { catchError, throwError } from 'rxjs';
 import { AxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { Request } from 'express';
+import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
+import { ConfigService } from '@nestjs/config';
+import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
+import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly headHunterService: HeadHunterService,
+  ) {}
+
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
-      catchError((error: AxiosError<B24ErrorResponse>) => {
-          console.log(error);
+      catchError(async (error: AxiosError<B24ErrorResponse>) => {
+        console.log(error.status);
+
+        if (
+          (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
+          HttpStatus.FORBIDDEN
+        ) {
+          const { host } = error.request as Request;
+
+          switch (host) {
+            case 'api.hh.ru':
+              await this.headHunterService.notifyAboutInvalidCredentials();
+              return throwError(
+                () =>
+                  new HttpException(
+                    error,
+                    error.status || HttpStatus.UNAUTHORIZED,
+                  ),
+              );
+          }
+        }
 
         if (!error.response?.data) return throwError(() => error);
 

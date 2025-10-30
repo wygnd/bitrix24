@@ -13,7 +13,6 @@ async function bootstrap() {
   const PORT = config.get<number>('PORT') ?? 3000;
 
   app.useGlobalPipes(new ValidationPipe());
-  app.useGlobalInterceptors(new AxiosGlobalInterceptor());
 
   // Swagger API
   const swaggerConfig = new DocumentBuilder()

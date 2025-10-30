@@ -6,5 +6,6 @@ export default (): { headHunterConfig: HeadHunterConfig } => ({
     clientSecret: process.env.HH_CLIENT_SECRET ?? '',
     clientId: process.env.HH_CLIENT_ID ?? '',
     applicationToken: process.env.HH_APPLICATION_TOKEN ?? '',
+    redirectUri: process.env.HH_REDIRECT_URI ?? '',
   },
 });

@@ -5,16 +5,11 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Inject,
-  InternalServerErrorException,
   Post,
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  B24ApiTags,
-  B24BatchResponseMap,
-} from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
@@ -23,15 +18,14 @@ import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/h
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
-import { REDIS_CLIENT, REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { RedisService } from '@/modules/redis/redis.service';
-import { CandidateContactInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
-import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
 import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
+import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 import {
-  ContactPhone,
-  HHResumeInterface,
-} from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+  HeadHunterAuthData,
+  HeadHunterAuthTokens,
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-auth.interface';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -55,16 +49,20 @@ export class BitrixHeadHunterController {
     params.append('client_id', this.headHunterApi.HH_CLIENT_ID);
     params.append('client_secret', this.headHunterApi.HH_CLIENT_SECRET);
     params.append('code', query.code);
-    const res = await this.headHunterApi.post('/token', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const res = await this.headHunterApi.post<object, HeadHunterAuthData>(
+      '/token',
+      params,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       },
-    });
+    );
 
     await this.bitrixImBotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID:
-        this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ?? '376',
+        this.configService.get<string>('bitrixConstants.TEST_CHAT_ID') ?? '',
       MESSAGE:
         '[user=376]Денис Некрасов[/user][br]' +
         'HH ru отправил заапрос на /redirect_uri[br]' +
@@ -74,6 +72,18 @@ export class BitrixHeadHunterController {
         '[br]Ответ авторизации: ' +
         JSON.stringify(res),
     });
+
+    const now = new Date();
+
+    // Save tokens in redis
+    await this.redisService.set<HeadHunterAuthTokens>(
+      REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+      { ...res, expires: now.setDate(now.getDate() + 14) },
+    );
+
+    // update token on url
+    await this.headHunterApi.updateToken();
+
     return true;
   }
 
@@ -113,6 +123,8 @@ export class BitrixHeadHunterController {
       this.headHunterApi.getResumeById(resume_id),
     ]);
 
+    return;
+    /*
     const candidateName = `${resume.last_name ?? ''} ${resume.first_name ?? ''} ${resume.middle_name ?? ''}`;
     const candidateContacts = resume.contact.reduce(
       (acc, { kind, contact_value, value }) => {
@@ -271,7 +283,7 @@ export class BitrixHeadHunterController {
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: 'chat68032',
       MESSAGE: message,
-      URL_PREVIEW: 'N'
+      URL_PREVIEW: 'N',
     });
 
     // const batchCommands: B24BatchCommands = {};
