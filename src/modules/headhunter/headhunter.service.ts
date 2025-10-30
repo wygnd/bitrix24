@@ -133,9 +133,19 @@ export class HeadHunterService {
 
   private async getAuthData() {
     const now = new Date();
+
     if (!this.auth_data) {
-      await this.notifyAboutInvalidCredentials();
-      return null;
+      const tokensFromCache = await this.redisService.get<HeadHunterAuthTokens>(
+        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+      );
+
+      if (!tokensFromCache) {
+        await this.notifyAboutInvalidCredentials();
+        return null;
+      }
+
+      this.auth_data = tokensFromCache;
+      return this.auth_data;
     }
 
     const { expires } = this.auth_data;
