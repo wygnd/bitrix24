@@ -108,7 +108,6 @@ export class BitrixAvitoController {
   @Post('/notify-about-unread-chats')
   async notifyAboutUnreadChats(@Body() accountNames: string[]) {
     try {
-      console.log('AVITO: NOTIFY UNREAD CHAT REQUEST: ', accountNames);
       const notifyMessage = accountNames.reduce((acc, accountName) => {
         acc += accountName + '[br]';
         return acc;
@@ -120,10 +119,6 @@ export class BitrixAvitoController {
           MESSAGE: notifyMessage,
         });
 
-      console.log(
-        'AVITO: NOTIFY UNREAD CHAT RESPONSE: ',
-        JSON.stringify(sendMessageResult),
-      );
       return sendMessageResult.result ?? -1;
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
