@@ -16,6 +16,8 @@ import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { HttpModule } from '@nestjs/axios';
 import { BitrixImbotController } from '@/modules/bitirx/modules/imbot/imbot.controller';
 import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhook.controller';
+import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/bitrix-placement.service';
+import { BitrixPlacementController } from '@/modules/bitirx/modules/placement/placement.controller';
 
 @Module({
   imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],
@@ -26,6 +28,7 @@ import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhoo
     BitrixHeadHunterController,
     BitrixImbotController,
     BitrixWebhookController,
+    BitrixPlacementController,
   ],
   providers: [
     ...bitrixProviders,
@@ -36,6 +39,7 @@ import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhoo
     BitrixImBotService,
     BitrixDealService,
     BitrixIntegrationAvitoService,
+    BitrixPlacementService,
   ],
   exports: [BitrixService, BitrixMessageService],
 })

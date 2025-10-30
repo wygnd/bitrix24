@@ -65,6 +65,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             case 'invalid_request':
             case 'ERROR_BATCH_LENGTH_EXCEEDED':
             case 'INVALID_REQUEST':
+            case 'ERROR_CORE':
               return throwError(() => new BadRequestException(data));
 
             //   401

@@ -49,7 +49,8 @@ export type B24ErrorType =
   | 'INVALID_CREDENTIALS'
   | 'ERROR_MANIFEST_IS_NOT_AVAILABLE'
   | 'expired_token'
-  | 'user_access_error';
+  | 'user_access_error'
+  | 'ERROR_CORE';
 
 export interface B24ErrorResponse {
   error: B24ErrorType;

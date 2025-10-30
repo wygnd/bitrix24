@@ -1,16 +1,21 @@
-import type { B24LangList } from '@bitrix24/b24jssdk';
-
 export interface PlacementBindOptions {
-  placement: string;
-  handler: string;
-  title: string;
-  description: string;
-  group_name: string;
-  lang_all: Record<B24LangList, LanguageOptions>[];
+  PLACEMENT: string;
+  HANDLER: string;
+  TITLE: string;
+  DESCRIPTION?: string;
+  GROUP_NAME?: string;
+  LANG_ALL: Record<string, B24LanguageOptions>;
+  OPTIONS?: Record<string, any>;
 }
 
-type LanguageOptions = {
-  title: string;
-  description: string;
-  group_name: string;
+export type B24LanguageOptions = {
+  TITLE: string;
+  DESCRIPTION: string;
+  GROUP_NAME: string;
 };
+
+export interface PlacementUnbindOptions {
+  PLACEMENT: string;
+  HANDLER: string;
+}
+

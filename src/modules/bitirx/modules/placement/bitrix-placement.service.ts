@@ -1,21 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { B24Hook } from '@bitrix24/b24jssdk';
-import { PlacementBindOptions } from './placement.interface';
+import { Injectable } from '@nestjs/common';
+import {
+  PlacementBindOptions,
+  PlacementUnbindOptions,
+} from './placement.interface';
+import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/placement-unbind.dto';
 
 @Injectable()
 export class BitrixPlacementService {
-  constructor(
-    @Inject('BITRIX24')
-    private readonly bx24: B24Hook,
-  ) {}
+  constructor(private readonly bitrixService: BitrixService) {}
 
-  // todo: type response
   async bind(params: PlacementBindOptions) {
-    return this.bx24
-      .callMethod('placement.bind', params)
-      .then((result) => result.getData())
-      .catch((err) => {
-        throw err;
-      });
+    return this.bitrixService.callMethod<PlacementBindOptions, boolean>(
+      'placement.bind',
+      params,
+    );
+  }
+
+  async unbind(fields: PlacementUnbindDto) {
+    return this.bitrixService.callMethod<
+      PlacementUnbindOptions,
+      { count: number }
+    >('placement.unbind', fields);
   }
 }

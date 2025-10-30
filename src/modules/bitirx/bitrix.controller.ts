@@ -13,6 +13,10 @@ import { BitrixUserService } from './modules/user/user.service';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/bitrix-placement.service';
+import { PlacementBindDto } from '@/modules/bitirx/modules/placement/dtos/placement-bind.dto';
+import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/placement-unbind.dto';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
@@ -21,6 +25,7 @@ export class BitrixController {
   constructor(
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixPlacementService: BitrixPlacementService,
   ) {}
 
   /**
@@ -46,5 +51,15 @@ export class BitrixController {
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Post('/placement/bind')
+  async bindWidget(@Body() fields: PlacementBindDto) {
+    return this.bitrixPlacementService.bind(fields);
+  }
+
+  @Post('/placement/unbind')
+  async unbindWidget(@Body() fields: PlacementUnbindDto) {
+    return this.bitrixPlacementService.unbind(fields);
   }
 }
