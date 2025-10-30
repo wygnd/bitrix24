@@ -70,6 +70,7 @@ export class BitrixHeadHunterController {
         },
       );
 
+      const now = new Date();
       // Save tokens in redis
       this.redisService
         .set<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA, {
@@ -97,8 +98,6 @@ export class BitrixHeadHunterController {
           '[br]Ответ авторизации: ' +
           JSON.stringify(res),
       });
-
-      const now = new Date();
 
       return '<h1>Успех<h1/><script>window.close();</script>';
     } catch (error) {
