@@ -70,6 +70,8 @@ export class BitrixHeadHunterController {
         },
       );
 
+      console.log('Check response on get tokens', res);
+
       const now = new Date();
       // Save tokens in redis
       this.redisService
@@ -99,7 +101,7 @@ export class BitrixHeadHunterController {
           JSON.stringify(res),
       });
 
-      return '<h1>Успех<h1/><script>window.close();</script>';
+      return '<h1>Успех</h1><script>window.close();</script>';
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
@@ -112,17 +114,27 @@ export class BitrixHeadHunterController {
     const redisNotificationKey =
       REDIS_KEYS.HEADHUNTER_WEBHOOK_NOTIFICATION + notificationId;
 
-    const notificationWasReceived =
-      await this.redisService.get<string>(redisNotificationKey);
+    let notificationWasReceived: string | null;
+
+    try {
+      notificationWasReceived =
+        await this.redisService.get<string>(redisNotificationKey);
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
 
     if (notificationWasReceived)
       throw new ConflictException('Notification was received');
 
-    await this.redisService.set<string>(
-      redisNotificationKey,
-      notificationId,
-      3600,
-    );
+    try {
+      await this.redisService.set<string>(
+        redisNotificationKey,
+        notificationId,
+        3600,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
 
     await this.bitrixImBotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,

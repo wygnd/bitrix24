@@ -17,21 +17,16 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { Request } from 'express';
-import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { ConfigService } from '@nestjs/config';
-import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly headHunterService: HeadHunterService,
-  ) {}
+  constructor(private readonly headHunterService: HeadHunterService) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
-      catchError(async (error: AxiosError<B24ErrorResponse>) => {
+      catchError((error: AxiosError<B24ErrorResponse>) => {
         if (
           (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
           error.status === HttpStatus.FORBIDDEN
@@ -40,7 +35,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
 
           switch (host) {
             case 'api.hh.ru':
-              await this.headHunterService.notifyAboutInvalidCredentials();
+              this.headHunterService.notifyAboutInvalidCredentials();
               return throwError(
                 () =>
                   new HttpException(
@@ -51,16 +46,19 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        if (!error.response?.data)
+        if (!error.response?.data) {
           return throwError(
-            () => new HttpException(error, HttpStatus.BAD_REQUEST),
+            () =>
+              new HttpException(
+                error,
+                error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+              ),
           );
+        }
 
-        const { data } = error.response;
-
-        if ('error' in data) {
-          const { error: errorName, error_description: errorDesc } = data;
-          const errorMessage = `BITRIX ERROR: ${errorName}: ${errorDesc}`;
+        if (error.response?.data && 'error' in error.response.data) {
+          const { data } = error.response;
+          const { error: errorName } = data;
 
           switch (errorName) {
             // 400
