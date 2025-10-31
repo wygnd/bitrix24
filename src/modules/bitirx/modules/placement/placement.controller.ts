@@ -7,9 +7,9 @@ import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/bitri
 import { PlacementBindDto } from '@/modules/bitirx/modules/placement/dtos/placement-bind.dto';
 import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/placement-unbind.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { BitrixWebhookGuard } from '@/modules/bitirx/guards/bitrix-webhook.guard';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -20,8 +20,12 @@ export class BitrixPlacementController {
     private readonly bitrixService: BitrixService,
   ) {}
 
+  @UseGuards(BitrixWebhookGuard)
   @Post('/crm/deal/detail-tab')
-  async handleCrmDealDetailTab(@Body() fields: any, @Res() res: Response) {
+  async handleCrmDealDetailTab(
+    @Body() fields: PlacementRequestDto,
+    @Res() res: Response,
+  ) {
     await this.bitrixImbotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
