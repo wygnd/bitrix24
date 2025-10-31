@@ -9,7 +9,7 @@ import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/plac
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
-import { BitrixWebhookGuard } from '@/modules/bitirx/guards/bitrix-webhook.guard';
+import { BitrixPlacementGuard } from '@/modules/bitirx/guards/bitrix-widget.guard';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -20,7 +20,7 @@ export class BitrixPlacementController {
     private readonly bitrixService: BitrixService,
   ) {}
 
-  @UseGuards(BitrixWebhookGuard)
+  @UseGuards(BitrixPlacementGuard)
   @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(
     @Body() fields: PlacementRequestDto,
