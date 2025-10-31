@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {});
@@ -13,6 +12,13 @@ async function bootstrap() {
   const PORT = config.get<number>('PORT') ?? 3000;
 
   app.useGlobalPipes(new ValidationPipe());
+
+  app.enableCors({
+    origin: [
+      'https://bitrix-hr-app-production.up.railway.app',
+      'http://localhost:5173',
+    ],
+  });
 
   // Swagger API
   const swaggerConfig = new DocumentBuilder()
