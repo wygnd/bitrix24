@@ -17,7 +17,6 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { Request } from 'express';
-import { ConfigService } from '@nestjs/config';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 
 @Injectable()
@@ -27,8 +26,6 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       catchError((error: AxiosError<B24ErrorResponse>) => {
-        console.log(error);
-
         if (
           (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
           error.status === HttpStatus.FORBIDDEN
