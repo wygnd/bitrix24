@@ -7,19 +7,27 @@ import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/bitri
 import { PlacementBindDto } from '@/modules/bitirx/modules/placement/dtos/placement-bind.dto';
 import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/placement-unbind.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
+import { BitrixService } from '@/modules/bitirx/bitrix.service';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
 export class BitrixPlacementController {
   constructor(
     private readonly bitrixPlacementService: BitrixPlacementService,
+    private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixService: BitrixService,
   ) {}
 
   @Post('/crm/deal/detail-tab')
-  async handleCrmDealDetailTab(
-    // @Body() fields: PlacementRequestDto,
-    @Res() res: Response,
-  ) {
+  async handleCrmDealDetailTab(@Body() fields: any, @Res() res: Response) {
+    await this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE:
+        '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
+        JSON.stringify(fields),
+    });
+
     res.redirect('https://bitrix-hr-app-production.up.railway.app');
   }
 
