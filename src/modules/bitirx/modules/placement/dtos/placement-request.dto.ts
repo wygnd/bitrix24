@@ -46,7 +46,8 @@ export class PlacementRequestDto {
     type: String,
     required: true,
     description: 'auth id',
-    example: '57f49f6600631fcd00005a4b00000001f0f1077ef2d8b6c37097b8985bb7fb4948d1e8',
+    example:
+      '57f49f6600631fcd00005a4b00000001f0f1077ef2d8b6c37097b8985bb7fb4948d1e8',
   })
   @IsNotEmpty()
   @IsString()
@@ -66,7 +67,8 @@ export class PlacementRequestDto {
     type: String,
     required: true,
     description: 'refresh id',
-    example: '4773c76600631fcd00005a4b00000001f0f10711f2f134f53a44072e44b61677961fac',
+    example:
+      '4773c76600631fcd00005a4b00000001f0f10711f2f134f53a44072e44b61677961fac',
   })
   @IsNotEmpty()
   @IsString()
@@ -111,4 +113,14 @@ export class PlacementRequestDto {
   @IsNotEmpty()
   @IsString()
   PLACEMENT_OPTIONS: string;
+
+  @ApiProperty({
+    type: String,
+    required: true,
+    description: 'server endpoint',
+    example: 'https://server.ru/ednpoint',
+  })
+  @IsNotEmpty()
+  @IsString()
+  SERVER_ENDPOINT: string;
 }

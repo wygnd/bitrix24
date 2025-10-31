@@ -16,7 +16,7 @@ import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { HttpModule } from '@nestjs/axios';
 import { BitrixImbotController } from '@/modules/bitirx/modules/imbot/imbot.controller';
 import { BitrixWebhookController } from '@/modules/bitirx/modules/webhook/webhook.controller';
-import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/bitrix-placement.service';
+import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/placement.service';
 import { BitrixPlacementController } from '@/modules/bitirx/modules/placement/placement.controller';
 
 @Module({
