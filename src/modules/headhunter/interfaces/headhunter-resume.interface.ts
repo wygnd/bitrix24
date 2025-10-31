@@ -19,7 +19,7 @@ export interface HHResumeInterface {
   actions: Actions;
   alternate_url: string;
   id: string;
-  download: Download2;
+  download: Download;
   platform: Platform;
   employment_form: EmploymentForm[];
   work_format: WorkFormat[];
@@ -31,14 +31,14 @@ export interface HHResumeInterface {
   birth_date: string;
   education: Education;
   employment: Employment;
-  employments: Employment2[];
+  employments: Employment[];
   experience: Experience[];
   language: Language[];
   metro: any;
   recommendation: any[];
   relocation: Relocation;
   schedule: Schedule;
-  schedules: Schedule2[];
+  schedules: Schedule[];
   site: any[];
   travel_time: TravelTime;
   business_trip_readiness: BusinessTripReadiness;
@@ -55,23 +55,23 @@ export interface HHResumeInterface {
   tags: any[];
 }
 
-export interface Area {
+interface Area {
   id: string;
   name: string;
   url: string;
 }
 
-export interface Gender {
+interface Gender {
   id: string;
   name: string;
 }
 
-export interface Salary {
+interface Salary {
   amount: number;
   currency: string;
 }
 
-export interface Photo {
+interface Photo {
   small: string;
   medium: string;
   '40': string;
@@ -79,55 +79,42 @@ export interface Photo {
   '500': string;
 }
 
-export interface TotalExperience {
+interface TotalExperience {
   months: number;
 }
 
-export interface Owner {
+interface Owner {
   id: string;
   comments: Comments;
 }
 
-export interface Comments {
+interface Comments {
   url: string;
   counters: Counters;
 }
 
-export interface Counters {
+interface Counters {
   total: number;
 }
 
-export interface NegotiationsHistory {
+interface NegotiationsHistory {
   url: string;
 }
 
-export interface Actions {
+interface Actions {
   download: Download;
 }
 
-export interface Download {
+interface Download {
   pdf: Pdf;
   rtf: Rtf;
 }
 
-export interface Pdf {
+interface Pdf {
   url: string;
 }
 
-export interface Rtf {
-  url: string;
-}
-
-export interface Download2 {
-  pdf: Pdf2;
-  rtf: Rtf2;
-}
-
-export interface Pdf2 {
-  url: string;
-}
-
-export interface Rtf2 {
+interface Rtf {
   url: string;
 }
 
@@ -198,19 +185,14 @@ export interface Employment {
   name: string;
 }
 
-export interface Employment2 {
-  id: string;
-  name: string;
-}
-
 export interface Experience {
   start: string;
   end?: string;
   company: string;
   company_id?: string;
   industry?: Industry;
-  industries: Industry2[];
-  area?: Area2;
+  industries: Industry[];
+  area?: Area;
   company_url?: string;
   employer?: Employer;
   position: string;
@@ -220,17 +202,6 @@ export interface Experience {
 export interface Industry {
   id: string;
   name: string;
-}
-
-export interface Industry2 {
-  id: string;
-  name: string;
-}
-
-export interface Area2 {
-  id: string;
-  name: string;
-  url: string;
 }
 
 export interface Employer {
@@ -250,12 +221,7 @@ export interface LogoUrls {
 export interface Language {
   id: string;
   name: string;
-  level: Level2;
-}
-
-export interface Level2 {
-  id: string;
-  name: string;
+  level: Level;
 }
 
 export interface Relocation {
@@ -270,11 +236,6 @@ export interface Type {
 }
 
 export interface Schedule {
-  id: string;
-  name: string;
-}
-
-export interface Schedule2 {
   id: string;
   name: string;
 }
@@ -295,7 +256,7 @@ export interface DriverLicenseType {
 
 export interface Contact {
   value: any;
-  type: Type2;
+  type: Type;
   preferred: boolean;
   comment: any;
   contact_value: string;
@@ -309,11 +270,6 @@ export interface ContactPhone {
   city: string;
   number: string;
   formatted: string;
-}
-
-export interface Type2 {
-  id: string;
-  name: string;
 }
 
 export interface ProfessionalRole {

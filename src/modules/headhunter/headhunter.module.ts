@@ -5,11 +5,12 @@ import { HttpModule } from '@nestjs/axios';
 import { HeadHunterController } from '@/modules/headhunter/headhunter.controller';
 import { RedisModule } from '@/modules/redis/redis.module';
 import { BitrixModule } from '@/modules/bitirx/bitrix.module';
+import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 
 @Module({
   imports: [HttpModule, RedisModule, forwardRef(() => BitrixModule)],
   controllers: [HeadHunterController],
-  providers: [...headHunterProviders, HeadHunterService],
-  exports: [HeadHunterService],
+  providers: [...headHunterProviders, HeadHunterService, HeadhunterRestService],
+  exports: [HeadHunterService, HeadhunterRestService],
 })
 export class HeadHunterModule {}

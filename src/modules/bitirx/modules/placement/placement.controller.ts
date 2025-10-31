@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { PlacementRequestDto } from '@/modules/bitirx/modules/placement/dtos/placement-request.dto';
@@ -23,7 +23,7 @@ export class BitrixPlacementController {
   @UseGuards(BitrixPlacementGuard)
   @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(
-    @Body() fields: PlacementRequestDto,
+    @Query() fields: PlacementRequestDto,
     @Res() res: Response,
   ) {
     await this.bitrixImbotService.sendMessage({
@@ -34,7 +34,9 @@ export class BitrixPlacementController {
         JSON.stringify(fields),
     });
 
-    res.redirect('https://bitrix-hr-app-production.up.railway.app');
+    res.redirect(
+      `https://bitrix-hr-app-production.up.railway.app?member_id=${fields.member_id}`,
+    );
   }
 
   @ApiHeader({

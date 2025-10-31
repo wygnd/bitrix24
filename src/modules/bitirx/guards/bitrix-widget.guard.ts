@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { PlacementRequestDto } from '@/modules/bitirx/modules/placement/dtos/placement-request.dto';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class BitrixPlacementGuard implements CanActivate {
 
     const body: PlacementRequestDto = request.body;
 
-    const memberIdFromRequest = body.member_id;
+    const memberIdFromRequest = body?.member_id;
     const memberId = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (!memberId || !memberIdFromRequest || memberId !== memberIdFromRequest)

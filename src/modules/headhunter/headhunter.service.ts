@@ -9,6 +9,7 @@ import { HeadHunterAuthTokens } from '@/modules/bitirx/modules/integration/headh
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.interface';
 
 @Injectable()
 export class HeadHunterService {
@@ -16,6 +17,7 @@ export class HeadHunterService {
   private readonly client_secret: string;
   private readonly redirect_uri: string;
   private auth_data?: HeadHunterAuthTokens;
+  private employer_id: string;
 
   constructor(
     private readonly redisService: RedisService,
@@ -44,6 +46,8 @@ export class HeadHunterService {
 
     this.http.defaults.baseURL = baseUrl;
 
+    // Check auth data.
+    // Send message about update credentials If not exists
     this.redisService
       .get<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA)
       .then(async (data) => {
@@ -61,11 +65,22 @@ export class HeadHunterService {
     this.client_id = clientId;
     this.client_secret = clientSecret;
     this.redirect_uri = redirectUri;
+
+    this.redisService
+      .get<string>(REDIS_KEYS.HEADHUNTER_EMPLOYER_ID)
+      .then(async (employerId) => {
+        if (!employerId) {
+          const me = await this.get<object, HHMeInterface>('/me');
+          this.employer_id = me.employer.id;
+          return;
+        }
+        this.employer_id = employerId;
+      });
   }
 
   async get<T, U = any>(url: string, config?: AxiosRequestConfig<T>) {
     const { data } = await this.http.get<T, AxiosResponse<U>>(url, config);
-    return data;
+    return data as U;
   }
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {
@@ -88,6 +103,10 @@ export class HeadHunterService {
 
   get REDIRECT_URI() {
     return this.redirect_uri;
+  }
+
+  get EMPLOYER_ID() {
+    return this.employer_id;
   }
 
   async getResumeById(resumeId: string) {
@@ -129,6 +148,13 @@ export class HeadHunterService {
 
     this.http.defaults.headers['Authorization'] =
       `Bearer ${tokens.access_token}`;
+
+    // Temporary
+    await this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE:
+        'Обновлены токены авторизации для hh.ru[br]' + JSON.stringify(tokens),
+    });
   }
 
   private async getAuthData() {
