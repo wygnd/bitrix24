@@ -9,19 +9,21 @@ import { PlacementUnbindDto } from '@/modules/bitirx/modules/placement/dtos/plac
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
 export class BitrixPlacementController {
   constructor(
     private readonly bitrixPlacementService: BitrixPlacementService,
-    private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
   ) {}
 
   @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(@Body() fields: any, @Res() res: Response) {
-    await this.bitrixMessageService.sendPrivateMessage({
+    await this.bitrixImbotService.sendMessage({
+      BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
