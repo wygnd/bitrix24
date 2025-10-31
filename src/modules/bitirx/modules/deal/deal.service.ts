@@ -1,13 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { B24CreateDeal, B24Deal, B24DealListParams } from './deal.interface';
-import { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface';
-import { B24User } from '@/modules/bitirx/modules/user/user.interface';
-import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import {
+  B24CreateDeal,
+  B24Deal,
+  B24DealFields,
+  B24DealListParams,
+} from './deal.interface';
+import { RedisService } from '@/modules/redis/redis.service';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 
 @Injectable()
 export class BitrixDealService {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(
+    private readonly bitrixService: BitrixService,
+    private readonly redisService: RedisService,
+  ) {}
 
   async getDealById(dealId: number | string) {
     return this.bitrixService.callMethod<{ id: string | number }, B24Deal>(
@@ -33,5 +40,40 @@ export class BitrixDealService {
         options: options,
       },
     );
+  }
+
+  async getDealFields() {
+    const dealFieldsFromCache = await this.redisService.get<B24DealFields>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_FIELDS,
+    );
+
+    if (dealFieldsFromCache) return dealFieldsFromCache;
+
+    const { result: dealFields } = await this.bitrixService.callMethod<
+      object,
+      B24DealFields
+    >('crm.deal.fields');
+
+    if (!dealFields) throw new NotFoundException('Deal fields in not found');
+
+    await this.redisService.set<B24DealFields>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_FIELDS,
+      dealFields,
+      3600,
+    );
+
+    return dealFields;
+  }
+
+  async getDealField(fieldId: string) {
+    const dealFields = await this.getDealFields();
+
+    const findFields = Object.keys(dealFields).filter(
+      (fieldKey) => fieldKey === fieldId,
+    );
+
+    if (findFields.length === 0) throw new NotFoundException('Field not found');
+
+    return dealFields[findFields[0]];
   }
 }
