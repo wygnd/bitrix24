@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class PlacementRequestDto {
+export class PlacementQueryRequestDto {
   @ApiProperty({
     type: String,
     required: true,
@@ -41,7 +41,9 @@ export class PlacementRequestDto {
   @IsNotEmpty()
   @IsString()
   APP_SID: string;
+}
 
+export class PlacementBodyRequestDto {
   @ApiProperty({
     type: String,
     required: true,

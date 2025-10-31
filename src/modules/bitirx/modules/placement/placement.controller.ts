@@ -1,7 +1,10 @@
 import { Body, Controller, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
-import { PlacementRequestDto } from '@/modules/bitirx/modules/placement/dtos/placement-request.dto';
+import {
+  PlacementBodyRequestDto,
+  PlacementQueryRequestDto,
+} from '@/modules/bitirx/modules/placement/dtos/placement-request.dto';
 import type { Response } from 'express';
 import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/placement.service';
 import { PlacementBindDto } from '@/modules/bitirx/modules/placement/dtos/placement-bind.dto';
@@ -23,8 +26,8 @@ export class BitrixPlacementController {
   @UseGuards(BitrixPlacementGuard)
   @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(
-    @Body() body: any,
-    @Query() fields: any,
+    @Body() body: PlacementBodyRequestDto,
+    @Query() query: PlacementQueryRequestDto,
     @Res() res: Response,
   ) {
     await this.bitrixImbotService.sendMessage({
@@ -32,14 +35,13 @@ export class BitrixPlacementController {
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
-        `Query: ${JSON.stringify(fields)}` +
+        `Query: ${JSON.stringify(query)}[br]` +
         `Body: ${JSON.stringify(body)}`,
     });
 
-    return 1;
-    // res.redirect(
-    //   `https://bitrix-hr-app-production.up.railway.app?member_id=${fields.member_id}`,
-    // );
+    res.redirect(
+      `https://bitrix-hr-app-production.up.railway.app?member_id=${body.member_id}`,
+    );
   }
 
   @ApiHeader({
