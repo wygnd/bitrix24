@@ -3,8 +3,10 @@ import { BitrixService } from '../../bitrix.service';
 import {
   B24CreateDeal,
   B24Deal,
+  B24DealField,
   B24DealFields,
   B24DealListParams,
+  B24DealUserField,
 } from './deal.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
@@ -66,14 +68,23 @@ export class BitrixDealService {
   }
 
   async getDealField(fieldId: string) {
+    const dealFieldFromCache = await this.redisService.get<
+      B24DealField & B24DealUserField
+    >(REDIS_KEYS.BITRIX_DATA_DEAL_FIELD + fieldId);
+
+    if (dealFieldFromCache) return dealFieldFromCache;
+
     const dealFields = await this.getDealFields();
 
-    const findFields = Object.keys(dealFields).filter(
-      (fieldKey) => fieldKey === fieldId,
+    if (!(fieldId in dealFields))
+      throw new NotFoundException('Field not found');
+
+    await this.redisService.set<B24DealField & B24DealUserField>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_FIELD + fieldId,
+      dealFields[fieldId],
+      86400,
     );
 
-    if (findFields.length === 0) throw new NotFoundException('Field not found');
-
-    return dealFields[findFields[0]];
+    return dealFields[fieldId];
   }
 }
