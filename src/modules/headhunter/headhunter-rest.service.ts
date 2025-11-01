@@ -8,6 +8,7 @@ import { plainToInstance } from 'class-transformer';
 import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 
 @Injectable()
 export class HeadhunterRestService {
@@ -47,6 +48,46 @@ export class HeadhunterRestService {
     );
 
     return vacanciesClear;
+  }
+
+  async getResumeById(resumeId: string) {
+    const resumeFromCache = await this.redisService.get<HHResumeInterface>(
+      REDIS_KEYS.HEADHUNTER_DATA_RESUME + resumeId,
+    );
+
+    if (resumeFromCache) return resumeFromCache;
+
+    const resume = await this.headHunterService.get<null, HHResumeInterface>(
+      `/resumes/${resumeId}`,
+    );
+
+    await this.redisService.set<HHResumeInterface>(
+      REDIS_KEYS.HEADHUNTER_DATA_RESUME + resumeId,
+      resume,
+      3600,
+    );
+
+    return resume;
+  }
+
+  async getVacancyById(vacancyId: string) {
+    const vacancyFromCache = await this.redisService.get<HHVacancyInterface>(
+      REDIS_KEYS.HEADHUNTER_DATA_VACANCY + vacancyId,
+    );
+
+    if (vacancyFromCache) return vacancyFromCache;
+
+    const vacancy = await this.headHunterService.get<null, HHVacancyInterface>(
+      `/vacancies/${vacancyId}`,
+    );
+
+    await this.redisService.set<HHVacancyInterface>(
+      REDIS_KEYS.HEADHUNTER_DATA_VACANCY + vacancyId,
+      vacancy,
+      3600,
+    );
+
+    return vacancy;
   }
 
   private toDto(vacancy: HHVacancyInterface) {

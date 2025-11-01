@@ -24,6 +24,10 @@ import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.inte
 import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
+import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
+import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
+import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
+import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -34,6 +38,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixService: BitrixService,
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixDealService: BitrixDealService,
+    private readonly headHunterRestService: HeadhunterRestService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -90,7 +95,17 @@ export class BitrixHeadHunterService {
   }
 
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
+    const { action_type } = body;
+
+    switch (action_type) {
+      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
+        return this.handleNewResponseVacancyWebhook(body);
+    }
+  }
+
+  async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
     const { id: notificationId, payload } = body;
+
     const redisNotificationKey =
       REDIS_KEYS.HEADHUNTER_WEBHOOK_NOTIFICATION + notificationId;
 
@@ -129,8 +144,8 @@ export class BitrixHeadHunterService {
     const [vacancy, resume] = await Promise.all<
       [Promise<HHVacancyInterface>, Promise<HHResumeInterface>]
     >([
-      this.headHunterApi.getVacancyById(vacancy_id),
-      this.headHunterApi.getResumeById(resume_id),
+      this.headHunterRestService.getVacancyById(vacancy_id),
+      this.headHunterRestService.getResumeById(resume_id),
     ]);
 
     const candidateName = `${resume.last_name ?? ''} ${resume.first_name ?? ''} ${resume.middle_name ?? ''}`;
@@ -411,7 +426,42 @@ export class BitrixHeadHunterService {
     // return this.bitrixService.callBatch(batchCommands);
   }
 
-  async getVacancies() {
+  async getRatioVacancies() {
+    const ratioVacanciesFromCache = await this.redisService.get<
+      HHBitrixVacancy[]
+    >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
 
+    if (ratioVacanciesFromCache) return ratioVacanciesFromCache;
+
+    const vacancies = await this.headHunterRestService.getActiveVacancies();
+
+    const ratioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
+      (acc, { id, name, alternate_url }) => {
+        acc.push({
+          id: id,
+          label: name,
+          url: alternate_url,
+          items: [],
+        });
+        return acc;
+      },
+      [],
+    );
+
+    await this.redisService.set<HHBitrixVacancy[]>(
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
+      ratioVacancies,
+      3600,
+    );
+
+    return ratioVacancies;
+  }
+
+  async setRatioVacancies(vacancies: HHBitrixVacancy[]) {
+    return this.redisService.set<HHBitrixVacancy[]>(
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
+      vacancies,
+      3600,
+    );
   }
 }

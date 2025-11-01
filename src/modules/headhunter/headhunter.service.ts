@@ -109,14 +109,6 @@ export class HeadHunterService {
     return this.employer_id;
   }
 
-  async getResumeById(resumeId: string) {
-    return this.get<null, HHResumeInterface>(`/resumes/${resumeId}`);
-  }
-
-  async getVacancyById(vacancyOd: string) {
-    return this.get<null, HHVacancyInterface>(`/vacancies/${vacancyOd}`);
-  }
-
   async notifyAboutInvalidCredentials() {
     const wasSendingNotification = await this.redisService.get<boolean>(
       REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,

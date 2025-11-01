@@ -8,12 +8,20 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiHeader,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
 import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
+import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
+import { HHBitrixVacancyDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-bitrix-vacancy.dto';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
@@ -47,6 +55,33 @@ export class BitrixHeadHunterController {
   @UseGuards(AuthGuard)
   @Get('/vacancies')
   async getVacancies() {
-    return this.bitrixHeadHunterService.getVacancies();
+    return this.bitrixHeadHunterService.getRatioVacancies();
+  }
+
+  @ApiOperation({
+    summary: 'save vacancies',
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'auth token',
+    required: true,
+    example: 'bga authtoken',
+  })
+  @ApiBody({
+    type: [HHBitrixVacancyDto],
+    description: 'request',
+    required: true,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'success save vacancies',
+    type: Boolean,
+    example: true,
+  })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard)
+  @Post('/vacancies')
+  async saveVacancies(@Body() fields: HHBitrixVacancyDto[]) {
+    return this.bitrixHeadHunterService.setRatioVacancies(fields);
   }
 }
