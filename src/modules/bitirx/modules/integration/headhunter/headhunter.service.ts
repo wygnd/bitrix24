@@ -77,7 +77,7 @@ export class BitrixHeadHunterService {
 
       await this.bitrixImBotService.sendMessage({
         BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID: '190', // Екатерина Туркатова
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
           'HH ru отправил запрос на /redirect_uri[br]' +
@@ -130,14 +130,6 @@ export class BitrixHeadHunterService {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
-
-    await this.bitrixImBotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
-      DIALOG_ID: 'chat77152',
-      MESSAGE:
-        '[b]hh.ru[/b][br][user=376]Денис Некрасов[/user][br]Новое уведомление:[br]' +
-        JSON.stringify(body),
-    });
 
     const { resume_id, vacancy_id } = payload;
 

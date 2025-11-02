@@ -39,9 +39,7 @@ export class BitrixPlacementController {
         `Body: ${JSON.stringify(body)}`,
     });
 
-    res.redirect(
-      `https://bitrix-hr-app-production.up.railway.app?member_id=${body.member_id}`,
-    );
+    res.redirect(`https://bitrix-hr-app-production.up.railway.app`);
   }
 
   @ApiHeader({
@@ -53,7 +51,8 @@ export class BitrixPlacementController {
   @UseGuards(AuthGuard)
   @Post('/placement/bind')
   async bindWidget(@Body() fields: PlacementBindDto) {
-    return this.bitrixPlacementService.bind(fields);
+    return false;
+    // return this.bitrixPlacementService.bind(fields);
   }
 
   @ApiHeader({
@@ -65,6 +64,7 @@ export class BitrixPlacementController {
   @UseGuards(AuthGuard)
   @Post('/placement/unbind')
   async unbindWidget(@Body() fields: PlacementUnbindDto) {
-    return this.bitrixPlacementService.unbind(fields);
+    return false;
+    // return this.bitrixPlacementService.unbind(fields);
   }
 }

@@ -117,7 +117,7 @@ export class HeadHunterService {
     if (wasSendingNotification) return;
 
     await this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      DIALOG_ID: '190', // Екатерина Туркатова
       MESSAGE:
         'Необходимо обновить авторизацию на hh.ru: [br]' +
         'https://hh.ru/oauth/authorize?' +
