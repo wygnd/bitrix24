@@ -10,14 +10,19 @@ export class RedisService {
     private readonly redisClient: Redis,
   ) {}
 
-  async set<T>(key: string, value: T, ttlSecond: number = 0) {
+  async set<T>(key: string, value: T, ttlSecond?: number) {
     try {
-      await this.redisClient.set(
-        key,
-        isString(value) ? value : JSON.stringify(value),
-        'EX',
-        ttlSecond,
-      );
+      ttlSecond
+        ? await this.redisClient.set(
+            key,
+            isString(value) ? value : JSON.stringify(value),
+            'EX',
+            ttlSecond,
+          )
+        : await this.redisClient.set(
+            key,
+            isString(value) ? value : JSON.stringify(value),
+          );
       return true;
     } catch (error) {
       console.log('REDIS ERROR: ', error);
