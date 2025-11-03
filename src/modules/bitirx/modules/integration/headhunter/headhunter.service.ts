@@ -443,7 +443,7 @@ export class BitrixHeadHunterService {
     await this.redisService.set<HHBitrixVacancy[]>(
       REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
       ratioVacancies,
-      3600,
+      -1,
     );
 
     return ratioVacancies;
@@ -453,7 +453,7 @@ export class BitrixHeadHunterService {
     return this.redisService.set<HHBitrixVacancy[]>(
       REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
       vacancies,
-      3600,
+      -1,
     );
   }
 }
