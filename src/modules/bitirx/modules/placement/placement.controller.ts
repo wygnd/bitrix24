@@ -58,7 +58,14 @@ export class BitrixPlacementController {
 
     if (!redirectUrl) throw new InternalServerErrorException();
 
-    res.redirect(301, `https://bitrix-hr-app-production.up.railway.app`);
+    const params = new URLSearchParams();
+
+    Object.entries(query).forEach(([key, value]) => params.set(key, value));
+
+    res.redirect(
+      301,
+      `https://bitrix-hr-app-production.up.railway.app?${params.toString()}`,
+    );
   }
 
   @ApiHeader({
