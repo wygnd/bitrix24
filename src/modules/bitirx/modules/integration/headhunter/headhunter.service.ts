@@ -27,11 +27,7 @@ import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
-import {
-  HHBitrixVacancy,
-  HHBitrixVacancyItem,
-} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
-import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
+import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -273,7 +269,7 @@ export class BitrixHeadHunterService {
           'ЗАПЛАНИРУЙ ЗВОНОК!';
       }
     } else {
-      let bitrixVacancy: HHBitrixVacancyItem | string = '';
+      let bitrixVacancy = '';
 
       this.getRatioVacancyBitrix(vacancy_id).then((result) => {
         if (!result?.items || result.items.length === 0) return;
