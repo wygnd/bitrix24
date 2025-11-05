@@ -26,7 +26,9 @@ import { NotifyAboutConvertedDealDto } from './dtos/notify-about-converted-deal.
 import { BitrixMessageService } from '../im/im.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import type { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface';
-import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
+import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
+import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitirx/modules/deal/dtos/deal-event.dto';
+import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.gruard';
 
 @ApiTags('Deals')
 @Controller('deals')
@@ -249,5 +251,11 @@ export class BitrixDealController {
   @Get('/fields/field/:field_id')
   async getDealField(@Param('field_id') fieldId: string) {
     return this.bitrixDealService.getDealField(fieldId);
+  }
+
+  @UseGuards(BitrixEventGuard)
+  @Post('/events/update')
+  async handleDealChange(@Body() body: OnCRMDealUpdateEventBodyDto) {
+    return this.bitrixDealService.handleUpdateDealEvent(body);
   }
 }

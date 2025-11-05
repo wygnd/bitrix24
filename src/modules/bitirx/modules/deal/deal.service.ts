@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import {
   B24CreateDeal,
@@ -7,9 +11,10 @@ import {
   B24DealFields,
   B24DealListParams,
   B24DealUserField,
-} from './deal.interface';
+} from './interfaces/deal.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { B24OnCRMDealUpdateEvent } from '@/modules/bitirx/modules/deal/interfaces/deal-event.interace';
 
 @Injectable()
 export class BitrixDealService {
@@ -19,12 +24,20 @@ export class BitrixDealService {
   ) {}
 
   async getDealById(dealId: number | string) {
-    return this.bitrixService.callMethod<{ id: string | number }, B24Deal>(
-      'crm.deal.get',
-      {
-        id: dealId,
-      },
-    );
+    const { result: deal } = await this.bitrixService.callMethod<
+      { id: string | number },
+      B24Deal
+    >('crm.deal.get', {
+      id: dealId,
+    });
+
+    if (!deal) throw new NotFoundException('deal not found');
+
+    this.redisService
+      .set<B24Deal>(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId, deal)
+      .then(() => {});
+
+    return deal;
   }
 
   async getDeal(fields: B24DealListParams) {

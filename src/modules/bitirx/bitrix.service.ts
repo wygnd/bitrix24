@@ -335,6 +335,10 @@ export class BitrixService {
     return this.incomingWebhookToken;
   }
 
+  get ACCESS_TOKEN() {
+    return this.tokens.access_token;
+  }
+
   private async post<T, U = any>(
     url: string,
     body: T,

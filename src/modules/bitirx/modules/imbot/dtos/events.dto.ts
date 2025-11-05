@@ -16,7 +16,7 @@ class OnImCommandAddEventDataDto implements B24EventData {
   USER: B24EventUser;
 }
 
-class OnImCommandAddEventAuthOptionsDto implements B24AuthOptions {
+export class OnImCommandAddEventAuthOptionsDto implements B24AuthOptions {
   @ApiProperty({
     type: String,
     required: true,

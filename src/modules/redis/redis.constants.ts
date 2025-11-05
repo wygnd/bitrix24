@@ -10,6 +10,7 @@ export const REDIS_KEYS = {
   BITRIX_DATA_DEAL_FIELDS: 'bitrix:deal:fields',
   BITRIX_DATA_DEAL_FIELD: 'bitrix:deal:field:',
   BITRIX_DATA_RATIO_VACANCIES: 'bitrix:deal:hr:ratio:vacancies',
+  BITRIX_DATA_DEAL_ITEM: 'bitrix:deal:item:',
 
   // HEAD HUNTER API
   HEADHUNTER_ACCESS_TOKEN: 'hh:access_token',

@@ -22,7 +22,7 @@ import {
 } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 import { CandidateContactInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
-import { B24Deal } from '@/modules/bitirx/modules/deal/deal.interface';
+import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
