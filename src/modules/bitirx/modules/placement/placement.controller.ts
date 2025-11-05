@@ -57,19 +57,7 @@ export class BitrixPlacementController {
 
     if (!redirectUrl) throw new InternalServerErrorException();
 
-    try {
-      const { ID } = JSON.parse(body.PLACEMENT_OPTIONS) as { ID: string };
-
-      const { STAGE_ID } = await this.bitrixDealService.getDealById(ID);
-
-      switch (STAGE_ID) {
-        case '14':
-          res.redirect(301, redirectUrl);
-          break;
-      }
-    } catch (err) {
-      throw new BadRequestException('Invalid body');
-    }
+    res.redirect(301, `${redirectUrl}?member_id=${body.member_id}`);
   }
 
   @ApiHeader({
