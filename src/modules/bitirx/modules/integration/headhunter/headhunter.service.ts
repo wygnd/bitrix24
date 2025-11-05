@@ -28,6 +28,7 @@ import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
+import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -39,6 +40,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixDealService: BitrixDealService,
     private readonly headHunterRestService: HeadhunterRestService,
+    private readonly bitrixMessageService: BitrixMessageService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -117,6 +119,11 @@ export class BitrixHeadHunterService {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
+
+    await this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: 'chat77152',
+      MESSAGE: '[b]HH.RU[/b][br]Новое уведомление:[br]' + JSON.stringify(body),
+    });
 
     if (notificationWasReceived)
       throw new ConflictException('Notification was received');
@@ -272,6 +279,7 @@ export class BitrixHeadHunterService {
       let bitrixVacancy = '';
 
       this.getRatioVacancyBitrix(vacancy_id).then((result) => {
+        console.log(result);
         if (!result?.items || result.items.length === 0) return;
 
         bitrixVacancy = result.items[0].ID;
