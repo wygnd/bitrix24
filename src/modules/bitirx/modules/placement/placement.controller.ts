@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Query, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  InternalServerErrorException,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiHeader, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import {
@@ -13,6 +21,7 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { BitrixPlacementGuard } from '@/modules/bitirx/guards/bitrix-widget.guard';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -21,6 +30,7 @@ export class BitrixPlacementController {
     private readonly bitrixPlacementService: BitrixPlacementService,
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
+    private readonly configService: ConfigService,
   ) {}
 
   @UseGuards(BitrixPlacementGuard)
@@ -30,16 +40,22 @@ export class BitrixPlacementController {
     @Query() query: PlacementQueryRequestDto,
     @Res() res: Response,
   ) {
+    const redirectUrl = this.configService.get<string>(
+      'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
+    );
+
     await this.bitrixImbotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
         `Query: ${JSON.stringify(query)}[br]` +
-        `Body: ${JSON.stringify(body)}`,
+        `Body: ${JSON.stringify(body)}[br][br]` + 'Пустой redirect_url',
     });
 
-    res.redirect(`https://bitrix-hr-app-production.up.railway.app`);
+    if (!redirectUrl) throw new InternalServerErrorException();
+
+    res.redirect(301, `https://bitrix-hr-app-production.up.railway.app`);
   }
 
   @ApiHeader({

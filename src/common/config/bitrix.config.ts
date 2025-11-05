@@ -10,5 +10,7 @@ export default (): BitrixOptions => ({
     BOT_ID: process.env.BOT_ID ?? '',
     TEST_CHAT_ID: process.env.BITRIX_TEST_CHAT_ID ?? '',
     WEBHOOK_INCOMING_TOKEN: process.env.BITRIX_INCOMING_WEBHOOK_TOKEN ?? '',
+    WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL:
+      process.env.BITRIX_DATA_HR_RATIO_VACANCIES_REDIRECT_URL ?? '',
   },
 });

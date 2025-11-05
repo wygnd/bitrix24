@@ -8,6 +8,7 @@ export interface BitrixConstants {
   BOT_ID: string;
   TEST_CHAT_ID: string;
   WEBHOOK_INCOMING_TOKEN: string;
+  WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL: string;
 }
 
 export interface BitrixOptions {
