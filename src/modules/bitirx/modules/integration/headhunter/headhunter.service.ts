@@ -61,8 +61,6 @@ export class BitrixHeadHunterService {
         },
       );
 
-      console.log('Check response on get tokens', res);
-
       const now = new Date();
       // Save tokens in redis
       await this.redisService.set<HeadHunterAuthTokens>(
@@ -119,11 +117,6 @@ export class BitrixHeadHunterService {
     } catch (error) {
       throw new InternalServerErrorException(error);
     }
-
-    await this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: 'chat77152',
-      MESSAGE: '[b]HH.RU[/b][br]Новое уведомление:[br]' + JSON.stringify(body),
-    });
 
     if (notificationWasReceived)
       throw new ConflictException('Notification was received');
@@ -278,12 +271,13 @@ export class BitrixHeadHunterService {
     } else {
       let bitrixVacancy = '';
 
-      this.getRatioVacancyBitrix(vacancy_id).then((result) => {
-        console.log(result);
-        if (!result?.items || result.items.length === 0) return;
+      try {
+        const vacancy = await this.getRatioVacancyBitrix(vacancy_id);
 
-        bitrixVacancy = result.items[0].ID;
-      });
+        if (vacancy.items?.length > 0) bitrixVacancy = vacancy.items[0].ID;
+      } catch (e) {
+        bitrixVacancy = '';
+      }
 
       const { result: newDealId } = await this.bitrixDealService.createDeal({
         TITLE: candidateName,
