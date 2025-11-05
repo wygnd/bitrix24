@@ -52,5 +52,5 @@ export class HHBitrixVacancyDto implements HHBitrixVacancy {
   @IsString({
     each: true,
   })
-  items: HHBitrixVacancyItem[];
+  bitrixField: HHBitrixVacancyItem | null;
 }

@@ -2,7 +2,7 @@ export interface HHBitrixVacancy {
   id: string;
   url: string;
   label: string;
-  items: HHBitrixVacancyItem[];
+  bitrixField: HHBitrixVacancyItem | null
 }
 
 export type HHBitrixVacancyItem = {

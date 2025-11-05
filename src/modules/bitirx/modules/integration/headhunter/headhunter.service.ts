@@ -274,7 +274,7 @@ export class BitrixHeadHunterService {
       try {
         const vacancy = await this.getRatioVacancyBitrix(vacancy_id);
 
-        if (vacancy.items?.length > 0) bitrixVacancy = vacancy.items[0].ID;
+        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
       } catch (e) {
         bitrixVacancy = '';
       }
@@ -445,7 +445,7 @@ export class BitrixHeadHunterService {
           id: id,
           label: name,
           url: alternate_url,
-          items: [],
+          bitrixField: null,
         });
         return acc;
       },

@@ -143,7 +143,6 @@ export class BitrixDealController {
   })
   @HttpCode(200)
   @Post('deal')
-  // async getDeal(@Body() fields: B24ListParams<Partial<B24Deal>>) {
   async getDeal(@Body('phone') phone: string) {
     try {
       return this.bitrixService.callMethod<
