@@ -50,10 +50,7 @@ export class BitrixPlacementController {
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
         `Query: ${JSON.stringify(query)}[br]` +
-        `Body: ${JSON.stringify(body)}` +
-        !redirectUrl
-          ? '[br][br]Пустой redirect_url'
-          : '',
+        `Body: ${JSON.stringify(body)}`,
     });
 
     if (!redirectUrl) throw new InternalServerErrorException();
