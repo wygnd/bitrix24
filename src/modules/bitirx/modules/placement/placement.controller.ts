@@ -64,7 +64,8 @@ export class BitrixPlacementController {
 
       switch (STAGE_ID) {
         case '14':
-          return res.redirect(301, redirectUrl);
+          res.redirect(301, redirectUrl);
+          break;
       }
     } catch (err) {
       throw new BadRequestException('Invalid body');
