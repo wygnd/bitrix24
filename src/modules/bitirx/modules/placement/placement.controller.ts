@@ -44,17 +44,17 @@ export class BitrixPlacementController {
       'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
     );
 
-    // await this.bitrixImbotService.sendMessage({
-    //   BOT_ID: this.bitrixService.BOT_ID,
-    //   DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-    //   MESSAGE:
-    //     '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
-    //     `Query: ${JSON.stringify(query)}[br]` +
-    //     `Body: ${JSON.stringify(body)}` +
-    //     !redirectUrl
-    //       ? '[br][br]Пустой redirect_url'
-    //       : '',
-    // });
+    await this.bitrixImbotService.sendMessage({
+      BOT_ID: this.bitrixService.BOT_ID,
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE:
+        '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
+        `Query: ${JSON.stringify(query)}[br]` +
+        `Body: ${JSON.stringify(body)}` +
+        !redirectUrl
+          ? '[br][br]Пустой redirect_url'
+          : '',
+    });
 
     if (!redirectUrl) throw new InternalServerErrorException();
 
@@ -62,10 +62,7 @@ export class BitrixPlacementController {
 
     Object.entries(query).forEach(([key, value]) => params.set(key, value));
 
-    res.redirect(
-      301,
-      `https://bitrix-hr-app-production.up.railway.app?${params.toString()}`,
-    );
+    res.redirect(301, `${redirectUrl}?${params.toString()}`);
   }
 
   @ApiHeader({
@@ -75,7 +72,7 @@ export class BitrixPlacementController {
     example: 'bga token',
   })
   @UseGuards(AuthGuard)
-  @Post('/placement/bind')
+  @Post('/bind')
   async bindWidget(@Body() fields: PlacementBindDto) {
     return false;
     // return this.bitrixPlacementService.bind(fields);
@@ -88,7 +85,7 @@ export class BitrixPlacementController {
     example: 'bga token',
   })
   @UseGuards(AuthGuard)
-  @Post('/placement/unbind')
+  @Post('/unbind')
   async unbindWidget(@Body() fields: PlacementUnbindDto) {
     return false;
     // return this.bitrixPlacementService.unbind(fields);
