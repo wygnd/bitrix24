@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -84,4 +85,19 @@ export class BitrixHeadHunterController {
   async saveVacancies(@Body() fields: HHBitrixVacancyDto[]) {
     return this.bitrixHeadHunterService.setRatioVacancies(fields);
   }
+  //
+  // @ApiOperation({
+  //   summary: 'get vacancy by id',
+  // })
+  // @ApiHeader({
+  //   name: 'Authorization',
+  //   description: 'auth token',
+  //   required: true,
+  //   example: 'bga authtoken',
+  // })
+  // @UseGuards(AuthGuard)
+  // @Get('/vacancies/vacancy/:vacancy_id')
+  // async getRatioVacancy(@Param('vacancy_id') vacancyId: string) {
+  //   return this.bitrixHeadHunterService.getRatioVacancyBitrix(vacancyId);
+  // }
 }

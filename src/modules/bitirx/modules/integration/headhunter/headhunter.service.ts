@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
 import {
@@ -26,7 +27,10 @@ import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
-import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
+import {
+  HHBitrixVacancy,
+  HHBitrixVacancyItem,
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
 import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 
 @Injectable()
@@ -269,6 +273,14 @@ export class BitrixHeadHunterService {
           'ЗАПЛАНИРУЙ ЗВОНОК!';
       }
     } else {
+      let bitrixVacancy: HHBitrixVacancyItem | string = '';
+
+      this.getRatioVacancyBitrix(vacancy_id).then((result) => {
+        if (!result?.items || result.items.length === 0) return;
+
+        bitrixVacancy = result.items[0];
+      });
+
       const { result: newDealId } = await this.bitrixDealService.createDeal({
         TITLE: candidateName,
         // Тип поиска: приведи друга
@@ -277,13 +289,15 @@ export class BitrixHeadHunterService {
         UF_CRM_1638524259: phone ?? '',
         // Телеграмм
         UF_CRM_1760598515308: candidateContacts.telegram ?? '',
-        //  E-mail
+        // E-mail
         UF_CRM_1638524275: email ?? '',
-        //  Ссылка на резюме
+        // Ссылка на резюме
         UF_CRM_1638524306: resume.alternate_url,
         ASSIGNED_BY_ID: bitrixUser?.ID || '',
         CATEGORY_ID: '14',
         STAGE_ID: 'C14:NEW',
+        // Вакансия
+        UF_CRM_1638524000: bitrixVacancy,
       });
 
       newDealId
@@ -453,5 +467,33 @@ export class BitrixHeadHunterService {
       REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
       vacancies,
     );
+  }
+
+  /**
+   * Try finding ratio vacancy from hh in bitrix
+   * @param vacancyId
+   */
+  async getRatioVacancyBitrix(vacancyId: string) {
+    const ratioVacanciesFromCache = await this.redisService.get<
+      HHBitrixVacancy[]
+    >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
+
+    if (ratioVacanciesFromCache) {
+      const findVacancy = ratioVacanciesFromCache.find(
+        (v) => v.id === vacancyId,
+      );
+
+      if (!findVacancy) throw new NotFoundException('Vacancy not found');
+
+      return findVacancy;
+    }
+
+    const findVacancy = (await this.getRatioVacancies()).find(
+      (v) => v.id === vacancyId,
+    );
+
+    if (!findVacancy) throw new NotFoundException('Vacancy not found');
+
+    return findVacancy;
   }
 }
