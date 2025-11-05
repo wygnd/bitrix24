@@ -252,10 +252,4 @@ export class BitrixDealController {
   async getDealField(@Param('field_id') fieldId: string) {
     return this.bitrixDealService.getDealField(fieldId);
   }
-
-  @UseGuards(BitrixEventGuard)
-  @Post('/events/update')
-  async handleDealChange(@Body() body: OnCRMDealUpdateEventBodyDto) {
-    return this.bitrixDealService.handleUpdateDealEvent(body);
-  }
 }
