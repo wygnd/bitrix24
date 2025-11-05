@@ -44,14 +44,17 @@ export class BitrixPlacementController {
       'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
     );
 
-    await this.bitrixImbotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-      MESSAGE:
-        '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
-        `Query: ${JSON.stringify(query)}[br]` +
-        `Body: ${JSON.stringify(body)}[br][br]` + 'Пустой redirect_url',
-    });
+    // await this.bitrixImbotService.sendMessage({
+    //   BOT_ID: this.bitrixService.BOT_ID,
+    //   DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+    //   MESSAGE:
+    //     '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
+    //     `Query: ${JSON.stringify(query)}[br]` +
+    //     `Body: ${JSON.stringify(body)}` +
+    //     !redirectUrl
+    //       ? '[br][br]Пустой redirect_url'
+    //       : '',
+    // });
 
     if (!redirectUrl) throw new InternalServerErrorException();
 
