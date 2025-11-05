@@ -278,7 +278,7 @@ export class BitrixHeadHunterService {
       this.getRatioVacancyBitrix(vacancy_id).then((result) => {
         if (!result?.items || result.items.length === 0) return;
 
-        bitrixVacancy = result.items[0];
+        bitrixVacancy = result.items[0].ID;
       });
 
       const { result: newDealId } = await this.bitrixDealService.createDeal({
