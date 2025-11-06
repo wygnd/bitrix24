@@ -19,6 +19,7 @@ export const redisOptions = (configService: ConfigService): RedisOptions => {
     lazyConnect: true,
     commandTimeout: 1000,
     family: 0,
+    maxRetriesPerRequest: 3,
     retryStrategy: (times) => {
       const { delay, retryDuration } = redisRetryStrategy(
         times,

@@ -77,6 +77,12 @@ export class BitrixService {
     this.incomingWebhookToken = WEBHOOK_INCOMING_TOKEN;
   }
 
+  /**
+   * Send request to bitrix
+   * See https://apidocs.bitrix24.ru/ for target method
+   * @param method - bitrix method
+   * @param params - params for method.
+   */
   async callMethod<
     T extends Record<string, any> = Record<string, any>,
     U = any,
@@ -88,6 +94,11 @@ export class BitrixService {
     });
   }
 
+  /**
+   * Send batch request to bitrix
+   * @param commands - object of list commands where key is unique id command and value is command object
+   * @param halt
+   */
   async callBatch<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
 
@@ -120,8 +131,8 @@ export class BitrixService {
 
   /**
    * @deprecated
-   * @param commands
-   * @param halt
+   * @param {B24BatchCommands} commands - object of list commands where key is unique id command and value is command object
+   * @param {boolean} halt
    */
   async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
     const { access_token } = await this.getTokens();
@@ -178,15 +189,15 @@ export class BitrixService {
   public isAvailableToDistributeOnManager() {
     const now = new Date();
 
-    if (
+    return (
       (now.getDay() > 0 && now.getDay() < 6 && now.getHours() < 17) ||
       (now.getHours() > 17 && now.getMinutes() < 30)
-    )
-      return true;
-
-    return false;
+    );
   }
 
+  /**
+   * Get bitrix tokens
+   */
   public async getTokens(): Promise<BitrixTokens> {
     if (
       this.tokens &&
@@ -300,6 +311,9 @@ export class BitrixService {
     return url;
   }
 
+  /**
+   * Update tokens and save in cache
+   */
   public async updateTokens() {
     const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
       this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
@@ -319,26 +333,53 @@ export class BitrixService {
     return this.tokens;
   }
 
+  /**
+   * Get application bot id
+   * @constructor
+   */
   get BOT_ID() {
     return this.botId;
   }
 
+  /**
+   * Get bitrix domain
+   * @constructor
+   */
   get BITRIX_DOMAIN() {
     return this.bitrixDomain;
   }
 
+  /**
+   * Get bitrix chat id. Need for testing
+   * @constructor
+   */
   get TEST_CHAT_ID() {
     return this.testChatId;
   }
 
+  /**
+   * Get token for validate incoming webhooks from bitrix
+   * @constructor
+   */
   get WEBHOOK_INCOMING_TOKEN() {
     return this.incomingWebhookToken;
   }
 
+  /**
+   * Get access token
+   * @constructor
+   */
   get ACCESS_TOKEN() {
     return this.tokens.access_token;
   }
 
+  /**
+   * Base post request to bitrix
+   * @param url
+   * @param body
+   * @param config
+   * @private
+   */
   private async post<T, U = any>(
     url: string,
     body: T,

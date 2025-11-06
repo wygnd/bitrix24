@@ -6,6 +6,7 @@ export type B24AvailableMethods =
   | 'crm.lead.update'
   | 'crm.lead.add'
   | 'crm.deal.fields'
+  | 'crm.stagehistory.list'
   | 'tasks.task.list'
   | 'department.get'
   | 'tasks.task.delete'

@@ -32,6 +32,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.0",
     "@sequelize/postgres": "^7.0.0-alpha.46",
     "axios": "^1.12.2",

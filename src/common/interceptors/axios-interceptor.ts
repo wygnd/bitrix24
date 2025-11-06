@@ -45,12 +45,15 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        if (!error.response?.data) {
+        if (
+          !error.response?.data ||
+          Object.keys(error.response?.data).length === 0
+        ) {
           return throwError(
             () =>
               new HttpException(
                 error,
-                error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                error.response?.status || HttpStatus.INTERNAL_SERVER_ERROR,
               ),
           );
         }
@@ -102,7 +105,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        return throwError(() => error);
+        return throwError(() => new InternalServerErrorException(error));
       }),
     );
   }

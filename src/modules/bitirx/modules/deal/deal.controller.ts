@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -251,5 +252,16 @@ export class BitrixDealController {
   @Get('/fields/field/:field_id')
   async getDealField(@Param('field_id') fieldId: string) {
     return this.bitrixDealService.getDealField(fieldId);
+  }
+
+  @UseGuards(BitrixEventGuard)
+  @Post('/events/ONCRMDEALUPDATE')
+  async handleChangeDeal(@Body() body: OnCRMDealUpdateEventBodyDto) {
+    const result = await this.bitrixDealService.handleUpdateDeal(body);
+
+    if (!result)
+      throw new BadRequestException('Execute error or deal was not handling');
+
+    return result;
   }
 }

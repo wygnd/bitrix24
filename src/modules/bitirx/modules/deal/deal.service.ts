@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import {
@@ -100,4 +101,26 @@ export class BitrixDealService {
 
     return dealFields[fieldId];
   }
+
+  async getDealStageHistory() {
+    return this.bitrixService.callMethod('crm.stagehistory.list')
+  }
+
+  async handleUpdateDeal(body: B24OnCRMDealUpdateEvent) {
+    const { ID } = body.data.FIELDS;
+
+    const deal = await this.getDealById(ID);
+    const { STAGE_ID } = deal;
+
+    switch (STAGE_ID) {
+      // Настройка РК
+      case '1':
+        return this.handleUpdateSettingAdvertCategory(deal);
+
+      default:
+        return false;
+    }
+  }
+
+  async handleUpdateSettingAdvertCategory(deal: B24Deal) {}
 }

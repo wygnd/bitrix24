@@ -122,13 +122,9 @@ export class BitrixHeadHunterService {
       throw new ConflictException('Notification was received');
 
     try {
-      await this.redisService.set<string>(
-        redisNotificationKey,
-        notificationId,
-        3600,
-      );
+      this.redisService.set<string>(redisNotificationKey, notificationId, 3600);
     } catch (error) {
-      throw new InternalServerErrorException(error);
+      console.error('Error on save notify from hh to cache', error);
     }
 
     const { resume_id, vacancy_id } = payload;
@@ -306,7 +302,7 @@ export class BitrixHeadHunterService {
             'Сделки не найдено.[br]Что то пошло не так при создании сделки');
     }
 
-    await this.bitrixImBotService.sendMessage({
+    this.bitrixImBotService.sendMessage({
       BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: 'chat68032',
       MESSAGE: message,
@@ -452,7 +448,7 @@ export class BitrixHeadHunterService {
       [],
     );
 
-    await this.redisService.set<HHBitrixVacancy[]>(
+    this.redisService.set<HHBitrixVacancy[]>(
       REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
       ratioVacancies,
     );

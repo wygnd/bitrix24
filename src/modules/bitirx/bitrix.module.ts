@@ -41,7 +41,7 @@ import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/he
     BitrixDealService,
     BitrixIntegrationAvitoService,
     BitrixPlacementService,
-    BitrixHeadHunterService
+    BitrixHeadHunterService,
   ],
   exports: [BitrixService, BitrixMessageService],
 })
