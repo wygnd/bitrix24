@@ -20,6 +20,8 @@ export class BitrixEventGuard implements CanActivate {
     const accessTokenFromRequest = body.auth.access_token;
     const accessToken = this.bitrixService.ACCESS_TOKEN;
 
+    console.log('TEST CHECKING ACCESS TOKEN: ', body.auth);
+
     if (
       !accessToken ||
       !accessTokenFromRequest ||

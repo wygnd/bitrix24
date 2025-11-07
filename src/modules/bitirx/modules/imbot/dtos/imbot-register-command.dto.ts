@@ -3,7 +3,7 @@ import {
   B24ImbotRegisterCommand,
 } from '../imbot.interface';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
@@ -42,7 +42,7 @@ export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
     required: true,
     example: '1',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   CLIENT_ID?: string;
 

@@ -29,7 +29,7 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import type { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitirx/modules/deal/dtos/deal-event.dto';
-import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.gruard';
+import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
 
 @ApiTags('Deals')
 @Controller('deals')

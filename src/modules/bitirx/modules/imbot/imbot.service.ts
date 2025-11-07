@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { ImbotRegisterCommandDto } from './dtos/imbot-register-command.dto';
 import { ImbotUnregisterCommandDto } from './dtos/imbot-unregister-command.dto';
 import {
+  B24ImbotRegisterCommand,
   B24ImbotRegisterOptions,
   B24ImbotSendMessageOptions,
   B24ImbotUnRegisterOptions,
 } from './imbot.interface';
-import {
-  OnImCommandAddDto,
-  OnImCommandKeyboardDto,
-} from '@/modules/bitirx/modules/imbot/dtos/events.dto';
+import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
 import { NotifyConvertedDeal } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events-handle.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { ConfigService } from '@nestjs/config';
+import { BitrixConstants } from '@/common/interfaces/bitrix-config.interface';
 
 @Injectable()
 export class BitrixImBotService {
-  constructor(private readonly bitrixService: BitrixService) {}
+  private readonly botId: string;
 
-  async addCommand(fields: ImbotRegisterCommandDto) {
-    return await this.bitrixService.callMethod<ImbotRegisterCommandDto, number>(
+  constructor(
+    private readonly bitrixService: BitrixService,
+    private readonly configService: ConfigService,
+  ) {
+    const bitrixConstants =
+      this.configService.get<BitrixConstants>('bitrixConstants');
+
+    if (!bitrixConstants)
+      throw new Error('BITRIX BOT MODULE: Invalid config constants');
+
+    const { BOT_ID } = bitrixConstants;
+
+    this.botId = BOT_ID;
+  }
+
+  /**
+   * Add new bot command
+   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-register.html
+   * @param fields
+   */
+  async addCommand(fields: B24ImbotRegisterCommand) {
+    return await this.bitrixService.callMethod<B24ImbotRegisterCommand, number>(
       'imbot.command.register',
       {
         ...fields,
@@ -28,6 +47,11 @@ export class BitrixImBotService {
     );
   }
 
+  /**
+   * Remove bot command
+   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-unregister.html
+   * @param fields
+   */
   async removeCommand(fields: ImbotUnregisterCommandDto) {
     return await this.bitrixService.callMethod<
       ImbotUnregisterCommandDto,
@@ -35,6 +59,10 @@ export class BitrixImBotService {
     >('imbot.command.unregister', fields);
   }
 
+  /**
+   * Send message in chat via bot
+   * @param fields
+   */
   async sendMessage(fields: B24ImbotSendMessageOptions) {
     return await this.bitrixService.callMethod<
       B24ImbotSendMessageOptions,
@@ -42,6 +70,11 @@ export class BitrixImBotService {
     >('imbot.message.add', fields);
   }
 
+  /**
+   * Register new bot
+   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-register.html
+   * @param fields
+   */
   async registerBot(fields: B24ImbotRegisterOptions) {
     return this.bitrixService.callMethod<B24ImbotRegisterOptions, number>(
       'imbot.register',
@@ -49,11 +82,20 @@ export class BitrixImBotService {
     );
   }
 
+  /**
+   * Unregister bot.
+   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-unregister.html
+   * @param fields
+   */
   async unregisterBot(fields: B24ImbotUnRegisterOptions) {
     return this.bitrixService.callMethod<B24ImbotUnRegisterOptions, boolean>(
       'imbot.unregister',
       fields,
     );
+  }
+
+  get BOT_ID(): string {
+    return this.botId;
   }
 
   async notifyAboutConvertedDeal(eventData: OnImCommandKeyboardDto) {
