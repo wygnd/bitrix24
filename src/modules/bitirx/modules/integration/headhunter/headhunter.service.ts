@@ -74,6 +74,7 @@ export class BitrixHeadHunterService {
       await this.headHunterApi.updateToken();
 
       await this.bitrixImBotService.sendMessage({
+        BOT_ID: this.bitrixImBotService.BOT_ID,
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
@@ -299,7 +300,8 @@ export class BitrixHeadHunterService {
             'Сделки не найдено.[br]Что то пошло не так при создании сделки');
     }
 
-    this.bitrixImBotService.sendMessage({
+    return this.bitrixImBotService.sendMessage({
+      BOT_ID: this.bitrixImBotService.BOT_ID,
       DIALOG_ID: 'chat68032',
       MESSAGE: message,
       URL_PREVIEW: 'N',

@@ -233,6 +233,7 @@ export class BitrixDealController {
         this.bitrixService.generateDealUrl(dealId);
 
       return this.bitrixImbotService.sendMessage({
+        BOT_ID: this.bitrixImbotService.BOT_ID,
         DIALOG_ID: userId,
         MESSAGE: message,
         KEYBOARD: [

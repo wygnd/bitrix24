@@ -53,7 +53,10 @@ export class BitrixBotController {
   @UseGuards(AuthGuard)
   @Post('/message/add')
   async sendMessage(@Body() fields: ImbotMessageAddDto) {
-    return this.bitrixBotService.sendMessage(fields);
+    return this.bitrixBotService.sendMessage({
+      BOT_ID: this.bitrixBotService.BOT_ID,
+      ...fields,
+    });
   }
 
   @UseGuards(AuthGuard)

@@ -15,11 +15,11 @@ import { join } from 'path';
   imports: [
     ConfigAppModule,
     RedisModule,
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'static'),
-      useGlobalPrefix: true,
-      exclude: ['/api'],
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'static'),
+    //   useGlobalPrefix: true,
+    //   exclude: ['/api'],
+    // }),
     BitrixModule,
     HeadHunterModule,
     // QueueModule,

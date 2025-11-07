@@ -44,6 +44,7 @@ export class BitrixPlacementController {
     );
 
     await this.bitrixImbotService.sendMessage({
+      BOT_ID: this.bitrixImbotService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
