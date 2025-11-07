@@ -84,22 +84,22 @@ export class BitrixImbotController {
   @Post('/app/install')
   async installApp(@Body() data: B24EventBodyOnInstallApp) {
     try {
-      console.log('Getting new tokens, try update');
       const { auth } = data;
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_ACCESS_TOKEN,
-        auth.access_token,
-      );
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_REFRESH_TOKEN,
-        auth.refresh_token,
-      );
-      await this.redisService.set<number>(
-        REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-        auth.expires,
-      );
-      await this.bitrixService.updateTokens();
-      return await this.bitrixMessageService.sendPrivateMessage({
+      Promise.all([
+        this.redisService.set<string>(
+          REDIS_KEYS.BITRIX_ACCESS_TOKEN,
+          auth.access_token,
+        ),
+        this.redisService.set<string>(
+          REDIS_KEYS.BITRIX_REFRESH_TOKEN,
+          auth.refresh_token,
+        ),
+        this.redisService.set<number>(
+          REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
+          auth.expires,
+        ),
+      ]).then(() => this.bitrixService.updateTokens());
+      return this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
         MESSAGE: `Установка приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,
         SYSTEM: 'Y',
