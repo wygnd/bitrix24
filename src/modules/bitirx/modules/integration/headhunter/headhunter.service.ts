@@ -28,7 +28,6 @@ import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
-import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -40,7 +39,6 @@ export class BitrixHeadHunterService {
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixDealService: BitrixDealService,
     private readonly headHunterRestService: HeadhunterRestService,
-    private readonly bitrixMessageService: BitrixMessageService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -76,7 +74,6 @@ export class BitrixHeadHunterService {
       await this.headHunterApi.updateToken();
 
       await this.bitrixImBotService.sendMessage({
-        BOT_ID: this.bitrixService.BOT_ID,
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
@@ -303,7 +300,6 @@ export class BitrixHeadHunterService {
     }
 
     this.bitrixImBotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: 'chat68032',
       MESSAGE: message,
       URL_PREVIEW: 'N',

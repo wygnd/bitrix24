@@ -28,7 +28,6 @@ export class BitrixWebhookController {
     @Query() query: IncomingWebhookDistributeDealDto,
   ) {
     await this.bitrixImbotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]Обработка исходнящего вебхука:[/b][br][br]' +

@@ -48,7 +48,6 @@ export class BitrixImbotEventsController {
     const { event, data } = body;
 
     this.bitrixImbotService.sendMessage({
-      BOT_ID: this.bitrixImbotService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE: 'Новая команда боту:[br]' + JSON.stringify(body),
     });
@@ -97,7 +96,7 @@ export class BitrixImbotEventsController {
         ),
       ]).then(() => this.bitrixService.updateTokens());
       return this.bitrixMessageService.sendPrivateMessage({
-        DIALOG_ID: 'chat77152',
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE: `Установка приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,
         SYSTEM: 'Y',
       });

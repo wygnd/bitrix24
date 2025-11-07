@@ -1,6 +1,6 @@
 import { BoolString } from '@bitrix24/b24jssdk';
 
-type KeyboardBgColorToken = 'primary' | 'secondary' | 'alert' | 'base';
+export type KeyboardBgColorToken = 'primary' | 'secondary' | 'alert' | 'base';
 
 export interface B24ImKeyboardOptions {
   TEXT: string;

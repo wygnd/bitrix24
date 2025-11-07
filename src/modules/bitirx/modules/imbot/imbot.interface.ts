@@ -47,6 +47,6 @@ export interface B24BotProperties {
 }
 
 export interface B24ImbotUnRegisterOptions {
-  BOT_ID: number;
+  BOT_ID: string | number;
   CLIENT_ID?: string;
 }

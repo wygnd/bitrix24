@@ -13,6 +13,7 @@ import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixConstants } from '@/common/interfaces/bitrix-config.interface';
+import { ImbotBot } from '@/modules/bitirx/modules/imbot/interfaces/imbot-bot.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -63,11 +64,11 @@ export class BitrixImBotService {
    * Send message in chat via bot
    * @param fields
    */
-  async sendMessage(fields: B24ImbotSendMessageOptions) {
+  async sendMessage(fields: Omit<B24ImbotSendMessageOptions, 'BOT_ID'>) {
     return await this.bitrixService.callMethod<
       B24ImbotSendMessageOptions,
       number
-    >('imbot.message.add', fields);
+    >('imbot.message.add', { ...fields, BOT_ID: this.botId });
   }
 
   /**
@@ -92,6 +93,10 @@ export class BitrixImBotService {
       'imbot.unregister',
       fields,
     );
+  }
+
+  async getBotList() {
+    return this.bitrixService.callMethod<never, ImbotBot[]>('imbot.bot.list');
   }
 
   get BOT_ID(): string {

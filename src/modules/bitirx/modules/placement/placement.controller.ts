@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   InternalServerErrorException,
@@ -23,7 +22,6 @@ import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { BitrixPlacementGuard } from '@/modules/bitirx/guards/bitrix-widget.guard';
 import { ConfigService } from '@nestjs/config';
-import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -32,7 +30,6 @@ export class BitrixPlacementController {
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
-    private readonly bitrixDealService: BitrixDealService,
   ) {}
 
   @UseGuards(BitrixPlacementGuard)
@@ -47,7 +44,6 @@ export class BitrixPlacementController {
     );
 
     await this.bitrixImbotService.sendMessage({
-      BOT_ID: this.bitrixService.BOT_ID,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +

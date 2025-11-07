@@ -41,83 +41,6 @@ export class BitrixDealController {
     private readonly bitrixMessageService: BitrixMessageService,
   ) {}
 
-  // todo: Notice project manage about ignore message
-  // todo: Was added new custom field: UF_CRM_1760972834021 need check this field and notice project manager
-  @ApiOperation({
-    summary: 'Webhook from bitrix for check site',
-    description:
-      'When deal translate in <b>CONVERTED</b> status bitrix send webhook with data<br/>' +
-      'This endpoint sending message to project manager and Irina Novolockaya with two buttons<br/>' +
-      'Project manager check site and choice button<br/>' +
-      'If site is fit for our library - backend send message Irina with deal link',
-  })
-  @Post('notify-about-converted-deal')
-  async notifyAboutConvertedSiteDeal(
-    @Body() body: BitrixOutcomingWebhookDto,
-    @Query() query: NotifyAboutConvertedDealDto,
-  ) {
-    try {
-      const [, dealId] = body.document_id[2].split('_');
-      const { assigned_id, ignored } = query;
-      const [, userId] = assigned_id.split('_');
-
-      if (ignored)
-        return this.bitrixMessageService.sendPrivateMessage({
-          DIALOG_ID: '220',
-          MESSAGE:
-            'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
-            this.bitrixService.generateDealUrl(dealId),
-        });
-
-      const message =
-        '[b]Сайты для кейсов[/b][br][br]' +
-        'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br][br]' +
-        '[b]Критерии отбора сайтов для кейсов:[/b][br]' +
-        '- Яркий, запоминающийся, нетипичный дизайн (не все подряд индивиды, ' +
-        'а когда наши дизайнеры прыгнули выше головы и сделали очень крутой дизайн). ' +
-        'Если есть сомнения по этому пункту, то всё равно отправляйте Ирине на согласование.[br]' +
-        '- Наличие технических особенностей (личные кабинеты, интеграции, наличие анимаций, сложная карточка товара и прочее)[br]' +
-        '- ВСЕ сайты на Bitrix (вне зависимости от дизайна и тех.особенностей)[br]' +
-        '- ВСЕ индивидуальные сайты Вологодских заказчиков (вне зависимости от дизайна и тех.особенностей)[br]' +
-        '- Нетиповые некоммерческие проекты (например, новостной портал).[br]' +
-        '- Сайты, которые делали для гос.структур (больницы и прочее)[br][br]' +
-        'Сделка: ' +
-        this.bitrixService.generateDealUrl(dealId);
-
-      return this.bitrixImbotService.sendMessage({
-        BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID: userId,
-        MESSAGE: message,
-        KEYBOARD: [
-          {
-            TEXT: 'Сайт подходит',
-            COMMAND: 'checkSiteForCase',
-            COMMAND_PARAMS: JSON.stringify({
-              dealId: dealId,
-              isFits: true,
-              oldMessage: Buffer.from(message, 'utf8'),
-            }),
-            BG_COLOR_TOKEN: 'primary',
-            DISPLAY: 'LINE',
-          },
-          {
-            TEXT: 'Сайт не подходит',
-            COMMAND: 'checkSiteForCase',
-            COMMAND_PARAMS: JSON.stringify({
-              dealId: dealId,
-              isFits: false,
-              oldMessage: Buffer.from(message, 'utf8'),
-            }),
-            BG_COLOR_TOKEN: 'alert',
-            DISPLAY: 'LINE',
-          },
-        ],
-      });
-    } catch (error) {
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
-    }
-  }
-
   @ApiQuery({
     type: Number,
     name: 'deal_id',
@@ -264,4 +187,82 @@ export class BitrixDealController {
 
     return result;
   }
+
+
+  // todo: Notice project manage about ignore message
+  // todo: Was added new custom field: UF_CRM_1760972834021 need check this field and notice project manager
+  @ApiOperation({
+    summary: 'Webhook from bitrix for check site',
+    description:
+      'When deal translate in <b>CONVERTED</b> status bitrix send webhook with data<br/>' +
+      'This endpoint sending message to project manager and Irina Novolockaya with two buttons<br/>' +
+      'Project manager check site and choice button<br/>' +
+      'If site is fit for our library - backend send message Irina with deal link',
+  })
+  @Post('/webhook/maybe-case')
+  async notifyAboutConvertedSiteDeal(
+    @Body() body: BitrixOutcomingWebhookDto,
+    @Query() query: NotifyAboutConvertedDealDto,
+  ) {
+    try {
+      const [, dealId] = body.document_id[2].split('_');
+      const { assigned_id, ignored } = query;
+      const [, userId] = assigned_id.split('_');
+
+      if (ignored)
+        return this.bitrixMessageService.sendPrivateMessage({
+          DIALOG_ID: '220',
+          MESSAGE:
+            'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
+            this.bitrixService.generateDealUrl(dealId),
+        });
+
+      const message =
+        '[b]Сайты для кейсов[/b][br][br]' +
+        'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br][br]' +
+        '[b]Критерии отбора сайтов для кейсов:[/b][br]' +
+        '- Яркий, запоминающийся, нетипичный дизайн (не все подряд индивиды, ' +
+        'а когда наши дизайнеры прыгнули выше головы и сделали очень крутой дизайн). ' +
+        'Если есть сомнения по этому пункту, то всё равно отправляйте Ирине на согласование.[br]' +
+        '- Наличие технических особенностей (личные кабинеты, интеграции, наличие анимаций, сложная карточка товара и прочее)[br]' +
+        '- ВСЕ сайты на Bitrix (вне зависимости от дизайна и тех.особенностей)[br]' +
+        '- ВСЕ индивидуальные сайты Вологодских заказчиков (вне зависимости от дизайна и тех.особенностей)[br]' +
+        '- Нетиповые некоммерческие проекты (например, новостной портал).[br]' +
+        '- Сайты, которые делали для гос.структур (больницы и прочее)[br][br]' +
+        'Сделка: ' +
+        this.bitrixService.generateDealUrl(dealId);
+
+      return this.bitrixImbotService.sendMessage({
+        DIALOG_ID: userId,
+        MESSAGE: message,
+        KEYBOARD: [
+          {
+            TEXT: 'Сайт подходит',
+            COMMAND: 'checkSiteForCase',
+            COMMAND_PARAMS: JSON.stringify({
+              dealId: dealId,
+              isFits: true,
+              oldMessage: Buffer.from(message, 'utf8'),
+            }),
+            BG_COLOR_TOKEN: 'primary',
+            DISPLAY: 'LINE',
+          },
+          {
+            TEXT: 'Сайт не подходит',
+            COMMAND: 'checkSiteForCase',
+            COMMAND_PARAMS: JSON.stringify({
+              dealId: dealId,
+              isFits: false,
+              oldMessage: Buffer.from(message, 'utf8'),
+            }),
+            BG_COLOR_TOKEN: 'alert',
+            DISPLAY: 'LINE',
+          },
+        ],
+      });
+    } catch (error) {
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
 }
