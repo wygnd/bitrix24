@@ -34,7 +34,7 @@ export interface B24ImbotRegisterOptions {
   PROPERTIES: B24BotProperties;
 }
 
-interface B24BotProperties {
+export interface B24BotProperties {
   NAME: string;
   LAST_NAME?: string;
   COLOR?: string;
