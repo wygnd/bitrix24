@@ -7,7 +7,7 @@ import {
 } from '../../interfaces/bitrix.interface';
 
 export interface B24User {
-  ID: number;
+  ID: string;
   XML_ID: string;
   ACTIVE: boolean;
   NAME: string;

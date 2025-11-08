@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import { ImbotUnregisterCommandDto } from './dtos/imbot-unregister-command.dto';
 import {
@@ -14,6 +18,9 @@ import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.inte
 import { ConfigService } from '@nestjs/config';
 import { BitrixConstants } from '@/common/interfaces/bitrix-config.interface';
 import { ImbotBot } from '@/modules/bitirx/modules/imbot/interfaces/imbot-bot.interface';
+import { RedisService } from '@/modules/redis/redis.service';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -22,6 +29,7 @@ export class BitrixImBotService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -40,12 +48,58 @@ export class BitrixImBotService {
    * @param fields
    */
   async addCommand(fields: B24ImbotRegisterCommand) {
-    return await this.bitrixService.callMethod<B24ImbotRegisterCommand, number>(
-      'imbot.command.register',
-      {
-        ...fields,
-      },
+    const commandLanguage = fields.LANG.find((l) => l.LANGUAGE_ID === 'ru');
+
+    if (!commandLanguage) throw new BadRequestException('Invalid language');
+
+    const { result: commandId } = await this.bitrixService.callMethod<
+      B24ImbotRegisterCommand,
+      number
+    >('imbot.command.register', {
+      ...fields,
+    });
+
+    if (!commandId) throw new BadRequestException('Error on add command');
+
+    let commandsFromCache = await this.redisService.get<ImbotCommand[]>(
+      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
     );
+
+    const newCommand: ImbotCommand = {
+      id: `${commandId}`,
+      command: fields.COMMAND,
+      name: commandLanguage.TITLE,
+    };
+
+    if (!commandsFromCache) commandsFromCache = [];
+
+    commandsFromCache.push(newCommand);
+
+    this.redisService.set<ImbotCommand[]>(
+      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
+      commandsFromCache,
+    );
+
+    return commandId;
+  }
+
+  async getBotCommands() {
+    const commands = await this.redisService.get<ImbotCommand[]>(
+      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
+    );
+
+    return commands ? commands : [];
+  }
+
+  async getBotCommandById(commandId: string) {
+    const commands = await this.redisService.get<ImbotCommand[]>(
+      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
+    );
+    const command = commands?.find((c) => c.id === commandId);
+
+    if (!commands || !command) throw new NotFoundException('Command not found');
+
+    return command;
   }
 
   /**

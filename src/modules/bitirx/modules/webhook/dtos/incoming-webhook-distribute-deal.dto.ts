@@ -1,4 +1,3 @@
-import { IncomingWebhookDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook.dto';
 import {
   IsEnum,
   IsInt,
@@ -6,9 +5,9 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { IncomingWebhookDepartment } from '@/modules/bitirx/modules/webhook/interfaces/webhook.interface';
+import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
 
 export class IncomingWebhookDistributeDealDto {
   @ApiProperty({
@@ -18,6 +17,7 @@ export class IncomingWebhookDistributeDealDto {
     example: 'D_1234',
   })
   @IsNotEmpty({ message: 'Deal id is required' })
+  @Transform(({ value }) => value.split('_')[1])
   @IsString({ message: 'Deal id is must be a string' })
   deal_id: string;
 
@@ -36,22 +36,23 @@ export class IncomingWebhookDistributeDealDto {
     description: 'is repeat webhook',
     required: true,
     example: 0,
+    default: 0,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt({ message: 'repeat field must be a number' })
-  is_repeat: number;
+  is_repeat?: number;
 
   @ApiProperty({
     type: String,
     description: 'department type',
     example: 'sites',
-    enum: IncomingWebhookDepartment,
+    enum: B24DepartmentTypeId,
   })
   @IsNotEmpty()
   @IsString()
-  @IsEnum(IncomingWebhookDepartment)
-  department: IncomingWebhookDepartment;
+  @IsEnum(B24DepartmentTypeId)
+  department: B24DepartmentTypeId;
 
   @ApiProperty({
     type: String,

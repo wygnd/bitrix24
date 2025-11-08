@@ -3,8 +3,16 @@ import {
   B24ImbotRegisterCommand,
 } from '../imbot.interface';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNotEmptyString } from '@/modules/bitirx/decorators/is-not-empty-string.decorator';
 
 export class ImboRegisterCommandLangDto
   implements B24ImbotCommandLanguageOptions
@@ -15,6 +23,8 @@ export class ImboRegisterCommandLangDto
     required: true,
     example: 'ru',
   })
+  @IsNotEmpty()
+  @IsString()
   LANGUAGE_ID: string;
 
   @ApiProperty({
@@ -23,6 +33,8 @@ export class ImboRegisterCommandLangDto
     required: true,
     example: 'Сообщение',
   })
+  @IsNotEmpty()
+  @IsString()
   TITLE: string;
 
   @ApiProperty({
@@ -32,6 +44,8 @@ export class ImboRegisterCommandLangDto
     example: 'message_test',
     default: '',
   })
+  @IsOptional()
+  @IsString()
   PARAMS: string = '';
 }
 
@@ -62,7 +76,10 @@ export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
     description: 'Languages',
     required: true,
   })
+  @IsArray()
   @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => ImboRegisterCommandLangDto)
   LANG: ImboRegisterCommandLangDto[];
 
   @ApiProperty({

@@ -1,5 +1,6 @@
 import { B24ImbotSendMessageOptions } from '@/modules/bitirx/modules/imbot/imbot.interface';
 import {
+  IsArray,
   IsIn,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -41,6 +42,7 @@ export class ImbotMessageAddDto
     required: false,
   })
   @IsOptional()
+  @IsArray()
   @ValidateNested()
   @Type(() => ImbotMessageKeyboardOptionsDto)
   KEYBOARD: ImbotMessageKeyboardOptionsDto[] = [];

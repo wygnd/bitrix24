@@ -20,6 +20,8 @@ import { BitrixPlacementService } from '@/modules/bitirx/modules/placement/place
 import { BitrixPlacementController } from '@/modules/bitirx/modules/placement/placement.controller';
 import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
 import { BitrixBotController } from '@/modules/bitirx/modules/imbot/imbot.controller';
+import { BitrixWebhookService } from '@/modules/bitirx/modules/webhook/webhook.service';
+import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
 
 @Module({
   imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],
@@ -44,6 +46,8 @@ import { BitrixBotController } from '@/modules/bitirx/modules/imbot/imbot.contro
     BitrixIntegrationAvitoService,
     BitrixPlacementService,
     BitrixHeadHunterService,
+    BitrixWebhookService,
+    BitrixDepartmentService,
   ],
   exports: [BitrixService, BitrixMessageService],
 })

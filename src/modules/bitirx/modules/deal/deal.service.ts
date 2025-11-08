@@ -25,6 +25,12 @@ export class BitrixDealService {
   ) {}
 
   async getDealById(dealId: number | string) {
+    const dealFromCache = await this.redisService.get<B24Deal>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
+    );
+
+    if (dealFromCache) return dealFromCache;
+
     const { result: deal } = await this.bitrixService.callMethod<
       { id: string | number },
       B24Deal
@@ -35,7 +41,7 @@ export class BitrixDealService {
     if (!deal) throw new NotFoundException('deal not found');
 
     this.redisService
-      .set<B24Deal>(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId, deal)
+      .set<B24Deal>(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId, deal, 3600)
       .then(() => {});
 
     return deal;
@@ -62,9 +68,9 @@ export class BitrixDealService {
     const dealFieldsFromCache = await this.redisService.get<B24DealFields>(
       REDIS_KEYS.BITRIX_DATA_DEAL_FIELDS,
     );
-
     if (dealFieldsFromCache) return dealFieldsFromCache;
 
+    console.log(dealFieldsFromCache);
     const { result: dealFields } = await this.bitrixService.callMethod<
       object,
       B24DealFields
@@ -72,7 +78,7 @@ export class BitrixDealService {
 
     if (!dealFields) throw new NotFoundException('Deal fields in not found');
 
-    await this.redisService.set<B24DealFields>(
+    this.redisService.set<B24DealFields>(
       REDIS_KEYS.BITRIX_DATA_DEAL_FIELDS,
       dealFields,
       3600,
@@ -103,7 +109,7 @@ export class BitrixDealService {
   }
 
   async getDealStageHistory() {
-    return this.bitrixService.callMethod('crm.stagehistory.list')
+    return this.bitrixService.callMethod('crm.stagehistory.list');
   }
 
   async handleUpdateDeal(body: B24OnCRMDealUpdateEvent) {

@@ -19,15 +19,13 @@ export class BitrixBotCommandGuard implements CanActivate {
 
     const body: OnImCommandKeyboardDto = request.body;
 
-    const accessTokenFromRequest = body.auth.access_token;
-    const accessToken = this.bitrixService.ACCESS_TOKEN;
-
-    console.log('TEST CHECKING ACCESS TOKEN: ', body.auth);
+    const memberIdFromRequest = body.auth.member_id;
+    const memberId = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (
-      !accessToken ||
-      !accessTokenFromRequest ||
-      accessToken !== accessTokenFromRequest
+      !memberId ||
+      !memberIdFromRequest ||
+      memberId !== memberIdFromRequest
     )
       throw new UnauthorizedException('Invalid access token');
 

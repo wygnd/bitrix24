@@ -11,7 +11,7 @@ async function bootstrap() {
 
   const PORT = config.get<number>('PORT') ?? 3000;
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   app.enableCors({
     origin: [

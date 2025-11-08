@@ -7,7 +7,7 @@ import { B24ListParams } from '../../interfaces/bitrix.interface';
 export class BitrixUserService {
   constructor(private readonly bitrixService: BitrixService) {}
 
-  async getUserById(userId: number) {
+  async getUserById(userId: string) {
     return await this.bitrixService.callMethod<
       B24ListParams<Partial<B24User>>,
       B24User

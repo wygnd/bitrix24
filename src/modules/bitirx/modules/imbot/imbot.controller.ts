@@ -5,6 +5,8 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -13,7 +15,7 @@ import {
   ApiBody,
   ApiExcludeEndpoint,
   ApiHeader,
-  ApiOperation,
+  ApiOperation, ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
@@ -44,6 +46,34 @@ export class BitrixBotController {
   @Post('/commands/add')
   async addBotCommand(@Body() body: ImbotRegisterCommandDto) {
     return this.bitrixBotService.addCommand(body);
+  }
+
+  @ApiOperation({
+    summary: 'Get registered bot commands',
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Authorization token',
+    example: 'bga token',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/commands')
+  async getBotCommands() {
+    return this.bitrixBotService.getBotCommands();
+  }
+
+  @ApiOperation({
+    summary: 'Get bot command by id'
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Authorization token',
+    example: 'bga token',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/commands/:id')
+  async getBotCommandById(@Param('id') commandId: string) {
+    return this.bitrixBotService.getBotCommandById(commandId);
   }
 
   @ApiExcludeEndpoint()

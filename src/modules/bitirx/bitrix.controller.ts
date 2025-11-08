@@ -28,7 +28,7 @@ export class BitrixController {
    */
   @UseGuards(AuthGuard)
   @Get('/users/:userId')
-  async getUserById(@Param('userId', ParseIntPipe) userId: number) {
+  async getUserById(@Param('userId') userId: string) {
     try {
       return this.bitrixUserService.getUserById(userId);
     } catch (error) {
