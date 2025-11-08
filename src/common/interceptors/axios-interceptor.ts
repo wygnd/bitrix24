@@ -54,7 +54,9 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             () =>
               new HttpException(
                 error,
-                error?.status || HttpStatus.INTERNAL_SERVER_ERROR,
+                error?.status ||
+                  error.response?.status ||
+                  HttpStatus.BAD_REQUEST,
               ),
           );
         }

@@ -64,10 +64,10 @@ export class BitrixImBotService {
    * Send message in chat via bot
    * @param fields
    */
-  async sendMessage(fields: B24ImbotSendMessageOptions) {
+  async sendMessage(fields: Omit<B24ImbotSendMessageOptions, 'BOT_ID'>) {
     return this.bitrixService.callMethod<B24ImbotSendMessageOptions, number>(
       'imbot.message.add',
-      fields,
+      { ...fields, BOT_ID: this.botId },
     );
   }
 

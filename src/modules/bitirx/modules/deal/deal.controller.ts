@@ -188,7 +188,6 @@ export class BitrixDealController {
     return result;
   }
 
-
   // todo: Notice project manage about ignore message
   // todo: Was added new custom field: UF_CRM_1760972834021 need check this field and notice project manager
   @ApiOperation({
@@ -233,7 +232,6 @@ export class BitrixDealController {
         this.bitrixService.generateDealUrl(dealId);
 
       return this.bitrixImbotService.sendMessage({
-        BOT_ID: this.bitrixImbotService.BOT_ID,
         DIALOG_ID: userId,
         MESSAGE: message,
         KEYBOARD: [
@@ -265,5 +263,4 @@ export class BitrixDealController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
-
 }

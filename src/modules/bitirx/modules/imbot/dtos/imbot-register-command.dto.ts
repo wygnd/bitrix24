@@ -6,6 +6,35 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export class ImboRegisterCommandLangDto
+  implements B24ImbotCommandLanguageOptions
+{
+  @ApiProperty({
+    type: String,
+    description: 'Language ID',
+    required: true,
+    example: 'ru',
+  })
+  LANGUAGE_ID: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Command title',
+    required: true,
+    example: 'Сообщение',
+  })
+  TITLE: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Params',
+    required: false,
+    example: 'message_test',
+    default: '',
+  })
+  PARAMS: string = '';
+}
+
 export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
   @ApiProperty({
     type: Number,
@@ -29,12 +58,12 @@ export class ImbotRegisterCommandDto implements B24ImbotRegisterCommand {
   COMMAND: string;
 
   @ApiProperty({
-    type: Array<B24ImbotCommandLanguageOptions>,
+    type: [ImboRegisterCommandLangDto],
     description: 'Languages',
     required: true,
   })
   @IsNotEmpty()
-  LANG: B24ImbotCommandLanguageOptions[];
+  LANG: ImboRegisterCommandLangDto[];
 
   @ApiProperty({
     type: String,

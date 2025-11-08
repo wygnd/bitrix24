@@ -13,7 +13,7 @@ export interface B24ImbotRegisterCommand {
 export interface B24ImbotCommandLanguageOptions {
   LANGUAGE_ID: string;
   TITLE: string;
-  PARAMS: string;
+  PARAMS?: string;
 }
 
 export interface B24ImbotSendMessageOptions {

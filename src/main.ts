@@ -34,13 +34,13 @@ async function bootstrap() {
       swaggerOptions: {
         filter: true,
         docExpansion: 'none',
-        showExtensions: true,
+        // showExtensions: true,
         showCommonExtensions: false,
         displayRequestDuration: true,
         operationsSorter: 'alpha',
         tagsSorter: 'alpha',
-        defaultModelsExpandDepth: -1,
-        defaultModelExpandDepth: 0,
+        // defaultModelsExpandDepth: -1,
+        // defaultModelExpandDepth: 0,
       },
     },
   );
