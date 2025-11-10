@@ -26,7 +26,9 @@ export type B24AvailableMethods =
   | 'imbot.message.update'
   | 'imbot.bot.list'
   | 'placement.bind'
-  | 'placement.unbind';
+  | 'placement.unbind'
+  | 'event.bind'
+  | 'event.unbind';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
