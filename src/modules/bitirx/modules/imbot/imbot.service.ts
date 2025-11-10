@@ -226,8 +226,15 @@ export class BitrixImBotService {
 
   async handleApproveSmmAdvertLayout(
     fields: ImbotHandleApproveSmmAdvertLayout,
+    messageId: number,
   ) {
-    const { taskId, isApproved, responsibleId, accomplices } = fields;
+    const {
+      taskId,
+      isApproved,
+      responsibleId,
+      accomplices,
+      message: oldMessage,
+    } = fields;
     let message = 'Макет согласован.[br]';
     // Если согласованно
     if (isApproved) {
@@ -238,6 +245,15 @@ export class BitrixImBotService {
     message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
 
     const batchCommandsSendMessage: B24BatchCommands = {
+      update_old_message: {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.botId,
+          MESSAGE_ID: messageId,
+          MESSAGE: oldMessage,
+          KEYBOARD: '',
+        },
+      },
       send_message_to_responsible: {
         method: 'im.message.add',
         params: {
@@ -248,11 +264,11 @@ export class BitrixImBotService {
     };
 
     if (accomplices.length > 0) {
-      accomplices.forEach((accompliceId) => {
+      accomplices.forEach((userId) => {
         batchCommandsSendMessage['send_message_to'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: accompliceId,
+            DIALOG_ID: userId,
             MESSAGE: message,
           },
         };
@@ -260,5 +276,9 @@ export class BitrixImBotService {
     }
 
     this.bitrixService.callBatch(batchCommandsSendMessage);
+    this.sendMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE: 'Обработана кнопка: ' + JSON.stringify(batchCommandsSendMessage),
+    });
   }
 }

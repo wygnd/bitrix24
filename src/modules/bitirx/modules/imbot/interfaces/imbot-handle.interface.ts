@@ -3,4 +3,5 @@ export interface ImbotHandleApproveSmmAdvertLayout {
   isApproved: boolean;
   responsibleId: string;
   accomplices: string[];
+  message: string;
 }

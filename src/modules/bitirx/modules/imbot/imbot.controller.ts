@@ -137,7 +137,7 @@ export class BitrixBotController {
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
 
-    const { MESSAGE } = data.PARAMS;
+    const { MESSAGE, MESSAGE_ID } = data.PARAMS;
 
     const [command, commandParams] = MESSAGE.split(' ', 2);
 
@@ -146,7 +146,7 @@ export class BitrixBotController {
         break;
 
       case '/approveSmmAdvertLayouts':
-        return this.bitrixBotService.handleApproveSmmAdvertLayout(JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout);
+        return this.bitrixBotService.handleApproveSmmAdvertLayout(JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout, MESSAGE_ID);
 
       default:
         throw new BadRequestException('Command not handled yet');

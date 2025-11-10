@@ -61,11 +61,20 @@ export class BitrixEventService {
       'Задача: ' +
       this.bitrixService.generateTaskUrl(responsibleId, taskId, title) +
       ' была завершена. Необходимо согласовать';
+
+    if (taskResult && taskResult?.length > 0) {
+      message += '[br][br][b]Результаты задачи: [/b][br]';
+      taskResult.forEach(({ text }) => {
+        message += text + '[br]';
+      });
+    }
+
     const keyboardParams: ImbotHandleApproveSmmAdvertLayout = {
       taskId: taskId,
       isApproved: true,
       responsibleId: responsibleId,
       accomplices: accomplices,
+      message: message,
     };
 
     const keyboardItems: B24ImKeyboardOptions[] = [
@@ -89,12 +98,6 @@ export class BitrixEventService {
         DISPLAY: 'LINE',
       },
     ];
-    if (taskResult && taskResult?.length > 0) {
-      message += '[br][br][b]Результаты задачи: [/b][br]';
-      taskResult.forEach(({ text }) => {
-        message += text + '[br]';
-      });
-    }
 
     return this.botService.sendMessage({
       MESSAGE: message,
