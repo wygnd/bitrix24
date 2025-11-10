@@ -250,7 +250,7 @@ export class BitrixImBotService {
     if (accomplices.length > 0) {
       accomplices.forEach((accompliceId) => {
         batchCommandsSendMessage['send_message_to'] = {
-          method: 'imbot.message.add',
+          method: 'im.message.add',
           params: {
             DIALOG_ID: accompliceId,
             MESSAGE: message,
