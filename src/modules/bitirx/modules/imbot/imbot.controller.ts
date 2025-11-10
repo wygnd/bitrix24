@@ -129,10 +129,10 @@ export class BitrixBotController {
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
     const { event, data } = body;
 
-    this.bitrixBotService.sendMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-      MESSAGE: 'Новая команда боту:[br]' + JSON.stringify(body),
-    });
+    // this.bitrixBotService.sendMessage({
+    //   DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+    //   MESSAGE: 'Новая команда боту:[br]' + JSON.stringify(body),
+    // });
 
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
@@ -146,7 +146,10 @@ export class BitrixBotController {
         break;
 
       case '/approveSmmAdvertLayouts':
-        return this.bitrixBotService.handleApproveSmmAdvertLayout(JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout, MESSAGE_ID);
+        return this.bitrixBotService.handleApproveSmmAdvertLayout(
+          JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout,
+          MESSAGE_ID,
+        );
 
       default:
         throw new BadRequestException('Command not handled yet');

@@ -30,9 +30,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
           error.status === HttpStatus.FORBIDDEN
         ) {
-          const { host } = error.request as Request;
-
-          switch (host) {
+          switch (error?.request && error?.request.host) {
             case 'api.hh.ru':
               this.headHunterService.notifyAboutInvalidCredentials();
               return throwError(

@@ -241,6 +241,7 @@ export class BitrixImBotService {
       message: oldMessage,
     } = fields;
     let message = 'Макет согласован.[br]';
+
     // Если согласованно
     if (isApproved) {
       this.taskService.setTaskComplete(taskId);
@@ -248,7 +249,8 @@ export class BitrixImBotService {
     }
 
     message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
-
+    // todo: Подумать над кодировкой текста
+    return [123];
     const batchCommandsSendMessage: B24BatchCommands = {
       update_old_message: {
         method: 'imbot.message.update',
@@ -270,6 +272,7 @@ export class BitrixImBotService {
 
     if (accomplices.length > 0) {
       accomplices.forEach((userId) => {
+        console.log(userId);
         batchCommandsSendMessage['send_message_to'] = {
           method: 'im.message.add',
           params: {
@@ -280,6 +283,7 @@ export class BitrixImBotService {
       });
     }
 
+    return batchCommandsSendMessage;
     this.bitrixService.callBatch(batchCommandsSendMessage);
     this.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,

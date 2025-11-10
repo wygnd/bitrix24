@@ -71,9 +71,12 @@ export class BitrixTaskService {
   }
 
   async setTaskComplete(taskId: string) {
-    return this.bitrixService.callMethod<{ taskId: string }, { task: B24Task }>(
+    console.log(taskId);
+    return this.bitrixService.callMethod<any, { task: B24Task }>(
       'tasks.task.complete',
-      { taskId: taskId },
+      {
+        taskId: taskId,
+      },
     );
   }
 }
