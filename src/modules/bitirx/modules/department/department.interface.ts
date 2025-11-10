@@ -3,6 +3,7 @@ export interface B24Department {
   NAME: string;
   SORT: number;
   PARENT: string;
+  UF_HEAD: string;
 }
 
 export enum B24DepartmentTypeId {
@@ -12,8 +13,3 @@ export enum B24DepartmentTypeId {
 }
 
 export type DepartmentTypeIds = Record<B24DepartmentTypeId, number[]>;
-
-export interface DepartmentHeadUserId {
-  userId: number;
-  departmentId: number;
-}

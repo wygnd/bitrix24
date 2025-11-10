@@ -1,4 +1,3 @@
-import type { BoolString, GenderString, ISODate } from '@bitrix24/b24jssdk';
 import {
   B24FilterOptions,
   B24ListOrder,
@@ -14,20 +13,20 @@ export interface B24User {
   LAST_NAME: string;
   SECOND_NAME: string;
   EMAIL: string;
-  LAST_LOGIN: ISODate;
-  DATE_REGISTER: ISODate;
+  LAST_LOGIN: string;
+  DATE_REGISTER: string;
   TIME_ZONE: string;
-  IS_ONLINE: BoolString;
+  IS_ONLINE: string;
   TIMESTAMP_X: object;
   LAST_ACTIVITY_DATE: object;
-  PERSONAL_GENDER: GenderString;
+  PERSONAL_GENDER: string;
   PERSONAL_WWW: string;
-  PERSONAL_BIRTHDAY: ISODate;
+  PERSONAL_BIRTHDAY: string;
   PERSONAL_MOBILE: string[];
   PERSONAL_CITY: string;
   WORK_PHONE: string;
   WORK_POSITION: string;
-  UF_EMPLOYMENT_DATE: ISODate;
+  UF_EMPLOYMENT_DATE: string;
   UF_DEPARTMENT: number[];
   USER_TYPE: string;
 }

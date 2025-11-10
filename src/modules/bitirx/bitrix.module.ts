@@ -22,9 +22,9 @@ import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/he
 import { BitrixBotController } from '@/modules/bitirx/modules/imbot/imbot.controller';
 import { BitrixWebhookService } from '@/modules/bitirx/modules/webhook/webhook.service';
 import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
-import { DepartmentController } from '@/modules/bitirx/modules/department/department.controller';
 import { BitrixEventsController } from '@/modules/bitirx/modules/events/events.controller';
 import { BitrixEventService } from '@/modules/bitirx/modules/events/event.service';
+import { DepartmentController } from '@/modules/bitirx/modules/department/department.controller';
 
 @Module({
   imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],

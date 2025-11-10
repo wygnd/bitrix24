@@ -19,21 +19,9 @@ export class BitrixUserService {
   }
 
   async getUsers(params: B24UserListParams) {
-    return await this.bitrixService.callMethod<
-      B24UserListParams,
-      B24User[]
-    >('user.get', { ...params });
-  }
-
-  async getUsersByDepartment(
-    departmentId: number,
-    orders: string[][] = [],
-    sort: string[] = [],
-  ) {
-    return await this.bitrixService.callMethod('department.get', {
-      id: departmentId,
-      orders: orders,
-      sort: sort,
-    });
+    return await this.bitrixService.callMethod<B24UserListParams, B24User[]>(
+      'user.get',
+      { ...params },
+    );
   }
 }
