@@ -5,10 +5,10 @@ import type { B24AuthOptions } from '../../../interfaces/bitrix.interface';
 import type {
   B24EventCommand,
   B24EventData,
-  B24EventList,
   B24EventParams,
   B24EventUser,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
+import type { B24EventList } from '@/modules/bitirx/modules/events/interfaces/events.interface';
 
 class OnImCommandAddEventDataDto implements B24EventData {
   COMMAND: B24EventCommand;
@@ -135,5 +135,4 @@ export class OnImCommandAddDto<T> {
   auth: B24AuthOptions;
 }
 
-export class OnImCommandKeyboardDto extends OnImCommandAddDto<B24EventData> {
-}
+export class OnImCommandKeyboardDto extends OnImCommandAddDto<B24EventData> {}

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { Request } from 'express';
-import { B24EventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
+import { B24BotEventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 
 @Injectable()
 export class BitrixEventGuard implements CanActivate {
@@ -15,7 +15,7 @@ export class BitrixEventGuard implements CanActivate {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
 
-    const body: B24EventBody = request.body;
+    const body: B24BotEventBody = request.body;
 
     const accessTokenFromRequest = body.auth.access_token;
     const accessToken = this.bitrixService.ACCESS_TOKEN;

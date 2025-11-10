@@ -1,9 +1,6 @@
 import { B24AuthOptions } from '../../../interfaces/bitrix.interface';
+import { B24EventList } from '@/modules/bitirx/modules/events/interfaces/events.interface';
 
-export type B24EventList =
-  | 'ONIMCOMMANDADD'
-  | 'ONAPPINSTALL'
-  | 'ONCRMDEALUPDATE';
 
 export interface B24EventCommand {
   [key: number]: B24EventCommandOptions;
@@ -48,7 +45,7 @@ export interface B24EventData {
   USER: B24EventUser;
 }
 
-export interface B24EventBody<T = any> {
+export interface B24BotEventBody<T = any> {
   event: B24EventList;
   event_handler_id: number;
   data: T;
@@ -64,6 +61,6 @@ export interface B24EventBodyDataOnInstallApp {
 }
 
 export interface B24EventBodyOnInstallApp
-  extends Omit<B24EventBody<B24EventBodyDataOnInstallApp>, 'event'> {
+  extends Omit<B24BotEventBody<B24EventBodyDataOnInstallApp>, 'event'> {
   event: 'ONAPPINSTALL';
 }

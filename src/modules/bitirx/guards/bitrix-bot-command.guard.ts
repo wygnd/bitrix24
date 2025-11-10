@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { Request } from 'express';
-import { B24EventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
+import { B24BotEventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 import { B24ImbotRegisterCommand } from '@/modules/bitirx/modules/imbot/imbot.interface';
 import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
 

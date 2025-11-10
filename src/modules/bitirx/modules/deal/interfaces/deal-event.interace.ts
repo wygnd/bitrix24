@@ -1,4 +1,4 @@
-import { B24EventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
+import { B24BotEventBody } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 
 export interface B24OnCRMDealUpdateEventData {
   FIELDS: {
@@ -6,4 +6,4 @@ export interface B24OnCRMDealUpdateEventData {
   };
 }
 
-export type B24OnCRMDealUpdateEvent = B24EventBody<B24OnCRMDealUpdateEventData>;
+export type B24OnCRMDealUpdateEvent = B24BotEventBody<B24OnCRMDealUpdateEventData>;
