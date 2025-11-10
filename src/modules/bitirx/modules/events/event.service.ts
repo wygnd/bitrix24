@@ -53,8 +53,6 @@ export class BitrixEventService {
       taskResult,
     } = task;
 
-    console.log(status);
-
     if (status !== '4') return;
 
     let message =
@@ -74,7 +72,7 @@ export class BitrixEventService {
       isApproved: true,
       responsibleId: responsibleId,
       accomplices: accomplices,
-      message: message,
+      message: this.botService.encodeText(message),
     };
 
     const keyboardItems: B24ImKeyboardOptions[] = [

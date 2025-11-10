@@ -23,10 +23,13 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
+import { TextDecoder } from 'node:util';
 
 @Injectable()
 export class BitrixImBotService {
   private readonly botId: string;
+  private readonly textEncoder: TextEncoder;
+  private readonly textDecoder: TextDecoder;
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -43,6 +46,8 @@ export class BitrixImBotService {
     const { BOT_ID } = bitrixConstants;
 
     this.botId = BOT_ID;
+    this.textEncoder = new TextEncoder();
+    this.textDecoder = new TextDecoder();
   }
 
   /**
@@ -250,7 +255,7 @@ export class BitrixImBotService {
         params: {
           BOT_ID: this.botId,
           MESSAGE_ID: messageId,
-          MESSAGE: oldMessage,
+          MESSAGE: this.decodeText(oldMessage),
           KEYBOARD: '',
         },
       },
@@ -280,5 +285,13 @@ export class BitrixImBotService {
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE: 'Обработана кнопка: ' + JSON.stringify(batchCommandsSendMessage),
     });
+  }
+
+  public encodeText(message: string) {
+    return this.textEncoder.encode(message);
+  }
+
+  public decodeText(message: Uint8Array<ArrayBuffer>) {
+    return this.textDecoder.decode(message);
   }
 }
