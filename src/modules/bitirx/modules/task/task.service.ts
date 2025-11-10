@@ -18,7 +18,11 @@ export class BitrixTaskService {
     private readonly redisService: RedisService,
   ) {}
 
-  async getTaskById(taskId: string, select: B24TaskSelect = []) {
+  async getTaskById(
+    taskId: string,
+    select: B24TaskSelect = [],
+    saveInCache = true,
+  ) {
     const taskFromCache = await this.redisService.get<B24TaskExtended>(
       REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
     );
@@ -56,11 +60,12 @@ export class BitrixTaskService {
       taskResult: taskResult,
     };
 
-    this.redisService.set<B24TaskExtended>(
-      REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
-      taskExtended,
-      3600,
-    );
+    saveInCache &&
+      this.redisService.set<B24TaskExtended>(
+        REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
+        taskExtended,
+        3600,
+      );
 
     return taskExtended;
   }

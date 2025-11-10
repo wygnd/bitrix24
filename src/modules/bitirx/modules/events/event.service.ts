@@ -13,7 +13,6 @@ import {
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { B24ImKeyboardOptions } from '@/modules/bitirx/modules/im/interfaces/im.interface';
-import { Index } from 'sequelize-typescript';
 
 @Injectable()
 export class BitrixEventService {
@@ -36,7 +35,7 @@ export class BitrixEventService {
 
   async handleTaskUpdate(fields: B24EventBody<B24EventTaskUpdateData>) {
     const { ID: taskId } = fields.data.FIELDS_BEFORE;
-    const task = await this.taskService.getTaskById(taskId);
+    const task = await this.taskService.getTaskById(taskId, undefined, false);
 
     if (task.title.startsWith('[МАКЕТ]'))
       return this.handleObserveEdnSmmAdvertLayoutsTaskUpdate(task);
@@ -53,6 +52,8 @@ export class BitrixEventService {
       accomplices,
       taskResult,
     } = task;
+
+    console.log(status);
 
     if (status !== '4') return;
 
@@ -95,7 +96,7 @@ export class BitrixEventService {
       });
     }
 
-    this.botService.sendMessage({
+    return this.botService.sendMessage({
       MESSAGE: message,
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       KEYBOARD: keyboardItems,

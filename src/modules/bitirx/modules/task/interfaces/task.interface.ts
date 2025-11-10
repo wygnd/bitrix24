@@ -144,7 +144,7 @@ export interface B24Task {
   checkListCanAdd: boolean;
 }
 
-export type B24TaskSelect = Array<keyof B24Task>;
+export type B24TaskSelect = Array<keyof B24Task> ;
 
 export interface TaskGetOptions {
   taskId: string;
