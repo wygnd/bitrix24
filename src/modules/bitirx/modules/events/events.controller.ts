@@ -18,6 +18,6 @@ export class BitrixEventsController {
 
   @Post('/handle/task/update')
   async handleTaskUpdate(@Body() fields: any) {
-    console.log('check event task: ', fields);
+    console.log('check event task: ', JSON.stringify(fields));
   }
 }
