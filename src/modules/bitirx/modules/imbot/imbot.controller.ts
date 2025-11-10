@@ -15,7 +15,8 @@ import {
   ApiBody,
   ApiExcludeEndpoint,
   ApiHeader,
-  ApiOperation, ApiResponse,
+  ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
@@ -25,6 +26,7 @@ import { ImbotMessageAddDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-me
 import { BitrixBotCommandGuard } from '@/modules/bitirx/guards/bitrix-bot-command.guard';
 import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
@@ -63,7 +65,7 @@ export class BitrixBotController {
   }
 
   @ApiOperation({
-    summary: 'Get bot command by id'
+    summary: 'Get bot command by id',
   })
   @ApiHeader({
     name: 'Authorization',
@@ -102,9 +104,7 @@ export class BitrixBotController {
   @UseGuards(AuthGuard)
   @Post('/message/add')
   async sendMessage(@Body() fields: ImbotMessageAddDto) {
-    return this.bitrixBotService.sendMessage({
-      ...fields,
-    });
+    return this.bitrixBotService.sendMessage(fields);
   }
 
   @UseGuards(AuthGuard)
@@ -139,11 +139,14 @@ export class BitrixBotController {
 
     const { MESSAGE } = data.PARAMS;
 
-    const [command] = MESSAGE.split(' ', 2);
+    const [command, commandParams] = MESSAGE.split(' ', 2);
 
     switch (command) {
       case '/distributeNewDeal':
         break;
+
+      case '/approveSmmAdvertLayouts':
+        return this.bitrixBotService.handleApproveSmmAdvertLayout(JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout);
 
       default:
         throw new BadRequestException('Command not handled yet');

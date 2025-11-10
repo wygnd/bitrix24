@@ -16,8 +16,8 @@ export type B24EventList =
   | 'ONTASKUPDATE';
 
 export interface B24EventTaskUpdateData {
-  FIELDS_BEFORE: any;
-  FIELDS_AFTER: any;
+  FIELDS_BEFORE: Record<string, any> & { ID: string };
+  FIELDS_AFTER: Record<string, any> & { ID: string };
   IS_ACCESSIBLE_BEFORE: any;
   IS_ACCESSIBLE_AFTER: any;
 }

@@ -25,6 +25,8 @@ import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/dep
 import { BitrixEventsController } from '@/modules/bitirx/modules/events/events.controller';
 import { BitrixEventService } from '@/modules/bitirx/modules/events/event.service';
 import { DepartmentController } from '@/modules/bitirx/modules/department/department.controller';
+import { BitrixTaskController } from '@/modules/bitirx/modules/task/task.controller';
+import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 
 @Module({
   imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],
@@ -39,6 +41,7 @@ import { DepartmentController } from '@/modules/bitirx/modules/department/depart
     BitrixPlacementController,
     DepartmentController,
     BitrixEventsController,
+    BitrixTaskController,
   ],
   providers: [
     ...bitrixProviders,
@@ -54,6 +57,7 @@ import { DepartmentController } from '@/modules/bitirx/modules/department/depart
     BitrixWebhookService,
     BitrixDepartmentService,
     BitrixEventService,
+    BitrixTaskService,
   ],
   exports: [BitrixService, BitrixMessageService],
 })

@@ -12,6 +12,7 @@ export enum B24ApiTags {
   AVITO = 'Avito',
   HEAD_HUNTER = 'Head Hunter',
   WEBHOOK = 'Webhook',
+  TASKS = 'Tasks',
 }
 
 interface B24Timestamp {
@@ -50,7 +51,8 @@ export type B24ErrorType =
   | 'ERROR_MANIFEST_IS_NOT_AVAILABLE'
   | 'expired_token'
   | 'user_access_error'
-  | 'ERROR_CORE';
+  | 'ERROR_CORE'
+  | 'BOT_ID_ERROR';
 
 export interface B24ErrorResponse {
   error: B24ErrorType;

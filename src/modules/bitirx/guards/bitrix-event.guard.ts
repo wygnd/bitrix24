@@ -17,15 +17,13 @@ export class BitrixEventGuard implements CanActivate {
 
     const body: B24BotEventBody = request.body;
 
-    const accessTokenFromRequest = body.auth.access_token;
-    const accessToken = this.bitrixService.ACCESS_TOKEN;
-
-    console.log('TEST CHECKING ACCESS TOKEN: ', body.auth);
+    const tokenFromRequest = body.auth.member_id;
+    const token = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (
-      !accessToken ||
-      !accessTokenFromRequest ||
-      accessToken !== accessTokenFromRequest
+      !token ||
+      !tokenFromRequest ||
+      token !== tokenFromRequest
     )
       throw new UnauthorizedException('Invalid access token');
 

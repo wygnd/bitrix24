@@ -306,9 +306,13 @@ export class BitrixService {
   public generateDealUrl(dealId: number | string, label?: string) {
     const url = `${this.bitrixDomain}/crm/deal/details/${dealId}/`;
 
-    if (label) return `[url=${url}]${label}[/url]`;
+    return label ? `[url=${url}]${label}[/url]` : url;
+  }
 
-    return url;
+  public generateTaskUrl(userId: string, taskId: string, label?: string) {
+    const url = `https://grampus.bitrix24.ru/company/personal/user/${userId}/tasks/task/view/${taskId}/`;
+
+    return label ? `[url=${url}]${label}[/url]` : url;
   }
 
   /**

@@ -11,8 +11,8 @@ import type {
   B24ImSendMessage,
 } from '../interfaces/im.interface';
 import { BoolString } from '@bitrix24/b24jssdk';
-
-class B24KeyboardOptions {}
+import { Type } from 'class-transformer';
+import { ImbotMessageKeyboardOptionsDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-message.dto';
 
 export class SendMessageDto implements B24ImSendMessage {
   @ApiProperty({
@@ -46,11 +46,12 @@ export class SendMessageDto implements B24ImSendMessage {
   SYSTEM: string = 'N';
 
   @ApiProperty({
-    type: B24KeyboardOptions,
+    type: ImbotMessageKeyboardOptionsDto,
     description: 'Inline Buttons',
     required: false,
   })
   @IsOptional()
   @IsArray()
-  KEYBOARD: B24ImKeyboardOptions[];
+  @Type(() => ImbotMessageKeyboardOptionsDto)
+  KEYBOARD: ImbotMessageKeyboardOptionsDto[] = [];
 }

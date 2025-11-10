@@ -71,6 +71,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             case 'ERROR_BATCH_LENGTH_EXCEEDED':
             case 'INVALID_REQUEST':
             case 'ERROR_CORE':
+            case 'BOT_ID_ERROR':
               return throwError(() => new BadRequestException(data));
 
             //   401
@@ -105,6 +106,9 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             case 'QUERY_LIMIT_EXCEEDED':
             case 'OVERLOAD_LIMIT':
               return throwError(() => new ServiceUnavailableException(data));
+
+            default:
+              return throwError(() => new InternalServerErrorException(data));
           }
         }
 

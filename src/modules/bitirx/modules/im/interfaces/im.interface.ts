@@ -3,7 +3,7 @@ import { BoolString } from '@bitrix24/b24jssdk';
 export type KeyboardBgColorToken = 'primary' | 'secondary' | 'alert' | 'base';
 
 export interface B24ImKeyboardOptions {
-  TEXT: string;
+  TEXT?: string;
   LINK?: string;
   COMMAND?: string;
   COMMAND_PARAMS?: string;
@@ -14,6 +14,9 @@ export interface B24ImKeyboardOptions {
   TEXT_COLOR?: string;
   DISPLAY?: 'BLOCK' | 'LINE';
   WIDTH?: string;
+  ACTION?: string;
+  ACTION_VALUE?: string;
+  TYPE?: string;
 }
 
 export interface B24ImSendMessage {

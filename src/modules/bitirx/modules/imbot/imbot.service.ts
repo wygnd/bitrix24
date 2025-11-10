@@ -21,6 +21,8 @@ import { ImbotBot } from '@/modules/bitirx/modules/imbot/interfaces/imbot-bot.in
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
+import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -30,6 +32,7 @@ export class BitrixImBotService {
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly taskService: BitrixTaskService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -220,4 +223,42 @@ export class BitrixImBotService {
   }
 
   async distributeNewDeal(eventData: OnImCommandKeyboardDto) {}
+
+  async handleApproveSmmAdvertLayout(
+    fields: ImbotHandleApproveSmmAdvertLayout,
+  ) {
+    const { taskId, isApproved, responsibleId, accomplices } = fields;
+    let message = 'Макет согласован.[br]';
+    // Если согласованно
+    if (isApproved) {
+      this.taskService.setTaskComplete(taskId);
+      message = 'Макет согласован. Задача завершена[br]';
+    }
+
+    message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
+
+    const batchCommandsSendMessage: B24BatchCommands = {
+      send_message_to_responsible: {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: responsibleId,
+          MESSAGE: message,
+        },
+      },
+    };
+
+    if (accomplices.length > 0) {
+      accomplices.forEach((accompliceId) => {
+        batchCommandsSendMessage['send_message_to'] = {
+          method: 'imbot.message.add',
+          params: {
+            DIALOG_ID: accompliceId,
+            MESSAGE: message,
+          },
+        };
+      });
+    }
+
+    this.bitrixService.callBatch(batchCommandsSendMessage);
+  }
 }
