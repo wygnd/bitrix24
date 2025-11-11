@@ -301,7 +301,7 @@ export class BitrixImBotService {
     } = fields;
 
     const { DIALOG_ID, MESSAGE_ID } = params;
-    const deal = await this.dealService.getDealById(dealId);
+    const deal = await this.dealService.getDealById(dealId, false);
     let nextStage = stage ?? '';
 
     switch (department) {
@@ -374,11 +374,6 @@ export class BitrixImBotService {
     };
 
     this.bitrixService.callBatch(batchCommands);
-    if (!stage) {
-      this.redisService
-        .del(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId)
-        .then(() => this.dealService.getDealById(dealId));
-    }
     return true;
   }
 

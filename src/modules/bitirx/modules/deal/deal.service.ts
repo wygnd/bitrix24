@@ -24,7 +24,7 @@ export class BitrixDealService {
     private readonly redisService: RedisService,
   ) {}
 
-  async getDealById(dealId: number | string) {
+  async getDealById(dealId: number | string, saveInCache = true) {
     const dealFromCache = await this.redisService.get<B24Deal>(
       REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
     );
@@ -40,11 +40,12 @@ export class BitrixDealService {
 
     if (!deal) throw new NotFoundException('deal not found');
 
-    this.redisService.set<B24Deal>(
-      REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
-      deal,
-      3600,
-    );
+    if (saveInCache)
+      this.redisService.set<B24Deal>(
+        REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
+        deal,
+        3600,
+      );
 
     return deal;
   }

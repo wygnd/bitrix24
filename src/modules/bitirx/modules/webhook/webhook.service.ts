@@ -388,9 +388,6 @@ export class BitrixWebhookService {
         send_message: number;
       }>
     >(batchCommandsSendMessage);
-
-    this.dealService.getDealById(deal_id);
-
     return true;
   }
 }
