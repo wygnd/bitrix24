@@ -51,6 +51,7 @@ export class BitrixEventService {
       title,
       accomplices,
       taskResult,
+      createdBy,
     } = task;
 
     if (status !== '4') return;
@@ -99,7 +100,7 @@ export class BitrixEventService {
 
     return this.botService.sendMessage({
       MESSAGE: message,
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      DIALOG_ID: createdBy,
       KEYBOARD: keyboardItems,
     });
   }
