@@ -294,7 +294,6 @@ export class BitrixImBotService {
     const {
       dealId,
       department,
-      oldMessage,
       chatId,
       managerId,
       managerName,
@@ -352,7 +351,7 @@ export class BitrixImBotService {
           MESSAGE:
             '>>[b]Обработано[/b][br]' +
             `Сделка распределена на [user=${managerId}]${managerName}[/user][br][br]` +
-            this.decodeText(oldMessage),
+            this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: [],
         },
       };
@@ -370,6 +369,7 @@ export class BitrixImBotService {
     };
 
     this.bitrixService.callBatch(batchCommands);
+    return true;
   }
 
   /**

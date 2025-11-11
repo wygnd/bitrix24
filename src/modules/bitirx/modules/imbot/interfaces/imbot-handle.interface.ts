@@ -25,7 +25,6 @@ export interface ImbotHandleDistributeNewDeal {
   chatId: string;
   assignedFieldId: string;
   stage: string | null;
-  oldMessage: Buffer<ArrayBuffer>;
 }
 
 export interface ImbotHandleDistributeNewDealReject {

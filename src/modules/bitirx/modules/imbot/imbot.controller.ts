@@ -5,6 +5,8 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -125,6 +127,7 @@ export class BitrixBotController {
     description: 'Available commands: ',
   })
   @UseGuards(BitrixBotCommandGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('onimcommandadd')
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
     const { event, data } = body;
@@ -132,25 +135,21 @@ export class BitrixBotController {
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
 
-    this.bitrixBotService.sendMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-      MESSAGE: 'Обработка нажатия кнопки:[br]' + JSON.stringify(body),
-    });
-
     const { MESSAGE, MESSAGE_ID } = data.PARAMS;
-
-    const [command, commandParams] = MESSAGE.split(' ', 2);
+    const [command, _] = MESSAGE.split(' ', 2);
 
     switch (command) {
       case '/distributeNewDeal':
         return this.bitrixBotService.handleDistributeNewDeal(
-          JSON.parse(commandParams),
+          JSON.parse(MESSAGE.replace(command, '')),
           data.PARAMS,
         );
 
       case '/approveSmmAdvertLayouts':
         return this.bitrixBotService.handleApproveSmmAdvertLayout(
-          JSON.parse(commandParams) as ImbotHandleApproveSmmAdvertLayout,
+          JSON.parse(
+            MESSAGE.replace(command, ''),
+          ) as ImbotHandleApproveSmmAdvertLayout,
           MESSAGE_ID,
         );
 

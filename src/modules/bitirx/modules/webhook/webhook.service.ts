@@ -304,7 +304,6 @@ export class BitrixWebhookService {
           chatId: dialog_id,
           assignedFieldId: this.departmentInfo[department].dealAssignedField,
           stage: this.departmentInfo[department].stage,
-          oldMessage: this.bitrixBotService.encodeText(message),
         };
 
         switch (department) {
