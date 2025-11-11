@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { QueueProcessor } from '@/modules/queue/processors/queue.processor';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisOptions } from 'ioredis';
-import { QueueController } from '@/modules/queue/queue.controller';
 import { ConfigService } from '@nestjs/config';
 import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 import { QueueService } from '@/modules/queue/queue.service';
+import { BitrixModule } from '@/modules/bitirx/bitrix.module';
 
 @Module({
   imports: [
@@ -23,10 +23,11 @@ import { QueueService } from '@/modules/queue/queue.service';
       inject: [ConfigService],
     }),
     BullModule.registerQueue({
-      name: QUEUE_NAMES.QUEUE_BITRIX_SYNC,
+      name: QUEUE_NAMES.QUEUE_BITRIX_EVENTS,
     }),
+    forwardRef(() => BitrixModule),
   ],
-  controllers: [QueueController],
+  controllers: [],
   providers: [QueueProcessor, QueueService],
   exports: [QueueService],
 })

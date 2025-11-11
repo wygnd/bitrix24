@@ -8,21 +8,14 @@ import { AppController } from '@/app.controller';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
 import { QueueModule } from '@/modules/queue/queue.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 
 @Module({
   imports: [
     ConfigAppModule,
     RedisModule,
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'static'),
-    //   useGlobalPrefix: true,
-    //   exclude: ['/api'],
-    // }),
     BitrixModule,
     HeadHunterModule,
-    // QueueModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

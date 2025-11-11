@@ -17,7 +17,7 @@ import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
 @Controller('events')
 export class BitrixEventsController {
   constructor(
-    private readonly eventsService: BitrixEventService
+    private readonly eventsService: BitrixEventService,
   ) {}
 
   @UseGuards(AuthGuard)

@@ -27,9 +27,15 @@ import { BitrixEventService } from '@/modules/bitirx/modules/events/event.servic
 import { DepartmentController } from '@/modules/bitirx/modules/department/department.controller';
 import { BitrixTaskController } from '@/modules/bitirx/modules/task/task.controller';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
+import { QueueModule } from '@/modules/queue/queue.module';
 
 @Module({
-  imports: [HttpModule, RedisModule, forwardRef(() => HeadHunterModule)],
+  imports: [
+    HttpModule,
+    RedisModule,
+    forwardRef(() => HeadHunterModule),
+    forwardRef(() => QueueModule),
+  ],
   controllers: [
     BitrixController,
     BitrixAvitoController,
@@ -59,6 +65,6 @@ import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
     BitrixEventService,
     BitrixTaskService,
   ],
-  exports: [BitrixService, BitrixMessageService],
+  exports: [BitrixService, BitrixMessageService, BitrixTaskService],
 })
 export class BitrixModule {}

@@ -22,8 +22,6 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
-import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
-import { TextDecoder } from 'node:util';
 
 @Injectable()
 export class BitrixImBotService {
@@ -33,7 +31,6 @@ export class BitrixImBotService {
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
-    private readonly taskService: BitrixTaskService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
