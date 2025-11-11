@@ -341,8 +341,10 @@ export class BitrixImBotService {
     };
 
     if (stage) {
-      const secondManager = deal['UF_CRM_1623766928']
-        ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
+      // Если SEO Проект-менеджер выбран
+      // в сообщении его тоже указать надо
+      const secondManager = deal['UF_CRM_1703764564']
+        ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
         : '';
 
       batchCommands['update_old_message'] = {
