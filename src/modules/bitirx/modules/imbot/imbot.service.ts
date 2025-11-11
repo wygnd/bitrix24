@@ -278,7 +278,6 @@ export class BitrixImBotService {
       });
     }
 
-    return batchCommandsSendMessage;
     this.bitrixService.callBatch(batchCommandsSendMessage);
     this.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
