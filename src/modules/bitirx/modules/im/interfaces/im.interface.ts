@@ -6,7 +6,7 @@ export interface B24ImKeyboardOptions {
   TEXT?: string;
   LINK?: string;
   COMMAND?: string;
-  COMMAND_PARAMS?: string;
+  COMMAND_PARAMS?: any;
   BG_COLOR_TOKEN?: KeyboardBgColorToken;
   BG_COLOR?: string;
   BLOCK?: BoolString;

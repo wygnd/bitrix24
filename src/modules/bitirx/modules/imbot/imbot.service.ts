@@ -28,8 +28,6 @@ import { TextDecoder } from 'node:util';
 @Injectable()
 export class BitrixImBotService {
   private readonly botId: string;
-  private readonly textEncoder: TextEncoder;
-  private readonly textDecoder: TextDecoder;
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -46,8 +44,6 @@ export class BitrixImBotService {
     const { BOT_ID } = bitrixConstants;
 
     this.botId = BOT_ID;
-    this.textEncoder = new TextEncoder();
-    this.textDecoder = new TextDecoder();
   }
 
   /**
@@ -249,8 +245,7 @@ export class BitrixImBotService {
     }
 
     message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
-    // todo: Подумать над кодировкой текста
-    return [123];
+
     const batchCommandsSendMessage: B24BatchCommands = {
       update_old_message: {
         method: 'imbot.message.update',
@@ -291,11 +286,11 @@ export class BitrixImBotService {
     });
   }
 
-  public encodeText(message: string) {
-    return this.textEncoder.encode(message);
+  public encodeText(message: string): Buffer<ArrayBuffer> {
+    return Buffer.from(message, 'utf8');
   }
 
-  public decodeText(message: Uint8Array<ArrayBuffer>) {
-    return this.textDecoder.decode(message);
+  public decodeText(message: Buffer<ArrayBuffer>): string {
+    return Buffer.from(message).toString('utf8');
   }
 }

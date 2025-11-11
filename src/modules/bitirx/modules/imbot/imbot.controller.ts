@@ -129,10 +129,10 @@ export class BitrixBotController {
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
     const { event, data } = body;
 
-    // this.bitrixBotService.sendMessage({
-    //   DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-    //   MESSAGE: 'Новая команда боту:[br]' + JSON.stringify(body),
-    // });
+    this.bitrixBotService.sendMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE: 'Новая команда боту:[br]' + JSON.stringify(body),
+    });
 
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
