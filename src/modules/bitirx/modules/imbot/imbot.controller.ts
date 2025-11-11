@@ -24,7 +24,7 @@ import { ImbotRegisterCommandDto } from '@/modules/bitirx/modules/imbot/dtos/imb
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { ImbotMessageAddDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-message-add.dto';
 import { BitrixBotCommandGuard } from '@/modules/bitirx/guards/bitrix-bot-command.guard';
-import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
+import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-events.dto';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 
@@ -131,6 +131,11 @@ export class BitrixBotController {
 
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
+
+    this.bitrixBotService.sendMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE: 'Обработка нажатия кнопки:[br]' + JSON.stringify(body),
+    });
 
     const { MESSAGE, MESSAGE_ID } = data.PARAMS;
 

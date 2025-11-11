@@ -12,7 +12,7 @@ import {
   B24ImbotUnRegisterOptions,
   B24ImbotUpdateMessageOptions,
 } from './imbot.interface';
-import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
+import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-events.dto';
 import { NotifyConvertedDeal } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events-handle.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';

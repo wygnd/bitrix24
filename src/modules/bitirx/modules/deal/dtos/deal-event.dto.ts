@@ -6,7 +6,7 @@ import type { B24AuthOptions } from '@/modules/bitirx/interfaces/bitrix.interfac
 import { ApiProperty } from '@nestjs/swagger';
 import { Equals, IsInt, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OnImCommandAddEventAuthOptionsDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
+import { OnImCommandAddEventAuthOptionsDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-events.dto';
 
 export class OnCRMDealUpdateEventBodyDataDto
   implements B24OnCRMDealUpdateEventData
