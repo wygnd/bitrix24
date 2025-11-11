@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {});
@@ -19,6 +20,8 @@ async function bootstrap() {
       'http://localhost:5173',
     ],
   });
+
+  app.use(compression());
 
   // Swagger API
   const swaggerConfig = new DocumentBuilder()
