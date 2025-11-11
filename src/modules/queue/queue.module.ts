@@ -24,6 +24,9 @@ import { BitrixModule } from '@/modules/bitirx/bitrix.module';
     }),
     BullModule.registerQueue({
       name: QUEUE_NAMES.QUEUE_BITRIX_EVENTS,
+      defaultJobOptions: {
+        removeOnComplete: true,
+      },
     }),
     forwardRef(() => BitrixModule),
   ],
