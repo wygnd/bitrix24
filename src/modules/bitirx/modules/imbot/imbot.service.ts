@@ -265,10 +265,12 @@ export class BitrixImBotService {
       },
     };
 
+    console.log(accomplices);
+
     if (accomplices.length > 0) {
       accomplices.forEach((userId) => {
         console.log(userId);
-        batchCommandsSendMessage['send_message_to'] = {
+        batchCommandsSendMessage[`send_message_to_accomplices_${userId}`] = {
           method: 'im.message.add',
           params: {
             DIALOG_ID: userId,
