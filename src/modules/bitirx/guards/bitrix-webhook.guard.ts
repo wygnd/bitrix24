@@ -17,7 +17,7 @@ export class BitrixWebhookGuard implements CanActivate {
 
     const body: IncomingWebhookDto = request.body;
 
-    const memberIdFromRequest = body.auth.member_id;
+    const memberIdFromRequest = body?.auth?.member_id;
     const memberId = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (!memberId || !memberIdFromRequest || memberId !== memberIdFromRequest)

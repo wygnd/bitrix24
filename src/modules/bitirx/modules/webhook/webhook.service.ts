@@ -265,7 +265,7 @@ export class BitrixWebhookService {
 
       case B24DepartmentTypeId.SEO:
         message +=
-          '[br][b]Первым выбирать технического специалиста, после проект-менеджера[/b]';
+          '[br][br][b]Первым выбирать технического специалиста, после проект-менеджера[/b]';
         break;
     }
 
@@ -315,6 +315,7 @@ export class BitrixWebhookService {
                 // SEO Технический специалист
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
                 keyboardItemOptions.BG_COLOR_TOKEN = 'secondary';
+                keyboardItemParams.stage = 'next';
                 break;
 
               case '92':

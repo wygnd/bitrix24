@@ -19,7 +19,7 @@ export class BitrixBotCommandGuard implements CanActivate {
 
     const body: OnImCommandKeyboardDto = request.body;
 
-    const memberIdFromRequest = body.auth.member_id;
+    const memberIdFromRequest = body?.auth?.member_id;
     const memberId = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (

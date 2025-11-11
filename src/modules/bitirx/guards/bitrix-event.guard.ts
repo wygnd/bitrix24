@@ -17,7 +17,7 @@ export class BitrixEventGuard implements CanActivate {
 
     const body: B24BotEventBody = request.body;
 
-    const tokenFromRequest = body.auth.member_id;
+    const tokenFromRequest = body?.auth?.member_id;
     const token = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
 
     if (
