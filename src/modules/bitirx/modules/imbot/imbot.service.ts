@@ -352,7 +352,6 @@ export class BitrixImBotService {
             '>>[b]Обработано[/b][br]' +
             `Сделка распределена на [user=${managerId}]${managerName}[/user][br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
-          KEYBOARD: [],
         },
       };
     }
