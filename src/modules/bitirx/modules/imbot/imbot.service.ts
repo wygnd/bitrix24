@@ -243,7 +243,7 @@ export class BitrixImBotService {
     // Если согласованно
     if (isApproved) {
       batchCommandsSendMessage['set_complete_task'] = {
-        method: 'tasks.task.complete',
+        method: 'tasks.task.approve',
         params: {
           taskId: taskId,
         },
@@ -253,12 +253,9 @@ export class BitrixImBotService {
     } else {
       // Если не согласованно
       batchCommandsSendMessage['return_task'] = {
-        method: 'tasks.task.update',
+        method: 'tasks.task.disapprove',
         params: {
           taskId: taskId,
-          fields: {
-            status: '2',
-          },
         },
       };
 
