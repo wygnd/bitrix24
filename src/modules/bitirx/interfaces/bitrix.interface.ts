@@ -12,6 +12,7 @@ export type B24AvailableMethods =
   | 'tasks.task.delete'
   | 'tasks.task.complete'
   | 'tasks.task.result.list'
+  | 'tasks.task.update'
   | 'department.get'
   | 'crm.deal.list'
   | 'crm.deal.add'

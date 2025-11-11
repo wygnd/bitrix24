@@ -6,10 +6,7 @@ import {
 } from '@/modules/bitirx/modules/events/interfaces/events.interface';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
-import {
-  B24Task,
-  B24TaskExtended,
-} from '@/modules/bitirx/modules/task/interfaces/task.interface';
+import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { B24ImKeyboardOptions } from '@/modules/bitirx/modules/im/interfaces/im.interface';

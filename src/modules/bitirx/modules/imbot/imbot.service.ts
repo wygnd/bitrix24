@@ -236,34 +236,52 @@ export class BitrixImBotService {
       accomplices,
       message: oldMessage,
     } = fields;
-    let message = 'Макет согласован.[br]';
-    let changeMessage = '>>[b]Обарботанно: Макет не согласован[/b][br][br]';
+    let message = '';
+    let changeMessage = '';
+    let batchCommandsSendMessage: B24BatchCommands = {};
 
     // Если согласованно
     if (isApproved) {
-      this.taskService.setTaskComplete(taskId);
-      message = 'Макет согласован. Задача завершена[br]';
+      batchCommandsSendMessage['set_complete_task'] = {
+        method: 'tasks.task.complete',
+        params: {
+          taskId: taskId,
+        },
+      };
+      message = 'Макет согласован. Задача завершена.[br]';
       changeMessage = '>>[b]Обарботанно: Макет согласован[/b][br][br]';
+    } else {
+      // Если не согласованно
+      batchCommandsSendMessage['return_task'] = {
+        method: 'tasks.task.update',
+        params: {
+          taskId: taskId,
+          fields: {
+            status: '2',
+          },
+        },
+      };
+
+      message = 'Макет не согласован. Задача возвращена.[br]';
+      changeMessage = '>>[b]Обарботанно: Макет не согласован[/b][br][br]';
     }
 
     message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
 
-    const batchCommandsSendMessage: B24BatchCommands = {
-      update_old_message: {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.botId,
-          MESSAGE_ID: messageId,
-          MESSAGE: changeMessage + this.decodeText(oldMessage),
-          KEYBOARD: '',
-        },
+    batchCommandsSendMessage['update_old_message'] = {
+      method: 'imbot.message.update',
+      params: {
+        BOT_ID: this.botId,
+        MESSAGE_ID: messageId,
+        MESSAGE: changeMessage + this.decodeText(oldMessage),
+        KEYBOARD: '',
       },
-      send_message_to_responsible: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: responsibleId,
-          MESSAGE: message,
-        },
+    };
+    batchCommandsSendMessage['send_message_to_responsible'] = {
+      method: 'im.message.add',
+      params: {
+        DIALOG_ID: responsibleId,
+        MESSAGE: message,
       },
     };
 
