@@ -3,6 +3,7 @@ import redisConfig from './redis.config';
 import databaseConfig from './database.config';
 import applicationConfig from './app.config';
 import headHunterConfig from './headhunter.config';
+import wikiConfig from './wiki.config';
 
 export const configList = [
   bitrixConfig,
@@ -10,4 +11,5 @@ export const configList = [
   databaseConfig,
   applicationConfig,
   headHunterConfig,
+  wikiConfig,
 ];

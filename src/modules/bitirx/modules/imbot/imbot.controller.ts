@@ -138,7 +138,10 @@ export class BitrixBotController {
 
     switch (command) {
       case '/distributeNewDeal':
-        break;
+        return this.bitrixBotService.handleDistributeNewDeal(
+          JSON.parse(commandParams),
+          data.PARAMS,
+        );
 
       case '/approveSmmAdvertLayouts':
         return this.bitrixBotService.handleApproveSmmAdvertLayout(

@@ -10,6 +10,7 @@ import {
   B24ImbotRegisterOptions,
   B24ImbotSendMessageOptions,
   B24ImbotUnRegisterOptions,
+  B24ImbotUpdateMessageOptions,
 } from './imbot.interface';
 import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/events.dto';
 import { NotifyConvertedDeal } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events-handle.interface';
@@ -21,16 +22,29 @@ import { ImbotBot } from '@/modules/bitirx/modules/imbot/interfaces/imbot-bot.in
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
-import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import {
+  B24DistributeNewDealHandleType,
+  ImbotHandleApproveSmmAdvertLayout,
+  ImbotHandleDistributeNewDeal,
+  ImbotHandleDistributeNewDealReject,
+  ImbotHandleDistributeNewDealUnknown,
+} from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import { WikiService } from '@/modules/wiki/wiki.service';
+import { B24EventParams } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
+import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
+import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 
 @Injectable()
 export class BitrixImBotService {
   private readonly botId: string;
+  private readonly distributeDealMessages: string[];
 
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly wikiService: WikiService,
+    private readonly dealService: BitrixDealService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -41,6 +55,12 @@ export class BitrixImBotService {
     const { BOT_ID } = bitrixConstants;
 
     this.botId = BOT_ID;
+    this.distributeDealMessages = [
+      'Желаю максимально легкого клиента 😊',
+      'Удачного проекта, будь креативным и сильным 💪🏼',
+      'Бери в работу, скорее звони клиенту ⚡',
+      'Take it! Hold it! love it! 🔥',
+    ];
   }
 
   /**
@@ -123,6 +143,20 @@ export class BitrixImBotService {
     return this.bitrixService.callMethod<B24ImbotSendMessageOptions, number>(
       'imbot.message.add',
       { ...fields, BOT_ID: this.botId },
+    );
+  }
+
+  /**
+   * Update message
+   * @param fields
+   */
+  async updateMessage(fields: Omit<B24ImbotUpdateMessageOptions, 'BOT_ID'>) {
+    return this.bitrixService.callMethod<B24ImbotUpdateMessageOptions, boolean>(
+      'imbot.message.update',
+      {
+        ...fields,
+        BOT_ID: this.botId,
+      },
     );
   }
 
@@ -220,7 +254,154 @@ export class BitrixImBotService {
     return true;
   }
 
-  async distributeNewDeal(eventData: OnImCommandKeyboardDto) {}
+  async handleDistributeNewDeal(
+    fields: ImbotHandleDistributeNewDealUnknown,
+    params: B24EventParams,
+  ) {
+    switch (fields.handle) {
+      case 'distributeDeal':
+        return this.handleDistributeNewDealSuccess(
+          fields as ImbotHandleDistributeNewDeal,
+          params,
+        );
+
+      case 'distributeDealReject':
+        return this.handleDistributeNewDealReject(
+          fields as ImbotHandleDistributeNewDealReject,
+          params,
+        );
+
+      default:
+        throw new BadRequestException(
+          'This distribute handle type is not handling yet',
+        );
+    }
+  }
+
+  /**
+   * Handling click button in distribution chats
+   *
+   * ---
+   *
+   * Обработка нажатия на кнопку в чатах 'Распределение...'
+   * @param fields
+   * @param params
+   */
+  async handleDistributeNewDealSuccess(
+    fields: ImbotHandleDistributeNewDeal,
+    params: B24EventParams,
+  ) {
+    const {
+      dealId,
+      department,
+      oldMessage,
+      chatId,
+      managerId,
+      managerName,
+      stage,
+      assignedFieldId,
+    } = fields;
+
+    const { DIALOG_ID, MESSAGE_ID } = params;
+    const deal = await this.dealService.getDealById(dealId);
+    let nextStage = stage ?? '';
+
+    switch (department) {
+      case B24DepartmentTypeId.SEO:
+        if (!stage) break;
+
+        switch (deal.CATEGORY_ID) {
+          case '34':
+            nextStage = 'C34:PREPAYMENT_INVOIC';
+            break;
+
+          case '7':
+            nextStage = 'C7:NEW';
+            break;
+
+          case '16':
+            nextStage = 'C16:NEW';
+            break;
+        }
+
+        break;
+    }
+
+    const batchCommands: B24BatchCommands = {
+      send_next_chat_message: {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.botId,
+          DIALOG_ID: chatId,
+          MESSAGE:
+            'Распределение сделки ' +
+            this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
+            ` на [user=${managerId}]${managerName}[/user][br] ` +
+            this.getRandomDistributeMessage(),
+        },
+      },
+    };
+
+    if (stage) {
+      batchCommands['update_old_message'] = {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.botId,
+          MESSAGE_ID: MESSAGE_ID,
+          DIALOG_ID: DIALOG_ID,
+          MESSAGE:
+            '>>[b]Обработано[/b][br]' +
+            `Сделка распределена на [user=${managerId}]${managerName}[/user][br][br]` +
+            this.decodeText(oldMessage),
+          KEYBOARD: [],
+        },
+      };
+    }
+
+    batchCommands['update_deal'] = {
+      method: 'crm.deal.update',
+      params: {
+        id: dealId,
+        fields: {
+          [assignedFieldId]: managerId,
+          STAGE_ID: nextStage,
+        },
+      },
+    };
+
+    this.bitrixService.callBatch(batchCommands);
+  }
+
+  /**
+   * Handle ONLY ADVERT DEAL. If user click on 'Reject' button
+   *
+   * ---
+   *
+   * Обрабатывает ТОЛЬКО СДЕЛКИ НА РК. Если пользователь нажал кнопку 'Брак'
+   * @param fields
+   * @param params
+   */
+  async handleDistributeNewDealReject(
+    fields: ImbotHandleDistributeNewDealReject,
+    params: B24EventParams,
+  ) {
+    const { userId, userCounter, oldMessage } = fields;
+    const { MESSAGE_ID, DIALOG_ID } = params;
+
+    this.wikiService.sendRejectDistributeNewDeal({
+      bitrix_id: userId,
+      counter: userCounter,
+    });
+
+    this.updateMessage({
+      DIALOG_ID: DIALOG_ID,
+      MESSAGE_ID: MESSAGE_ID,
+      MESSAGE: '>>[b]Обработано: Брак[/b][br]' + this.decodeText(oldMessage),
+      KEYBOARD: [],
+    });
+
+    return true;
+  }
 
   async handleApproveSmmAdvertLayout(
     fields: ImbotHandleApproveSmmAdvertLayout,
@@ -300,5 +481,11 @@ export class BitrixImBotService {
 
   public decodeText(message: Buffer<ArrayBuffer>): string {
     return Buffer.from(message).toString('utf8');
+  }
+
+  private getRandomDistributeMessage() {
+    return this.distributeDealMessages[
+      Math.floor(Math.random() * this.distributeDealMessages.length)
+    ];
   }
 }

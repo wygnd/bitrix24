@@ -2,8 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
-import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
-import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { HeadHunterAuthTokens } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-auth.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';

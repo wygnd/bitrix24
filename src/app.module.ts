@@ -8,6 +8,7 @@ import { AppController } from '@/app.controller';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
 import { QueueModule } from '@/modules/queue/queue.module';
+import { WikiModule } from '@/modules/wiki/wiki.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { QueueModule } from '@/modules/queue/queue.module';
     BitrixModule,
     HeadHunterModule,
     QueueModule,
+    WikiModule,
   ],
   controllers: [AppController],
   providers: [

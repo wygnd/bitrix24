@@ -68,9 +68,9 @@ export type B24FilterOptions<T> = {
 
 export type B24SelectOptions<T> = (keyof T)[];
 
-export interface B24BatchCommand {
+export interface B24BatchCommand<T = any> {
   method: B24AvailableMethods;
-  params: Record<string, any>;
+  params: Record<string, T>;
 }
 
 export type B24BatchCommands = Record<string, B24BatchCommand>;

@@ -40,9 +40,11 @@ export class BitrixDealService {
 
     if (!deal) throw new NotFoundException('deal not found');
 
-    this.redisService
-      .set<B24Deal>(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId, deal, 3600)
-      .then(() => {});
+    this.redisService.set<B24Deal>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
+      deal,
+      3600,
+    );
 
     return deal;
   }
@@ -111,22 +113,4 @@ export class BitrixDealService {
   async getDealStageHistory() {
     return this.bitrixService.callMethod('crm.stagehistory.list');
   }
-
-  async handleUpdateDeal(body: B24OnCRMDealUpdateEvent) {
-    const { ID } = body.data.FIELDS;
-
-    const deal = await this.getDealById(ID);
-    const { STAGE_ID } = deal;
-
-    switch (STAGE_ID) {
-      // Настройка РК
-      case '1':
-        return this.handleUpdateSettingAdvertCategory(deal);
-
-      default:
-        return false;
-    }
-  }
-
-  async handleUpdateSettingAdvertCategory(deal: B24Deal) {}
 }

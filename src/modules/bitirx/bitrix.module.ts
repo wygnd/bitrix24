@@ -28,6 +28,7 @@ import { DepartmentController } from '@/modules/bitirx/modules/department/depart
 import { BitrixTaskController } from '@/modules/bitirx/modules/task/task.controller';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { QueueModule } from '@/modules/queue/queue.module';
+import { WikiModule } from '@/modules/wiki/wiki.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { QueueModule } from '@/modules/queue/queue.module';
     RedisModule,
     forwardRef(() => HeadHunterModule),
     forwardRef(() => QueueModule),
+    WikiModule,
   ],
   controllers: [
     BitrixController,

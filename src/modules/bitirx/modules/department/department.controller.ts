@@ -27,13 +27,18 @@ export class DepartmentController {
       'departmentId',
       new ParseArrayPipe({ items: String, separator: ',' }),
     )
-    ids: string,
+    ids: string[],
   ) {
-    return this.departmentService.getDepartmentById(...ids);
+    return this.departmentService.getDepartmentById(ids);
   }
 
-  // @Get('/test')
-  // async testGetSettingsRate() {
-  //   return this.departmentService.getAdvertSettingRate();
-  // }
+  @Get('/test')
+  async testGetSettingsRate() {
+    return this.departmentService.getHeadCountDealAtLastMonthRate([
+      '36',
+      '54',
+      '124',
+      '128',
+    ]);
+  }
 }

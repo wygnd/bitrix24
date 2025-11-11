@@ -25,6 +25,8 @@ export interface B24ImbotSendMessageOptions {
   URL_PREVIEW?: string;
 }
 
+export type B24ImbotUpdateMessageOptions = B24ImbotSendMessageOptions & { MESSAGE_ID: number };
+
 export interface B24ImbotRegisterOptions {
   CODE: string;
   TYPE: 'B' | 'O' | 'S';

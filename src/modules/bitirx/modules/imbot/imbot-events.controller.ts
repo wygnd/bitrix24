@@ -12,7 +12,6 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { B24EventBodyOnInstallApp } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
-import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 
 @ApiTags(B24ApiTags.EVENTS)

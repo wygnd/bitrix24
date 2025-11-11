@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   B24Department,
   B24DepartmentTypeId,
@@ -6,6 +6,7 @@ import {
 } from '@/modules/bitirx/modules/department/department.interface';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import {
+  B24BatchCommand,
   B24BatchCommands,
   B24ListParams,
 } from '@/modules/bitirx/interfaces/bitrix.interface';
@@ -15,6 +16,8 @@ import { NotFoundError } from 'rxjs';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
+import dayjs from 'dayjs';
+import { DepartmentHeadDealCount } from '@/modules/bitirx/modules/department/interfaces/department-api.interface';
 
 @Injectable()
 export class BitrixDepartmentService {
@@ -41,6 +44,8 @@ export class BitrixDepartmentService {
       : null;
   }
 
+  // todo: doc
+  // todo: list params
   async getDepartmentList(fields: B24ListParams<B24Department> = {}) {
     const departmentListFromCache = await this.redisService.get<
       B24Department[]
@@ -64,7 +69,23 @@ export class BitrixDepartmentService {
     return departments;
   }
 
-  async getDepartmentById(...ids: string[]) {
+  /**
+   * Function receive array of id departments
+   * and return array of department object.
+   *
+   * For more information: {@link https://apidocs.bitrix24.ru/api-reference/departments/department-get.html#obrabotka-otveta}
+   *
+   * ---
+   *
+   * Функция принимает массив идентификаторов подразделений
+   * и возвращает массив объектов подразделений.
+   *
+   * Подробнее: {@link https://apidocs.bitrix24.ru/api-reference/departments/department-get.html#obrabotka-otveta}
+   *
+   * @param ids
+   * @return Promise array of department
+   */
+  async getDepartmentById(ids: string[]) {
     let departments = await this.redisService.get<B24Department[]>(
       REDIS_KEYS.BITRIX_DATA_DEPARTMENT_LIST,
     );
@@ -74,19 +95,40 @@ export class BitrixDepartmentService {
     return departments.filter((d) => ids.includes(d.ID));
   }
 
-  // todo: Add function for new wiki request [get advert setting rate]
-  async getAdvertSettingRate() {
-    const advertDepartments = await this.getDepartmentById(
-      '36',
-      '54',
-      '124',
-      '128',
-    );
+  async getDepartmentByUserId(userId: string) {
+    const departments = await this.getDepartmentList();
 
-    if (advertDepartments.length === 0) return false;
+    const departmentsFiltered = departments.filter((d) => d.UF_HEAD === userId);
 
-    // Пытаемся получить объект руководителей с кол-вом сделок из кеша
-    // todo
+    if (departmentsFiltered.length === 0)
+      throw new NotFoundException('Department not found');
+
+    return departmentsFiltered;
+  }
+
+  /**
+   * Function receive departments id array
+   * calculate count deal at last month on each receive department and
+   * return object where key is department head id
+   * value is count user deals in department
+   *
+   * ---
+   *
+   * Функция принимает пассив идентификаторов подрзделений
+   * считает кол-во сделок за текущий месяц
+   * и возврщает объект формата:
+   *    ключ - id руководителя
+   *    значение - кол-во сделок у подчиненных этого руководителя
+   *
+   * @param ids - array of string where each item is department id
+   * @return Promise<object>
+   */
+  async getHeadCountDealAtLastMonthRate(
+    ids: string[],
+  ): Promise<DepartmentHeadDealCount> {
+    const departmentHeads = await this.getDepartmentById(ids);
+
+    if (departmentHeads.length === 0) return {};
 
     // Поулчаем объект с пользователями
     // Где ключ - id руководителя
@@ -102,7 +144,7 @@ export class BitrixDepartmentService {
         await this.bitrixService.callBatch<
           B24BatchResponseMap<Record<string, B24User[]>>
         >(
-          advertDepartments.reduce<B24BatchCommands>((acc, { ID, UF_HEAD }) => {
+          departmentHeads.reduce<B24BatchCommands>((acc, { ID, UF_HEAD }) => {
             acc[`get_user-${UF_HEAD}-${ID}`] = {
               method: 'user.get',
               params: {
@@ -137,26 +179,37 @@ export class BitrixDepartmentService {
       );
     }
 
-    // Проходим по обхекту и собираем запрос на получение сделок
-    // const batchResponseGetHeadUsersDeals = await this.bitrixService.callBatch<
-    //   B24BatchResponseMap<Record<string, B24Deal[]>>
-    // >(
-    //   Object.entries(usersByHeadAdvert).reduce<
-    //     Record<string, B24ListParams<B24Deal>>
-    //   >((acc, [headId, userIds]) => {
-    //     acc[`get_deals-${headId}`] = {
-    //       method: '',
-    //       params: {
-    //         filter: {
-    //           '>UF_CRM_1741670426': '',
-    //           '@': userIds,
-    //         },
-    //       },
-    //     };
-    //
-    //     return acc;
-    //   }, {}),
-    // );
-    // return
+    // Проходим по объекту, собираем и выполняем запрос на получение кол-ва сделок за месяц
+    const batchResponseGetTotalUserDeals = (
+      await this.bitrixService.callBatch<
+        B24BatchResponseMap<Record<string, B24Deal[]>>
+      >(
+        Object.entries(usersByHeadAdvert).reduce<
+          Record<string, B24BatchCommand>
+        >((acc, [headId, userIds]) => {
+          acc[`get_deals-${headId}`] = {
+            method: 'crm.deal.list',
+            params: {
+              filter: {
+                '>=UF_CRM_1741670426': `${dayjs(Date.now()).format('YYYY-MM')}`, // Дата перехода в Ожидает звонка клинету (РК настройка)
+                '@UF_CRM_1638351463': userIds, // Кто ведет: Любой из сотрудников отдела
+              },
+            },
+          };
+
+          return acc;
+        }, {}),
+      )
+    ).result.result_total;
+
+    // Возвращаем объект
+    // где ключ - id руководителя, значение - кол-во сделок подчиненных
+    return Object.entries(batchResponseGetTotalUserDeals).reduce<
+      Record<string, number>
+    >((acc, [command, total]) => {
+      const [_, headId] = command.split('-');
+      acc[headId] = total;
+      return acc;
+    }, {});
   }
 }

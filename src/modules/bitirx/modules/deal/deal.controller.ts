@@ -180,12 +180,7 @@ export class BitrixDealController {
   @UseGuards(BitrixEventGuard)
   @Post('/events/ONCRMDEALUPDATE')
   async handleChangeDeal(@Body() body: OnCRMDealUpdateEventBodyDto) {
-    const result = await this.bitrixDealService.handleUpdateDeal(body);
-
-    if (!result)
-      throw new BadRequestException('Execute error or deal was not handling');
-
-    return result;
+    throw new BadRequestException('Execute error or deal was not handling');
   }
 
   // todo: Notice project manage about ignore message
