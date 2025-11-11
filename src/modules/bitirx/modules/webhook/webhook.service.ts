@@ -254,7 +254,7 @@ export class BitrixWebhookService {
         };
 
         message +=
-          '[br]Общая сумма: $result[get_deal][UF_CRM_639AB96F4A820]\n' +
+          '[br][br]Общая сумма: $result[get_deal][UF_CRM_639AB96F4A820]\n' +
           'Аванс 1: $result[get_deal][UF_CRM_61CAEBD653BED]\n' +
           'Аванс 2: $result[get_deal][UF_CRM_61CAEBD661A42]\n' +
           'Аванс 3: $result[get_deal][UF_CRM_61CAEBD66F4A9]';

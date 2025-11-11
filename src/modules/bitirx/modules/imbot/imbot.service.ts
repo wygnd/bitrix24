@@ -23,7 +23,6 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
 import {
-  B24DistributeNewDealHandleType,
   ImbotHandleApproveSmmAdvertLayout,
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
@@ -352,6 +351,7 @@ export class BitrixImBotService {
             '>>[b]Обработано[/b][br]' +
             `Сделка распределена на [user=${managerId}]${managerName}[/user][br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
+          KEYBOARD: '',
         },
       };
     }
@@ -396,7 +396,7 @@ export class BitrixImBotService {
       DIALOG_ID: DIALOG_ID,
       MESSAGE_ID: MESSAGE_ID,
       MESSAGE: '>>[b]Обработано: Брак[/b][br]' + this.decodeText(oldMessage),
-      KEYBOARD: [],
+      KEYBOARD: '',
     });
 
     return true;

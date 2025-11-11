@@ -20,12 +20,14 @@ export interface B24ImbotSendMessageOptions {
   BOT_ID: string;
   DIALOG_ID: string | number;
   MESSAGE: string;
-  KEYBOARD?: B24ImKeyboardOptions[];
+  KEYBOARD?: B24ImKeyboardOptions[] | string;
   SYSTEM?: string;
   URL_PREVIEW?: string;
 }
 
-export type B24ImbotUpdateMessageOptions = B24ImbotSendMessageOptions & { MESSAGE_ID: number };
+export type B24ImbotUpdateMessageOptions = B24ImbotSendMessageOptions & {
+  MESSAGE_ID: number;
+};
 
 export interface B24ImbotRegisterOptions {
   CODE: string;
