@@ -252,7 +252,7 @@ export class BitrixImBotService {
         params: {
           BOT_ID: this.botId,
           MESSAGE_ID: messageId,
-          MESSAGE: this.decodeText(oldMessage),
+          MESSAGE: '>>[b]Обарботанно[/b][br][br]' + this.decodeText(oldMessage),
           KEYBOARD: '',
         },
       },
