@@ -8,11 +8,12 @@ export class HttpLoggerMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     const { ip, method, originalUrl: url } = req;
     const userAgent = req.get('user-agent') || '';
+    const requestTime = Date.now();
 
     res.on('close', () => {
       const { statusCode } = res;
 
-      let message = `[${statusCode}] ${method} ${url} - ${userAgent}: ${ip}`;
+      let message = `[${statusCode}] ${method} ${url} - ${userAgent}: ${ip} => ${Date.now() - requestTime}ms`;
 
       this.logger.log(message);
     });

@@ -237,11 +237,13 @@ export class BitrixImBotService {
       message: oldMessage,
     } = fields;
     let message = 'Макет согласован.[br]';
+    let changeMessage = '>>[b]Обарботанно: Макет не согласован[/b][br][br]';
 
     // Если согласованно
     if (isApproved) {
       this.taskService.setTaskComplete(taskId);
       message = 'Макет согласован. Задача завершена[br]';
+      changeMessage = '>>[b]Обарботанно: Макет согласован[/b][br][br]';
     }
 
     message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
@@ -252,7 +254,7 @@ export class BitrixImBotService {
         params: {
           BOT_ID: this.botId,
           MESSAGE_ID: messageId,
-          MESSAGE: '>>[b]Обарботанно[/b][br][br]' + this.decodeText(oldMessage),
+          MESSAGE: changeMessage + this.decodeText(oldMessage),
           KEYBOARD: '',
         },
       },
@@ -265,11 +267,8 @@ export class BitrixImBotService {
       },
     };
 
-    console.log(accomplices);
-
     if (accomplices.length > 0) {
       accomplices.forEach((userId) => {
-        console.log(userId);
         batchCommandsSendMessage[`send_message_to_accomplices_${userId}`] = {
           method: 'im.message.add',
           params: {
@@ -281,10 +280,6 @@ export class BitrixImBotService {
     }
 
     this.bitrixService.callBatch(batchCommandsSendMessage);
-    this.sendMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-      MESSAGE: 'Обработана кнопка: ' + JSON.stringify(batchCommandsSendMessage),
-    });
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {
