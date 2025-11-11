@@ -341,6 +341,10 @@ export class BitrixImBotService {
     };
 
     if (stage) {
+      const secondManager = deal['UF_CRM_1623766928']
+        ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
+        : '';
+
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
         params: {
@@ -349,7 +353,7 @@ export class BitrixImBotService {
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
             '>>[b]Обработано[/b][br]' +
-            `Сделка распределена на [user=${managerId}]${managerName}[/user][br][br]` +
+            `Сделка распределена на [user=${managerId}]${managerName}[/user]${secondManager}[br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',
         },
@@ -368,6 +372,11 @@ export class BitrixImBotService {
     };
 
     this.bitrixService.callBatch(batchCommands);
+    if (!stage) {
+      this.redisService
+        .del(REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId)
+        .then(() => this.dealService.getDealById(dealId));
+    }
     return true;
   }
 
