@@ -301,7 +301,7 @@ export class BitrixImBotService {
     } = fields;
 
     const { DIALOG_ID, MESSAGE_ID } = params;
-    const deal = await this.dealService.getDealById(dealId, false);
+    const deal = await this.dealService.getDealById(dealId);
     let nextStage = stage ?? '';
 
     switch (department) {
@@ -354,16 +354,12 @@ export class BitrixImBotService {
     if (stage) {
       // Если Ответственный SEO специалист выбран
       // в сообщении его тоже указать надо
-      const secondManager = deal['UF_CRM_1703764564']
-        ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
-        : '';
-
-      // batchCommands['get_deal'] = {
-      //   method: 'crm.deal.get',
-      //   params: {
-      //     id: dealId,
-      //   },
-      // };
+      batchCommands['get_deal'] = {
+        method: 'crm.deal.get',
+        params: {
+          id: dealId,
+        },
+      };
 
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
@@ -373,7 +369,7 @@ export class BitrixImBotService {
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
             '>>[b]Обработано[/b][br]' +
-            `Сделка распределена на [user=${managerId}]${managerName}[/user]${secondManager}[br][br]` +
+            `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=$result[get_deal[UF_CRM_1623766928]]][/user][br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',
         },
