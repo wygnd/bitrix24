@@ -394,10 +394,10 @@ export class BitrixWebhookService {
         send_message: number;
       }>
     >(batchCommandsSendMessage);
-    this.queueService.addTaskOnCheckIsDistributedDeal(
-      taskOnCheckDistributedDealOptions,
-      { delay: 5000 },
-    );
+    // this.queueService.addTaskOnCheckIsDistributedDeal(
+    //   taskOnCheckDistributedDealOptions,
+    //   { delay: 5000 },
+    // );
     return true;
   }
 }
