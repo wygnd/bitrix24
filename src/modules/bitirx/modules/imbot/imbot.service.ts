@@ -341,7 +341,7 @@ export class BitrixImBotService {
           MESSAGE:
             'Распределение сделки ' +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
-            ` на [user=${managerId}]${managerName}[/user][br] ` +
+            ` на [user=${managerId}][/user][br] ` +
             this.getRandomDistributeMessage(),
         },
       },

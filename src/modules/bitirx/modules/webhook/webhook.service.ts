@@ -331,6 +331,12 @@ export class BitrixWebhookService {
 
         switch (department) {
           case B24DepartmentTypeId.SEO:
+            if (
+              !this.departmentInfo[department].category ||
+              !(category in this.departmentInfo[department].category)
+            )
+              break;
+
             keyboardItemOptions.BLOCK = 'N';
 
             switch (depId) {
@@ -344,7 +350,8 @@ export class BitrixWebhookService {
               case '92':
                 // SEO Проект-менеджер
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1703764564';
-                keyboardItemParams.stage = null;
+                keyboardItemParams.stage =
+                  this.departmentInfo[department].category[category];
                 break;
             }
 
@@ -402,7 +409,8 @@ export class BitrixWebhookService {
       method: 'imbot.message.add',
       params: {
         BOT_ID: this.bitrixBotService.BOT_ID,
-        DIALOG_ID: this.departmentInfo[department].chatId,
+        // DIALOG_ID: this.departmentInfo[department].chatId,
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE: message,
         KEYBOARD: messageKeyboard,
       },
