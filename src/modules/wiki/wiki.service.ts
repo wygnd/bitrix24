@@ -28,12 +28,27 @@ export class WikiService {
     );
   }
 
-  public async sendRejectDistributeNewDeal(
+  // todo: Исправить, когда придет Кирилл
+  public async sendRejectDistributeNewDealOld(
     data: DistributeAdvertDealWikiResponse,
   ) {
     return this.wikiApiService.post<DistributeAdvertDealWikiResponse>(
       '/advertising-department/rollback-counter',
       data,
+    );
+  }
+
+  public async sendRejectDistributeNewDeal(
+    data: DistributeAdvertDealWikiResponse,
+  ) {
+    return this.wikiApiService.post<{
+      reject_data: DistributeAdvertDealWikiResponse;
+    }>(
+      '',
+      { reject_data: data },
+      {
+        baseURL: 'https://bitrix24.grampus-server.ru/src/api/wiki/reject.php',
+      },
     );
   }
 }
