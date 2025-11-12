@@ -116,4 +116,6 @@ export class BitrixDealService {
   async getDealStageHistory() {
     return this.bitrixService.callMethod('crm.stagehistory.list');
   }
+
+
 }

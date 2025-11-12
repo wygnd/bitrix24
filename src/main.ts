@@ -21,6 +21,7 @@ async function bootstrap() {
     ],
   });
 
+  // use compression
   app.use(compression());
 
   // Swagger API

@@ -19,7 +19,8 @@ import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
 import { ImbotHandleDistributeNewDeal } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
-import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
+import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
+import { QueueService } from '@/modules/queue/queue.service';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -34,7 +35,7 @@ export class BitrixWebhookService {
     private readonly bitrixDepartmentService: BitrixDepartmentService,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
-    private readonly dealService: BitrixDealService,
+    private readonly queueService: QueueService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -43,11 +44,13 @@ export class BitrixWebhookService {
         hideUsers: [
           '56', // Анастасия Загоскина
         ],
+        chatId: 'chat766',
       },
       [B24DepartmentTypeId.ADVERT]: {
         stage: 'C1:NEW',
         dealAssignedField: 'UF_CRM_1638351463', // Кто ведет
         hideUsers: [],
+        chatId: 'chat2640',
       },
       [B24DepartmentTypeId.SEO]: {
         stage: '',
@@ -56,6 +59,12 @@ export class BitrixWebhookService {
           '402', // Степан Комягин
           '158', // Артем Шевелёв
         ],
+        chatId: 'chat6368',
+        category: {
+          '34': 'C34:PREPAYMENT_INVOIC',
+          '16': 'C16:NEW',
+          '7': 'C7:NEW',
+        },
       },
     };
   }
@@ -77,6 +86,7 @@ export class BitrixWebhookService {
       deal_title,
       deal_id,
       is_repeat = 0,
+      seo_category = '',
     } = fields;
 
     const departmentIds =
@@ -132,21 +142,6 @@ export class BitrixWebhookService {
             name: `${user.NAME} ${user.LAST_NAME}`,
           };
 
-          // Специльно для сео. У них 2 раза надо нажимать кнопку, чтобы сделка распределилась
-          switch (department) {
-            case B24DepartmentTypeId.SEO:
-              switch (user.UF_DEPARTMENT[0]) {
-                case 90:
-                  userData.seoToken = 'tec';
-                  break;
-
-                case 92:
-                  userData.seoToken = 'pm';
-                  break;
-              }
-              break;
-          }
-
           acc[depId].push(userData);
         });
         return acc;
@@ -163,12 +158,13 @@ export class BitrixWebhookService {
       );
     }
 
-    let nextAdvertHead: DistributeAdvertDealWikiResponse | null = {
-      bitrix_id: '560',
-      counter: 2,
-    };
-
+    let nextAdvertHead: DistributeAdvertDealWikiResponse | null = null;
     let nextAdvertInfo: WebhookUserItem | null = null;
+    let taskOnCheckDistributedDealOptions: QueueDistributeDeal = {
+      ...fields,
+      is_repeat: 1,
+      distributedStage: this.departmentInfo[department].stage,
+    };
 
     switch (department) {
       case B24DepartmentTypeId.ADVERT:
@@ -180,13 +176,14 @@ export class BitrixWebhookService {
            *  Функция getHeadCountDealAtLastMonthRate в результате отдает объект,
            *  где ключ - id руководителя, значение - кол-во сделок подчиненных за текущий/последний месяц
            */
-          // nextAdvertHead = await this.wikiService.getAdvertNextHead(
-          //  await this.bitrixDepartmentService.getHeadCountDealAtLastMonthRate([
-          //               '36',
-          //               '54',
-          //               '124',
-          //               '128',
-          //             ]),);
+          nextAdvertHead = await this.wikiService.getAdvertNextHead(
+            await this.bitrixDepartmentService.getHeadCountDealAtLastMonthRate([
+              '36',
+              '54',
+              '124',
+              '128',
+            ]),
+          );
           const [departmentFiltered] =
             await this.bitrixDepartmentService.getDepartmentByUserId(
               nextAdvertHead.bitrix_id,
@@ -231,6 +228,14 @@ export class BitrixWebhookService {
         break;
 
       case B24DepartmentTypeId.SEO:
+        if (
+          !this.departmentInfo[department].category ||
+          !(seo_category in this.departmentInfo[department].category)
+        )
+          break;
+
+        taskOnCheckDistributedDealOptions.distributedStage =
+          this.departmentInfo[department].category[seo_category];
         break;
     }
 
@@ -315,7 +320,7 @@ export class BitrixWebhookService {
                 // SEO Технический специалист
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
                 keyboardItemOptions.BG_COLOR_TOKEN = 'secondary';
-                keyboardItemParams.stage = 'next';
+                keyboardItemParams.stage = '';
                 break;
 
               case '92':
@@ -376,7 +381,8 @@ export class BitrixWebhookService {
       method: 'imbot.message.add',
       params: {
         BOT_ID: this.bitrixBotService.BOT_ID,
-        DIALOG_ID: 'chat77152',
+        // DIALOG_ID: this.departmentInfo[department].chatId ,
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE: message,
         KEYBOARD: messageKeyboard,
       },
@@ -388,6 +394,10 @@ export class BitrixWebhookService {
         send_message: number;
       }>
     >(batchCommandsSendMessage);
+    this.queueService.addTaskOnCheckIsDistributedDeal(
+      taskOnCheckDistributedDealOptions,
+      { delay: 5000 },
+    );
     return true;
   }
 }

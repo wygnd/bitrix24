@@ -1,5 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { QueueProcessor } from '@/modules/queue/processors/queue.processor';
+import { QueueBitrixProcessor } from '@/modules/queue/processors/queue-bitrix.processor';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisOptions } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -31,7 +31,7 @@ import { BitrixModule } from '@/modules/bitirx/bitrix.module';
     forwardRef(() => BitrixModule),
   ],
   controllers: [],
-  providers: [QueueProcessor, QueueService],
+  providers: [QueueBitrixProcessor, QueueService],
   exports: [QueueService],
 })
 export class QueueModule {}

@@ -1,5 +1,6 @@
 import {
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -58,22 +59,12 @@ export class IncomingWebhookDistributeDealDto {
     type: String,
     description: 'Seo category',
     required: false,
-    example: 'base',
+    example: '12',
   })
   @IsOptional()
   @IsString()
+  @IsIn(['34', '16', '7'])
   seo_category?: string;
-
-  @ApiProperty({
-    type: Number,
-    description: 'Seo department id',
-    required: false,
-    example: 43,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt({ message: 'seo department field must be a number' })
-  seo_department?: number;
 
   @ApiProperty({
     type: String,

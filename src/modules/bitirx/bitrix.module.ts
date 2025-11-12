@@ -67,6 +67,12 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
     BitrixEventService,
     BitrixTaskService,
   ],
-  exports: [BitrixService, BitrixMessageService, BitrixTaskService],
+  exports: [
+    BitrixService,
+    BitrixMessageService,
+    BitrixTaskService,
+    BitrixDealService,
+    BitrixWebhookService,
+  ],
 })
 export class BitrixModule {}
