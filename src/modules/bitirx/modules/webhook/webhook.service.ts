@@ -339,7 +339,7 @@ export class BitrixWebhookService {
             )
               break;
 
-            keyboardItemOptions.BLOCK = 'N';
+            // keyboardItemOptions.BLOCK = 'N';
 
             switch (depId) {
               case '90':
