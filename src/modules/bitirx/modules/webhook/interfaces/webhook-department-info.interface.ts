@@ -5,5 +5,5 @@ export interface WebhookDepartmentInfo {
   chatId: string;
   nextChatId: string;
   category?: Record<string, string>;
-  distributedStageId?: string;
+  distributedStageId: Record<string, string>;
 }

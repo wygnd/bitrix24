@@ -49,7 +49,9 @@ export class BitrixWebhookService {
         ],
         chatId: 'chat36368',
         nextChatId: 'chat766',
-        distributedStageId: 'UC_ERQDZN',
+        distributedStageId: {
+          '0': 'UC_ERQDZN',
+        },
       },
       [B24DepartmentTypeId.ADVERT]: {
         stage: 'C1:NEW',
@@ -57,7 +59,9 @@ export class BitrixWebhookService {
         hideUsers: [],
         chatId: 'chat12862',
         nextChatId: 'chat2640',
-        distributedStageId: 'C1:UC_05626B',
+        distributedStageId: {
+          '1': 'C1:UC_05626B',
+        },
       },
       [B24DepartmentTypeId.SEO]: {
         stage: '',
@@ -72,6 +76,11 @@ export class BitrixWebhookService {
           '34': 'C34:PREPAYMENT_INVOIC',
           '16': 'C16:NEW',
           '7': 'C7:NEW',
+        },
+        distributedStageId: {
+          '34': 'C34:PREPARATION',
+          '16': 'C16:UC_NR6UPR',
+          '7': 'C7:UC_6MBZS4',
         },
       },
     };
@@ -88,14 +97,7 @@ export class BitrixWebhookService {
   async handleIncomingWebhookToDistributeNewDeal(
     fields: IncomingWebhookDistributeDealDto,
   ) {
-    const {
-      department,
-      deal_title,
-      deal_id,
-      is_repeat = 0,
-      category = '',
-      distributed_stage_id = '',
-    } = fields;
+    const { department, deal_title, deal_id, is_repeat = 0, category } = fields;
 
     const departmentIds =
       this.bitrixDepartmentService.DEPARTMENT_TYPE_IDS(department);
@@ -172,7 +174,7 @@ export class BitrixWebhookService {
       ...fields,
       is_repeat: 1,
       distributedStage:
-        this.departmentInfo[department].distributedStageId ?? '',
+        this.departmentInfo[department].distributedStageId[category] ?? '',
     };
 
     switch (department) {
@@ -409,8 +411,7 @@ export class BitrixWebhookService {
       method: 'imbot.message.add',
       params: {
         BOT_ID: this.bitrixBotService.BOT_ID,
-        // DIALOG_ID: this.departmentInfo[department].chatId,
-        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+        DIALOG_ID: this.departmentInfo[department].chatId,
         MESSAGE: message,
         KEYBOARD: messageKeyboard,
       },
