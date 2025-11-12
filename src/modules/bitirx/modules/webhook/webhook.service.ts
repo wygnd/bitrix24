@@ -249,14 +249,6 @@ export class BitrixWebhookService {
         break;
     }
 
-    // Добавляем задачу, чтобы через 15 минут проверить, распределили ли сделку
-    const { id: jobId } =
-      await this.queueService.addTaskOnCheckIsDistributedDeal(
-        taskOnCheckDistributedDealOptions,
-        {
-          delay: 900000,
-        },
-      );
     // Объект батч запросов
     const batchCommandsSendMessage: B24BatchCommands = {};
     // Собираем сообщение
@@ -328,7 +320,6 @@ export class BitrixWebhookService {
           chatId: this.departmentInfo[department].nextChatId,
           assignedFieldId: this.departmentInfo[department].dealAssignedField,
           stage: this.departmentInfo[department].stage,
-          jobId: jobId,
         };
 
         switch (department) {
@@ -339,20 +330,20 @@ export class BitrixWebhookService {
             )
               break;
 
-            // keyboardItemOptions.BLOCK = 'N';
+            keyboardItemOptions.BLOCK = 'N';
 
             switch (depId) {
               case '90':
-                // SEO Технический специалист
-                keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
+                // SEO Проект-менеджер
+                keyboardItemParams.assignedFieldId = 'UF_CRM_1703764564';
                 keyboardItemOptions.BG_COLOR_TOKEN = 'secondary';
                 keyboardItemParams.stage =
                   this.departmentInfo[department].category[category];
                 break;
 
               case '92':
-                // SEO Проект-менеджер
-                keyboardItemParams.assignedFieldId = 'UF_CRM_1703764564';
+                // SEO Технический специалист
+                keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
                 keyboardItemParams.stage = '';
                 break;
             }

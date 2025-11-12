@@ -22,12 +22,11 @@ export interface ImbotHandleDistributeNewDeal {
   chatId: string;
   assignedFieldId: string;
   stage: string | null;
-  jobId?: string;
 }
 
 export type ImbotHandleDistributeNewDealUnknown = Pick<
   ImbotHandleDistributeNewDeal,
-  'handle' | 'jobId'
+  'handle'
 >;
 
 // export type ImbotHandleDistributeNewDealUnknown = {
