@@ -18,6 +18,7 @@ export interface ImbotHandleDistributeNewDeal {
   managerName: string;
   department: B24DepartmentTypeId;
   dealId: string;
+  dealTitle: string;
   chatId: string;
   assignedFieldId: string;
   stage: string | null;
@@ -38,5 +39,5 @@ export interface ImbotHandleDistributeNewDealReject {
   dealId: string;
   userId: string;
   userCounter: number;
-  oldMessage: Buffer<ArrayBuffer>;
+  dealTitle: string;
 }

@@ -260,7 +260,7 @@ export class BitrixImBotService {
     fields: ImbotHandleDistributeNewDealUnknown,
     params: B24EventParams,
   ) {
-    const {handle, jobId} = fields;
+    const { handle, jobId } = fields;
 
     jobId && this.queueService.removeJob(jobId);
 
@@ -397,7 +397,7 @@ export class BitrixImBotService {
     fields: ImbotHandleDistributeNewDealReject,
     params: B24EventParams,
   ) {
-    const { userId, userCounter, oldMessage } = fields;
+    const { userId, userCounter, dealId, dealTitle } = fields;
     const { MESSAGE_ID, DIALOG_ID } = params;
 
     this.wikiService.sendRejectDistributeNewDeal({
@@ -408,7 +408,9 @@ export class BitrixImBotService {
     this.updateMessage({
       DIALOG_ID: DIALOG_ID,
       MESSAGE_ID: MESSAGE_ID,
-      MESSAGE: '>>[b]Обработано: Брак[/b][br]' + this.decodeText(oldMessage),
+      MESSAGE:
+        '>>[b]Обработано: Брак[/b][br]' +
+        this.bitrixService.generateDealUrl(dealId, dealTitle),
       KEYBOARD: '',
     });
 

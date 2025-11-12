@@ -18,7 +18,10 @@ import { WebhookDepartmentInfo } from '@/modules/bitirx/modules/webhook/interfac
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
-import { ImbotHandleDistributeNewDeal } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import {
+  ImbotHandleDistributeNewDeal,
+  ImbotHandleDistributeNewDealReject,
+} from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
 import { QueueService } from '@/modules/queue/queue.service';
 
@@ -316,6 +319,7 @@ export class BitrixWebhookService {
           managerId: user.userId,
           managerName: user.name,
           department: department,
+          dealTitle: deal_title,
           dealId: deal_id,
           chatId: this.departmentInfo[department].nextChatId,
           assignedFieldId: this.departmentInfo[department].dealAssignedField,
@@ -365,16 +369,19 @@ export class BitrixWebhookService {
             '$result[get_deal][UF_CRM_1716383143]'; // Комментарий к сделке;
         }
 
-        messageKeyboard.push({
-          TEXT: 'Брак',
-          COMMAND: 'distributeNewDeal',
-          COMMAND_PARAMS: JSON.stringify({
+        const advertRejectDealKeyboardParams: ImbotHandleDistributeNewDealReject =
+          {
             handle: `distributeDealReject`,
             dealId: deal_id,
             userId: nextAdvertHead.bitrix_id,
+            dealTitle: deal_title,
             userCounter: nextAdvertHead.counter,
-            oldMessage: this.bitrixBotService.encodeText(message),
-          }),
+          };
+
+        messageKeyboard.push({
+          TEXT: 'Брак',
+          COMMAND: 'distributeNewDeal',
+          COMMAND_PARAMS: JSON.stringify(advertRejectDealKeyboardParams),
           BG_COLOR_TOKEN: 'alert',
           DISPLAY: 'LINE',
           BLOCK: 'Y',
