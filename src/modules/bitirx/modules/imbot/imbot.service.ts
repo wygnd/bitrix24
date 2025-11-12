@@ -302,7 +302,7 @@ export class BitrixImBotService {
     } = fields;
 
     const { DIALOG_ID, MESSAGE_ID } = params;
-    const deal = await this.dealService.getDealById(dealId);
+    const deal = await this.dealService.getDealById(dealId, 'force');
     let nextStage = stage ?? '';
 
     switch (department) {
@@ -355,47 +355,26 @@ export class BitrixImBotService {
     if (stage) {
       // Если Ответственный SEO специалист выбран
       // в сообщении его тоже указать надо
-      batchCommands['get_deal'] = {
-        method: 'crm.deal.get',
+      const secondManager = deal['UF_CRM_1703764564']
+        ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
+        : '';
+
+      batchCommands['update_old_message'] = {
+        method: 'imbot.message.update',
         params: {
-          id: dealId,
-        },
-      };
-
-      // batchCommands['update_old_message'] = {
-      //   method: 'imbot.message.update',
-      //   params: {
-      //     BOT_ID: this.botId,
-      //     MESSAGE_ID: MESSAGE_ID,
-      //     DIALOG_ID: DIALOG_ID,
-      //     MESSAGE:
-      //       '>>[b]Обработано[/b][br]' +
-      //       `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=$result[get_deal[UF_CRM_1623766928]]][/user][br][br]` +
-      //       this.bitrixService.generateDealUrl(dealId, deal.TITLE),
-      //     KEYBOARD: '',
-      //   },
-      // };
-    }
-
-    this.bitrixService
-      .callBatch<
-        B24BatchResponseMap<{
-          get_deal: B24Deal;
-        }>
-      >(batchCommands)
-      .then(({ result }) => {
-        const deal = result.result.get_deal;
-
-        this.updateMessage({
+          BOT_ID: this.botId,
           MESSAGE_ID: MESSAGE_ID,
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
             '>>[b]Обработано[/b][br]' +
-            `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=${deal['UF_CRM_1623766928']}][/user][br][br]` +
+            `Сделка распределена на [user=${managerId}][/user]${secondManager}[br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',
-        });
-      });
+        },
+      };
+    }
+
+    this.bitrixService.callBatch(batchCommands);
     return true;
   }
 

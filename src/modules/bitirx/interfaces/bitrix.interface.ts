@@ -89,3 +89,5 @@ export interface B24AuthOptions {
   refresh_token: string;
   application_token: string;
 }
+
+export type B24ActionType = 'force' | 'cache';

@@ -16,6 +16,7 @@ import {
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24OnCRMDealUpdateEvent } from '@/modules/bitirx/modules/deal/interfaces/deal-event.interace';
+import { B24ActionType } from '@/modules/bitirx/interfaces/bitrix.interface';
 
 @Injectable()
 export class BitrixDealService {
@@ -24,12 +25,14 @@ export class BitrixDealService {
     private readonly redisService: RedisService,
   ) {}
 
-  async getDealById(dealId: number | string, saveInCache = true) {
-    const dealFromCache = await this.redisService.get<B24Deal>(
-      REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
-    );
+  async getDealById(dealId: number | string, action: B24ActionType = 'cache') {
+    if (action === 'cache') {
+      const dealFromCache = await this.redisService.get<B24Deal>(
+        REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
+      );
 
-    if (dealFromCache) return dealFromCache;
+      if (dealFromCache) return dealFromCache;
+    }
 
     const { result: deal } = await this.bitrixService.callMethod<
       { id: string | number },
@@ -40,12 +43,11 @@ export class BitrixDealService {
 
     if (!deal) throw new NotFoundException('deal not found');
 
-    if (saveInCache)
-      this.redisService.set<B24Deal>(
-        REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
-        deal,
-        3600,
-      );
+    this.redisService.set<B24Deal>(
+      REDIS_KEYS.BITRIX_DATA_DEAL_ITEM + dealId,
+      deal,
+      3600,
+    );
 
     return deal;
   }
