@@ -327,15 +327,15 @@ export class BitrixImBotService {
         break;
     }
 
-    const batchCommands: B24BatchCommands = {};
-
-    batchCommands['update_deal'] = {
-      method: 'crm.deal.update',
-      params: {
-        id: dealId,
-        fields: {
-          [assignedFieldId]: managerId,
-          STAGE_ID: nextStage,
+    const batchCommands: B24BatchCommands = {
+      update_deal: {
+        method: 'crm.deal.update',
+        params: {
+          id: dealId,
+          fields: {
+            [assignedFieldId]: managerId,
+            STAGE_ID: nextStage,
+          },
         },
       },
     };
@@ -343,10 +343,11 @@ export class BitrixImBotService {
     if (stage) {
       // Если Ответственный SEO специалист выбран
       // в сообщении его тоже указать надо
-      const secondManager = deal['UF_CRM_1703764564']
-        ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
+      const secondManager = deal['UF_CRM_1623766928']
+        ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
         : '';
 
+      // Отправляем в другой чат сообщение о распределенной сделке
       batchCommands['send_next_chat_message'] = {
         method: 'imbot.message.add',
         params: {
@@ -360,6 +361,7 @@ export class BitrixImBotService {
         },
       };
 
+      // Обновляем сообщение. Помечаем его как "Обработанное"
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
         params: {
