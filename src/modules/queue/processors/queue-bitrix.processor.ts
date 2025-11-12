@@ -46,7 +46,7 @@ export class QueueBitrixProcessor extends WorkerHost {
   }: QueueDistributeDeal) {
     const deal = await this.dealService.getDealById(data.deal_id, 'force');
 
-    if (deal.STAGE_ID !== distributedStage) return;
+    if (!distributedStage || deal.STAGE_ID !== distributedStage) return;
 
     this.webhookService.handleIncomingWebhookToDistributeNewDeal(data);
   }

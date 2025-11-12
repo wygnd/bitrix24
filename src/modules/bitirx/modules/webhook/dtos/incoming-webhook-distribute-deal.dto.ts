@@ -62,9 +62,9 @@ export class IncomingWebhookDistributeDealDto {
     required: true,
     example: '37',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  distributed_stage_id: string;
+  distributed_stage_id?: string;
 
   @ApiProperty({
     type: String,

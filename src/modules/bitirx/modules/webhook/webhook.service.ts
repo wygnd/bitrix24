@@ -49,6 +49,7 @@ export class BitrixWebhookService {
         ],
         chatId: 'chat36368',
         nextChatId: 'chat766',
+        distributedStageId: 'UC_ERQDZN',
       },
       [B24DepartmentTypeId.ADVERT]: {
         stage: 'C1:NEW',
@@ -56,6 +57,7 @@ export class BitrixWebhookService {
         hideUsers: [],
         chatId: 'chat12862',
         nextChatId: 'chat2640',
+        distributedStageId: 'C1:UC_05626B',
       },
       [B24DepartmentTypeId.SEO]: {
         stage: '',
@@ -92,7 +94,7 @@ export class BitrixWebhookService {
       deal_id,
       is_repeat = 0,
       category = '',
-      distributed_stage_id,
+      distributed_stage_id = '',
     } = fields;
 
     const departmentIds =
@@ -169,7 +171,7 @@ export class BitrixWebhookService {
     let taskOnCheckDistributedDealOptions: QueueDistributeDeal = {
       ...fields,
       is_repeat: 1,
-      distributedStage: distributed_stage_id,
+      distributedStage: this.departmentInfo[department].distributedStageId ?? '',
     };
 
     switch (department) {
