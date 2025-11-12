@@ -171,7 +171,8 @@ export class BitrixWebhookService {
     let taskOnCheckDistributedDealOptions: QueueDistributeDeal = {
       ...fields,
       is_repeat: 1,
-      distributedStage: this.departmentInfo[department].distributedStageId ?? '',
+      distributedStage:
+        this.departmentInfo[department].distributedStageId ?? '',
     };
 
     switch (department) {
@@ -221,13 +222,14 @@ export class BitrixWebhookService {
             },
           );
         } catch (e) {
+          console.log('ERROR ON GET NEXT ADVERT HEAD: ', e);
+
           // Если возникла ошибка оставляем всех подчиненных
           this.bitrixBotService.sendMessage({
             DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
             MESSAGE:
               '[b](Ошибка: Распределение сделок -> РК)[/b][br][br]Произошла ошибка при попытке запроса new-wiki[br]' +
-              'Ошибка: ' +
-              JSON.parse(e),
+              `Ошибка: ${e}`,
           });
         }
         break;
