@@ -32,6 +32,7 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24EventParams } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
+import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -361,22 +362,40 @@ export class BitrixImBotService {
         },
       };
 
-      batchCommands['update_old_message'] = {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.botId,
+      // batchCommands['update_old_message'] = {
+      //   method: 'imbot.message.update',
+      //   params: {
+      //     BOT_ID: this.botId,
+      //     MESSAGE_ID: MESSAGE_ID,
+      //     DIALOG_ID: DIALOG_ID,
+      //     MESSAGE:
+      //       '>>[b]Обработано[/b][br]' +
+      //       `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=$result[get_deal[UF_CRM_1623766928]]][/user][br][br]` +
+      //       this.bitrixService.generateDealUrl(dealId, deal.TITLE),
+      //     KEYBOARD: '',
+      //   },
+      // };
+    }
+
+    this.bitrixService
+      .callBatch<
+        B24BatchResponseMap<{
+          get_deal: B24Deal;
+        }>
+      >(batchCommands)
+      .then(({ result }) => {
+        const deal = result.result.get_deal;
+
+        this.updateMessage({
           MESSAGE_ID: MESSAGE_ID,
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
             '>>[b]Обработано[/b][br]' +
-            `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=$result[get_deal[UF_CRM_1623766928]]][/user][br][br]` +
+            `Сделка распределена на [user=${managerId}]${managerName}[/user] и [user=${deal['UF_CRM_1623766928']}][/user][br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',
-        },
-      };
-    }
-
-    this.bitrixService.callBatch(batchCommands);
+        });
+      });
     return true;
   }
 
