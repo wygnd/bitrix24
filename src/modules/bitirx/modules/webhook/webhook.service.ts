@@ -86,7 +86,8 @@ export class BitrixWebhookService {
       deal_title,
       deal_id,
       is_repeat = 0,
-      seo_category = '',
+      category = '',
+      distributed_stage_id,
     } = fields;
 
     const departmentIds =
@@ -163,7 +164,7 @@ export class BitrixWebhookService {
     let taskOnCheckDistributedDealOptions: QueueDistributeDeal = {
       ...fields,
       is_repeat: 1,
-      distributedStage: this.departmentInfo[department].stage,
+      distributedStage: distributed_stage_id,
     };
 
     switch (department) {
@@ -230,12 +231,12 @@ export class BitrixWebhookService {
       case B24DepartmentTypeId.SEO:
         if (
           !this.departmentInfo[department].category ||
-          !(seo_category in this.departmentInfo[department].category)
+          !(category in this.departmentInfo[department].category)
         )
           break;
 
         taskOnCheckDistributedDealOptions.distributedStage =
-          this.departmentInfo[department].category[seo_category];
+          this.departmentInfo[department].category[category];
         break;
     }
 
@@ -394,10 +395,14 @@ export class BitrixWebhookService {
         send_message: number;
       }>
     >(batchCommandsSendMessage);
-    // this.queueService.addTaskOnCheckIsDistributedDeal(
-    //   taskOnCheckDistributedDealOptions,
-    //   { delay: 5000 },
-    // );
+
+    // Добавляем задачу, чтобы через 15 минут проверить, распределили ли сделку
+    this.queueService.addTaskOnCheckIsDistributedDeal(
+      taskOnCheckDistributedDealOptions,
+      {
+        delay: 900000,
+      },
+    );
     return true;
   }
 }

@@ -64,7 +64,17 @@ export class IncomingWebhookDistributeDealDto {
   @IsOptional()
   @IsString()
   @IsIn(['34', '16', '7'])
-  seo_category?: string;
+  category?: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'stage id whet deal is need to distribute',
+    required: true,
+    example: '37',
+  })
+  @IsNotEmpty()
+  @IsString()
+  distributed_stage_id: string;
 
   @ApiProperty({
     type: String,
