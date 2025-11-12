@@ -327,20 +327,7 @@ export class BitrixImBotService {
         break;
     }
 
-    const batchCommands: B24BatchCommands = {
-      send_next_chat_message: {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.botId,
-          DIALOG_ID: chatId,
-          MESSAGE:
-            'Распределение сделки ' +
-            this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
-            ` на [user=${managerId}][/user][br] ` +
-            this.getRandomDistributeMessage(),
-        },
-      },
-    };
+    const batchCommands: B24BatchCommands = {};
 
     batchCommands['update_deal'] = {
       method: 'crm.deal.update',
@@ -359,6 +346,19 @@ export class BitrixImBotService {
       const secondManager = deal['UF_CRM_1703764564']
         ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
         : '';
+
+      batchCommands['send_next_chat_message'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.botId,
+          DIALOG_ID: chatId,
+          MESSAGE:
+            'Распределение сделки ' +
+            this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
+            ` на [user=${managerId}][/user]${secondManager}[br]` +
+            this.getRandomDistributeMessage(),
+        },
+      };
 
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
