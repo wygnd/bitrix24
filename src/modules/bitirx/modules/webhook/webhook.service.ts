@@ -382,8 +382,7 @@ export class BitrixWebhookService {
       method: 'imbot.message.add',
       params: {
         BOT_ID: this.bitrixBotService.BOT_ID,
-        // DIALOG_ID: this.departmentInfo[department].chatId ,
-        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+        DIALOG_ID: this.departmentInfo[department].chatId ,
         MESSAGE: message,
         KEYBOARD: messageKeyboard,
       },
