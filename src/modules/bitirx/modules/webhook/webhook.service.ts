@@ -346,14 +346,14 @@ export class BitrixWebhookService {
                 // SEO Технический специалист
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
                 keyboardItemOptions.BG_COLOR_TOKEN = 'secondary';
-                keyboardItemParams.stage = '';
+                keyboardItemParams.stage =
+                  this.departmentInfo[department].category[category];
                 break;
 
               case '92':
                 // SEO Проект-менеджер
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1703764564';
-                keyboardItemParams.stage =
-                  this.departmentInfo[department].category[category];
+                keyboardItemParams.stage = '';
                 break;
             }
 
