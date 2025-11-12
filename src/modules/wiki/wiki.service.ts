@@ -7,11 +7,25 @@ import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki
 export class WikiService {
   constructor(private readonly wikiApiService: WikiApiService) {}
 
-  public async getAdvertNextHead(data: DepartmentHeadDealCount) {
+  // todo: Исправить, когда придет Кирилл0
+  public async getAdvertNextHeadOld(data: DepartmentHeadDealCount) {
     return this.wikiApiService.post<
       DepartmentHeadDealCount,
       DistributeAdvertDealWikiResponse
     >('/advertising-department/destribute-deal/', data);
+  }
+
+  public async getAdvertNextHead(data: DepartmentHeadDealCount) {
+    return this.wikiApiService.post<
+      { settings: DepartmentHeadDealCount },
+      DistributeAdvertDealWikiResponse
+    >(
+      '',
+      { settings: data },
+      {
+        baseURL: 'https://bitrix24.grampus-server.ru/src/api/wiki/index.php',
+      },
+    );
   }
 
   public async sendRejectDistributeNewDeal(

@@ -18,9 +18,7 @@ import { IncomingWebhookDto } from '@/modules/bitirx/modules/webhook/dtos/incomi
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
 export class BitrixWebhookController {
-  constructor(
-    private readonly bitrixWebhookService: BitrixWebhookService,
-  ) {}
+  constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}
 
   @UseGuards(BitrixWebhookGuard)
   @Post('/bitrix/distribute-new-deal')
