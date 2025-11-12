@@ -369,7 +369,7 @@ export class BitrixImBotService {
           MESSAGE_ID: MESSAGE_ID,
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
-            '>>[b]Обработано[/b][br]' +
+            '[b]Обработано[/b][br]' +
             `Сделка распределена на [user=${managerId}][/user]${secondManager}[br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',
@@ -406,7 +406,7 @@ export class BitrixImBotService {
       DIALOG_ID: DIALOG_ID,
       MESSAGE_ID: MESSAGE_ID,
       MESSAGE:
-        '>>[b]Обработано: Брак[/b][br]' +
+        '[b]Обработано: Брак[/b][br]' +
         this.bitrixService.generateDealUrl(dealId, dealTitle),
       KEYBOARD: '',
     });
