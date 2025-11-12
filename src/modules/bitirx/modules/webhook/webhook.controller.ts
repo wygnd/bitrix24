@@ -14,6 +14,7 @@ import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { BitrixWebhookService } from '@/modules/bitirx/modules/webhook/webhook.service';
 import { BitrixWebhookGuard } from '@/modules/bitirx/guards/bitrix-webhook.guard';
 import { IncomingWebhookDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook.dto';
+import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
@@ -28,6 +29,18 @@ export class BitrixWebhookController {
     @Query() query: IncomingWebhookDistributeDealDto,
   ) {
     return this.bitrixWebhookService.handleIncomingWebhookToDistributeNewDeal(
+      query,
+    );
+  }
+
+  // @UseGuards(BitrixWebhookGuard)
+  @Post('/bitrix/approve-site-for-advert')
+  @HttpCode(HttpStatus.OK)
+  async approveSiteDealForAdvert(
+    // @Body() body: IncomingWebhookDto,
+    @Query() query: IncomingWebhookApproveSiteForDealDto,
+  ) {
+    return this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForAdvert(
       query,
     );
   }

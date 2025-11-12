@@ -24,6 +24,7 @@ import {
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
 import { QueueService } from '@/modules/queue/queue.service';
+import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -411,5 +412,23 @@ export class BitrixWebhookService {
     // Отправляем запрос
     this.bitrixService.callBatch(batchCommandsSendMessage);
     return true;
+  }
+
+  /**
+   *
+   * @param project_manager_id
+   */
+  async handleIncomingWebhookToApproveSiteForAdvert({
+    project_manager_id,
+  }: IncomingWebhookApproveSiteForDealDto) {
+    const advertDepartmentIds = ['36', '54', '124', '128'];
+    const advertDepartment = (
+      await this.bitrixDepartmentService.getDepartmentById([
+        advertDepartmentIds[
+          Math.floor(Math.random() * advertDepartmentIds.length)
+        ],
+      ])
+    )[0];
+    let message = `[user=${advertDepartment.UF_HEAD}][/user]`;
   }
 }
