@@ -340,12 +340,30 @@ export class BitrixImBotService {
       },
     };
 
+    batchCommands['update_deal'] = {
+      method: 'crm.deal.update',
+      params: {
+        id: dealId,
+        fields: {
+          [assignedFieldId]: managerId,
+          STAGE_ID: nextStage,
+        },
+      },
+    };
+
     if (stage) {
       // Если Ответственный SEO специалист выбран
       // в сообщении его тоже указать надо
-      const secondManager = deal['UF_CRM_1623766928']
-        ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
+      const secondManager = deal['UF_CRM_1703764564']
+        ? ` и [user=${deal['UF_CRM_1703764564']}][/user]`
         : '';
+
+      // batchCommands['get_deal'] = {
+      //   method: 'crm.deal.get',
+      //   params: {
+      //     id: dealId,
+      //   },
+      // };
 
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
@@ -361,17 +379,6 @@ export class BitrixImBotService {
         },
       };
     }
-
-    batchCommands['update_deal'] = {
-      method: 'crm.deal.update',
-      params: {
-        id: dealId,
-        fields: {
-          [assignedFieldId]: managerId,
-          STAGE_ID: nextStage,
-        },
-      },
-    };
 
     this.bitrixService.callBatch(batchCommands);
     return true;
