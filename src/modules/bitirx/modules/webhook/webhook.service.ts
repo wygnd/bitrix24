@@ -222,8 +222,6 @@ export class BitrixWebhookService {
             },
           );
         } catch (e) {
-          console.log('ERROR ON GET NEXT ADVERT HEAD: ', e);
-
           // Если возникла ошибка оставляем всех подчиненных
           this.bitrixBotService.sendMessage({
             DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
