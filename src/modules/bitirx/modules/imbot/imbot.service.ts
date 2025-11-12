@@ -33,6 +33,7 @@ import { B24EventParams } from '@/modules/bitirx/modules/imbot/interfaces/imbot-
 import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
+import { QueueService } from '@/modules/queue/queue.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -45,6 +46,7 @@ export class BitrixImBotService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly dealService: BitrixDealService,
+    private readonly queueService: QueueService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -258,7 +260,11 @@ export class BitrixImBotService {
     fields: ImbotHandleDistributeNewDealUnknown,
     params: B24EventParams,
   ) {
-    switch (fields.handle) {
+    const {handle, jobId} = fields;
+
+    jobId && this.queueService.removeJob(jobId);
+
+    switch (handle) {
       case 'distributeDeal':
         return this.handleDistributeNewDealSuccess(
           fields as ImbotHandleDistributeNewDeal,

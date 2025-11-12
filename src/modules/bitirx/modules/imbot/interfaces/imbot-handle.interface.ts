@@ -12,10 +12,6 @@ export type B24DistributeNewDealHandleType =
   | 'distributeDeal'
   | 'distributeDealReject';
 
-export type ImbotHandleDistributeNewDealUnknown = {
-  handle: B24DistributeNewDealHandleType;
-} & Record<string, any>;
-
 export interface ImbotHandleDistributeNewDeal {
   handle: B24DistributeNewDealHandleType;
   managerId: string;
@@ -25,7 +21,17 @@ export interface ImbotHandleDistributeNewDeal {
   chatId: string;
   assignedFieldId: string;
   stage: string | null;
+  jobId?: string;
 }
+
+export type ImbotHandleDistributeNewDealUnknown = Pick<
+  ImbotHandleDistributeNewDeal,
+  'handle' | 'jobId'
+>;
+
+// export type ImbotHandleDistributeNewDealUnknown = {
+//   handle: B24DistributeNewDealHandleType
+// } & Record<string, any>;
 
 export interface ImbotHandleDistributeNewDealReject {
   handle: B24DistributeNewDealHandleType;

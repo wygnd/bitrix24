@@ -242,6 +242,14 @@ export class BitrixWebhookService {
         break;
     }
 
+    // Добавляем задачу, чтобы через 15 минут проверить, распределили ли сделку
+    const { id: jobId } =
+      await this.queueService.addTaskOnCheckIsDistributedDeal(
+        taskOnCheckDistributedDealOptions,
+        {
+          delay: 900000,
+        },
+      );
     // Объект батч запросов
     const batchCommandsSendMessage: B24BatchCommands = {};
     // Собираем сообщение
@@ -312,6 +320,7 @@ export class BitrixWebhookService {
           chatId: this.departmentInfo[department].nextChatId,
           assignedFieldId: this.departmentInfo[department].dealAssignedField,
           stage: this.departmentInfo[department].stage,
+          jobId: jobId,
         };
 
         switch (department) {
@@ -390,22 +399,8 @@ export class BitrixWebhookService {
       },
     };
 
-    this.bitrixService
-      .callBatch<
-        B24BatchResponseMap<{
-          get_deal: B24Deal;
-          send_message: number;
-        }>
-      >(batchCommandsSendMessage)
-      .then((res) => console.log(res.result.result_error));
-
-    // Добавляем задачу, чтобы через 15 минут проверить, распределили ли сделку
-    // this.queueService.addTaskOnCheckIsDistributedDeal(
-    //   taskOnCheckDistributedDealOptions,
-    //   {
-    //     delay: 900000,
-    //   },
-    // );
+    // Отправляем запрос
+    this.bitrixService.callBatch(batchCommandsSendMessage);
     return true;
   }
 }

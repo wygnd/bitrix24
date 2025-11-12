@@ -13,6 +13,20 @@ export class QueueService {
     private queueBitrixSync: Queue,
   ) {}
 
+  async removeJob(jobId: string) {
+    try {
+      const job = await this.queueBitrixSync.getJob(jobId);
+
+      if (!job) return false;
+
+      job.remove().then((res) => console.log('job successful remove', res));
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /**
    * Added task on handle update task
    * @param task
@@ -30,6 +44,14 @@ export class QueueService {
   ) {
     return this.queueBitrixSync.add(
       QUEUE_TASK_NAMES.QUEUE_BX_IS_DISTRIBUTED_DEAL,
+      data,
+      options,
+    );
+  }
+
+  async addTaskTest(data: string, options?: JobsOptions) {
+    return this.queueBitrixSync.add(
+      QUEUE_TASK_NAMES.QUEUE_BX_TEST,
       data,
       options,
     );
