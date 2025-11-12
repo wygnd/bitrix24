@@ -258,4 +258,24 @@ export class BitrixDealController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @Get('/test-chat')
+  async testWork() {
+    return this.bitrixService.callBatch({
+      get_deal: {
+        method: 'crm.deal.get',
+        params: {
+          id: 50762
+        }
+      },
+      send_message: {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixImbotService.BOT_ID,
+          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+          MESSAGE: 'Тестовое сообщение:[br][user=$result[get_deal][UF_CRM_1626852351]][/user]'
+        }
+      }
+    });
+  }
 }

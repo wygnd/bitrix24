@@ -22,11 +22,11 @@ export class BitrixWebhookController {
     private readonly bitrixWebhookService: BitrixWebhookService,
   ) {}
 
-  @UseGuards(BitrixWebhookGuard)
+  // @UseGuards(BitrixWebhookGuard)
   @Post('/bitrix/distribute-new-deal')
   @HttpCode(HttpStatus.OK)
   async distributeNewDeal(
-    @Body() body: IncomingWebhookDto,
+    // @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookDistributeDealDto,
   ) {
     return this.bitrixWebhookService.handleIncomingWebhookToDistributeNewDeal(

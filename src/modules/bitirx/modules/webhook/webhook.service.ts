@@ -44,13 +44,15 @@ export class BitrixWebhookService {
         hideUsers: [
           '56', // Анастасия Загоскина
         ],
-        chatId: 'chat766',
+        chatId: 'chat36368',
+        nextChatId: 'chat766',
       },
       [B24DepartmentTypeId.ADVERT]: {
         stage: 'C1:NEW',
         dealAssignedField: 'UF_CRM_1638351463', // Кто ведет
         hideUsers: [],
-        chatId: 'chat2640',
+        chatId: 'chat12862',
+        nextChatId: 'chat2640',
       },
       [B24DepartmentTypeId.SEO]: {
         stage: '',
@@ -59,7 +61,8 @@ export class BitrixWebhookService {
           '402', // Степан Комягин
           '158', // Артем Шевелёв
         ],
-        chatId: 'chat6368',
+        chatId: 'chat36370',
+        nextChatId: 'chat6368',
         category: {
           '34': 'C34:PREPAYMENT_INVOIC',
           '16': 'C16:NEW',
@@ -82,7 +85,6 @@ export class BitrixWebhookService {
   ) {
     const {
       department,
-      dialog_id,
       deal_title,
       deal_id,
       is_repeat = 0,
@@ -307,7 +309,7 @@ export class BitrixWebhookService {
           managerName: user.name,
           department: department,
           dealId: deal_id,
-          chatId: dialog_id,
+          chatId: this.departmentInfo[department].nextChatId,
           assignedFieldId: this.departmentInfo[department].dealAssignedField,
           stage: this.departmentInfo[department].stage,
         };
@@ -382,26 +384,28 @@ export class BitrixWebhookService {
       method: 'imbot.message.add',
       params: {
         BOT_ID: this.bitrixBotService.BOT_ID,
-        DIALOG_ID: this.departmentInfo[department].chatId ,
+        DIALOG_ID: this.departmentInfo[department].chatId,
         MESSAGE: message,
         KEYBOARD: messageKeyboard,
       },
     };
 
-    this.bitrixService.callBatch<
-      B24BatchResponseMap<{
-        get_deal: B24Deal;
-        send_message: number;
-      }>
-    >(batchCommandsSendMessage);
+    this.bitrixService
+      .callBatch<
+        B24BatchResponseMap<{
+          get_deal: B24Deal;
+          send_message: number;
+        }>
+      >(batchCommandsSendMessage)
+      .then((res) => console.log(res.result.result_error));
 
     // Добавляем задачу, чтобы через 15 минут проверить, распределили ли сделку
-    this.queueService.addTaskOnCheckIsDistributedDeal(
-      taskOnCheckDistributedDealOptions,
-      {
-        delay: 900000,
-      },
-    );
+    // this.queueService.addTaskOnCheckIsDistributedDeal(
+    //   taskOnCheckDistributedDealOptions,
+    //   {
+    //     delay: 900000,
+    //   },
+    // );
     return true;
   }
 }

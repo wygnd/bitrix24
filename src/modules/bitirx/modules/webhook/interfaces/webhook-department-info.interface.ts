@@ -3,5 +3,6 @@ export interface WebhookDepartmentInfo {
   dealAssignedField: string;
   hideUsers: string[];
   chatId: string;
+  nextChatId: string;
   category?: Record<string, string>;
 }

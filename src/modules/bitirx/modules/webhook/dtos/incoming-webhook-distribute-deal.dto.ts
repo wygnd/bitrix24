@@ -23,16 +23,6 @@ export class IncomingWebhookDistributeDealDto {
   deal_id: string;
 
   @ApiProperty({
-    type: String,
-    description: 'chat id',
-    required: true,
-    example: 'chat12354',
-  })
-  @IsNotEmpty({ message: 'Chat id is required' })
-  @IsString({ message: 'Chat id is must be a string' })
-  dialog_id: string;
-
-  @ApiProperty({
     type: Number,
     description: 'is repeat webhook',
     required: true,
