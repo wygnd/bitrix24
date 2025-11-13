@@ -15,7 +15,6 @@ import {
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import type { B24ImKeyboardOptions } from '@/modules/bitirx/modules/im/interfaces/im.interface';
 import { WebhookDepartmentInfo } from '@/modules/bitirx/modules/webhook/interfaces/webhook-department-info.interface';
-import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
 import {
@@ -47,6 +46,12 @@ export class BitrixWebhookService {
         dealAssignedField: 'UF_CRM_1589349464', // Проект-менеджер
         hideUsers: [
           '56', // Анастасия Загоскина
+        ],
+        addUsers: [
+          {
+            userId: '274',
+            name: 'Данил Куршев',
+          },
         ],
         chatId: 'chat36368',
         nextChatId: 'chat766',
@@ -397,6 +402,38 @@ export class BitrixWebhookService {
           },
         };
         break;
+    }
+
+    // Кастомные кнопки с пользователями
+    if (
+      this.departmentInfo[department].addUsers &&
+      this.departmentInfo[department].addUsers.length > 0
+    ) {
+      this.departmentInfo[department].addUsers.forEach((user) => {
+        // Собираем кнопку
+        const hardcodeKeyboardItemOptions: B24ImKeyboardOptions = {
+          TEXT: user.name,
+          COMMAND: 'distributeNewDeal',
+          BLOCK: 'Y',
+          BG_COLOR_TOKEN: 'primary',
+          DISPLAY: 'LINE',
+        };
+
+        const hardcodeKeyboardItemParams: ImbotHandleDistributeNewDeal = {
+          handle: `distributeDeal`,
+          managerId: user.userId,
+          managerName: user.name,
+          department: department,
+          dealTitle: deal_title,
+          dealId: deal_id,
+          chatId: this.departmentInfo[department].nextChatId,
+          assignedFieldId: this.departmentInfo[department].dealAssignedField,
+          stage: this.departmentInfo[department].stage,
+        };
+
+        hardcodeKeyboardItemOptions.COMMAND_PARAMS = JSON.stringify(hardcodeKeyboardItemParams);
+        messageKeyboard.push(hardcodeKeyboardItemOptions);
+      });
     }
 
     batchCommandsSendMessage['send_message'] = {
