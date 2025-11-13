@@ -503,9 +503,10 @@ export class BitrixImBotService {
         ' и заходите в сделку РК и отправляйте её в распределение.';
 
     let changeMessage =
-      'Сообщение обработано: сайт' + isApprove
-        ? ': Сайт согласован'
-        : ': Сайт не согласован';
+      'Сообщение обработано: сайт' +
+      (isApprove ? ': Сайт согласован' : ': Сайт не согласован') +
+      `[br][br]` +
+      this.bitrixService.generateDealUrl(dealId);
 
     this.bitrixService.callBatch({
       send_message_head_sites_category: {

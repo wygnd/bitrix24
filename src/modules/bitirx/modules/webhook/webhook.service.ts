@@ -494,7 +494,7 @@ export class BitrixWebhookService {
           ...keyboardItemParams,
           isApprove: false,
         }),
-        BG_COLOR_TOKEN: 'primary',
+        BG_COLOR_TOKEN: 'alert',
         DISPLAY: 'LINE',
         BLOCK: 'Y',
       },
@@ -549,7 +549,7 @@ export class BitrixWebhookService {
     this.bitrixBotService.sendMessage({
       DIALOG_ID: chat_id,
       MESSAGE:
-        `[user=${advertDepartment.UF_HEAD}][/user]` +
+        `[user=${advertDepartment.UF_HEAD}][/user][br]` +
         '[b]Согласование наших сайтов перед передачей сделки на РК.[/b][br]' +
         'Нужно согласовать и принять наш сайт в работу РК.[br]' +
         this.bitrixService.generateTaskUrl(
