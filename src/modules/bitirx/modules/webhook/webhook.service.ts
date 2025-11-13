@@ -500,6 +500,7 @@ export class BitrixWebhookService {
       },
     ];
 
+    console.log(bitrixDealId, dealId);
     const { result: batchResponseCreateTask } =
       await this.bitrixService.callBatch<
         B24BatchResponseMap<{
@@ -529,7 +530,7 @@ export class BitrixWebhookService {
                 '- Нажми в сообщении кнопку [b]Не согласованно[/b]',
               CREATED_BY: '460',
               RESPONSIBLE_ID: advertDepartment.UF_HEAD,
-              UF_CRM_TASK: [bitrixDealId],
+              UF_CRM_TASK: [`D_${dealId}`],
               ACCOMPLICES: advertDepartments
                 .filter((d) => d.ID !== advertDepartment.ID)
                 .map((d) => d.UF_HEAD),
