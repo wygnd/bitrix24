@@ -18,12 +18,16 @@ import { WebhookDepartmentInfo } from '@/modules/bitirx/modules/webhook/interfac
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
 import {
+  ImbotHandleApproveSiteForAdvert,
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
 import { QueueService } from '@/modules/queue/queue.service';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
+import { B24Task } from '@/modules/bitirx/modules/task/interfaces/task.interface';
+import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -431,7 +435,9 @@ export class BitrixWebhookService {
           stage: this.departmentInfo[department].stage,
         };
 
-        hardcodeKeyboardItemOptions.COMMAND_PARAMS = JSON.stringify(hardcodeKeyboardItemParams);
+        hardcodeKeyboardItemOptions.COMMAND_PARAMS = JSON.stringify(
+          hardcodeKeyboardItemParams,
+        );
         messageKeyboard.push(hardcodeKeyboardItemOptions);
       });
     }
@@ -451,21 +457,107 @@ export class BitrixWebhookService {
     return true;
   }
 
-  /**
-   *
-   * @param project_manager_id
-   */
-  async handleIncomingWebhookToApproveSiteForAdvert({
-    project_manager_id,
-  }: IncomingWebhookApproveSiteForDealDto) {
-    const advertDepartmentIds = ['36', '54', '124', '128'];
-    const advertDepartment = (
+  async handleIncomingWebhookToApproveSiteForAdvert(
+    { project_manager_id, chat_id }: IncomingWebhookApproveSiteForDealDto,
+    bitrixDealId: string,
+  ) {
+    const [_, dealId] = bitrixDealId.split('_')[1];
+    const advertDepartments =
       await this.bitrixDepartmentService.getDepartmentById([
-        advertDepartmentIds[
-          Math.floor(Math.random() * advertDepartmentIds.length)
-        ],
-      ])
-    )[0];
-    let message = `[user=${advertDepartment.UF_HEAD}][/user]`;
+        '36',
+        '54',
+        '124',
+        '128',
+      ]);
+    const advertDepartment =
+      advertDepartments[Math.floor(Math.random() * advertDepartments.length)];
+
+    const keyboardItemParams: ImbotHandleApproveSiteForAdvert = {
+      dealId: dealId,
+      isApprove: true,
+      managerId: project_manager_id,
+    };
+
+    const keyboard: B24ImKeyboardOptions[] = [
+      {
+        TEXT: 'Согласованно',
+        COMMAND: 'approveSiteDealForAdvert',
+        COMMAND_PARAMS: JSON.stringify(keyboardItemParams),
+        BG_COLOR_TOKEN: 'primary',
+        DISPLAY: 'LINE',
+        BLOCK: 'Y',
+      },
+      {
+        TEXT: 'Не согласованно',
+        COMMAND: 'approveSiteDealForAdvert',
+        COMMAND_PARAMS: JSON.stringify({
+          ...keyboardItemParams,
+          isApprove: false,
+        }),
+        BG_COLOR_TOKEN: 'primary',
+        DISPLAY: 'LINE',
+        BLOCK: 'Y',
+      },
+    ];
+
+    const { result: batchResponseCreateTask } =
+      await this.bitrixService.callBatch<
+        B24BatchResponseMap<{
+          get_deal: B24Deal;
+          create_task: { task: B24Task };
+        }>
+      >({
+        get_deal: {
+          method: 'crm.deal.get',
+          params: {
+            id: dealId,
+          },
+        },
+        create_task: {
+          method: 'tasks.task.add',
+          params: {
+            fields: {
+              TITLE:
+                'Необходимо проверить сайт на дееспособность работы на РК.',
+              DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
+              DESCRIPTION:
+                '$result[get_deal][UF_CRM_1600184739]\n' +
+                '$result[get_deal][UF_CRM_1600184739]\n\n' +
+                'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
+                'Если есть правки, то:\n- НЕ завершай задачу\n' +
+                '- Пропиши в комментариях задачи список правок\n' +
+                '- Нажми в сообщении кнопку [b]Не согласованно[/b]',
+              CREATED_BY: '460',
+              RESPONSIBLE_ID: advertDepartment.UF_HEAD,
+              UF_CRM_TASK: [bitrixDealId],
+              ACCOMPLICES: advertDepartments
+                .filter((d) => d.ID !== advertDepartment.ID)
+                .map((d) => d.UF_HEAD),
+              AUDITORS: [project_manager_id, '376'],
+            },
+          },
+        },
+      });
+
+    if (Object.keys(batchResponseCreateTask.result_error).length !== 0) {
+      console.log(batchResponseCreateTask.result_error);
+      throw new BadRequestException(batchResponseCreateTask.result_error);
+    }
+
+    const { id: taskId } = batchResponseCreateTask.result.create_task.task;
+
+    this.bitrixBotService.sendMessage({
+      DIALOG_ID: chat_id,
+      MESSAGE:
+        `[user=${advertDepartment.UF_HEAD}][/user]` +
+        '[b]Согласование наших сайтов перед передачей сделки на РК.[/b][br]' +
+        'Нужно согласовать и принять наш сайт в работу РК.[br]' +
+        this.bitrixService.generateTaskUrl(
+          advertDepartment.UF_HEAD,
+          taskId,
+          'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
+        ),
+      KEYBOARD: keyboard,
+    });
   }
 }

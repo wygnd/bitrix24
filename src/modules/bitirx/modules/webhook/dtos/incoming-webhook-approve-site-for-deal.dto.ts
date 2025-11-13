@@ -13,4 +13,14 @@ export class IncomingWebhookApproveSiteForDealDto {
   @Transform(({ value }) => value.split('_')[1])
   @IsString({ message: 'invalid project_manager_id' })
   project_manager_id: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'id чата, куда будет отправляться сообщение',
+    required: true,
+    example: 'chat1234',
+  })
+  @IsNotEmpty()
+  @IsString()
+  chat_id: string;
 }

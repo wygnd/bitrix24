@@ -28,7 +28,11 @@ import { ImbotMessageAddDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-me
 import { BitrixBotCommandGuard } from '@/modules/bitirx/guards/bitrix-bot-command.guard';
 import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-events.dto';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
-import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import {
+  ImbotHandleApproveSiteForAdvert,
+  ImbotHandleApproveSmmAdvertLayout,
+  ImbotHandleDistributeNewDealUnknown,
+} from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
@@ -137,19 +141,26 @@ export class BitrixBotController {
 
     const { MESSAGE, MESSAGE_ID } = data.PARAMS;
     const [command, _] = MESSAGE.split(' ', 2);
+    const commandParamsDecoded: unknown = JSON.parse(
+      MESSAGE.replace(command, ''),
+    );
 
     switch (command) {
       case '/distributeNewDeal':
         return this.bitrixBotService.handleDistributeNewDeal(
-          JSON.parse(MESSAGE.replace(command, '')),
+          commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
           data.PARAMS,
         );
 
       case '/approveSmmAdvertLayouts':
         return this.bitrixBotService.handleApproveSmmAdvertLayout(
-          JSON.parse(
-            MESSAGE.replace(command, ''),
-          ) as ImbotHandleApproveSmmAdvertLayout,
+          commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
+          MESSAGE_ID,
+        );
+
+      case '/approveSiteDealForAdvert':
+        return this.bitrixBotService.handleApproveSiteForAdvert(
+          commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
           MESSAGE_ID,
         );
 

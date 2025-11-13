@@ -29,14 +29,16 @@ export type ImbotHandleDistributeNewDealUnknown = Pick<
   'handle'
 >;
 
-// export type ImbotHandleDistributeNewDealUnknown = {
-//   handle: B24DistributeNewDealHandleType
-// } & Record<string, any>;
-
 export interface ImbotHandleDistributeNewDealReject {
   handle: B24DistributeNewDealHandleType;
   dealId: string;
   userId: string;
   userCounter: number;
   dealTitle: string;
+}
+
+export interface ImbotHandleApproveSiteForAdvert {
+  dealId: string;
+  isApprove: boolean;
+  managerId: string;
 }

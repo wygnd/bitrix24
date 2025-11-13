@@ -23,6 +23,7 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { ImbotCommand } from '@/modules/bitirx/modules/imbot/interfaces/imbot.interface';
 import {
+  ImbotHandleApproveSiteForAdvert,
   ImbotHandleApproveSmmAdvertLayout,
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
@@ -484,6 +485,56 @@ export class BitrixImBotService {
     }
 
     this.bitrixService.callBatch(batchCommandsSendMessage);
+    return true;
+  }
+
+  async handleApproveSiteForAdvert(
+    { dealId, isApprove, managerId }: ImbotHandleApproveSiteForAdvert,
+    messageId: number,
+  ) {
+    let managerMessage = isApprove
+      ? 'Ваш проект [u]согласован[/u] отделом рекламы[br]' +
+        this.bitrixService.generateDealUrl(dealId) +
+        '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
+        'Вам необходимо зайти в сделку РК и отправить её в распределение.'
+      : 'Ваш проект [u]НЕ согласован[/u] отделом рекламы.[br]' +
+        this.bitrixService.generateDealUrl(dealId) +
+        '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
+        ' и заходите в сделку РК и отправляйте её в распределение.';
+
+    let changeMessage =
+      'Сообщение обработано: сайт' + isApprove
+        ? ': Сайт согласован'
+        : ': Сайт не согласован';
+
+    this.bitrixService.callBatch({
+      send_message_head_sites_category: {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: '', // Анастасия Загоскина
+          MESSAGE: managerMessage,
+          SYSTEM: 'Y',
+        },
+      },
+      send_message_manager_deal: {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: managerId,
+          MESSAGE: managerMessage,
+          SYSTEM: 'Y',
+        },
+      },
+      update_message: {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.botId,
+          MESSAGE_ID: messageId,
+          MESSAGE: changeMessage,
+          KEYBOARD: '',
+        },
+      },
+    });
+    return true;
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {
