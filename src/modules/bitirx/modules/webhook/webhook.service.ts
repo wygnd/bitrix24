@@ -533,7 +533,7 @@ export class BitrixWebhookService {
               ACCOMPLICES: advertDepartments
                 .filter((d) => d.ID !== advertDepartment.ID)
                 .map((d) => d.UF_HEAD),
-              AUDITORS: [project_manager_id, '376'],
+              AUDITORS: [project_manager_id],
             },
           },
         },
