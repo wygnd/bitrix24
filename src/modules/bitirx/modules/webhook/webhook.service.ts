@@ -461,7 +461,7 @@ export class BitrixWebhookService {
     { project_manager_id, chat_id }: IncomingWebhookApproveSiteForDealDto,
     bitrixDealId: string,
   ) {
-    const [_, dealId] = bitrixDealId.split('_')[1];
+    const dealId = bitrixDealId.split('_')[1];
     const advertDepartments =
       await this.bitrixDepartmentService.getDepartmentById([
         '36',
@@ -500,7 +500,6 @@ export class BitrixWebhookService {
       },
     ];
 
-    console.log(bitrixDealId, dealId);
     const { result: batchResponseCreateTask } =
       await this.bitrixService.callBatch<
         B24BatchResponseMap<{
