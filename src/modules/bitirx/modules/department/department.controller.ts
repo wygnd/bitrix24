@@ -21,7 +21,7 @@ export class DepartmentController {
     return this.departmentService.getDepartmentList();
   }
 
-  @Get('/list/:departmentId')
+  @Get('/item/:departmentId')
   async getDepartmentById(
     @Param(
       'departmentId',
@@ -30,15 +30,5 @@ export class DepartmentController {
     ids: string[],
   ) {
     return this.departmentService.getDepartmentById(ids);
-  }
-
-  @Get('/test')
-  async testGetSettingsRate() {
-    return this.departmentService.getHeadCountDealAtLastMonthRate([
-      '36',
-      '54',
-      '124',
-      '128',
-    ]);
   }
 }

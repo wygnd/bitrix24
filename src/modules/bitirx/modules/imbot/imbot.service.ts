@@ -33,6 +33,7 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24EventParams } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
+import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -45,6 +46,7 @@ export class BitrixImBotService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly dealService: BitrixDealService,
+    private readonly departmentService: BitrixDepartmentService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -503,16 +505,19 @@ export class BitrixImBotService {
         ' и заходите в сделку РК и отправляйте её в распределение.';
 
     let changeMessage =
-      'Сообщение обработано: сайт' +
-      (isApprove ? ': Сайт согласован' : ': Сайт не согласован') +
-      `[br][br]` +
+      '[b]Сообщение обработано: ' +
+      (isApprove ? 'Сайт согласован' : 'Сайт не согласован') +
+      `[/b][br][br]` +
       this.bitrixService.generateDealUrl(dealId);
+
+    const siteDepartmentHeadId =
+      (await this.departmentService.getDepartmentById(['98']))[0].UF_HEAD ?? '';
 
     this.bitrixService.callBatch({
       send_message_head_sites_category: {
         method: 'im.message.add',
         params: {
-          DIALOG_ID: '', // Анастасия Загоскина
+          DIALOG_ID: siteDepartmentHeadId,
           MESSAGE: managerMessage,
           SYSTEM: 'Y',
         },
