@@ -34,6 +34,7 @@ import { B24EventParams } from '@/modules/bitirx/modules/imbot/interfaces/imbot-
 import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
+import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 
 @Injectable()
 export class BitrixImBotService {
@@ -295,15 +296,8 @@ export class BitrixImBotService {
     fields: ImbotHandleDistributeNewDeal,
     params: B24EventParams,
   ) {
-    const {
-      dealId,
-      department,
-      chatId,
-      managerId,
-      managerName,
-      stage,
-      assignedFieldId,
-    } = fields;
+    const { dealId, department, chatId, managerId, stage, assignedFieldId } =
+      fields;
 
     const { DIALOG_ID, MESSAGE_ID } = params;
     const deal = await this.dealService.getDealById(dealId, 'force');
@@ -372,7 +366,7 @@ export class BitrixImBotService {
           MESSAGE_ID: MESSAGE_ID,
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
-            '[b]Обработано[/b][br]' +
+            `[b]${B24Emoji.SUCCESS} Обработано[/b][br]` +
             `Сделка распределена на [user=${managerId}][/user]${secondManager}[br][br]` +
             this.bitrixService.generateDealUrl(dealId, deal.TITLE),
           KEYBOARD: '',

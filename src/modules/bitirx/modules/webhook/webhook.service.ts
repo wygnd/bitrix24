@@ -23,11 +23,11 @@ import {
   ImbotHandleDistributeNewDealReject,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
-import { QueueService } from '@/modules/queue/queue.service';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { B24Task } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import dayjs from 'dayjs';
+import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -42,7 +42,6 @@ export class BitrixWebhookService {
     private readonly bitrixDepartmentService: BitrixDepartmentService,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
-    private readonly queueService: QueueService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -265,7 +264,7 @@ export class BitrixWebhookService {
     let message =
       is_repeat == 0
         ? 'Добавлена новая сделка, необходимо распределить'
-        : 'Сделка [b]НЕ РАСПРЕДЕЛЕНА[/b] необходимо распределить';
+        : `${B24Emoji.REFUSAL} Сделка [b]НЕ РАСПРЕДЕЛЕНА[/b] необходимо распределить`;
 
     message += ` ${this.bitrixService.generateDealUrl(deal_id, deal_title)}`;
 
