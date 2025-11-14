@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   B24EventAdd,
   B24EventBody,
@@ -36,6 +36,6 @@ export class BitrixEventService {
       return true;
     }
 
-    throw new BadRequestException('Task not handling yet');
+    return false;
   }
 }
