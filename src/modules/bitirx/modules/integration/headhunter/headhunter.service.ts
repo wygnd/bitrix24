@@ -138,8 +138,8 @@ export class BitrixHeadHunterService {
       (acc, { kind, contact_value, value }) => {
         switch (kind) {
           case 'phone':
-            const { city } = value as ContactPhone;
-            if (!/[()]/.test(contact_value)) {
+            const { city = '' } = value as ContactPhone;
+            if (!/[()]/.test(contact_value) && city) {
               acc[kind] = contact_value.replace(` ${city} `, ` (${city}) `);
             } else {
               acc[kind] = contact_value;
