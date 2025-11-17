@@ -28,6 +28,8 @@ import { B24Task } from '@/modules/bitirx/modules/task/interfaces/task.interface
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import dayjs from 'dayjs';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
+import { IncomingWebhookApproveSiteForCase } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
+import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -558,5 +560,65 @@ export class BitrixWebhookService {
         ),
       KEYBOARD: keyboard,
     });
+  }
+
+  async handleIncomingWebhookToApproveSiteForCase(
+    { siteType, ignored, assignedId }: IncomingWebhookApproveSiteForCase,
+    dealId: string,
+  ) {
+    if (ignored) {
+      this.bitrixBotService.sendMessage({
+        DIALOG_ID: '220', // Ирина Наволоцкая
+        MESSAGE:
+          'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
+          this.bitrixService.generateDealUrl(dealId),
+      });
+    }
+
+    const message =
+      '[b]Сайты для кейсов[/b][br][br]' +
+      'Разработка сайта завершена![br]Укажи, отвечает ли сайт на требования хотя бы одного из пунктов[br][br]' +
+      '[b]Критерии отбора сайтов для кейсов:[/b][br]' +
+      '- Яркий, запоминающийся, нетипичный дизайн (не все подряд индивиды, ' +
+      'а когда наши дизайнеры прыгнули выше головы и сделали очень крутой дизайн)+ ' +
+      'Если есть сомнения по этому пункту, то всё равно отправляйте Ирине на согласование+[br]' +
+      '- Наличие технических особенностей (личные кабинеты, интеграции, наличие анимаций, сложная карточка товара и прочее)[br]' +
+      '- ВСЕ сайты на Bitrix (вне зависимости от дизайна и тех+особенностей)[br]' +
+      '- ВСЕ индивидуальные сайты Вологодских заказчиков (вне зависимости от дизайна и тех+особенностей)[br]' +
+      '- Нетиповые некоммерческие проекты (например, новостной портал)+[br]' +
+      '- Сайты, которые делали для гос+структур (больницы и прочее)[br][br]Сделка: ' +
+      this.bitrixService.generateDealUrl(dealId);
+
+    const keyboardParams: ImbotKeyboardApproveSiteForCase = {
+      approved: true,
+      dealId: dealId,
+      oldMessage: this.bitrixBotService.encodeText(message),
+    };
+
+    this.bitrixBotService.sendMessage({
+      DIALOG_ID: assignedId,
+      MESSAGE: message,
+      KEYBOARD: [
+        {
+          TEXT: 'Сайт подходит',
+          COMMAND: 'approveSiteForCase',
+          COMMAND_PARAMS: JSON.stringify(keyboardParams),
+          BG_COLOR_TOKEN: 'primary',
+          DISPLAY: 'LINE',
+        },
+        {
+          TEXT: 'Сайт не подходит',
+          COMMAND: 'approveSiteForCase',
+          COMMAND_PARAMS: JSON.stringify({
+            ...keyboardParams,
+            approved: false,
+          } as ImbotKeyboardApproveSiteForCase),
+          BG_COLOR_TOKEN: 'alert',
+          DISPLAY: 'LINE',
+        },
+      ],
+    });
+
+    return true;
   }
 }
