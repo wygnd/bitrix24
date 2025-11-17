@@ -563,6 +563,23 @@ export class BitrixWebhookService {
     });
   }
 
+  /**
+   * Function handle incomng webhook from bitrix24.
+   * When deal stay in stage **converted** bitrix send request.
+   * Function send message to project manager with two buttons
+   * and if ignored is true function send message to Irina Navolockaya
+   * with message that manager doesnt approve site
+   *
+   * ---
+   *
+   * Функция обрабатывает исходящий вебхук из битркис24.
+   * На стадии **сделка успешна** битрикс отправляет запрос.
+   * Ф-я отправляет сообщение менеджеру с двумя кнопками и если установлен параметр ignored в значении true,
+   * отправляет сообщение Ирине Наволоцкой о том, что менеджер не проверил сайт.
+   * @param ignored
+   * @param assignedId
+   * @param dealId
+   */
   async handleIncomingWebhookToApproveSiteForCase(
     { ignored, assignedId }: IncomingWebhookApproveSiteForCase,
     dealId: string,

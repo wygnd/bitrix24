@@ -69,6 +69,10 @@ export class BitrixImBotService {
 
   /**
    * Add new bot command
+   *
+   * ---
+   *
+   * Регистрация новой команды
    * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-register.html
    * @param fields
    */
@@ -108,6 +112,13 @@ export class BitrixImBotService {
     return commandId;
   }
 
+  /**
+   * Get bot command list
+   *
+   * ---
+   *
+   * Получение списка команд бота
+   */
   async getBotCommands() {
     const commands = await this.redisService.get<ImbotCommand[]>(
       REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
@@ -258,6 +269,17 @@ export class BitrixImBotService {
     return true;
   }
 
+  /**
+   * Handle button with command **distributeNewDeal**
+   * Function update deal and send message in chat about distribute deal on target project-manager
+   *
+   * ---
+   *
+   * Обработка команды **distributeNewDeal**
+   * Функция обновляет сделку, отправляет сообщение в чат о распределении сделки на указанного проект-менеджера
+   * @param fields
+   * @param params
+   */
   async handleDistributeNewDeal(
     fields: ImbotHandleDistributeNewDealUnknown,
     params: B24EventParams,
@@ -412,6 +434,20 @@ export class BitrixImBotService {
     return true;
   }
 
+  /**
+   * Handle button with **approveSmmAdvertLayouts** command.
+   * Function send message to responsible and accomplices
+   * and close and return task
+   *
+   * ---
+   *
+   * Обработка кнопки с командой **approveSmmAdvertLayouts**
+   * Функция отправляет сообщение исполнителю и соисполнителям
+   * и закрывает или возвращает задачу
+   *
+   * @param fields
+   * @param messageId
+   */
   async handleApproveSmmAdvertLayout(
     fields: ImbotHandleApproveSmmAdvertLayout,
     messageId: number,
@@ -485,6 +521,21 @@ export class BitrixImBotService {
     return true;
   }
 
+  /**
+   * Handle button with **approveSiteDealForAdvert** command.
+   * Function update existsing message and send messages to project manager and
+   * his supervisor
+   *
+   * ---
+   * Обработка кнопки с коммандой **approveSiteDealForAdvert**.
+   * Функция обновляет старое сообщение и отправляет сообщения проект-менеджеру и
+   * его руководителю.
+   *
+   * @param dealId
+   * @param isApprove
+   * @param managerId
+   * @param messageId
+   */
   async handleApproveSiteForAdvert(
     { dealId, isApprove, managerId }: ImbotHandleApproveSiteForAdvert,
     messageId: number,
@@ -538,6 +589,21 @@ export class BitrixImBotService {
     return true;
   }
 
+  /**
+   * Handle button with commnad **approveSiteForCase**
+   * Function update project manager message set was handling in deal
+   * and send message Irina Navolockaya if site is approve
+   *
+   * ---
+   *
+   * Обработка нажатия кнопки с командой **approveSiteForCase**
+   * Функция обновляет сообщение у проект-менеджера, устанавливает значение в карточке сделки
+   * и если сайт согласован отправляет сообщение Ирине Наволоцкой
+   * @param dealId
+   * @param approved
+   * @param oldMessage
+   * @param messageId
+   */
   async handleApproveSiteForCase(
     { dealId, approved, oldMessage }: ImbotKeyboardApproveSiteForCase,
     messageId: number,
