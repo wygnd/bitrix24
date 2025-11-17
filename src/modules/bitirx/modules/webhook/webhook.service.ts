@@ -30,6 +30,7 @@ import dayjs from 'dayjs';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
+import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -44,6 +45,7 @@ export class BitrixWebhookService {
     private readonly bitrixDepartmentService: BitrixDepartmentService,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
+    private readonly messageService: BitrixMessageService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -566,7 +568,7 @@ export class BitrixWebhookService {
     dealId: string,
   ) {
     if (ignored) {
-      this.bitrixBotService.sendMessage({
+      this.messageService.sendPrivateMessage({
         DIALOG_ID: '220', // Ирина Наволоцкая
         MESSAGE:
           'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
