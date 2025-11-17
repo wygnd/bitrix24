@@ -25,6 +25,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler) {
     return next.handle().pipe(
       catchError((error: AxiosError<B24ErrorResponse>) => {
+        console.log(error);
         if (!isAxiosError(error)) return throwError(() => error);
 
         if (
