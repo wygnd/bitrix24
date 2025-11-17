@@ -100,10 +100,13 @@ export class BitrixWebhookService {
   }
 
   /**
-   * todo
+   * Function handle incoming webhook from bitrix
+   * Get all employers department and form message for distribute deal
+   *
    * ---
    *
    * Функция обрабатывает исходящий вебхук из битрикс24.
+   * Получает всех сотрудников подразделения и формирует сообщение для распределения сделки
    *
    * @param fields
    */
