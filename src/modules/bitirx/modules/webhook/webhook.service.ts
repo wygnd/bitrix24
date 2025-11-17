@@ -460,9 +460,8 @@ export class BitrixWebhookService {
 
   async handleIncomingWebhookToApproveSiteForAdvert(
     { project_manager_id, chat_id }: IncomingWebhookApproveSiteForDealDto,
-    bitrixDealId: string,
+    dealId: string,
   ) {
-    const dealId = bitrixDealId.split('_')[1];
     const advertDepartments =
       await this.bitrixDepartmentService.getDepartmentById([
         '36',
@@ -563,7 +562,7 @@ export class BitrixWebhookService {
   }
 
   async handleIncomingWebhookToApproveSiteForCase(
-    { siteType, ignored, assignedId }: IncomingWebhookApproveSiteForCase,
+    { ignored, assignedId }: IncomingWebhookApproveSiteForCase,
     dealId: string,
   ) {
     if (ignored) {

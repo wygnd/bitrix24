@@ -65,7 +65,6 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForCase,
   ) {
-    console.log('WEBHOOK CONTROLLER: CHECK QUERY PARARMS: ', query);
     return this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForCase(
       query,
       body.document_id[2],

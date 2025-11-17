@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class IncomingWebhookAuthOptionsDto {
   @ApiProperty({
@@ -50,6 +51,10 @@ export class IncomingWebhookDto {
     example: ['crm', 'CCrmDocumentDeal', 'DEAL_1234'],
   })
   @IsNotEmpty()
+  @Transform(({ value }) => {
+    value[2] = value[2].split('_')[1];
+    return value;
+  })
   document_id: string[];
 
   @ApiProperty({
