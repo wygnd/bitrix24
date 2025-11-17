@@ -29,7 +29,7 @@ export class BitrixEventService {
 
   async handleTaskUpdate(fields: B24EventBody<B24EventTaskUpdateData>) {
     const { ID: taskId } = fields.data.FIELDS_BEFORE;
-    const task = await this.taskService.getTaskById(taskId, undefined, false);
+    const task = await this.taskService.getTaskById(taskId);
 
     if (task.title.startsWith('[МАКЕТ]')) {
       this.queueService.addTaskBxTask(task);

@@ -67,7 +67,7 @@ export class BitrixTaskService {
       this.redisService.set<B24TaskExtended>(
         REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
         taskExtended,
-        3600,
+        3600, // 1 час
       );
 
     return taskExtended;
