@@ -33,6 +33,7 @@ import {
   ImbotHandleApproveSmmAdvertLayout,
   ImbotHandleDistributeNewDealUnknown,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
+import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
@@ -161,6 +162,12 @@ export class BitrixBotController {
       case '/approveSiteDealForAdvert':
         return this.bitrixBotService.handleApproveSiteForAdvert(
           commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
+          MESSAGE_ID,
+        );
+
+      case '/approveSiteForCase':
+        return this.bitrixBotService.handleApproveSiteForCase(
+          commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
           MESSAGE_ID,
         );
 

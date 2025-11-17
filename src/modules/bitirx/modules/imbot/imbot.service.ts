@@ -35,6 +35,7 @@ import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/departm
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
+import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -534,6 +535,48 @@ export class BitrixImBotService {
         },
       },
     });
+    return true;
+  }
+
+  async handleApproveSiteForCase(
+    { dealId, approved, oldMessage }: ImbotKeyboardApproveSiteForCase,
+    messageId: number,
+  ) {
+    const batchCommands: B24BatchCommands = {
+      update_message: {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.botId,
+          MESSAGE_ID: messageId,
+          MESSAGE:
+            `[b]Обработано: [/b]${approved ? 'Сайт подходит' : 'Сайт не подходит'}[br][br]` +
+            this.decodeText(oldMessage),
+        },
+      },
+      update_deal: {
+        method: 'crm.deal.update',
+        params: {
+          id: dealId,
+          fields: {
+            UF_CRM_1760972834021: '1', // Поле: Обработка кейса
+          },
+        },
+      },
+    };
+
+    if (approved) {
+      batchCommands['send_message'] = {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: 220, // Ирина Наволоцкая,
+          MESSAGE:
+            'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
+            this.bitrixService.generateDealUrl(dealId),
+        },
+      };
+    }
+
+    this.bitrixService.callBatch(batchCommands);
     return true;
   }
 
