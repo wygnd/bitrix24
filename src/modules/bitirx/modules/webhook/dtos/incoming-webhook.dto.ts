@@ -55,7 +55,6 @@ export class IncomingWebhookDto {
     value[2] = value[2].split('_')[1];
     return value;
   })
-  @IsString({ message: 'invalid entity id' })
   document_id: string[];
 
   @ApiProperty({
