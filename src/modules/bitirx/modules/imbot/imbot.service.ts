@@ -549,8 +549,9 @@ export class BitrixImBotService {
           BOT_ID: this.botId,
           MESSAGE_ID: messageId,
           MESSAGE:
-            `[b]Обработано: [/b]${approved ? 'Сайт подходит' : 'Сайт не подходит'}[br][br]` +
+            `[b]Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
             this.decodeText(oldMessage),
+          KEYBOARD: '',
         },
       },
       update_deal: {
