@@ -317,6 +317,11 @@ export class BitrixHeadHunterService {
         ? (errorMessage = e.message)
         : (errorMessage = (e as Error).message);
 
+      try {
+        errorMessage += '[br][br]' + JSON.parse(e);
+      }
+      catch (err) {}
+
       this.bitrixService.callBatch({
         send_message_to_hr: {
           method: 'imbot.message.add',
