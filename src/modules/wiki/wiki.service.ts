@@ -8,14 +8,14 @@ export class WikiService {
   constructor(private readonly wikiApiService: WikiApiService) {}
 
   // todo: Исправить, когда придет Кирилл0
-  public async getAdvertNextHeadOld(data: DepartmentHeadDealCount) {
+  public async getAdvertNextHead(data: DepartmentHeadDealCount) {
     return this.wikiApiService.post<
       DepartmentHeadDealCount,
       DistributeAdvertDealWikiResponse
     >('/advertising-department/destribute-deal/', data);
   }
 
-  public async getAdvertNextHead(data: DepartmentHeadDealCount) {
+  public async getAdvertNextHeadOld(data: DepartmentHeadDealCount) {
     return this.wikiApiService.post<
       { settings: DepartmentHeadDealCount },
       DistributeAdvertDealWikiResponse
@@ -29,7 +29,7 @@ export class WikiService {
   }
 
   // todo: Исправить, когда придет Кирилл
-  public async sendRejectDistributeNewDealOld(
+  public async sendRejectDistributeNewDeal(
     data: DistributeAdvertDealWikiResponse,
   ) {
     return this.wikiApiService.post<DistributeAdvertDealWikiResponse>(
@@ -38,7 +38,7 @@ export class WikiService {
     );
   }
 
-  public async sendRejectDistributeNewDeal(
+  public async sendRejectDistributeNewDealOld(
     data: DistributeAdvertDealWikiResponse,
   ) {
     return this.wikiApiService.post<{
