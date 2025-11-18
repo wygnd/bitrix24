@@ -7,47 +7,27 @@ import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki
 export class WikiService {
   constructor(private readonly wikiApiService: WikiApiService) {}
 
-  // todo: Исправить, когда придет Кирилл0
   public async getAdvertNextHead(data: DepartmentHeadDealCount) {
     return this.wikiApiService.post<
       DepartmentHeadDealCount,
       DistributeAdvertDealWikiResponse
-    >('/advertising-department/destribute-deal/', data);
-  }
-
-  public async getAdvertNextHeadOld(data: DepartmentHeadDealCount) {
-    return this.wikiApiService.post<
-      { settings: DepartmentHeadDealCount },
-      DistributeAdvertDealWikiResponse
-    >(
-      '',
-      { settings: data },
-      {
-        baseURL: 'https://bitrix24.grampus-server.ru/src/api/wiki/index.php',
+    >('/advertising-department/destribute-deal/', data, {
+      headers: {
+        wiki_api_key: 'deniska-pipiska',
       },
-    );
+    });
   }
 
-  // todo: Исправить, когда придет Кирилл
   public async sendRejectDistributeNewDeal(
     data: DistributeAdvertDealWikiResponse,
   ) {
     return this.wikiApiService.post<DistributeAdvertDealWikiResponse>(
       '/advertising-department/rollback-counter',
       data,
-    );
-  }
-
-  public async sendRejectDistributeNewDealOld(
-    data: DistributeAdvertDealWikiResponse,
-  ) {
-    return this.wikiApiService.post<{
-      reject_data: DistributeAdvertDealWikiResponse;
-    }>(
-      '',
-      { reject_data: data },
       {
-        baseURL: 'https://bitrix24.grampus-server.ru/src/api/wiki/reject.php',
+        headers: {
+          wiki_api_key: 'deniska-pipiska',
+        },
       },
     );
   }
