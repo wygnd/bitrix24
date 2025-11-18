@@ -19,4 +19,10 @@ export class AppHttpService {
 
     return data;
   }
+
+  async get<T = any>(url: string, config?: AxiosRequestConfig<T>) {
+    const { data } = await this.http.get<any, AxiosResponse<T>>(url, config);
+
+    return data;
+  }
 }

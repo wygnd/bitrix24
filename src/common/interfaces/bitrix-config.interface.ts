@@ -9,9 +9,14 @@ export interface BitrixConstants {
   TEST_CHAT_ID: string;
   WEBHOOK_INCOMING_TOKEN: string;
   WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL: string;
+  HR: BitrixHRConstants;
 }
 
 export interface BitrixOptions {
   bitrixConfig: BitrixConfig;
   bitrixConstants: BitrixConstants;
+}
+
+export interface BitrixHRConstants {
+  hrChatId: string;
 }

@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  InternalServerErrorException,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';

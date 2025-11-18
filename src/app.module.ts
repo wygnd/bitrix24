@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigAppModule } from './config/config.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BitrixModule } from './modules/bitirx/bitrix.module';
@@ -9,6 +14,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
+import { AppHttModule } from '@/modules/http/http.module';
 
 @Module({
   imports: [
@@ -18,6 +24,7 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
     HeadHunterModule,
     QueueModule,
     WikiModule,
+    AppHttModule
   ],
   controllers: [AppController],
   providers: [
@@ -29,6 +36,9 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
+    consumer.apply(HttpLoggerMiddleware).forRoutes({
+      path: '*',
+      method: RequestMethod.ALL,
+    });
   }
 }

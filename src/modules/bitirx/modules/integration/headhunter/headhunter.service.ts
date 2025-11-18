@@ -94,9 +94,34 @@ export class BitrixHeadHunterService {
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
     const { action_type } = body;
 
-    switch (action_type) {
-      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
-        return this.handleNewResponseVacancyWebhook(body);
+    try {
+      switch (action_type) {
+        case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
+          return this.handleNewResponseVacancyWebhook(body);
+      }
+    } catch (e) {
+      this.bitrixService.callBatch({
+        send_message_to_hr: {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.BOT_ID,
+            DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
+            MESSAGE: 'Новый отклик по [url=]вакансии[/url][br]',
+          },
+        },
+      });
+
+      this.bitrixService.callBatch({
+        send_message_to_hr: {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.BOT_ID,
+            DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+            MESSAGE: 'Ошибка обработки отклика[br]' + JSON.stringify(body),
+          },
+        },
+      });
+      return true;
     }
   }
 
@@ -427,9 +452,35 @@ export class BitrixHeadHunterService {
       HHBitrixVacancy[]
     >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
 
-    if (ratioVacanciesFromCache) return ratioVacanciesFromCache;
+    const vacancies = await this.headHunterRestService.getActiveVacancies(true);
 
-    const vacancies = await this.headHunterRestService.getActiveVacancies();
+    // Сравниваем вакансии по кол-ву элементов
+    if (ratioVacanciesFromCache) {
+      const newRatioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
+        (acc, vacancy) => {
+          const vacancyIndex = ratioVacanciesFromCache.findIndex(
+            (v) => v.id === vacancy.id,
+          );
+          vacancyIndex !== -1
+            ? acc.push(ratioVacanciesFromCache[vacancyIndex])
+            : acc.push({
+                id: vacancy.id,
+                label: vacancy.name,
+                url: vacancy.alternate_url,
+                bitrixField: null,
+              });
+          return acc;
+        },
+        [],
+      );
+
+      this.redisService.set<HHBitrixVacancy[]>(
+        REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
+        newRatioVacancies,
+      );
+
+      return newRatioVacancies;
+    }
 
     const ratioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
       (acc, { id, name, alternate_url }) => {

@@ -12,5 +12,9 @@ export default (): BitrixOptions => ({
     WEBHOOK_INCOMING_TOKEN: process.env.BITRIX_INCOMING_WEBHOOK_TOKEN ?? '',
     WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL:
       process.env.BITRIX_DATA_HR_RATIO_VACANCIES_REDIRECT_URL ?? '',
+
+    HR: {
+      hrChatId: process.env.BITRIX_DATA_HR_CHAT_ID ?? '',
+    },
   },
 });

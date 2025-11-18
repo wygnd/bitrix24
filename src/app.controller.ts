@@ -2,9 +2,7 @@ import {
   Controller,
   Get,
   Header,
-  InternalServerErrorException,
   NotFoundException,
-  Param,
   Redirect,
   Res,
   UseGuards,
@@ -19,6 +17,8 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 @ApiExcludeController()
 @Controller()
 export class AppController {
+  constructor() {}
+
   @Get()
   @Redirect('/api', 301)
   async main() {}

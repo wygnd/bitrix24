@@ -9,20 +9,40 @@ import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+import { ConfigService } from '@nestjs/config';
+import { BitrixHRConstants } from '@/common/interfaces/bitrix-config.interface';
 
 @Injectable()
 export class HeadhunterRestService {
+  private readonly hrChatId: string;
+
   constructor(
     private readonly headHunterService: HeadHunterService,
     private readonly redisService: RedisService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const HRConstants =
+      this.configService.get<BitrixHRConstants>('bitrixConstants.HR');
 
-  async getActiveVacancies() {
-    const vacanciesFromCache = await this.redisService.get<HHVacancyDto[]>(
-      REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
-    );
+    if (!HRConstants)
+      throw new Error('HEADHUNTER REST API SERVICE: Invalid constants config');
 
-    if (vacanciesFromCache) return vacanciesFromCache;
+    const { hrChatId } = HRConstants;
+
+    if (!hrChatId)
+      throw new Error('HEADHUNTER REST API SERVICE: Invalid HR chat id');
+
+    this.hrChatId = hrChatId;
+  }
+
+  async getActiveVacancies(force = false) {
+    if (!force) {
+      const vacanciesFromCache = await this.redisService.get<HHVacancyDto[]>(
+        REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
+      );
+
+      if (vacanciesFromCache) return vacanciesFromCache;
+    }
 
     const vacanciesFromApi = await this.headHunterService.get<
       object,
@@ -44,7 +64,7 @@ export class HeadhunterRestService {
     await this.redisService.set<HHVacancyDto[]>(
       REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
       vacanciesClear,
-      3600,
+      86400, // 24 hours
     );
 
     return vacanciesClear;
@@ -94,5 +114,9 @@ export class HeadhunterRestService {
     return plainToInstance(HHVacancyDto, vacancy, {
       excludeExtraneousValues: true,
     });
+  }
+
+  public get HR_CHAT_ID() {
+    return this.hrChatId;
   }
 }
