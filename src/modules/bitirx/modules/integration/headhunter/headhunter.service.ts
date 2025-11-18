@@ -94,36 +94,12 @@ export class BitrixHeadHunterService {
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
     const { action_type } = body;
 
-    try {
-      switch (action_type) {
-        case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
-          return this.handleNewResponseVacancyWebhook(body);
-      }
-    } catch (e) {
-      this.bitrixService.callBatch({
-        send_message_to_hr: {
-          method: 'imbot.message.add',
-          params: {
-            BOT_ID: this.bitrixService.BOT_ID,
-            DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
-            MESSAGE:
-              'Ошибка обработки отклика.[br]' +
-              `Резюме: https://hh.ru/resume/${body.payload.resume_id}[br]` +
-              `Вакансия: https://vologda.hh.ru/vacancy/${body.payload.vacancy_id}`,
-            SYSTEM: 'Y',
-          },
-        },
-        send_message: {
-          method: 'imbot.message.add',
-          params: {
-            BOT_ID: this.bitrixService.BOT_ID,
-            DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-            MESSAGE: 'Ошибка обработки отклика[br]' + JSON.stringify(body),
-          },
-        },
-      });
-      return true;
+    switch (action_type) {
+      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
+        return this.handleNewResponseVacancyWebhook(body);
     }
+
+    return false;
   }
 
   async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
@@ -159,7 +135,7 @@ export class BitrixHeadHunterService {
       this.headHunterRestService.getResumeById(resume_id),
     ]);
 
-    const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name.trim() ?? ''} ${resume.middle_name.trim() ?? ''}`;
+    const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name ? resume.first_name.trim() : ''} ${resume.middle_name ? resume.middle_name.trim() : ''}`;
     const candidateContacts = resume.contact.reduce(
       (acc, { kind, contact_value, value }) => {
         switch (kind) {
@@ -330,7 +306,7 @@ export class BitrixHeadHunterService {
       MESSAGE: message,
       URL_PREVIEW: 'N',
     });
-    return;
+    return true;
 
     /*
     const batchCommands: B24BatchCommands = {};
