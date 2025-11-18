@@ -133,7 +133,7 @@ export class BitrixHeadHunterService {
       this.headHunterRestService.getResumeById(resume_id),
     ]);
 
-    const candidateName = `${resume.last_name ?? ''} ${resume.first_name ?? ''}${resume.middle_name ?? ''}`;
+    const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name.trim() ?? ''} ${resume.middle_name.trim() ?? ''}`;
     const candidateContacts = resume.contact.reduce(
       (acc, { kind, contact_value, value }) => {
         switch (kind) {
