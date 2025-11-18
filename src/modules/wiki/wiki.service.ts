@@ -11,11 +11,7 @@ export class WikiService {
     return this.wikiApiService.post<
       DepartmentHeadDealCount,
       DistributeAdvertDealWikiResponse
-    >('/advertising-department/destribute-deal/', data, {
-      headers: {
-        wiki_api_key: 'deniska-pipiska',
-      },
-    });
+    >('/advertising-department/destribute-deal/', data);
   }
 
   public async sendRejectDistributeNewDeal(
@@ -24,11 +20,6 @@ export class WikiService {
     return this.wikiApiService.post<DistributeAdvertDealWikiResponse>(
       '/advertising-department/rollback-counter',
       data,
-      {
-        headers: {
-          wiki_api_key: 'deniska-pipiska',
-        },
-      },
     );
   }
 }
