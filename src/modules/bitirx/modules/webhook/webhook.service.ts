@@ -250,7 +250,7 @@ export class BitrixWebhookService {
             DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
             MESSAGE:
               '[b](Ошибка: Распределение сделок -> РК)[/b][br][br]Произошла ошибка при попытке запроса new-wiki[br]' +
-              `Ошибка: ${e}`,
+              `Ошибка: ${JSON.stringify(e)}`,
           });
         }
         break;
