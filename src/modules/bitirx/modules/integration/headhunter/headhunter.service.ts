@@ -110,6 +110,7 @@ export class BitrixHeadHunterService {
               'Ошибка обработки отклика.[br]' +
               `Резюме: https://hh.ru/resume/${body.payload.resume_id}[br]` +
               `Вакансия: https://vologda.hh.ru/vacancy/${body.payload.vacancy_id}`,
+            SYSTEM: 'Y',
           },
         },
         send_message: {
