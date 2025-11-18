@@ -21,7 +21,9 @@ export class BitrixIntegrationAvitoService {
     private readonly bitrixLeadService: BitrixLeadService,
   ) {}
 
-  public async findDuplicatesLeadsBPhones(fields: AvitoFindDuplicateLeadsDto[]) {
+  public async findDuplicatesLeadsBPhones(
+    fields: AvitoFindDuplicateLeadsDto[],
+  ) {
     const batchCommands = fields.reduce((acc, { phone, chat_id }) => {
       acc[`getDuplicateLeads_${phone}_${chat_id}`] = {
         method: 'crm.duplicate.findbycomm',
@@ -93,6 +95,7 @@ export class BitrixIntegrationAvitoService {
         B24BatchResponseMap<Record<string, B24Lead[]>>
       >(commands);
 
+    // todo: add in cache
     const usersLeadsCount = Object.entries(batchResponse.result_total)
       .reduce(
         (acc, [command, totalLeads]) => {
@@ -123,7 +126,6 @@ export class BitrixIntegrationAvitoService {
 
     return usersLeadsCount[0].user_id;
   }
-
 
   public async distributeClientRequests(fields: AvitoCreateLeadDto) {
     const {
