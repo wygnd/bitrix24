@@ -106,13 +106,13 @@ export class BitrixHeadHunterService {
           params: {
             BOT_ID: this.bitrixService.BOT_ID,
             DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
-            MESSAGE: 'Новый отклик по [url=]вакансии[/url][br]',
+            MESSAGE:
+              'Ошибка обработки отклика.[br]' +
+              `Резюме: https://hh.ru/resume/${body.payload.resume_id}[br]` +
+              `Вакансия: https://vologda.hh.ru/vacancy/${body.payload.vacancy_id}`,
           },
         },
-      });
-
-      this.bitrixService.callBatch({
-        send_message_to_hr: {
+        send_message: {
           method: 'imbot.message.add',
           params: {
             BOT_ID: this.bitrixService.BOT_ID,
