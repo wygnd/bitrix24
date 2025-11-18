@@ -48,32 +48,7 @@ export class BitrixHeadHunterController {
   @HttpCode(HttpStatus.OK)
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
-    try {
-      return await this.bitrixHeadHunterService.receiveWebhook(body);
-    } catch (error) {
-      this.bitrixService.callBatch({
-        send_message_to_hr: {
-          method: 'imbot.message.add',
-          params: {
-            BOT_ID: this.bitrixService.BOT_ID,
-            DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
-            MESSAGE:
-              'Ошибка обработки отклика.[br]' +
-              `Резюме: https://hh.ru/resume/${body.payload.resume_id}[br]` +
-              `Вакансия: https://vologda.hh.ru/vacancy/${body.payload.vacancy_id}`,
-            SYSTEM: 'Y',
-          },
-        },
-        send_message: {
-          method: 'imbot.message.add',
-          params: {
-            BOT_ID: this.bitrixService.BOT_ID,
-            DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-            MESSAGE: 'Ошибка обработки отклика[br]' + JSON.stringify(body),
-          },
-        },
-      });
-    }
+    return this.bitrixHeadHunterService.receiveWebhook(body);
   }
 
   @ApiOperation({
