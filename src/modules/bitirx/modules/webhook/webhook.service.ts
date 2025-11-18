@@ -240,6 +240,7 @@ export class BitrixWebhookService {
             },
           );
         } catch (e) {
+          console.log('ERROR ON SEND REQUEST TO NEW WIKI', e);
           // Если возникла ошибка оставляем всех подчиненных
           this.bitrixBotService.sendMessage({
             DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
