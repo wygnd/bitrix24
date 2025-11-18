@@ -22,6 +22,7 @@ export class WikiApiService {
 
     this.http.defaults.baseURL = baseApiUrl;
     this.http.defaults.headers.common['Content-Type'] = 'application/json';
+    this.http.defaults.headers.common['wiki_api_key'] = 'deniska-pipiska';
   }
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {
