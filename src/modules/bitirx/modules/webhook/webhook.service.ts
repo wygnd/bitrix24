@@ -31,6 +31,7 @@ import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
+import { isAxiosError } from 'axios';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -240,7 +241,10 @@ export class BitrixWebhookService {
             },
           );
         } catch (e) {
-          console.log('ERROR ON SEND REQUEST TO NEW WIKI', e);
+          console.log(
+            'ERROR ON SEND REQUEST TO NEW WIKI',
+            isAxiosError(e) ? e.response : e,
+          );
           // Если возникла ошибка оставляем всех подчиненных
           this.bitrixBotService.sendMessage({
             DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
