@@ -2,8 +2,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseBoolPipe,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
@@ -19,6 +17,6 @@ export class BitrixTaskController {
 
   @Get('/task/:taskId')
   async getTaskById(@Param('taskId') taskId: string) {
-    return this.taskService.getTaskById(taskId);
+    return this.taskService.getTaskById(taskId, undefined, true);
   }
 }
