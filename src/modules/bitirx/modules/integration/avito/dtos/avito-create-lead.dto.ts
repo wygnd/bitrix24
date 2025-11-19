@@ -11,7 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class AvitoCreateLeadDto {
   @ApiProperty({
     type: [Number],
-    description: 'user ids',
+    description: 'manager ids',
     required: true,
     example: [123, 456, 789],
   })

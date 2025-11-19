@@ -422,14 +422,34 @@ export class BitrixImBotService {
       counter: userCounter,
     });
 
-    this.updateMessage({
-      DIALOG_ID: DIALOG_ID,
-      MESSAGE_ID: MESSAGE_ID,
-      MESSAGE:
-        '[b]Обработано: Брак[/b][br]' +
-        this.bitrixService.generateDealUrl(dealId, dealTitle),
-      KEYBOARD: '',
-    });
+    this.bitrixService
+      .callBatch<B24BatchResponseMap>({
+        update_message: {
+          method: 'imbot.message.update',
+          params: {
+            DIALOG_ID: DIALOG_ID,
+            MESSAGE_ID: MESSAGE_ID,
+            MESSAGE:
+              '[b]Обработано: Брак[/b][br]' +
+              this.bitrixService.generateDealUrl(dealId, dealTitle),
+            KEYBOARD: '',
+          },
+        },
+        update_deal: {
+          method: 'crm.deal.update',
+          params: {
+            id: dealId,
+            fields: {
+              STAGE_ID: 'C1:14',
+            },
+          },
+        },
+      })
+      .then(({ result }) => {
+        if (Object.keys(result.result_error).length === 0) return;
+
+        console.log(result.result_error);
+      });
 
     return true;
   }
