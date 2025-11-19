@@ -397,4 +397,8 @@ export class BitrixService {
 
     return response.data;
   }
+
+  public getRandomElement<T = any>(items: T[]) {
+    return items[Math.floor(Math.random() * items.length)];
+  }
 }

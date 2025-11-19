@@ -3,7 +3,10 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
 import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
-import { B24DepartmentTypeId } from '@/modules/bitirx/modules/department/department.interface';
+import {
+  B24Department,
+  B24DepartmentTypeId,
+} from '@/modules/bitirx/modules/department/department.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
@@ -39,6 +42,7 @@ export class BitrixWebhookService {
     B24DepartmentTypeId,
     WebhookDepartmentInfo
   >;
+  private lastSelectedDepartmentId: string = '';
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -479,8 +483,15 @@ export class BitrixWebhookService {
         '124',
         '128',
       ]);
-    const advertDepartment =
-      advertDepartments[Math.floor(Math.random() * advertDepartments.length)];
+    let advertDepartment =
+      this.bitrixService.getRandomElement<B24Department>(advertDepartments);
+
+    if (this.lastSelectedDepartmentId === advertDepartment.ID) {
+      advertDepartment =
+        this.bitrixService.getRandomElement<B24Department>(advertDepartments);
+    }
+
+    this.lastSelectedDepartmentId = advertDepartment.ID;
 
     const keyboardItemParams: ImbotHandleApproveSiteForAdvert = {
       dealId: dealId,
