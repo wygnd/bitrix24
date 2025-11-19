@@ -123,7 +123,7 @@ export class AvitoCreateLeadDto {
   })
   @IsOptional()
   @IsString()
-  date: string = '';
+  date?: string;
 
   @ApiProperty({
     type: String,
@@ -134,5 +134,5 @@ export class AvitoCreateLeadDto {
   })
   @IsOptional()
   @IsString()
-  time: string = '';
+  time?: string;
 }

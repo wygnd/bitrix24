@@ -75,7 +75,15 @@ export class BitrixIntegrationAvitoService {
     return sendMessageResult.result ?? -1;
   }
 
-  // todo: write function
+  /**
+   * Function receive array of bitrix user ids get info about new leads on each manager and getting most free workflow user
+   *
+   * ---
+   *
+   * Функция принимает массив id пользователей. Получает по каждому информацию о кол-ве новых лидов и возвращает пользователя, у которого меньше новых лидов
+   *
+   * @param users
+   */
   public async getMinWorkflowUser(users: number[]) {
     const commands = users.reduce((acc, userId) => {
       acc[`get_user-${userId}`] = {
@@ -95,8 +103,7 @@ export class BitrixIntegrationAvitoService {
         B24BatchResponseMap<Record<string, B24Lead[]>>
       >(commands);
 
-    // todo: add in cache
-    const usersLeadsCount = Object.entries(batchResponse.result_total)
+    return Object.entries(batchResponse.result_total)
       .reduce(
         (acc, [command, totalLeads]) => {
           const [_, userId] = command.split('-');
@@ -122,9 +129,7 @@ export class BitrixIntegrationAvitoService {
               ? -1
               : 0;
         },
-      );
-
-    return usersLeadsCount[0].user_id;
+      )[0].user_id;
   }
 
   public async distributeClientRequests(fields: AvitoCreateLeadDto) {
@@ -143,10 +148,9 @@ export class BitrixIntegrationAvitoService {
     } = fields;
     const minWorkflowUser = await this.getMinWorkflowUser(users);
 
-    const { result } =
-      await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+    const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
-    if (isArray(result) && result.length === 0) {
+    if (result.length === 0) {
       //   todo: create lead
       const batchCommands: B24BatchCommands = {
         create_lead: {
@@ -182,6 +186,9 @@ export class BitrixIntegrationAvitoService {
           },
         },
       };
+
+      if (date && time) {
+      }
 
       return;
     }
