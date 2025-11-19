@@ -17,6 +17,7 @@ import { EventHandleUpdateTaskDto } from '@/modules/bitirx/modules/events/dtos/e
 import express from 'express';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 
 @ApiTags(B24ApiTags.EVENTS)
 @Controller('events')
@@ -25,6 +26,7 @@ export class BitrixEventsController {
     private readonly eventsService: BitrixEventService,
     private readonly botService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
+    private readonly taskService: BitrixTaskService,
   ) {}
 
   @UseGuards(AuthGuard)
@@ -49,7 +51,13 @@ export class BitrixEventsController {
     if (resultHandlingTask)
       this.botService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-        MESSAGE: 'Изменение задчи[br]' + JSON.stringify(fields),
+        MESSAGE:
+          'Изменение задчи[br]' +
+          JSON.stringify(fields) +
+          '[br][br]' +
+          JSON.stringify(
+            await this.taskService.getTaskById(fields.data.FIELDS_BEFORE.ID),
+          ),
       });
 
     res.status(status).json(resultHandlingTask);
