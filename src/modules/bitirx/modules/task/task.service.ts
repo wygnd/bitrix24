@@ -24,13 +24,15 @@ export class BitrixTaskService {
   async getTaskById(
     taskId: string,
     select: B24TaskSelect = [],
-    saveInCache = true,
+    force: boolean = false,
   ) {
-    const taskFromCache = await this.redisService.get<B24TaskExtended>(
-      REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
-    );
+    if (!force) {
+      const taskFromCache = await this.redisService.get<B24TaskExtended>(
+        REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
+      );
 
-    if (taskFromCache) return taskFromCache;
+      if (taskFromCache) return taskFromCache;
+    }
 
     const { get_task: task, get_task_result: taskResult } = (
       await this.bitrixService.callBatch<
@@ -63,12 +65,11 @@ export class BitrixTaskService {
       taskResult: taskResult,
     };
 
-    saveInCache &&
-      this.redisService.set<B24TaskExtended>(
-        REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
-        taskExtended,
-        3600, // 1 час
-      );
+    this.redisService.set<B24TaskExtended>(
+      REDIS_KEYS.BITRIX_DATA_TASK_ITEM + taskId,
+      taskExtended,
+      3600, // 1 час
+    );
 
     return taskExtended;
   }

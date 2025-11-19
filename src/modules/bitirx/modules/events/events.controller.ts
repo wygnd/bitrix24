@@ -52,11 +52,15 @@ export class BitrixEventsController {
       this.botService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
-          'Изменение задчи[br]' +
+          'Изменение задачи[br]' +
           JSON.stringify(fields) +
           '[br][br]' +
           JSON.stringify(
-            await this.taskService.getTaskById(fields.data.FIELDS_BEFORE.ID),
+            await this.taskService.getTaskById(
+              fields.data.FIELDS_BEFORE.ID,
+              undefined,
+              true,
+            ),
           ),
       });
 

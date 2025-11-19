@@ -1,4 +1,11 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseBoolPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
