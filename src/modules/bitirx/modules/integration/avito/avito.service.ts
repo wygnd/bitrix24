@@ -188,9 +188,34 @@ export class BitrixIntegrationAvitoService {
       };
 
       if (date && time) {
+        batchCommands['add_comment'] = {
+          method: 'crm.timeline.comment.add',
+          params: {
+            fields: {
+              ENTITY_ID: '$result[create_lead]',
+              ENTITY_TYPE: 'lead',
+              COMMENT: `[b]Свяжись с клиентом ${date} ${time}[/b]`,
+            },
+          },
+        };
+
+        batchCommands['pin_comment'] = {
+          method: 'crm.timeline.item.pin',
+          params: {
+            id: '$result[add_comment]',
+            ownerTypeId: '1',
+            ownerId: '$result[create_lead]',
+          },
+        };
       }
 
-      return;
+      return (
+        await this.bitrixService.callBatch<
+          B24BatchResponseMap<{
+            create_lead: number;
+          }>
+        >(batchCommands)
+      ).result.result.create_lead;
     }
     //   todo: update lead
 
