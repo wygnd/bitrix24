@@ -92,6 +92,14 @@ export class BitrixHeadHunterService {
     }
   }
 
+  /**
+   * Receive incoming webhook from hh.ru and distribute to functions
+   *
+   * ---
+   *
+   * Принимает исходящий вебхук от hh.ru и в зависимости от события распределяет на соответствующие функции
+   * @param body
+   */
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
     const { action_type } = body;
 
@@ -103,6 +111,14 @@ export class BitrixHeadHunterService {
     return false;
   }
 
+  /**
+   * Receive request on vacancy or invite from employer
+   *
+   * ---
+   *
+   * Обрабатывает отклик на вакансию или приглашение от работодателя
+   * @param body
+   */
   async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
     const { id: notificationId, payload } = body;
 
@@ -138,12 +154,43 @@ export class BitrixHeadHunterService {
       ]);
 
       const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name ? resume.first_name.trim() : ''} ${resume.middle_name ? resume.middle_name.trim() : ''}`;
+      const { result: resultGetUser } = await this.bitrixUserService.getUsers({
+        filter: {
+          EMAIL: vacancy.contacts.email,
+        },
+      });
+
+      const bitrixUser =
+        resultGetUser && resultGetUser?.length !== 0 ? resultGetUser[0] : null;
+
+      let message =
+        (bitrixUser
+          ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
+          : '') +
+        `Отклик на вакансию ${vacancy.name}[br]` +
+        `Кандидат: ${candidateName}[br]` +
+        `Резюме: ${resume.alternate_url}[br][br]`;
+
+      if (resume.contact.length === 0) {
+        this.bitrixImBotService.sendMessage({
+          DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
+          MESSAGE: message,
+        });
+        return;
+      }
+
       const candidateContacts = resume.contact.reduce(
         (acc, { kind, contact_value, value }) => {
           switch (kind) {
             case 'phone':
-              if (!/[()]/.test(contact_value) && (value as ContactPhone)?.city) {
-                acc[kind] = contact_value.replace(` ${value.city} `, ` (${value.city}) `);
+              if (
+                !/[()]/.test(contact_value) &&
+                (value as ContactPhone)?.city
+              ) {
+                acc[kind] = contact_value.replace(
+                  ` ${value.city} `,
+                  ` (${value.city}) `,
+                );
               } else {
                 acc[kind] = contact_value;
               }
@@ -216,23 +263,6 @@ export class BitrixHeadHunterService {
       const { get_deal_by_phone: dealsByPhone, get_deal_by_name: dealsByName } =
         batchResponse.result;
 
-      const { result: resultGetUser } = await this.bitrixUserService.getUsers({
-        filter: {
-          EMAIL: vacancy.contacts.email,
-        },
-      });
-
-      const bitrixUser =
-        resultGetUser && resultGetUser?.length !== 0 ? resultGetUser[0] : null;
-
-      let message =
-        (bitrixUser
-          ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
-          : '') +
-        `Отклик на вакансию ${vacancy.name}[br]` +
-        `Кандидат: ${candidateName}[br]` +
-        `Резюме: ${resume.alternate_url}[br][br]`;
-
       if (dealsByPhone.length > 0) {
         // Сначала ищем по телефону
         message +=
@@ -279,21 +309,15 @@ export class BitrixHeadHunterService {
 
         const { result: newDealId } = await this.bitrixDealService.createDeal({
           TITLE: candidateName,
-          // Тип поиска: приведи друга
-          UF_CRM_1644922120: '6600',
-          // Номер телефона
-          UF_CRM_1638524259: phone ?? '',
-          // Телеграмм
-          UF_CRM_1760598515308: candidateContacts.telegram ?? '',
-          // E-mail
-          UF_CRM_1638524275: email ?? '',
-          // Ссылка на резюме
-          UF_CRM_1638524306: resume.alternate_url,
+          UF_CRM_1644922120: '6600', // Тип поиска: Отклик на HH
+          UF_CRM_1638524259: phone ?? '', // Номер телефона
+          UF_CRM_1760598515308: candidateContacts.telegram ?? '', // Телеграмм
+          UF_CRM_1638524275: email ?? '', // E-mail
+          UF_CRM_1638524306: resume.alternate_url, // Ссылка на резюме
           ASSIGNED_BY_ID: bitrixUser?.ID || '',
           CATEGORY_ID: '14',
           STAGE_ID: 'C14:NEW',
-          // Вакансия
-          UF_CRM_1638524000: bitrixVacancy,
+          UF_CRM_1638524000: bitrixVacancy, // Вакансия
         });
 
         newDealId
@@ -318,8 +342,7 @@ export class BitrixHeadHunterService {
 
       try {
         errorMessage += '[br][br]' + JSON.parse(e);
-      }
-      catch (err) {}
+      } catch (err) {}
 
       this.bitrixService.callBatch({
         send_message_to_hr: {
@@ -351,6 +374,14 @@ export class BitrixHeadHunterService {
     }
   }
 
+  /**
+   * Return ratio vacancy
+   *
+   * ---
+   *
+   * Возвращает соотношение вакансий hh.ru и поля в сделке HR вакансия
+   *
+   */
   async getRatioVacancies() {
     const ratioVacanciesFromCache = await this.redisService.get<
       HHBitrixVacancy[]

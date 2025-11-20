@@ -31,6 +31,7 @@ export class BitrixWikiController {
   @HttpCode(HttpStatus.OK)
   @Post('/unload-lost-calling')
   async unloadLostCalling(@Body() fields: UnloadLostCallingDto) {
-    return this.bitrixWikiService.unloadLostCalling(fields);
+    return ['pisapopa'];
+    // return this.bitrixWikiService.unloadLostCalling(fields);
   }
 }

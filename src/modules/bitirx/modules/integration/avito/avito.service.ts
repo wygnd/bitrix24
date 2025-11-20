@@ -17,6 +17,14 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
+  private readonly clientRequestType: Record<string, string> = {
+    '': '', // 'не выбрано',
+    'разработка сайта': '1050', // '1. Разработка сайта',
+    'настройка РК': '1052', // '2. Контекстная реклама',
+    SEO: '1054', // '3. SEO оптимизация',
+    комплекс: '4272',
+  };
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly bitrixMessageService: BitrixMessageService,
@@ -99,7 +107,6 @@ export class BitrixIntegrationAvitoService {
     const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
     if (result.length === 0) {
-      //   todo: create lead
       const batchCommands: B24BatchCommands = {
         create_lead: {
           method: 'crm.lead.add',
@@ -116,20 +123,16 @@ export class BitrixIntegrationAvitoService {
                   VALUE: phone,
                 },
               ],
-              UF_CRM_1651577716: 6856,
-              // Файлы
-              UF_CRM_1692711658572: '',
-              // Новый в работе
-              STATUS_ID: 'UC_GEWKFD',
-              // fixme: ?? idk what is that field
-              UF_CRM_1573459036: '',
-              // С какого авито обращение
-              UF_CRM_1712667568: avito,
-              UF_CRM_1713765220416: avito_number,
-              UF_CRM_1580204442317: city,
-              UF_CRM_1760173920: region,
+              UF_CRM_1651577716: 6856, // Тип лида: пропущенный
+              UF_CRM_1692711658572: '', // Файлы
+              STATUS_ID: 'UC_GEWKFD', // Стадия сделки: Новый в работе
+              UF_CRM_1573459036: '', // откуда
+              UF_CRM_1712667568: avito, // С какого авито обращение
+              UF_CRM_1713765220416: avito_number, // Подменный номер авито
+              UF_CRM_1580204442317: city, // Город
+              UF_CRM_1760173920: region, // Регион
               NAME: client_name,
-              UF_CRM_1598441630: '',
+              UF_CRM_1598441630: this.clientRequestType[service_text], // С чем обратился
             },
           },
         },

@@ -1,14 +1,18 @@
 import {
   IsArray,
+  IsDate,
+  IsDateString,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { UnloadLostCallingItem } from '@/modules/bitirx/modules/integration/wiki/interfaces/wiki-unload-lost-calling.interface';
 
-export class UnloadLostCallingDto {
+export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
   @ApiProperty({
     type: [String],
     description: 'Массив номеров',
@@ -16,10 +20,22 @@ export class UnloadLostCallingDto {
     required: true,
   })
   @IsNotEmpty()
-  @IsArray()
-  @IsString({ each: true })
+  @IsString()
   // @IsPhoneNumber(undefined, { each: true })
-  phones: string[];
+  phone: string;
+
+  @ApiProperty({})
+  @IsNotEmpty()
+  @IsString()
+  @IsDateString()
+  datetime: string;
+}
+
+export class UnloadLostCallingDto {
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => UnloadLostCallingItemDto)
+  fields: UnloadLostCallingItemDto[];
 
   @ApiProperty({
     type: Number,

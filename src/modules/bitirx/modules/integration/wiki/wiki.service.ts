@@ -13,10 +13,8 @@ export class BitrixWikiService {
     private readonly wikiService: WikiService,
   ) {}
 
-  public async unloadLostCalling({
-    phones,
-    needCreate = 0,
-  }: UnloadLostCallingDto) {
+  // todo: change receive object fields
+  public async unloadLostCalling({ phones, needCreate = 0 }: any) {
     const uniquePhones = new Set(phones);
     const users = await this.wikiService.getWorkingSalesFromWiki();
     const batchCommandsBatches: B24BatchCommands[] = [];
@@ -95,7 +93,7 @@ export class BitrixWikiService {
 
         if (userIndex + 1 >= users.length) userIndex = 0;
 
-        batchCommandsCreateLeadsBatches[batchIndex][`create_lead-${phone}`] = {
+        batchCommandsCreateLeadsBatches[batchIndex][`create_lead=${phone}`] = {
           method: 'crm.lead.add',
           params: {
             fields: {
@@ -108,6 +106,18 @@ export class BitrixWikiService {
                 },
               ],
               ASSIGNED_BY_ID: users[userIndex],
+            },
+          },
+        };
+        batchCommandsCreateLeadsBatches[batchIndex][`add_comment=${phone}`] = {
+          method: 'crm.timeline.comment.add',
+          params: {
+            fields: {
+              ENTITY_ID: `$result[create_lead=${phone}]`,
+              ENTITY_TYPE: 'lead',
+              COMMENT:
+                'Лид был создан [Дата] и не был добавлен из-за сбоя в системе. Учитывайте в работе',
+              AUTHOR_ID: '460',
             },
           },
         };
@@ -124,7 +134,9 @@ export class BitrixWikiService {
       batchResponseCreateLead.forEach((batchResponseCreateLeadList) => {
         Object.entries(batchResponseCreateLeadList.result.result).forEach(
           ([command, result]) => {
-            const phone = command.split('=')[1];
+            const [commandName, phone] = command.split('=');
+
+            if (commandName !== 'create_lead') return;
 
             resultPhones.add({
               leadId: result,
