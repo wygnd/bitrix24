@@ -27,6 +27,9 @@ export const REDIS_KEYS = {
   HEADHUNTER_API_ACTIVE_VACANCIES: 'hh:api:active_vacancies',
   HEADHUNTER_DATA_RESUME: 'hh:data:resume:',
   HEADHUNTER_DATA_VACANCY: 'hh:data:vacancy:',
+
+  // WIKI
+  WIKI_WORKING_SALES: 'wiki:sales:working',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

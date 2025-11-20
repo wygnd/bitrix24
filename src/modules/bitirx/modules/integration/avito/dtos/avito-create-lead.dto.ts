@@ -10,17 +10,6 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AvitoCreateLeadDto {
   @ApiProperty({
-    type: [Number],
-    description: 'manager ids',
-    required: true,
-    example: [123, 456, 789],
-  })
-  @IsNotEmpty()
-  @IsArray({ message: 'users must be an array' })
-  @IsInt({ each: true, message: 'Invalid users field' })
-  users: number[];
-
-  @ApiProperty({
     type: [String],
     description: 'array messages',
     required: false,

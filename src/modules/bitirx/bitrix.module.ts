@@ -29,6 +29,8 @@ import { BitrixTaskController } from '@/modules/bitirx/modules/task/task.control
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
+import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/wiki.controller';
+import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
 
 @Module({
   imports: [
@@ -50,6 +52,7 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
     DepartmentController,
     BitrixEventsController,
     BitrixTaskController,
+    BitrixWikiController,
   ],
   providers: [
     ...bitrixProviders,
@@ -66,6 +69,7 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
     BitrixDepartmentService,
     BitrixEventService,
     BitrixTaskService,
+    BitrixWikiService,
   ],
   exports: [
     BitrixService,

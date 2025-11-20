@@ -1,8 +1,6 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import {
@@ -15,7 +13,6 @@ import {
 } from './interfaces/deal.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { B24OnCRMDealUpdateEvent } from '@/modules/bitirx/modules/deal/interfaces/deal-event.interace';
 import { B24ActionType } from '@/modules/bitirx/interfaces/bitrix.interface';
 
 @Injectable()

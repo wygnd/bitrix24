@@ -60,7 +60,7 @@ export class BitrixAvitoController {
   }
 
   @ApiOperation({
-    summary: 'Выгрузка звонков из атс / сообщений из авито',
+    summary: 'сообщений из авито',
   })
   @ApiBody({ type: AvitoCreateLeadDto })
   @Post('/receive-client-request')

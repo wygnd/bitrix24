@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
 } from '@nestjs/common';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
+import { WikiService } from '@/modules/wiki/wiki.service';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
@@ -14,6 +16,7 @@ import { BitrixMessageService } from './modules/im/im.service';
 export class BitrixController {
   constructor(
     private readonly bitrixMessageService: BitrixMessageService,
+    private readonly wikiService: WikiService,
   ) {}
 
   @Post('/app/handle')
@@ -26,5 +29,10 @@ export class BitrixController {
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Get('/test')
+  async testGetFromWiki() {
+    return this.wikiService.getWorkingSalesFromWiki();
   }
 }

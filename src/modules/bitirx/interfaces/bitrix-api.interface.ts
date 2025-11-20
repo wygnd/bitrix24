@@ -1,5 +1,3 @@
-import { ISODate } from '@bitrix24/b24jssdk';
-
 export enum B24ApiTags {
   LEADS = 'Leads',
   USERS = 'Users',
@@ -13,9 +11,10 @@ export enum B24ApiTags {
   HEAD_HUNTER = 'Head Hunter',
   WEBHOOK = 'Webhook',
   TASKS = 'Tasks',
+  WIKI = 'Wiki'
 }
 
-interface B24Timestamp {
+export interface B24Timestamp {
   start: number;
   finish: number;
   duration: number;
