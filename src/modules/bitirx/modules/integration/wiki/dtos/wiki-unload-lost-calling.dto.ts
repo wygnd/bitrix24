@@ -21,7 +21,6 @@ export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
   })
   @IsNotEmpty()
   @IsString()
-  // @IsPhoneNumber(undefined, { each: true })
   phone: string;
 
   @ApiProperty({
@@ -32,7 +31,6 @@ export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
   })
   @IsNotEmpty()
   @IsString()
-  @IsDateString()
   datetime: string;
 }
 

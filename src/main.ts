@@ -4,15 +4,18 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {});
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
 
   const config = app.get(ConfigService);
 
   const PORT = config.get<number>('PORT') ?? 3000;
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+  app.useBodyParser('json', { limit: '10mb' });
 
   app.enableCors({
     origin: [
