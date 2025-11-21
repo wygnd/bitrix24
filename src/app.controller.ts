@@ -39,6 +39,6 @@ export class AppController {
 
   @Get('wiki/working-sales')
   async getWorkingSales() {
-    return this.wikiService.getWorkingSalesFromWiki();
+    return this.wikiService.getWorkingSalesFromWiki(true);
   }
 }

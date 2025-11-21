@@ -31,12 +31,14 @@ export class WikiService {
     );
   }
 
-  public async getWorkingSalesFromWiki() {
-    const salesFromCache = await this.redisService.get<string[]>(
-      REDIS_KEYS.WIKI_WORKING_SALES,
-    );
-
-    if (salesFromCache) return salesFromCache;
+  public async getWorkingSalesFromWiki(force: boolean = false) {
+    if (!force) {
+      const salesFromCache = await this.redisService.get<string[]>(
+        REDIS_KEYS.WIKI_WORKING_SALES,
+      );
+      console.log(salesFromCache);
+      if (salesFromCache) return salesFromCache;
+    }
 
     const { sales, status } =
       await this.wikiApiServiceOld.get<GetWorkingSalesInterface>(
