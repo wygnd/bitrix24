@@ -14,9 +14,9 @@ import { UnloadLostCallingItem } from '@/modules/bitirx/modules/integration/wiki
 
 export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
   @ApiProperty({
-    type: [String],
-    description: 'Массив номеров',
-    example: ['79395548535', '79773642722'],
+    type: String,
+    description: 'Номер телефона',
+    example: '79395548535',
     required: true,
   })
   @IsNotEmpty()
@@ -24,7 +24,12 @@ export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
   // @IsPhoneNumber(undefined, { each: true })
   phone: string;
 
-  @ApiProperty({})
+  @ApiProperty({
+    type: String,
+    description: 'Дата последнего звонка',
+    example: '2025-11-20 15:11:45',
+    required: true,
+  })
   @IsNotEmpty()
   @IsString()
   @IsDateString()
@@ -32,6 +37,14 @@ export class UnloadLostCallingItemDto implements UnloadLostCallingItem {
 }
 
 export class UnloadLostCallingDto {
+  @ApiProperty({
+    type: UnloadLostCallingItemDto,
+    description:
+      'Массив объектов с информацией: номер телефона, дата последнего звонка',
+    isArray: true,
+    example: UnloadLostCallingItemDto,
+    required: true,
+  })
   @IsNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => UnloadLostCallingItemDto)
