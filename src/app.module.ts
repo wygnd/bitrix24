@@ -26,6 +26,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
           limit: 5,
         },
       ],
+      errorMessage: 'Too many requests',
     }),
     ConfigAppModule,
     RedisModule,
