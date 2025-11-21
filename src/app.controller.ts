@@ -13,11 +13,12 @@ import { join } from 'path';
 import type { Response } from 'express';
 import { existsSync } from 'fs';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { WikiService } from '@/modules/wiki/wiki.service';
 
 @ApiExcludeController()
 @Controller()
 export class AppController {
-  constructor() {}
+  constructor(private readonly wikiService: WikiService) {}
 
   @Get()
   @Redirect('/api', 301)
@@ -34,5 +35,10 @@ export class AppController {
     const file = createReadStream(filepath);
 
     file.pipe(response);
+  }
+
+  @Get('wiki/working-sales')
+  async getWorkingSales() {
+    return this.wikiService.getWorkingSalesFromWiki();
   }
 }
