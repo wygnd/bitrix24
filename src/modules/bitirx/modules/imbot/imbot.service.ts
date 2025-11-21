@@ -687,7 +687,7 @@ export class BitrixImBotService {
 
     if (!approved) return false;
 
-    this.avitoIntegrationService.distributeClientRequestByAI(fields);
+    this.avitoIntegrationService.distributeClientRequests(fields);
     return true;
   }
 
