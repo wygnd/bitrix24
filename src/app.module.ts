@@ -10,27 +10,40 @@ import { BitrixModule } from './modules/bitirx/bitrix.module';
 import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middleware';
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 15,
+        },
+      ],
+    }),
     ConfigAppModule,
     RedisModule,
     BitrixModule,
     HeadHunterModule,
     QueueModule,
     WikiModule,
-    AppHttModule
+    AppHttModule,
   ],
   controllers: [AppController],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: AxiosGlobalInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

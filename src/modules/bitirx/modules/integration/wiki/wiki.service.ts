@@ -16,6 +16,16 @@ export class BitrixWikiService {
     private readonly wikiService: WikiService,
   ) {}
 
+  /**
+   * Function find duplicates by phones. If not found and set **needCreate** at 1 create leads
+   *
+   * ---
+   *
+   * Функция ищет дубликаты по номерам. Если не нашла и передан флаг **needCreate** в значении 1 создает лиды
+   *
+   * @param fields
+   * @param needCreate
+   */
   public async unloadLostCalling({
     fields,
     needCreate = 0,

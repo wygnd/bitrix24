@@ -34,6 +34,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.0",
+    "@nestjs/throttler": "^6.4.0",
     "@sequelize/postgres": "^7.0.0-alpha.46",
     "axios": "^1.12.2",
     "bull": "^4.16.5",
