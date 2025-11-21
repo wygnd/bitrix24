@@ -1,15 +1,66 @@
 import {
   IsArray,
+  IsBase64,
+  IsEnum,
   IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { AvitoClientRequestsType } from '@/modules/bitirx/modules/integration/avito/avito.constants';
 import { Transform, Type } from 'class-transformer';
+import {
+  B24FileReceive,
+  B24MimeType,
+} from '@/modules/bitirx/interfaces/bitrix-file.interface';
+
+export class AvitoCreateLeadFileDto implements B24FileReceive {
+  @ApiProperty({
+    type: String,
+    description: 'type',
+    example: 'file_attachment',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  type: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'filename',
+    example: 'story.png',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  filename: string;
+
+  @ApiProperty({
+    type: String,
+    enum: B24MimeType,
+    description: 'content type',
+    example: B24MimeType.JPG,
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsEnum(B24MimeType)
+  content_type: B24MimeType;
+
+  @ApiProperty({
+    type: String,
+    description: 'base64',
+    example: 'SGVsbG8gV29ybGQ=',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @IsBase64()
+  content_base64: string;
+}
 
 export class AvitoCreateLeadDto {
   @ApiProperty({
@@ -129,4 +180,17 @@ export class AvitoCreateLeadDto {
   @IsOptional()
   @IsString()
   time?: string;
+
+  @ApiProperty({
+    type: AvitoCreateLeadFileDto,
+    example: AvitoCreateLeadFileDto,
+    isArray: true,
+    description: 'Файлы',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested()
+  @Type(() => AvitoCreateLeadFileDto)
+  files: AvitoCreateLeadFileDto[] = [];
 }

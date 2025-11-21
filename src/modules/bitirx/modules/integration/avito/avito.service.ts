@@ -27,6 +27,7 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { ConfigService } from '@nestjs/config';
 import { BitrixAvitoConstants } from '@/common/interfaces/bitrix-config.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
+import { B24FileUpload } from '@/modules/bitirx/interfaces/bitrix-file.interface';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
@@ -123,11 +124,18 @@ export class BitrixIntegrationAvitoService {
       service_text,
       date,
       time,
+      files,
     } = fields;
     const minWorkflowUser = await this.bitrixUserService.getMinWorkflowUser(
       await this.wikiService.getWorkingSalesFromWiki(),
     );
-
+    const handledFiles = files.reduce<[string, string][]>(
+      (acc, { filename, content_base64 }) => {
+        acc.push([filename, content_base64]);
+        return acc;
+      },
+      [],
+    );
     // Ищем дубликаты
     const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
@@ -149,7 +157,9 @@ export class BitrixIntegrationAvitoService {
                 },
               ],
               UF_CRM_1651577716: 6856, // Тип лида: пропущенный
-              UF_CRM_1692711658572: '', // Файлы
+              UF_CRM_1692711658572: {
+                fileData: handledFiles,
+              }, // Файлы
               STATUS_ID: 'UC_GEWKFD', // Стадия сделки: Новый в работе
               UF_CRM_1712667568: avito, // С какого авито обращение
               UF_CRM_1713765220416: avito_number, // Подменный номер авито
@@ -222,28 +232,27 @@ export class BitrixIntegrationAvitoService {
     };
 
     // Добавляем комментарий если указаны дата и время
-    // todo
-    // if (date && time) {
-    //   batchCommands['add_comment'] = {
-    //     method: 'crm.timeline.comment.add',
-    //     params: {
-    //       fields: {
-    //         ENTITY_ID: leadId,
-    //         ENTITY_TYPE: 'lead',
-    //         COMMENT: `[b]Свяжись с клиентом ${date} в ${time}[/b]`,
-    //       },
-    //     },
-    //   };
-    //
-    //   batchCommands['pin_comment'] = {
-    //     method: 'crm.timeline.item.pin',
-    //     params: {
-    //       id: '$result[add_comment]',
-    //       ownerTypeId: '1',
-    //       ownerId: '$result[create_lead]',
-    //     },
-    //   };
-    // }
+    if (date && time) {
+      batchCommands['add_comment'] = {
+        method: 'crm.timeline.comment.add',
+        params: {
+          fields: {
+            ENTITY_ID: leadId,
+            ENTITY_TYPE: 'lead',
+            COMMENT: `[b]Свяжись с клиентом ${date} в ${time}[/b]`,
+          },
+        },
+      };
+
+      batchCommands['pin_comment'] = {
+        method: 'crm.timeline.item.pin',
+        params: {
+          id: '$result[add_comment]',
+          ownerTypeId: '1',
+          ownerId: '$result[create_lead]',
+        },
+      };
+    }
 
     // Делаем запрос на получение информации
     const { result: batchResponse } = await this.bitrixService.callBatch<
@@ -268,7 +277,9 @@ export class BitrixIntegrationAvitoService {
       UF_CRM_1653291114976: messages.join('[br][br]'),
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
-      UF_CRM_1692711658572: '', // Файлы
+      UF_CRM_1692711658572: {
+        fileData: handledFiles,
+      }, // Файлы
       STATUS_ID: '', // Стадия сделки: Новый в работе
       UF_CRM_1712667568: avito, // С какого авито обращение
       UF_CRM_1713765220416: avito_number, // Подменный номер авито
