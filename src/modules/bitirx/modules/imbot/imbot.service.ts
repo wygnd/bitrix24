@@ -673,14 +673,15 @@ export class BitrixImBotService {
     return true;
   }
 
-  async handleApproveDistributeDealFromAvitoByAI({
-    fields,
-    approved,
-    message,
-  }: ImbotApproveDistributeLeadFromAvitoByAi, messageId: number) {
+  async handleApproveDistributeDealFromAvitoByAI(
+    { fields, approved, message }: ImbotApproveDistributeLeadFromAvitoByAi,
+    messageId: number,
+  ) {
     this.updateMessage({
       MESSAGE_ID: messageId,
-      MESSAGE: this.decodeText(message),
+      MESSAGE:
+        `[b]Обработано: ${approved ? 'лид создан' : 'лид отменен'}[/b][br]` +
+        this.decodeText(message),
       KEYBOARD: '',
     });
 
