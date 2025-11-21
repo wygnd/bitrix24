@@ -41,9 +41,10 @@ export class WikiService {
     }
 
     const { sales, status } =
-      await this.wikiApiServiceOld.get<GetWorkingSalesInterface>(
-        '?action=get_working_sales',
-      );
+      await this.wikiApiServiceOld.get<GetWorkingSalesInterface>('', {
+        baseURL:
+          'https://bitrix24.grampus-server.ru/src/api/wiki/working-sales.php',
+      });
 
     if (!status)
       throw new BadRequestException('Invalid get working sales from wiki');
