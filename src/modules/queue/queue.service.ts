@@ -38,20 +38,9 @@ export class QueueService {
     );
   }
 
-  async addTaskOnCheckIsDistributedDeal(
-    data: QueueDistributeDeal,
-    options?: JobsOptions,
-  ) {
-    return this.queueBitrixSync.add(
-      QUEUE_TASK_NAMES.QUEUE_BX_IS_DISTRIBUTED_DEAL,
-      data,
-      options,
-    );
-  }
-
   async addTaskTest(data: string, options?: JobsOptions) {
     return this.queueBitrixSync.add(
-      QUEUE_TASK_NAMES.QUEUE_BX_TEST,
+      QUEUE_TASK_NAMES.QUEUE_BX_INTEGRATION_AVITO_HANDLE_REQUEST,
       data,
       options,
     );

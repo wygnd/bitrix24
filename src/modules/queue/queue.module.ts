@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 import { QueueService } from '@/modules/queue/queue.service';
 import { BitrixModule } from '@/modules/bitirx/bitrix.module';
+import { QueueBitrixEventsListener } from '@/modules/queue/listeners/queue-bitrix-events.listener';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { BitrixModule } from '@/modules/bitirx/bitrix.module';
     forwardRef(() => BitrixModule),
   ],
   controllers: [],
-  providers: [QueueBitrixProcessor, QueueService],
+  providers: [QueueBitrixProcessor, QueueBitrixEventsListener, QueueService],
   exports: [QueueService],
 })
 export class QueueModule {}
