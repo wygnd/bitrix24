@@ -134,6 +134,14 @@ export class BitrixWikiService {
             },
           },
         };
+        batchCommandsCreateLeadsBatches[batchIndex][`pin_comment=${phone}`] = {
+          method: 'crm.timeline.item.pin',
+          params: {
+            id: `$result[add_comment=${phone}]`,
+            ownerTypeId: '1',
+            ownerId: `$result[create_lead=${phone}]`,
+          },
+        };
 
         userIndex++;
       });
