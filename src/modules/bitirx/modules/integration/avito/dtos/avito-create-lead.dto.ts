@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -7,6 +8,8 @@ import {
   IsString,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { AvitoClientRequestsType } from '@/modules/bitirx/modules/integration/avito/avito.constants';
+import { Transform, Type } from 'class-transformer';
 
 export class AvitoCreateLeadDto {
   @ApiProperty({
@@ -49,6 +52,7 @@ export class AvitoCreateLeadDto {
   })
   @IsNotEmpty()
   @IsString()
+  @IsPhoneNumber('RU')
   avito_number: string;
 
   @ApiProperty({
@@ -101,6 +105,7 @@ export class AvitoCreateLeadDto {
   })
   @IsOptional()
   @IsString()
+  @Transform(({ value }) => AvitoClientRequestsType[value.toLowerCase()] ?? '')
   service_text: string = '';
 
   @ApiProperty({

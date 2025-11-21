@@ -1,5 +1,7 @@
-export interface B24Lead {
+export interface B24Lead extends Record<string, string> {
   ID: string;
+  ASSIGNED_BY_ID: string;
+  STATUS_ID: string;
 }
 
 export interface B24DuplicateFindByComm {

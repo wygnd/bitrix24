@@ -1,6 +1,7 @@
 import {
   Body,
-  Controller, Get,
+  Controller,
+  Get,
   HttpCode,
   HttpStatus,
   ParseArrayPipe,
@@ -63,6 +64,7 @@ export class BitrixAvitoController {
     summary: 'сообщений из авито',
   })
   @ApiBody({ type: AvitoCreateLeadDto })
+  @HttpCode(HttpStatus.OK)
   @Post('/receive-client-request')
   async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
     return this.bitrixIntegrationAvitoService.distributeClientRequests(fields);

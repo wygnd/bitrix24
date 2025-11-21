@@ -38,6 +38,7 @@ export class BitrixService {
   private readonly botId: string;
   private readonly testChatId: string;
   private readonly incomingWebhookToken: string;
+  private readonly zlataZiminaBitrixId: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -71,10 +72,16 @@ export class BitrixService {
     this.http.defaults.headers['Content-Type'] = 'application/json';
 
     //   Constants
-    const { BOT_ID, TEST_CHAT_ID, WEBHOOK_INCOMING_TOKEN } = bitrixConstants;
+    const {
+      BOT_ID,
+      TEST_CHAT_ID,
+      WEBHOOK_INCOMING_TOKEN,
+      ZLATA_ZIMINA_BITRIX_ID,
+    } = bitrixConstants;
     this.botId = BOT_ID;
     this.testChatId = TEST_CHAT_ID;
     this.incomingWebhookToken = WEBHOOK_INCOMING_TOKEN;
+    this.zlataZiminaBitrixId = ZLATA_ZIMINA_BITRIX_ID;
   }
 
   /**
@@ -375,6 +382,10 @@ export class BitrixService {
    */
   get ACCESS_TOKEN() {
     return this.tokens.access_token;
+  }
+
+  get ZLATA_ZIMINA_BITRIX_ID() {
+    return this.zlataZiminaBitrixId;
   }
 
   /**

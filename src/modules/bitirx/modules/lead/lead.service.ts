@@ -30,7 +30,8 @@ export class BitrixLeadService {
         REDIS_KEYS.BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE + phone,
       );
 
-      if (duplicatesFromCache) return duplicatesFromCache;
+      if (duplicatesFromCache && duplicatesFromCache.length !== 0)
+        return duplicatesFromCache;
     }
 
     const { result: response } = await this.bitrixService.callMethod<
@@ -49,11 +50,13 @@ export class BitrixLeadService {
           ? response.LEAD
           : [];
 
-    this.redisService.set<number[]>(
-      REDIS_KEYS.BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE + phone,
-      result,
-      600, // 10 минут
-    );
+    if (result.length !== 0) {
+      this.redisService.set<number[]>(
+        REDIS_KEYS.BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE + phone,
+        result,
+        600, // 10 минут
+      );
+    }
 
     return result;
   }

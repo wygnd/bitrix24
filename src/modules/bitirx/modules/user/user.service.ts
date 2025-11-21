@@ -41,6 +41,8 @@ export class BitrixUserService {
    * @param users
    */
   public async getMinWorkflowUser(users: string[]) {
+    if(!this.bitrixService.isAvailableToDistributeOnManager()) return this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
+
     const commands = users.reduce((acc, userId) => {
       acc[`get_user-${userId}`] = {
         method: 'user.get',

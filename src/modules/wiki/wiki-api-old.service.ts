@@ -7,7 +7,7 @@ import { WikiConfig } from '@/common/interfaces/wiki-config.interface';
 export class WikiApiServiceOld {
   constructor(
     private readonly configService: ConfigService,
-    @Inject('WikiApiService')
+    @Inject('WikiApiServiceOld')
     private readonly http: AxiosInstance,
   ) {
     const wikiConfig = this.configService.get<WikiConfig>('wikiConfig');

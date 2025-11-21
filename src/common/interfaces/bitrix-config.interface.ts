@@ -9,6 +9,7 @@ export interface BitrixConstants {
   TEST_CHAT_ID: string;
   WEBHOOK_INCOMING_TOKEN: string;
   WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL: string;
+  ZLATA_ZIMINA_BITRIX_ID: string;
   HR: BitrixHRConstants;
 }
 
