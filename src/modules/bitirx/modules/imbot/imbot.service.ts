@@ -680,7 +680,7 @@ export class BitrixImBotService {
     this.updateMessage({
       MESSAGE_ID: messageId,
       MESSAGE:
-        `[b]Обработано: ${approved ? 'лид создан' : 'лид отменен'}[/b][br]` +
+        `[b]Обработано: ${approved ? 'лид создан' : 'лид отменен'}[/b][br][br]` +
         this.decodeText(message),
       KEYBOARD: '',
     });
