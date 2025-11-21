@@ -25,7 +25,10 @@ export interface B24ImbotSendMessageOptions {
   URL_PREVIEW?: string;
 }
 
-export type B24ImbotUpdateMessageOptions = B24ImbotSendMessageOptions & {
+export type B24ImbotUpdateMessageOptions = Omit<
+  B24ImbotSendMessageOptions,
+  'DIALOG_ID'
+> & {
   MESSAGE_ID: number;
 };
 

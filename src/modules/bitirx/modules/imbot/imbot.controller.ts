@@ -6,6 +6,7 @@ import {
   ForbiddenException,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   Param,
   ParseIntPipe,
@@ -34,6 +35,7 @@ import {
   ImbotHandleDistributeNewDealUnknown,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
+import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
@@ -171,8 +173,14 @@ export class BitrixBotController {
           MESSAGE_ID,
         );
 
+      case '/approveDistributeDealFromAvitoByAI':
+        return this.bitrixBotService.handleApproveDistributeDealFromAvitoByAI(
+          commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
+          MESSAGE_ID,
+        );
+
       default:
-        throw new BadRequestException('Command not handled yet');
+        throw new HttpException('Command not handled yet', HttpStatus.ACCEPTED);
     }
   }
 }

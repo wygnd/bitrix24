@@ -37,7 +37,8 @@ export type B24AvailableMethods =
   | 'event.bind'
   | 'event.unbind'
   | 'crm.timeline.comment.add'
-  | 'crm.timeline.item.pin';
+  | 'crm.timeline.item.pin'
+  | 'crm.activity.add';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

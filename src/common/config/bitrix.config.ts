@@ -16,5 +16,8 @@ export default (): BitrixOptions => ({
     HR: {
       hrChatId: process.env.BITRIX_DATA_HR_CHAT_ID ?? '',
     },
+    avito: {
+      avitoAiChatId: process.env.BITRIX_DATA_AVITO_AI_CHAT_ID ?? ''
+    }
   },
 });

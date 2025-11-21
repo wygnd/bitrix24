@@ -67,6 +67,8 @@ export class BitrixAvitoController {
   @HttpCode(HttpStatus.OK)
   @Post('/receive-client-request')
   async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
-    return this.bitrixIntegrationAvitoService.distributeClientRequests(fields);
+    return fields.is_ai === '1'
+      ? this.bitrixIntegrationAvitoService.distributeClientRequestByAI(fields)
+      : this.bitrixIntegrationAvitoService.distributeClientRequests(fields);
   }
 }

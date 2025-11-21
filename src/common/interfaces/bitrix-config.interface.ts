@@ -11,6 +11,7 @@ export interface BitrixConstants {
   WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL: string;
   ZLATA_ZIMINA_BITRIX_ID: string;
   HR: BitrixHRConstants;
+  avito: BitrixAvitoConstants;
 }
 
 export interface BitrixOptions {
@@ -20,4 +21,8 @@ export interface BitrixOptions {
 
 export interface BitrixHRConstants {
   hrChatId: string;
+}
+
+export interface BitrixAvitoConstants {
+  avitoAiChatId: string;
 }

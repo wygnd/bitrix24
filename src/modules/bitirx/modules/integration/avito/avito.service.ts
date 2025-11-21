@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
@@ -18,19 +18,44 @@ import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24Department } from '@/modules/bitirx/modules/department/department.interface';
 import {
   B24LeadActiveStages,
+  B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
 } from '@/modules/bitirx/modules/lead/lead.constants';
+import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
+import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { ConfigService } from '@nestjs/config';
+import { BitrixAvitoConstants } from '@/common/interfaces/bitrix-config.interface';
+import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
+  private readonly avitoAiChatId: string;
+
   constructor(
+    private readonly configService: ConfigService,
     private readonly bitrixService: BitrixService,
     private readonly bitrixMessageService: BitrixMessageService,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly bitrixUserService: BitrixUserService,
     private readonly wikiService: WikiService,
-  ) {}
+    @Inject(forwardRef(() => BitrixImBotService))
+    private readonly bitrixBotService: BitrixImBotService,
+  ) {
+    const avitoConstants = this.configService.get<BitrixAvitoConstants>(
+      'bitrixConstants.avito',
+    );
+
+    if (!avitoConstants)
+      throw new Error('BITRIX AVITO MODULE: Invalid avito contants');
+
+    const { avitoAiChatId } = avitoConstants;
+
+    if (!avitoAiChatId)
+      throw new Error('BITRIX AVITO MODULE: Invalid avito chat id');
+
+    this.avitoAiChatId = avitoAiChatId;
+  }
 
   public async findDuplicatesLeadsBPhones(
     fields: AvitoFindDuplicateLeadsDto[],
@@ -103,6 +128,7 @@ export class BitrixIntegrationAvitoService {
       await this.wikiService.getWorkingSalesFromWiki(),
     );
 
+    // Ищем дубликаты
     const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
     if (result.length === 0) {
@@ -195,28 +221,31 @@ export class BitrixIntegrationAvitoService {
       },
     };
 
-    if (date && time) {
-      batchCommands['add_comment'] = {
-        method: 'crm.timeline.comment.add',
-        params: {
-          fields: {
-            ENTITY_ID: leadId,
-            ENTITY_TYPE: 'lead',
-            COMMENT: `[b]Свяжись с клиентом ${date} в ${time}[/b]`,
-          },
-        },
-      };
+    // Добавляем комментарий если указаны дата и время
+    // todo
+    // if (date && time) {
+    //   batchCommands['add_comment'] = {
+    //     method: 'crm.timeline.comment.add',
+    //     params: {
+    //       fields: {
+    //         ENTITY_ID: leadId,
+    //         ENTITY_TYPE: 'lead',
+    //         COMMENT: `[b]Свяжись с клиентом ${date} в ${time}[/b]`,
+    //       },
+    //     },
+    //   };
+    //
+    //   batchCommands['pin_comment'] = {
+    //     method: 'crm.timeline.item.pin',
+    //     params: {
+    //       id: '$result[add_comment]',
+    //       ownerTypeId: '1',
+    //       ownerId: '$result[create_lead]',
+    //     },
+    //   };
+    // }
 
-      batchCommands['pin_comment'] = {
-        method: 'crm.timeline.item.pin',
-        params: {
-          id: '$result[add_comment]',
-          ownerTypeId: '1',
-          ownerId: '$result[create_lead]',
-        },
-      };
-    }
-
+    // Делаем запрос на получение информации
     const { result: batchResponse } = await this.bitrixService.callBatch<
       B24BatchResponseMap<{
         get_lead: B24Lead[];
@@ -225,16 +254,22 @@ export class BitrixIntegrationAvitoService {
       }>
     >(batchCommands);
 
-    const { get_lead: lead } = batchResponse.result;
+    const { get_lead: lead, get_assigned_lead: user } = batchResponse.result;
+
+    const { STATUS_ID, ASSIGNED_BY_ID, DATE_CREATE } = lead[0];
+
+    const leadDateCreate = new Date(DATE_CREATE);
+    const now = new Date();
+    let leadStatusType = '';
 
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
-      ASSIGNED_BY_ID: lead[0].ASSIGNED_BY_ID,
+      ASSIGNED_BY_ID: ASSIGNED_BY_ID,
       UF_CRM_1653291114976: messages.join('[br][br]'),
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: '', // Файлы
-      STATUS_ID: 'UC_GEWKFD', // Стадия сделки: Новый в работе
+      STATUS_ID: '', // Стадия сделки: Новый в работе
       UF_CRM_1712667568: avito, // С какого авито обращение
       UF_CRM_1713765220416: avito_number, // Подменный номер авито
       UF_CRM_1580204442317: city, // Город
@@ -244,34 +279,190 @@ export class BitrixIntegrationAvitoService {
       UF_CRM_1715671150: new Date(), // дата последнего обращения
     };
 
-    // Если лид не в активных стадиях
-    if (B24LeadRejectStages.includes(lead[0].STATUS_ID)) {
-      updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser; // Меняем ответственного
-      updateLeadFields.STATUS_ID = 'UC_GEWKFD'; // Новый в работе
+    switch (true) {
+      // Если лид не в активных стадиях
+      case B24LeadRejectStages.includes(STATUS_ID):
+        updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser; // Меняем ответственного
+        updateLeadFields.STATUS_ID = 'UC_JTIP45'; // Новый в работе
+
+        // Если менеджер уволен - меняем ответственного на менее занятого
+        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+        break;
+
+      // Если лид в новых стадиях меняем стадию на новый в работе
+      case B24LeadNewStages.includes(STATUS_ID):
+        updateLeadFields.STATUS_ID = 'UC_JTIP45';
+
+        // Если менеджер уволен - меняем ответственного на менее занятого
+        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+        break;
+
+      // Если лид в активных стадиях - уведомляем менеджера и его руководителя
+      case B24LeadActiveStages.includes(STATUS_ID):
+        // Если менеджер уволен - меняем ответственного на менее занятого
+        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+
+        if (
+          updateLeadFields.ASSIGNED_BY_ID !==
+          this.bitrixService.ZLATA_ZIMINA_BITRIX_ID
+        ) {
+          batchCommandsUpdateLead['send_message_head'] = {
+            method: 'im.message.add',
+            params: {
+              DIALOG_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
+              MESSAGE:
+                '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! КЛИЕНТ ВАШЕГО МЕНЕДЖЕРА ИЩЕТ ДАЛЬШЕ! ' +
+                'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
+                `Лид: ${this.bitrixService.generateLeadUrl(leadId)}` +
+                `[br]C авито: ${avito}` +
+                `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
+            },
+          };
+        }
+
+        batchCommandsUpdateLead['send_message_manager'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: updateLeadFields.ASSIGNED_BY_ID,
+            MESSAGE:
+              '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
+              this.bitrixService.generateLeadUrl(leadId) +
+              `[br]C авито: ${avito}[br]Сообщение:[br]>>${messages.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
+              '[br]Имя, вижу, что Вы писали моему коллеге, на другое Авито, продолжаете искать подрядчика?' +
+              'Возможно какие-то дополнительные вопросы появились?[br]Варианты развития событий:[br]' +
+              '1. Клиент просто сравнивает, тогда говорим следующее: У нас студия, работаем уже больше 9 лет и у нас много ' +
+              'аккаунтов Авито и они хорошо раскручены, скорей всего еще не раз к нам попадете. Тогда с Вами связываемся как договаривались ... ' +
+              'Хорошего дня!"[br]2. Клиенту дорого, ищет варианты дешевле. - повторно рассказываем о ценности нашей услуги.О перечне работ, ' +
+              'которые будем производить. Повторно предоставляем Клиенту обоснование цены - если важна именно цена и если есть возможность - ' +
+              'предлагаем скидку или переориентируемКлиента с индивидуальной разработки на готовый сайт.',
+          },
+        };
+        batchCommandsUpdateLead['add_calling'] = {
+          method: 'crm.activity.add',
+          params: {
+            fields: {
+              OWNER_ID: leadId,
+              OWNER_TYPE_ID: 1,
+              TYPE_ID: 2,
+              COMMUNICATIONS: [{ VALUE: phone }],
+              SUBJECT:
+                'Продолжает искать подрядчика (Звони! Клиент продолжает искать)',
+              COMPLETED: 'N',
+              RESPONSIBLE_ID: updateLeadFields.ASSIGNED_BY_ID,
+              DIRECTION: 2,
+            },
+          },
+        };
+        break;
+
+      // Если лид успешный или в стадии Ожидаем подписанный договор
+      // отправить сообщение Злате Зиминой
+      case B24LeadConvertedStages.includes(STATUS_ID):
+        batchCommandsUpdateLead['send_message_converted'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
+            MESSAGE:
+              `[b]TEST[/b][br]${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
+              'Необходимо посмотреть действующие сделки ' +
+              'и, при необходимости, распределить лид в работу[/b][br]' +
+              this.bitrixService.generateLeadUrl(leadId) +
+              `С авито: ${avito}` +
+              `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
+          },
+        };
+
+        updateLeadFields.ASSIGNED_BY_ID = ASSIGNED_BY_ID;
+        break;
     }
 
-    // Если лид в новых стадиях меняем стадию на новый в работе
-    if (B24LeadNewStages.includes(lead[0].STATUS_ID))
-      updateLeadFields.STATUS_ID = 'UC_GEWKFD';
-
-    if (B24LeadActiveStages.includes(lead[0].STATUS_ID)) {
-      batchCommandsUpdateLead['send_message_manager'] = {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: updateLeadFields.ASSIGNED_BY_ID,
-          MESSAGE:
-            '[b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
-            +this.bitrixService.generateLeadUrl(leadId) +
-            `[br]C авито: ${avito}[br]Сообщение: >>${messages.join('[br][br]>>')}[br][br][b]Скрипт:[/b]` +
-            '[br]Имя, вижу, что Вы писали моему коллеге, на другое Авито, продолжаете искатьподрядчика?' +
-            'Возможно какие-то дополнительные вопросы появились?[br]Варианты развития событий:[br]1. Клиент просто сравнивает, тогда говорим следующее: "У нас студия, работаем ужебольше 9 лет и у нас много аккаунтов Авито и они хорошо раскручены, скорей всего ещене раз к нампопадете. Тогда с Вами связываемся как договаривались ... Хорошего дня!"[br]2. Клиенту дорого, ищет варианты дешевле. - повторно рассказываем о ценности нашейуслуги.О перечне работ, которые будем производить. Повторно предоставляем Клиентуобоснование цены- если важна именно цена и если есть возможность - предлагаем скидкуили переориентируемКлиента с индивидуальной разработки на готовый сайт.',
+    batchCommandsUpdateLead['add_comment'] = {
+      method: 'crm.timeline.comment.add',
+      params: {
+        fields: {
+          ENTITY_ID: leadId,
+          ENTITY_TYPE: 'lead',
+          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${messages.join('\n')}`,
         },
-      };
+      },
+    };
+
+    batchCommandsUpdateLead['pin_comment'] = {
+      method: 'crm.timeline.item.pin',
+      params: {
+        id: '$result[add_comment]',
+        ownerTypeId: '1',
+        ownerId: leadId,
+      },
+    };
+
+    batchCommandsUpdateLead['update_lead'] = {
+      method: 'crm.lead.update',
+      params: {
+        id: leadId,
+        fields: updateLeadFields,
+      },
+    };
+
+    this.bitrixService.callBatch(batchCommandsUpdateLead);
+
+    if (
+      now.toDateString() !== leadDateCreate.toDateString() &&
+      B24LeadRejectStages.includes(STATUS_ID)
+    ) {
+      leadStatusType = 'nonactive';
+    } else if (now.toDateString() === leadDateCreate.toDateString()) {
+      leadStatusType = 'active';
+    } else {
+      leadStatusType = 'new';
     }
 
     return {
-      message: 'need update lead',
-      result: result,
+      lead_id: leadId,
+      status: leadStatusType,
     };
+  }
+
+  public async distributeClientRequestByAI(fields: AvitoCreateLeadDto) {
+    const message =
+      '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
+      `С авито: ${fields.avito}[br][br]>>` +
+      fields.messages.join('[br]>>');
+
+    this.bitrixService.callBatch({
+      send_message: {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixBotService.BOT_ID,
+          DIALOG_ID: this.avitoAiChatId,
+          MESSAGE: message,
+          KEYBOARD: [
+            {
+              TEXT: 'Подтвердить',
+              BG_COLOR_TOKEN: 'primary',
+              COMMAND: 'approveDistributeDealFromAvitoByAI',
+              COMMAND_PARAMS: JSON.stringify({
+                message: this.bitrixBotService.encodeText(message),
+                fields: fields,
+                approved: true,
+              } as ImbotApproveDistributeLeadFromAvitoByAi),
+              DISPLAY: 'LINE',
+            },
+            {
+              TEXT: 'Отменить',
+              BG_COLOR_TOKEN: 'alert',
+              COMMAND: 'approveDistributeDealFromAvitoByAI',
+              COMMAND_PARAMS: JSON.stringify({
+                message: this.bitrixBotService.encodeText(message),
+                fields: fields,
+                approved: false,
+              } as ImbotApproveDistributeLeadFromAvitoByAi),
+              DISPLAY: 'LINE',
+            },
+          ],
+        },
+      },
+    });
+    return true;
   }
 }

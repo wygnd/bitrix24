@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -36,6 +38,8 @@ import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { BitrixDepartmentService } from '@/modules/bitirx/modules/department/department.service';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
+import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
+import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -49,6 +53,8 @@ export class BitrixImBotService {
     private readonly wikiService: WikiService,
     private readonly dealService: BitrixDealService,
     private readonly departmentService: BitrixDepartmentService,
+    @Inject(forwardRef(() => BitrixIntegrationAvitoService))
+    private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -664,6 +670,23 @@ export class BitrixImBotService {
     }
 
     this.bitrixService.callBatch(batchCommands);
+    return true;
+  }
+
+  async handleApproveDistributeDealFromAvitoByAI({
+    fields,
+    approved,
+    message,
+  }: ImbotApproveDistributeLeadFromAvitoByAi, messageId: number) {
+    this.updateMessage({
+      MESSAGE_ID: messageId,
+      MESSAGE: this.decodeText(message),
+      KEYBOARD: '',
+    });
+
+    if (!approved) return false;
+
+    this.avitoIntegrationService.distributeClientRequestByAI(fields);
     return true;
   }
 

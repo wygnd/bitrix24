@@ -1,4 +1,6 @@
 export const B24LeadActiveStages = [
+  'UC_JTIP45', // Новый в работе
+  'UC_YPTATL', // Согласование сложных задач
   '9', // '2. Ожидает КП',
   'NEW', // '3. Я подумаю',
   '11', // '4. Я подумаю (ВАЖНЫЙ)',
@@ -7,7 +9,6 @@ export const B24LeadActiveStages = [
   '2', // '7. Встреча',
   '5', // '8. Ожидание реквизитов',
   '6', // '9. Ожидаем аванс',
-  'UC_LAZJ4H', // '10. Ожидаем подписанный договор',
 ];
 
 export const B24LeadRejectStages = [
@@ -21,4 +22,9 @@ export const B24LeadRejectStages = [
 export const B24LeadNewStages = [
   '3', // Новый
   'UC_GEWKFD', // Лид сообщение
+];
+
+export const B24LeadConvertedStages = [
+  'CONVERTED', // Завершена
+  'UC_LAZJ4H', // '10. Ожидаем подписанный договор',
 ];
