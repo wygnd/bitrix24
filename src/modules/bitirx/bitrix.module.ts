@@ -31,14 +31,16 @@ import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/wiki.controller';
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
+import { AvitoModule } from '@/modules/avito/avito.module';
 
 @Module({
   imports: [
     HttpModule,
     RedisModule,
     forwardRef(() => HeadHunterModule),
-    forwardRef(() => QueueModule),
+    QueueModule,
     WikiModule,
+    AvitoModule,
   ],
   controllers: [
     BitrixController,

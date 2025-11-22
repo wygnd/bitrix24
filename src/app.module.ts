@@ -16,6 +16,8 @@ import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { QueueProcessorModule } from '@/modules/queue-processor/queue-processor.module';
+import { AvitoModule } from '@/modules/avito/avito.module';
 
 @Module({
   imports: [
@@ -33,8 +35,10 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     BitrixModule,
     HeadHunterModule,
     QueueModule,
+    QueueProcessorModule,
     WikiModule,
     AppHttModule,
+    AvitoModule,
   ],
   controllers: [AppController],
   providers: [

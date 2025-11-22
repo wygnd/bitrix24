@@ -1,6 +1,9 @@
 import {
   BadRequestException,
+  ForbiddenException,
   forwardRef,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -40,6 +43,7 @@ import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
+import { AvitoService } from '@/modules/avito/avito.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -55,6 +59,7 @@ export class BitrixImBotService {
     private readonly departmentService: BitrixDepartmentService,
     @Inject(forwardRef(() => BitrixIntegrationAvitoService))
     private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
+    private readonly avitoService: AvitoService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -211,6 +216,54 @@ export class BitrixImBotService {
 
   get BOT_ID(): string {
     return this.botId;
+  }
+
+  async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
+    const { event, data } = body;
+
+    if (event !== 'ONIMCOMMANDADD')
+      throw new ForbiddenException('Invalid event');
+
+    const { MESSAGE, MESSAGE_ID } = data.PARAMS;
+    const [command, _] = MESSAGE.split(' ', 2);
+    const commandParamsDecoded: unknown = JSON.parse(
+      MESSAGE.replace(command, ''),
+    );
+
+    switch (command) {
+      case '/distributeNewDeal':
+        return this.handleDistributeNewDeal(
+          commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
+          data.PARAMS,
+        );
+
+      case '/approveSmmAdvertLayouts':
+        return this.handleApproveSmmAdvertLayout(
+          commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
+          MESSAGE_ID,
+        );
+
+      case '/approveSiteDealForAdvert':
+        return this.handleApproveSiteForAdvert(
+          commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
+          MESSAGE_ID,
+        );
+
+      case '/approveSiteForCase':
+        return this.handleApproveSiteForCase(
+          commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
+          MESSAGE_ID,
+        );
+
+      case '/approveDistributeDealFromAvitoByAI':
+        return this.handleApproveDistributeDealFromAvitoByAI(
+          commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
+          MESSAGE_ID,
+        );
+
+      default:
+        throw new HttpException('Command not handled yet', HttpStatus.ACCEPTED);
+    }
   }
 
   async notifyAboutConvertedDeal(eventData: OnImCommandKeyboardDto) {
@@ -674,7 +727,12 @@ export class BitrixImBotService {
   }
 
   async handleApproveDistributeDealFromAvitoByAI(
-    { fields, approved, message }: ImbotApproveDistributeLeadFromAvitoByAi,
+    {
+      fields,
+      approved,
+      message,
+      phone,
+    }: ImbotApproveDistributeLeadFromAvitoByAi,
     messageId: number,
   ) {
     this.updateMessage({
@@ -685,7 +743,11 @@ export class BitrixImBotService {
       KEYBOARD: '',
     });
 
-    if (!approved) return false;
+    if (!approved) {
+      // todo: uncommend on monday
+      // this.avitoService.rejectDistributeLeadByAi(phone);
+      return false;
+    }
 
     this.avitoIntegrationService.distributeClientRequests(fields);
     return true;

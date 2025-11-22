@@ -1,25 +1,20 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   ForbiddenException,
   Get,
   HttpCode,
-  HttpException,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import {
-  ApiBody,
   ApiExcludeEndpoint,
   ApiHeader,
   ApiOperation,
-  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
@@ -28,22 +23,11 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { ImbotMessageAddDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-message-add.dto';
 import { BitrixBotCommandGuard } from '@/modules/bitirx/guards/bitrix-bot-command.guard';
 import { OnImCommandKeyboardDto } from '@/modules/bitirx/modules/imbot/dtos/imbot-events.dto';
-import { BitrixService } from '@/modules/bitirx/bitrix.service';
-import {
-  ImbotHandleApproveSiteForAdvert,
-  ImbotHandleApproveSmmAdvertLayout,
-  ImbotHandleDistributeNewDealUnknown,
-} from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
-import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitirx/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
-import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
 export class BitrixBotController {
-  constructor(
-    private readonly bitrixBotService: BitrixImBotService,
-    private readonly bitrixService: BitrixService,
-  ) {}
+  constructor(private readonly bitrixBotService: BitrixImBotService) {}
 
   @ApiHeader({
     name: 'Authorization',
@@ -137,50 +121,6 @@ export class BitrixBotController {
   @HttpCode(HttpStatus.OK)
   @Post('onimcommandadd')
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
-    const { event, data } = body;
-
-    if (event !== 'ONIMCOMMANDADD')
-      throw new ForbiddenException('Invalid event');
-
-    const { MESSAGE, MESSAGE_ID } = data.PARAMS;
-    const [command, _] = MESSAGE.split(' ', 2);
-    const commandParamsDecoded: unknown = JSON.parse(
-      MESSAGE.replace(command, ''),
-    );
-
-    switch (command) {
-      case '/distributeNewDeal':
-        return this.bitrixBotService.handleDistributeNewDeal(
-          commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
-          data.PARAMS,
-        );
-
-      case '/approveSmmAdvertLayouts':
-        return this.bitrixBotService.handleApproveSmmAdvertLayout(
-          commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
-          MESSAGE_ID,
-        );
-
-      case '/approveSiteDealForAdvert':
-        return this.bitrixBotService.handleApproveSiteForAdvert(
-          commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
-          MESSAGE_ID,
-        );
-
-      case '/approveSiteForCase':
-        return this.bitrixBotService.handleApproveSiteForCase(
-          commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
-          MESSAGE_ID,
-        );
-
-      case '/approveDistributeDealFromAvitoByAI':
-        return this.bitrixBotService.handleApproveDistributeDealFromAvitoByAI(
-          commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
-          MESSAGE_ID,
-        );
-
-      default:
-        throw new HttpException('Command not handled yet', HttpStatus.ACCEPTED);
-    }
+    return this.bitrixBotService.handleOnImCommandAdd(body);
   }
 }

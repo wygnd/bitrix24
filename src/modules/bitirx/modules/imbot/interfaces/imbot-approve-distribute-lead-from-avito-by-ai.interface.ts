@@ -4,4 +4,5 @@ export interface ImbotApproveDistributeLeadFromAvitoByAi {
   message: Buffer<ArrayBuffer>;
   approved: boolean;
   fields: AvitoCreateLeadDto;
+  phone: string;
 }

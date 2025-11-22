@@ -39,6 +39,12 @@ export class AppController {
 
   // @Get('/test')
   // async test() {
-  //   return this.bitrixQueue.addTaskTest('pisapopa');
+  //   let i = 0;
+  //     this.bitrixQueue.addTaskTest(i.toString());
+  //   // while (i < 10) {
+  //   //   i++;
+  //   // }
+  //
+  //   return true;
   // }
 }

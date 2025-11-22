@@ -4,6 +4,7 @@ import databaseConfig from './database.config';
 import applicationConfig from './app.config';
 import headHunterConfig from './headhunter.config';
 import wikiConfig from './wiki.config';
+import avitoConfig from './avito.config';
 
 export const configList = [
   bitrixConfig,
@@ -12,4 +13,5 @@ export const configList = [
   applicationConfig,
   headHunterConfig,
   wikiConfig,
+  avitoConfig,
 ];

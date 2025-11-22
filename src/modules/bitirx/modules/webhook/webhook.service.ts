@@ -25,7 +25,6 @@ import {
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
 } from '@/modules/bitirx/modules/imbot/interfaces/imbot-handle.interface';
-import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitirx/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { B24Task } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
@@ -191,12 +190,6 @@ export class BitrixWebhookService {
 
     let nextAdvertHead: DistributeAdvertDealWikiResponse | null = null;
     let nextAdvertInfo: WebhookUserItem | null = null;
-    let taskOnCheckDistributedDealOptions: QueueDistributeDeal = {
-      ...fields,
-      is_repeat: 1,
-      distributedStage:
-        this.departmentInfo[department].distributedStageId[category] ?? '',
-    };
 
     switch (department) {
       case B24DepartmentTypeId.ADVERT:
@@ -263,14 +256,6 @@ export class BitrixWebhookService {
         break;
 
       case B24DepartmentTypeId.SEO:
-        if (
-          !this.departmentInfo[department].category ||
-          !(category in this.departmentInfo[department].category)
-        )
-          break;
-
-        taskOnCheckDistributedDealOptions.distributedStage =
-          this.departmentInfo[department].category[category];
         break;
     }
 

@@ -434,11 +434,27 @@ export class BitrixIntegrationAvitoService {
     };
   }
 
+  /**
+   * Sending message on avito chat for manager approve lead created by ai
+   *
+   * ---
+   *
+   * Отправляет сообщение в авито чат, чтобы менеджер подтвердил обработку лида созданного ИИ
+   *
+   * @param fields
+   */
   public async distributeClientRequestByAI(fields: AvitoCreateLeadDto) {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
       fields.messages.join('[br]>>');
+
+    const keyboardParams: ImbotApproveDistributeLeadFromAvitoByAi = {
+      message: this.bitrixBotService.encodeText(message),
+      fields: fields,
+      approved: true,
+      phone: fields.phone,
+    };
 
     this.bitrixService.callBatch({
       send_message: {
@@ -452,11 +468,7 @@ export class BitrixIntegrationAvitoService {
               TEXT: 'Подтвердить',
               BG_COLOR_TOKEN: 'primary',
               COMMAND: 'approveDistributeDealFromAvitoByAI',
-              COMMAND_PARAMS: JSON.stringify({
-                message: this.bitrixBotService.encodeText(message),
-                fields: fields,
-                approved: true,
-              } as ImbotApproveDistributeLeadFromAvitoByAi),
+              COMMAND_PARAMS: JSON.stringify(keyboardParams),
               DISPLAY: 'LINE',
             },
             {
@@ -464,10 +476,9 @@ export class BitrixIntegrationAvitoService {
               BG_COLOR_TOKEN: 'alert',
               COMMAND: 'approveDistributeDealFromAvitoByAI',
               COMMAND_PARAMS: JSON.stringify({
-                message: this.bitrixBotService.encodeText(message),
-                fields: fields,
+                ...keyboardParams,
                 approved: false,
-              } as ImbotApproveDistributeLeadFromAvitoByAi),
+              }),
               DISPLAY: 'LINE',
             },
           ],

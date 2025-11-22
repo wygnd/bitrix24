@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { QUEUE_NAMES, QUEUE_TASK_NAMES } from '@/modules/queue/queue.constants';
+import { QUEUE_NAMES, QUEUE_TASK_NAMES } from '@/modules/queue-processor/queue-processor.constants';
 import { Queue } from 'bullmq';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
-import { QueueDistributeDeal } from '@/modules/queue/interfaces/queue-distribute-deal.interface';
 import { JobsOptions } from 'bullmq';
 
 @Injectable()
@@ -40,7 +39,7 @@ export class QueueService {
 
   async addTaskTest(data: string, options?: JobsOptions) {
     return this.queueBitrixSync.add(
-      QUEUE_TASK_NAMES.QUEUE_BX_INTEGRATION_AVITO_HANDLE_REQUEST,
+      QUEUE_TASK_NAMES.QUEUE_BX_TEST,
       data,
       options,
     );

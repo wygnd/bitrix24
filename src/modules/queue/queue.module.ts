@@ -1,12 +1,9 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { QueueBitrixProcessor } from '@/modules/queue/processors/queue-bitrix.processor';
+import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisOptions } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
-import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 import { QueueService } from '@/modules/queue/queue.service';
-import { BitrixModule } from '@/modules/bitirx/bitrix.module';
-import { QueueBitrixEventsListener } from '@/modules/queue/listeners/queue-bitrix-events.listener';
+import { QUEUE_NAMES } from '@/modules/queue-processor/queue-processor.constants';
 
 @Module({
   imports: [
@@ -29,10 +26,9 @@ import { QueueBitrixEventsListener } from '@/modules/queue/listeners/queue-bitri
         removeOnComplete: true,
       },
     }),
-    forwardRef(() => BitrixModule),
   ],
   controllers: [],
-  providers: [QueueBitrixProcessor, QueueBitrixEventsListener, QueueService],
-  exports: [QueueService],
+  providers: [QueueService],
+  exports: [QueueService, BullModule],
 })
 export class QueueModule {}
