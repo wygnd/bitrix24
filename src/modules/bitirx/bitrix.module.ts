@@ -27,7 +27,6 @@ import { BitrixEventService } from '@/modules/bitirx/modules/events/event.servic
 import { DepartmentController } from '@/modules/bitirx/modules/department/department.controller';
 import { BitrixTaskController } from '@/modules/bitirx/modules/task/task.controller';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
-import { QueueModule } from '@/modules/queue/queue.module';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/wiki.controller';
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
@@ -38,7 +37,6 @@ import { AvitoModule } from '@/modules/avito/avito.module';
     HttpModule,
     RedisModule,
     forwardRef(() => HeadHunterModule),
-    QueueModule,
     WikiModule,
     AvitoModule,
   ],

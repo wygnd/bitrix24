@@ -6,14 +6,12 @@ import {
 } from '@/modules/bitirx/modules/events/interfaces/events.interface';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
-import { QueueService } from '@/modules/queue/queue.service';
 
 @Injectable()
 export class BitrixEventService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly taskService: BitrixTaskService,
-    private readonly queueService: QueueService,
   ) {}
 
   async addEvent(fields: B24EventAdd) {
@@ -32,7 +30,7 @@ export class BitrixEventService {
     const task = await this.taskService.getTaskById(taskId, undefined, true);
 
     if (task.title.startsWith('[МАКЕТ]')) {
-      this.queueService.addTaskBxTask(task);
+      this.taskService.handleObserveEdnSmmAdvertLayoutsTaskUpdate(task);
       return true;
     }
 
