@@ -13,11 +13,12 @@ import { join } from 'path';
 import type { Response } from 'express';
 import { existsSync } from 'fs';
 import { AuthGuard } from '@/common/guards/auth.guard';
+import { QueueService } from '@/modules/queue/queue.service';
 
 @ApiExcludeController()
 @Controller()
 export class AppController {
-  constructor() {}
+  constructor(private readonly bitrixQueue: QueueService) {}
 
   @Get()
   @Redirect('/api', 301)
@@ -34,5 +35,16 @@ export class AppController {
     const file = createReadStream(filepath);
 
     file.pipe(response);
+  }
+
+  @Get('/test')
+  async test() {
+    let i = 0;
+    this.bitrixQueue.addTaskTest(i.toString());
+    // while (i < 10) {
+    //   i++;
+    // }
+
+    return true;
   }
 }

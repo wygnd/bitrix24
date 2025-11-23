@@ -2,14 +2,12 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import {
   QUEUE_NAMES,
-  QUEUE_TASK_NAMES,
 } from '@/modules/queue-processor/queue-processor.constants';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
-import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_EVENTS)
 export class QueueProcessorBitrixProcessor extends WorkerHost {
-  constructor(private readonly taskService: BitrixTaskService) {
+  constructor() {
     super();
   }
 
@@ -40,11 +38,5 @@ export class QueueProcessorBitrixProcessor extends WorkerHost {
     // }
     //
     // return false;
-  }
-
-  private async handleTaskUpdateBxTask(data: B24TaskExtended) {
-    this.taskService.handleObserveEdnSmmAdvertLayoutsTaskUpdate(data);
-
-    return true;
   }
 }
