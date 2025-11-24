@@ -77,6 +77,7 @@ import { AvitoModule } from '@/modules/avito/avito.module';
     BitrixTaskService,
     BitrixDealService,
     BitrixWebhookService,
+    BitrixIntegrationAvitoService,
   ],
 })
 export class BitrixModule {}

@@ -1,10 +1,10 @@
-export enum QueueConsumerStatus {
+export enum QueueProcessorStatus {
   OK = 'ok',
   INVALID = 'invalid',
 }
 
-export interface QueueConsumerResponse<T = any> {
+export interface QueueProcessorResponse<T = any> {
   message: string;
-  status: QueueConsumerStatus;
+  status: QueueProcessorStatus;
   data: T;
 }
