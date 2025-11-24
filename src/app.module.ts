@@ -16,6 +16,8 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -27,6 +29,12 @@ import { AvitoModule } from '@/modules/avito/avito.module';
         },
       ],
       errorMessage: 'Too many requests',
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      serveStaticOptions: {
+        cacheControl: true,
+      },
     }),
     ConfigAppModule,
     RedisModule,
