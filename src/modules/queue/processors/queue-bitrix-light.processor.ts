@@ -41,11 +41,12 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
 
       default:
+        this.logger.warn(`not handled yet: ${name}`);
         response.message = 'Not handled';
+        response.status = QueueProcessorStatus.NOT_HANDLED;
         break;
     }
 
-    this.logger.warn(`not handled yet: ${name}`);
     return response;
   }
 
@@ -59,8 +60,14 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   @OnWorkerEvent('completed')
   onCompleted(job: Job) {
-    this.bitrixImBotService.sendTestMessage(
-      '[b]handle delete deal[/b][br]Задача завершена: ' + JSON.stringify(job),
-    );
+
+    switch (job.name) {
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE:
+        this.bitrixImBotService.sendTestMessage(
+          '[b]handle delete deal[/b][br]Задача завершена: ' +
+            JSON.stringify(job),
+        );
+        break;
+    }
   }
 }

@@ -8,6 +8,7 @@ import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
+import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 
 @Injectable()
 export class BitrixEventService {
@@ -15,6 +16,7 @@ export class BitrixEventService {
     private readonly bitrixService: BitrixService,
     private readonly taskService: BitrixTaskService,
     private readonly queueLightService: QueueLightService,
+    private readonly queueMiddleService: QueueMiddleService,
   ) {}
 
   async addEvent(fields: B24EventAdd) {
@@ -33,7 +35,7 @@ export class BitrixEventService {
     const task = await this.taskService.getTaskById(taskId, undefined, true);
 
     if (task.title.startsWith('[МАКЕТ]')) {
-      this.taskService.handleObserveEdnSmmAdvertLayoutsTaskUpdate(task);
+      this.queueMiddleService.addTaskToHandleSmmTaskSmmAdvertLayouts(task);
       return true;
     }
 

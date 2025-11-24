@@ -11,6 +11,8 @@ import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/module
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { WikiService } from '@/modules/wiki/wiki.service';
+import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
+import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
@@ -20,6 +22,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly wikiService: WikiService,
+    private readonly bitrixTaskService: BitrixTaskService,
   ) {
     super();
   }
@@ -27,6 +30,11 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data } = job;
+    const response: QueueProcessorResponse = {
+      message: '',
+      status: QueueProcessorStatus.OK,
+      data: null,
+    };
 
     switch (name) {
       case QUEUE_TASKS.MIDDLE
@@ -35,29 +43,31 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
           `[b]receive-client-request[/b][br]Добавлено в очередь: ${name}[br]` +
             JSON.stringify(data),
         );
-        return this.handleTaskClientRequestFromAvito(
+        response.data = await this.handleTaskClientRequestFromAvito(
           data as AvitoCreateLeadDto,
         );
+        break;
+
+      case QUEUE_TASKS.MIDDLE.QUEUE_BX_TASK_UPDATE:
+        response.data =
+          await this.bitrixTaskService.handleObserveEndSmmAdvertLayoutsTaskUpdate(
+            data as B24TaskExtended,
+          );
+        break;
+
+      default:
+        this.logger.warn(`not handled yet: ${name}`);
+        response.message = 'Not handled';
+        response.status = QueueProcessorStatus.NOT_HANDLED;
     }
 
-    this.logger.warn(`not handled yet: ${name}`);
-    return {
-      message: 'Not handled',
-      status: QueueProcessorStatus.OK,
-      data: null,
-    } as QueueProcessorResponse<null>;
+    return response;
   }
 
-  private async handleTaskClientRequestFromAvito(
-    fields: AvitoCreateLeadDto,
-  ): Promise<QueueProcessorResponse<IntegrationAvitoDistributeLeadFromAvito>> {
-    return {
-      message: 'Success',
-      status: QueueProcessorStatus.OK,
-      data: await this.bitrixIntegrationAvitoService.distributeClientRequestFromAvito(
-        fields,
-      ),
-    };
+  private async handleTaskClientRequestFromAvito(fields: AvitoCreateLeadDto) {
+    return this.bitrixIntegrationAvitoService.distributeClientRequestFromAvito(
+      fields,
+    );
   }
 
   /* ==================== EVENTS LISTENERS ==================== */

@@ -4,6 +4,7 @@ import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Queue } from 'bullmq';
 import { JobsOptions } from 'bullmq';
 import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
+import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 
 @Injectable()
 export class QueueMiddleService {
@@ -22,5 +23,13 @@ export class QueueMiddleService {
       data,
       options,
     );
+  }
+
+  /**
+   * Added task on handle update task
+   * @param task
+   */
+  async addTaskToHandleSmmTaskSmmAdvertLayouts(task: B24TaskExtended) {
+    return this.queueBitrixMiddle.add(QUEUE_TASKS.MIDDLE.QUEUE_BX_TASK_UPDATE, task);
   }
 }

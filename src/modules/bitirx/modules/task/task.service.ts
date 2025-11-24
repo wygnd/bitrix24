@@ -83,7 +83,7 @@ export class BitrixTaskService {
     );
   }
 
-  async handleObserveEdnSmmAdvertLayoutsTaskUpdate(task: B24TaskExtended) {
+  async handleObserveEndSmmAdvertLayoutsTaskUpdate(task: B24TaskExtended) {
     const {
       status,
       responsibleId,
