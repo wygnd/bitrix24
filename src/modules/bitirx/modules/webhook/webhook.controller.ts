@@ -25,14 +25,13 @@ export class BitrixWebhookController {
 
   @UseGuards(BitrixWebhookGuard)
   @Post('/bitrix/distribute-new-deal')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   async distributeNewDeal(
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookDistributeDealDto,
   ) {
-    return this.bitrixWebhookService.handleIncomingWebhookToDistributeNewDeal(
-      query,
-    );
+    this.bitrixWebhookService.handleIncomingWebhookToDistributeNewDeal(query);
+    return true;
   }
 
   @ApiOperation({
@@ -42,15 +41,17 @@ export class BitrixWebhookController {
   })
   @UseGuards(BitrixWebhookGuard)
   @Post('/bitrix/approve-site-for-advert')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   async approveSiteDealForAdvert(
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForDealDto,
   ) {
-    return this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForAdvert(
+    this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForAdvert(
       query,
       body.document_id[2],
     );
+
+    return true;
   }
 
   @ApiOperation({
@@ -60,14 +61,15 @@ export class BitrixWebhookController {
   })
   @UseGuards(BitrixWebhookGuard)
   @Post('/bitrix/approve-site-for-case')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   async approveConvertedSiteDealForCase(
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForCase,
   ) {
-    return this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForCase(
+    this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForCase(
       query,
       body.document_id[2],
     );
+    return true;
   }
 }

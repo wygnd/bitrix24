@@ -519,6 +519,25 @@ export class BitrixWebhookService {
             id: dealId,
           },
         },
+        get_lead: {
+          method: 'crm.deal.list',
+          params: {
+            FILTER: {
+              UF_CRM_1731418991: '$result[get_deal][UF_CRM_1731418991]',
+              CATEGORY_ID: '1',
+            },
+            SELECT: ['ID'],
+          },
+        },
+        get_advert_deal: {
+          method: 'crm.deal.list',
+          params: {
+            FILTER: {
+              ID: '$result[get_lead][0][ID]',
+            },
+            SELECT: ['ID', 'UF_CRM_1716383143'],
+          },
+        },
         create_task: {
           method: 'tasks.task.add',
           params: {
@@ -532,7 +551,7 @@ export class BitrixWebhookService {
                 'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
                 'Если есть правки, то:\n- НЕ завершай задачу\n' +
                 '- Пропиши в комментариях задачи список правок\n' +
-                '- Нажми в сообщении кнопку [b]Не согласованно[/b]',
+                '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' + 'Комментарий сделки РК:\n$result[get_advert_deal][0][UF_CRM_1716383143]',
               CREATED_BY: '460',
               RESPONSIBLE_ID: advertDepartment.UF_HEAD,
               UF_CRM_TASK: [`D_${dealId}`],
