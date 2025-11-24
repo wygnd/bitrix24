@@ -1,7 +1,8 @@
 import { B24LeadStatus } from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 
 export interface IntegrationAvitoDistributeLeadFromAvito {
-  lead_id: string;
+  wiki_lead_id: number;
+  lead_id: number;
   status: B24LeadStatus;
 }
 

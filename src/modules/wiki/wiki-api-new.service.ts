@@ -18,7 +18,9 @@ export class WikiApiServiceNew {
     const { baseApiUrl } = wikiConfig;
 
     if (!baseApiUrl)
-      throw new Error('WIKI NEW MODULE: Invalid field: baseApiUrl must be defined');
+      throw new Error(
+        'WIKI NEW MODULE: Invalid field: baseApiUrl must be defined',
+      );
 
     this.http.defaults.baseURL = baseApiUrl;
     this.http.defaults.headers.common['Content-Type'] = 'application/json';
@@ -26,6 +28,20 @@ export class WikiApiServiceNew {
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {
     const { data } = await this.http.post<T, AxiosResponse<U>>(
+      url,
+      body,
+      config,
+    );
+
+    return data;
+  }
+
+  async patch<T = any, U = any>(
+    url: string,
+    body: T,
+    config?: AxiosRequestConfig<T>,
+  ) {
+    const { data } = await this.http.patch<T, AxiosResponse<U>>(
       url,
       body,
       config,

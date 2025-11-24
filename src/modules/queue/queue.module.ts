@@ -8,6 +8,7 @@ import { QueueBitrixLightProcessor } from '@/modules/queue/processors/queue-bitr
 import { BitrixModule } from '@/modules/bitirx/bitrix.module';
 import { QueueBitrixMiddleProcessor } from '@/modules/queue/processors/queue-bitrix-middle.processor';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
+import { WikiModule } from '@/modules/wiki/wiki.module';
 
 @Global()
 @Module({
@@ -47,6 +48,7 @@ import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
       },
     }),
     BitrixModule,
+    WikiModule,
   ],
   controllers: [],
   providers: [

@@ -10,6 +10,7 @@ import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/d
 import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { WikiService } from '@/modules/wiki/wiki.service';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
@@ -18,6 +19,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   constructor(
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
     private readonly bitrixImBotService: BitrixImBotService,
+    private readonly wikiService: WikiService,
   ) {
     super();
   }
@@ -67,8 +69,13 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
         this.bitrixImBotService.sendTestMessage(
           `[b]receive-client-request[/b][br]Очередь завершена: ${name}[br]` +
-          JSON.stringify(data),
+            JSON.stringify(data),
         );
+        this.wikiService.sendResultReceiveClientRequestFromAvitoToWiki({
+          wiki_lead_id: data.wiki_lead_id,
+          lead_id: data.lead_id,
+          status: data.status,
+        });
         break;
     }
   }

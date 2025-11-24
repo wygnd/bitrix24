@@ -6,7 +6,7 @@ import { WikiApiServiceOld } from '@/modules/wiki/wiki-api-old.service';
 import { GetWorkingSalesInterface } from '@/modules/wiki/interfaces/wiki-get-working-sales.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { WikiLeadResultRequestClientFromAvito } from '@/modules/wiki/interfaces/wiki-lead-result.interface';
+import { WikiSendResponseAvito } from '@/modules/wiki/interfaces/wiki-send-response-avito.interface';
 
 @Injectable()
 export class WikiService {
@@ -59,8 +59,11 @@ export class WikiService {
     return sales;
   }
 
-  // todo: Write function
   public async sendResultReceiveClientRequestFromAvitoToWiki(
-    fields: WikiLeadResultRequestClientFromAvito,
-  ) {}
+    fields: WikiSendResponseAvito,
+  ) {
+    return this.wikiApiServiceNew.patch<
+      Omit<WikiSendResponseAvito, 'wiki_lead_id'>
+    >(`/avito/leads/${fields.wiki_lead_id}`, fields);
+  }
 }

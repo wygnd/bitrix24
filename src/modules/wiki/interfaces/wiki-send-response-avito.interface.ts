@@ -1,6 +1,6 @@
 import { B24LeadStatus } from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 
-export interface WikiLeadResultRequestClientFromAvito {
+export interface WikiSendResponseAvito {
   wiki_lead_id: number;
   lead_id: number;
   status: B24LeadStatus;

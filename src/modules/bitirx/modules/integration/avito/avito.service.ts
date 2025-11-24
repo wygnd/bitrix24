@@ -149,6 +149,7 @@ export class BitrixIntegrationAvitoService {
       date,
       time,
       files,
+      wiki_lead_id,
     } = fields;
     const minWorkflowUser = await this.bitrixUserService.getMinWorkflowUser(
       await this.wikiService.getWorkingSalesFromWiki(),
@@ -219,13 +220,14 @@ export class BitrixIntegrationAvitoService {
       }
 
       return {
+        wiki_lead_id: wiki_lead_id,
         lead_id: (
           await this.bitrixService.callBatch<
             B24BatchResponseMap<{
               create_lead: number;
             }>
           >(batchCommands)
-        ).result.result.create_lead.toString(),
+        ).result.result.create_lead,
         status: B24LeadStatus.NEW,
       };
     }
@@ -296,7 +298,7 @@ export class BitrixIntegrationAvitoService {
 
     const leadDateCreate = new Date(DATE_CREATE);
     const now = new Date();
-    let leadStatusType = B24LeadStatus.UNKNOWN;
+    let leadStatusType = B24LeadStatus.LOST;
 
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
@@ -451,13 +453,14 @@ export class BitrixIntegrationAvitoService {
     ) {
       leadStatusType = B24LeadStatus.NONACTIVE;
     } else if (now.toDateString() === leadDateCreate.toDateString()) {
-      leadStatusType = B24LeadStatus.ACTIVE;
+      leadStatusType = B24LeadStatus.NEW;
     } else {
-      leadStatusType = B24LeadStatus.EXISTS;
+      leadStatusType = B24LeadStatus.ACTIVE;
     }
 
     return {
-      lead_id: leadId.toString(),
+      wiki_lead_id: wiki_lead_id,
+      lead_id: leadId,
       status: leadStatusType,
     };
   }
