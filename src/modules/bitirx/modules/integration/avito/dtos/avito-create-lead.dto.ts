@@ -64,14 +64,15 @@ export class AvitoCreateLeadFileDto implements B24FileReceive {
 
 export class AvitoCreateLeadDto {
   @ApiProperty({
-    type: String,
+    type: Number,
     description: 'unique wiki lead id',
     required: true,
-    example: '12345',
+    example: 12345,
   })
   @IsNotEmpty()
-  @IsString()
-  wiki_lead_id: string;
+  @Type(() => Number)
+  @IsInt()
+  wiki_lead_id: number;
 
   @ApiProperty({
     type: [String],

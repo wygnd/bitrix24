@@ -5,8 +5,8 @@ export const QUEUE_NAMES = {
   QUEUE_BITRIX_HEAVY: 'bitrix:heavy',
 };
 
-export const QUEUE_TASK_NAMES = {
+export const QUEUE_TASKS = {
   QUEUE_BX_TASK_UPDATE: 'bxTaskUpdate',
   QUEUE_BX_INTEGRATION_AVITO_HANDLE_REQUEST: 'bxIntegrationAvitoHandleRequest',
-  QUEUE_BX_TEST: 'bxTest',
+  QUEUE_BX_TEST: 'bitrix:task:test',
 };

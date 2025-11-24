@@ -113,7 +113,7 @@ export class BitrixIntegrationAvitoService {
     return sendMessageResult.result ?? -1;
   }
 
-  public async distributeClientRequests(
+  public async distributeClientRequestFromAvito(
     fields: AvitoCreateLeadDto,
   ): Promise<IntegrationAvitoDistributeLeadFromAvito> {
     const {
@@ -332,7 +332,8 @@ export class BitrixIntegrationAvitoService {
                 'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
                 `Лид: ${this.bitrixService.generateLeadUrl(leadId)}` +
                 `[br]C авито: ${avito}` +
-                `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
+                `[br]Сообщение:[br]>>${messages.join('[br]>>')}[br]` +
+                `${service_text ? 'Выбранная услуга: ' + service_text : ''}`,
             },
           };
         }
@@ -449,7 +450,7 @@ export class BitrixIntegrationAvitoService {
    *
    * @param fields
    */
-  public async distributeClientRequestByAI(fields: AvitoCreateLeadDto) {
+  public async distributeClientRequestFromAvitoByAI(fields: AvitoCreateLeadDto) {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
