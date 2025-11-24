@@ -15,13 +15,12 @@ import { EventAddDto } from '@/modules/bitirx/modules/events/dtos/event-add.dto'
 import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
 import { EventHandleUpdateTaskDto } from '@/modules/bitirx/modules/events/dtos/event-task-update.dto';
 import express from 'express';
+import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
 
 @ApiTags(B24ApiTags.EVENTS)
 @Controller('events')
 export class BitrixEventsController {
-  constructor(
-    private readonly eventsService: BitrixEventService,
-  ) {}
+  constructor(private readonly eventsService: BitrixEventService) {}
 
   @UseGuards(AuthGuard)
   @Post('/add')
@@ -29,8 +28,8 @@ export class BitrixEventsController {
     return this.eventsService.addEvent(fields);
   }
 
-  @HttpCode(HttpStatus.OK)
   @UseGuards(BitrixEventGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('/handle/task/update')
   async handleTaskUpdate(
     @Body() fields: EventHandleUpdateTaskDto,
@@ -43,5 +42,12 @@ export class BitrixEventsController {
     if (!resultHandlingTask) status = HttpStatus.ACCEPTED;
 
     res.status(status).json(resultHandlingTask);
+  }
+
+  @UseGuards(BitrixEventGuard)
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Post('/handle/lead/delete')
+  async handleLeadDelete(@Body() fields: EventLeadDeleteDto) {
+    return this.eventsService.handleLeadDelete(fields);
   }
 }

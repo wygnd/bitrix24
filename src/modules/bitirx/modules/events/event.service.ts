@@ -6,12 +6,15 @@ import {
 } from '@/modules/bitirx/modules/events/interfaces/events.interface';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
+import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
 
 @Injectable()
 export class BitrixEventService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly taskService: BitrixTaskService,
+    private readonly queueLightService: QueueLightService,
   ) {}
 
   async addEvent(fields: B24EventAdd) {
@@ -35,5 +38,10 @@ export class BitrixEventService {
     }
 
     return false;
+  }
+
+  async handleLeadDelete({ data }: EventLeadDeleteDto) {
+    this.queueLightService.addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID);
+    return true;
   }
 }

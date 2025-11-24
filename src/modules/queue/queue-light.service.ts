@@ -30,6 +30,10 @@ export class QueueLightService {
    * @param task
    */
   async addTaskBxTask(task: B24TaskExtended) {
-    return this.queueBitrixLight.add(QUEUE_TASKS.QUEUE_BX_TASK_UPDATE, task);
+    return this.queueBitrixLight.add(QUEUE_TASKS.LIGHT.QUEUE_BX_TASK_UPDATE, task);
+  }
+
+  async addTaskSendWikiRequestOnDeleteLead(leadId: string) {
+    return this.queueBitrixLight.add(QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE, leadId);
   }
 }
