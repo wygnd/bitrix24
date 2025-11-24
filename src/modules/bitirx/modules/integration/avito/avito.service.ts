@@ -117,7 +117,7 @@ export class BitrixIntegrationAvitoService {
       phone,
       avito_number,
       avito,
-      messages,
+      message,
       client_name,
       region,
       city,
@@ -150,7 +150,7 @@ export class BitrixIntegrationAvitoService {
                   ? minWorkflowUser
                   : '344',
               UF_CRM_1669804346: avito,
-              UF_CRM_1653291114976: messages.join('[br][br]'),
+              UF_CRM_1653291114976: message.join('[br][br]'),
               PHONE: [
                 {
                   VALUE: phone,
@@ -274,7 +274,7 @@ export class BitrixIntegrationAvitoService {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: messages.join('[br][br]'),
+      UF_CRM_1653291114976: message.join('[br][br]'),
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: {
@@ -326,7 +326,7 @@ export class BitrixIntegrationAvitoService {
                 'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
                 `Лид: ${this.bitrixService.generateLeadUrl(leadId)}` +
                 `[br]C авито: ${avito}` +
-                `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
+                `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
             },
           };
         }
@@ -338,7 +338,7 @@ export class BitrixIntegrationAvitoService {
             MESSAGE:
               '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
               this.bitrixService.generateLeadUrl(leadId) +
-              `[br]C авито: ${avito}[br]Сообщение:[br]>>${messages.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
+              `[br]C авито: ${avito}[br]Сообщение:[br]>>${message.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
               '[br]Имя, вижу, что Вы писали моему коллеге, на другое Авито, продолжаете искать подрядчика?' +
               'Возможно какие-то дополнительные вопросы появились?[br]Варианты развития событий:[br]' +
               '1. Клиент просто сравнивает, тогда говорим следующее: У нас студия, работаем уже больше 9 лет и у нас много ' +
@@ -379,7 +379,7 @@ export class BitrixIntegrationAvitoService {
               'и, при необходимости, распределить лид в работу[/b][br]' +
               this.bitrixService.generateLeadUrl(leadId) +
               `С авито: ${avito}` +
-              `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
+              `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
           },
         };
 
@@ -393,7 +393,7 @@ export class BitrixIntegrationAvitoService {
         fields: {
           ENTITY_ID: leadId,
           ENTITY_TYPE: 'lead',
-          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${messages.join('\n')}`,
+          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${message.join('\n')}`,
         },
       },
     };
@@ -447,7 +447,7 @@ export class BitrixIntegrationAvitoService {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
-      fields.messages.join('[br]>>');
+      fields.message.join('[br]>>');
 
     const keyboardParams: ImbotApproveDistributeLeadFromAvitoByAi = {
       message: this.bitrixBotService.encodeText(message),
