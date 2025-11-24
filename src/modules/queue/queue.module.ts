@@ -3,7 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { RedisOptions } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { QueueService } from '@/modules/queue/queue.service';
-import { QUEUE_NAMES } from '@/modules/queue-processor/queue-processor.constants';
+import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
+import { QueueBitrixLightConsumer } from '@/modules/queue/consumers/queue-bitrix-light.consumer';
 
 @Module({
   imports: [
@@ -22,13 +23,14 @@ import { QUEUE_NAMES } from '@/modules/queue-processor/queue-processor.constants
     }),
     BullModule.registerQueue({
       name: QUEUE_NAMES.QUEUE_BITRIX_LIGHT,
+      prefix: 'qbitrix',
       defaultJobOptions: {
         removeOnComplete: true,
       },
     }),
   ],
   controllers: [],
-  providers: [QueueService],
-  exports: [QueueService, BullModule],
+  providers: [QueueService, QueueBitrixLightConsumer],
+  exports: [QueueService],
 })
 export class QueueModule {}

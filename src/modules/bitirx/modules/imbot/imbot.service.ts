@@ -749,7 +749,7 @@ export class BitrixImBotService {
       return false;
     }
 
-    this.avitoIntegrationService.distributeClientRequests(fields);
+    this.avitoIntegrationService.distributeClientRequestFromAvito(fields);
     return true;
   }
 

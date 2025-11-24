@@ -18,6 +18,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { QueueModule } from '@/modules/queue/queue.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { join } from 'path';
     WikiModule,
     AppHttModule,
     AvitoModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [
