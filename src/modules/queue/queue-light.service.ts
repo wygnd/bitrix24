@@ -3,10 +3,9 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Queue } from 'bullmq';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
-import { JobsOptions } from 'bullmq';
 
 @Injectable()
-export class QueueService {
+export class QueueLightService {
   constructor(
     @InjectQueue(QUEUE_NAMES.QUEUE_BITRIX_LIGHT)
     private queueBitrixLight: Queue,
@@ -31,17 +30,6 @@ export class QueueService {
    * @param task
    */
   async addTaskBxTask(task: B24TaskExtended) {
-    return this.queueBitrixLight.add(
-      QUEUE_TASKS.QUEUE_BX_TASK_UPDATE,
-      task,
-    );
-  }
-
-  async addTaskTest(data: string, options?: JobsOptions) {
-    return this.queueBitrixLight.add(
-      QUEUE_TASKS.QUEUE_BX_TEST,
-      data,
-      options,
-    );
+    return this.queueBitrixLight.add(QUEUE_TASKS.QUEUE_BX_TASK_UPDATE, task);
   }
 }

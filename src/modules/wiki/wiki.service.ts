@@ -37,7 +37,7 @@ export class WikiService {
       const salesFromCache = await this.redisService.get<string[]>(
         REDIS_KEYS.WIKI_WORKING_SALES,
       );
-      console.log(salesFromCache);
+
       if (salesFromCache) return salesFromCache;
     }
 

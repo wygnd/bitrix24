@@ -74,6 +74,7 @@ import { AvitoModule } from '@/modules/avito/avito.module';
   exports: [
     BitrixService,
     BitrixMessageService,
+    BitrixImBotService,
     BitrixTaskService,
     BitrixDealService,
     BitrixWebhookService,

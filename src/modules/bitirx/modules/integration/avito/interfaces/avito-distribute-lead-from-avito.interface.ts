@@ -4,3 +4,8 @@ export interface IntegrationAvitoDistributeLeadFromAvito {
   lead_id: string;
   status: B24LeadStatus;
 }
+
+export interface IntegrationAvitoDistributeLeadFromAvitoServiceOptions {
+  name: string;
+  value: string;
+}

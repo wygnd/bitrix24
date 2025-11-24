@@ -5,6 +5,7 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -17,6 +18,7 @@ import {
   B24FileReceive,
   B24MimeType,
 } from '@/modules/bitirx/interfaces/bitrix-file.interface';
+import type { IntegrationAvitoDistributeLeadFromAvitoServiceOptions } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
 
 export class AvitoCreateLeadFileDto implements B24FileReceive {
   @ApiProperty({
@@ -160,14 +162,16 @@ export class AvitoCreateLeadDto {
   client_name: string = '';
 
   @ApiProperty({
-    type: String,
+    type: Object,
     description: 'Services',
     required: false,
     example: 'Разработка сайта',
   })
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => AvitoClientRequestsType[value.toLowerCase()] ?? '')
+  @Transform(({ value }) => value.toLowerCase())
+  @IsIn(Object.keys(AvitoClientRequestsType))
+  @IsString()
   service_text: string = '';
 
   @ApiProperty({

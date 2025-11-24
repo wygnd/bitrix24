@@ -545,10 +545,8 @@ export class BitrixWebhookService {
         },
       });
 
-    if (Object.keys(batchResponseCreateTask.result_error).length !== 0) {
-      console.log(batchResponseCreateTask.result_error);
+    if (Object.keys(batchResponseCreateTask.result_error).length !== 0)
       throw new BadRequestException(batchResponseCreateTask.result_error);
-    }
 
     const { id: taskId } = batchResponseCreateTask.result.create_task.task;
 

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   HttpStatus,
   ParseArrayPipe,
   ParseIntPipe,
@@ -64,11 +65,11 @@ export class BitrixAvitoController {
     summary: 'сообщений из авито',
   })
   @ApiBody({ type: AvitoCreateLeadDto })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('/receive-client-request')
   async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
-    return fields.is_ai === '1'
-      ? this.bitrixIntegrationAvitoService.distributeClientRequestFromAvitoByAI(fields)
-      : this.bitrixIntegrationAvitoService.distributeClientRequestFromAvito(fields);
+    return this.bitrixIntegrationAvitoService.handleDistributeClientRequestFromAvito(
+      fields,
+    );
   }
 }

@@ -766,4 +766,13 @@ export class BitrixImBotService {
       Math.floor(Math.random() * this.distributeDealMessages.length)
     ];
   }
+
+  public async sendTestMessage(message: string) {
+    const { result } = await this.sendMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE: message,
+    });
+
+    return result;
+  }
 }

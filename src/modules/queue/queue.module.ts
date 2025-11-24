@@ -2,11 +2,12 @@ import { Global, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { RedisOptions } from 'ioredis';
 import { ConfigService } from '@nestjs/config';
-import { QueueService } from '@/modules/queue/queue.service';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 import { QueueBitrixLightProcessor } from '@/modules/queue/processors/queue-bitrix-light.processor';
 import { BitrixModule } from '@/modules/bitirx/bitrix.module';
-import { QueueBitrixLightListener } from '@/modules/queue/listeners/queue-bitrix-light.listener';
+import { QueueBitrixMiddleProcessor } from '@/modules/queue/processors/queue-bitrix-middle.processor';
+import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 
 @Global()
 @Module({
@@ -31,13 +32,29 @@ import { QueueBitrixLightListener } from '@/modules/queue/listeners/queue-bitrix
         removeOnComplete: true,
       },
     }),
+    BullModule.registerQueue({
+      name: QUEUE_NAMES.QUEUE_BITRIX_MIDDLE,
+      prefix: 'qbitrix',
+      defaultJobOptions: {
+        removeOnComplete: true,
+      },
+    }),
+    BullModule.registerQueue({
+      name: QUEUE_NAMES.QUEUE_BITRIX_HEAVY,
+      prefix: 'qbitrix',
+      defaultJobOptions: {
+        removeOnComplete: true,
+      },
+    }),
     BitrixModule,
   ],
   controllers: [],
   providers: [
+    QueueLightService,
+    QueueMiddleService,
     QueueBitrixLightProcessor,
-    QueueService,
+    QueueBitrixMiddleProcessor,
   ],
-  exports: [QueueService],
+  exports: [QueueLightService, QueueMiddleService],
 })
 export class QueueModule {}

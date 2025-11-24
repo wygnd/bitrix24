@@ -1,4 +1,10 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
@@ -29,6 +35,8 @@ import { ConfigService } from '@nestjs/config';
 import { BitrixAvitoConstants } from '@/common/interfaces/bitrix-config.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
+import { AvitoClientRequestsType } from '@/modules/bitirx/modules/integration/avito/avito.constants';
+import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
@@ -43,6 +51,7 @@ export class BitrixIntegrationAvitoService {
     private readonly wikiService: WikiService,
     @Inject(forwardRef(() => BitrixImBotService))
     private readonly bitrixBotService: BitrixImBotService,
+    private readonly queueMiddleService: QueueMiddleService,
   ) {
     const avitoConstants = this.configService.get<BitrixAvitoConstants>(
       'bitrixConstants.avito',
@@ -113,6 +122,18 @@ export class BitrixIntegrationAvitoService {
     return sendMessageResult.result ?? -1;
   }
 
+  public async handleDistributeClientRequestFromAvito(
+    fields: AvitoCreateLeadDto,
+  ) {
+    fields.is_ai === '1'
+      ? this.distributeClientRequestFromAvitoByAI(fields)
+      : this.queueMiddleService.addTaskForDistributeClientRequestFromAvito(
+          fields,
+        );
+
+    return true;
+  }
+
   public async distributeClientRequestFromAvito(
     fields: AvitoCreateLeadDto,
   ): Promise<IntegrationAvitoDistributeLeadFromAvito> {
@@ -169,7 +190,7 @@ export class BitrixIntegrationAvitoService {
               UF_CRM_1580204442317: city, // Город
               UF_CRM_1760173920: region, // Регион
               NAME: client_name,
-              UF_CRM_1598441630: service_text, // С чем обратился
+              UF_CRM_1598441630: AvitoClientRequestsType[service_text], // С чем обратился
             },
           },
         },
@@ -292,7 +313,7 @@ export class BitrixIntegrationAvitoService {
       UF_CRM_1580204442317: city, // Город
       UF_CRM_1760173920: region, // Регион
       NAME: client_name,
-      UF_CRM_1598441630: service_text, // С чем обратился
+      UF_CRM_1598441630: AvitoClientRequestsType[service_text], // С чем обратился
       UF_CRM_1715671150: new Date(), // дата последнего обращения
     };
 
@@ -450,7 +471,9 @@ export class BitrixIntegrationAvitoService {
    *
    * @param fields
    */
-  public async distributeClientRequestFromAvitoByAI(fields: AvitoCreateLeadDto) {
+  public async distributeClientRequestFromAvitoByAI(
+    fields: AvitoCreateLeadDto,
+  ) {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +

@@ -44,6 +44,7 @@ import { QueueModule } from '@/modules/queue/queue.module';
     WikiModule,
     AppHttModule,
     AvitoModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

@@ -72,7 +72,6 @@ export class BitrixDealService {
     );
     if (dealFieldsFromCache) return dealFieldsFromCache;
 
-    console.log(dealFieldsFromCache);
     const { result: dealFields } = await this.bitrixService.callMethod<
       object,
       B24DealFields
