@@ -4,7 +4,7 @@ import {
   B24DuplicateFindByComm,
   B24DuplicateFindByCommResponse,
   B24Lead,
-} from './lead.interface';
+} from './interfaces/lead.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 

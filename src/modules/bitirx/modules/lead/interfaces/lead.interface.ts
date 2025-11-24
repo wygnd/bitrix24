@@ -12,3 +12,11 @@ export interface B24DuplicateFindByComm {
 }
 
 export type B24DuplicateFindByCommResponse = { [key: string]: number[] };
+
+export enum B24LeadStatus {
+  NEW = 'new',
+  EXISTS = 'exists',
+  NONACTIVE = 'nonactive',
+  ACTIVE = 'active',
+  UNKNOWN = 'unknown',
+}

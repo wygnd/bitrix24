@@ -1,5 +1,8 @@
 export const QUEUE_NAMES = {
-  QUEUE_BITRIX_EVENTS: 'bitrix_event',
+  QUEUE_BITRIX_TEST: 'bitrix:test',
+  QUEUE_BITRIX_LIGHT: 'bitrix:light',
+  QUEUE_BITRIX_MIDDLE: 'bitrix:middle',
+  QUEUE_BITRIX_HEAVY: 'bitrix:heavy',
 };
 
 export const QUEUE_TASK_NAMES = {

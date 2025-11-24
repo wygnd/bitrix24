@@ -82,7 +82,7 @@ export class AvitoCreateLeadDto {
   @IsOptional()
   @IsArray({ message: 'messages must be an array' })
   @IsString({ each: true, message: 'Invalid messages field' })
-  message: string[];
+  messages: string[];
 
   @ApiProperty({
     type: String,

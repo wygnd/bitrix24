@@ -21,7 +21,7 @@ import { QUEUE_NAMES } from '@/modules/queue-processor/queue-processor.constants
       inject: [ConfigService],
     }),
     BullModule.registerQueue({
-      name: QUEUE_NAMES.QUEUE_BITRIX_EVENTS,
+      name: QUEUE_NAMES.QUEUE_BITRIX_LIGHT,
       defaultJobOptions: {
         removeOnComplete: true,
       },

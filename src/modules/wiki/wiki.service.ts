@@ -6,12 +6,13 @@ import { WikiApiServiceOld } from '@/modules/wiki/wiki-api-old.service';
 import { GetWorkingSalesInterface } from '@/modules/wiki/interfaces/wiki-get-working-sales.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { WikiLeadResultRequestClientFromAvito } from '@/modules/wiki/interfaces/wiki-lead-result.interface';
 
 @Injectable()
 export class WikiService {
   constructor(
-    private readonly wikiApiServiceNew: WikiApiServiceNew,
-    private readonly wikiApiServiceOld: WikiApiServiceOld,
+    private readonly wikiApiServiceNew: WikiApiServiceNew, // new-wiki
+    private readonly wikiApiServiceOld: WikiApiServiceOld, // wiki.grampus-server
     private readonly redisService: RedisService,
   ) {}
 
@@ -57,4 +58,9 @@ export class WikiService {
 
     return sales;
   }
+
+  // todo: Write function
+  public async sendResultReceiveClientRequestFromAvitoToWiki(
+    fields: WikiLeadResultRequestClientFromAvito,
+  ) {}
 }

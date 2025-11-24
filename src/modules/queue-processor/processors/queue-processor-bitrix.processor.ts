@@ -5,7 +5,7 @@ import {
 } from '@/modules/queue-processor/queue-processor.constants';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
 
-@Processor(QUEUE_NAMES.QUEUE_BITRIX_EVENTS)
+@Processor(QUEUE_NAMES.QUEUE_BITRIX_TEST)
 export class QueueProcessorBitrixProcessor extends WorkerHost {
   constructor() {
     super();

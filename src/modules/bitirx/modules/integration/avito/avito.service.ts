@@ -5,7 +5,8 @@ import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import {
   B24DuplicateFindByComm,
   B24Lead,
-} from '@/modules/bitirx/modules/lead/lead.interface';
+  B24LeadStatus,
+} from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 import { isArray } from 'class-validator';
 import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
 import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
@@ -27,7 +28,7 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { ConfigService } from '@nestjs/config';
 import { BitrixAvitoConstants } from '@/common/interfaces/bitrix-config.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
-import { B24FileUpload } from '@/modules/bitirx/interfaces/bitrix-file.interface';
+import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
@@ -112,12 +113,14 @@ export class BitrixIntegrationAvitoService {
     return sendMessageResult.result ?? -1;
   }
 
-  public async distributeClientRequests(fields: AvitoCreateLeadDto) {
+  public async distributeClientRequests(
+    fields: AvitoCreateLeadDto,
+  ): Promise<IntegrationAvitoDistributeLeadFromAvito> {
     const {
       phone,
       avito_number,
       avito,
-      message,
+      messages,
       client_name,
       region,
       city,
@@ -150,7 +153,7 @@ export class BitrixIntegrationAvitoService {
                   ? minWorkflowUser
                   : '344',
               UF_CRM_1669804346: avito,
-              UF_CRM_1653291114976: message.join('[br][br]'),
+              UF_CRM_1653291114976: messages.join('[br][br]'),
               PHONE: [
                 {
                   VALUE: phone,
@@ -194,13 +197,16 @@ export class BitrixIntegrationAvitoService {
         };
       }
 
-      return (
-        await this.bitrixService.callBatch<
-          B24BatchResponseMap<{
-            create_lead: number;
-          }>
-        >(batchCommands)
-      ).result.result.create_lead;
+      return {
+        lead_id: (
+          await this.bitrixService.callBatch<
+            B24BatchResponseMap<{
+              create_lead: number;
+            }>
+          >(batchCommands)
+        ).result.result.create_lead.toString(),
+        status: B24LeadStatus.NEW,
+      };
     }
 
     const leadId = result[0];
@@ -269,12 +275,12 @@ export class BitrixIntegrationAvitoService {
 
     const leadDateCreate = new Date(DATE_CREATE);
     const now = new Date();
-    let leadStatusType = '';
+    let leadStatusType = B24LeadStatus.UNKNOWN;
 
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: message.join('[br][br]'),
+      UF_CRM_1653291114976: messages.join('[br][br]'),
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: {
@@ -326,7 +332,7 @@ export class BitrixIntegrationAvitoService {
                 'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
                 `Лид: ${this.bitrixService.generateLeadUrl(leadId)}` +
                 `[br]C авито: ${avito}` +
-                `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
+                `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
             },
           };
         }
@@ -338,7 +344,7 @@ export class BitrixIntegrationAvitoService {
             MESSAGE:
               '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
               this.bitrixService.generateLeadUrl(leadId) +
-              `[br]C авито: ${avito}[br]Сообщение:[br]>>${message.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
+              `[br]C авито: ${avito}[br]Сообщение:[br]>>${messages.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
               '[br]Имя, вижу, что Вы писали моему коллеге, на другое Авито, продолжаете искать подрядчика?' +
               'Возможно какие-то дополнительные вопросы появились?[br]Варианты развития событий:[br]' +
               '1. Клиент просто сравнивает, тогда говорим следующее: У нас студия, работаем уже больше 9 лет и у нас много ' +
@@ -379,7 +385,7 @@ export class BitrixIntegrationAvitoService {
               'и, при необходимости, распределить лид в работу[/b][br]' +
               this.bitrixService.generateLeadUrl(leadId) +
               `С авито: ${avito}` +
-              `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
+              `[br]Сообщение:[br]>>${messages.join('[br]>>')}`,
           },
         };
 
@@ -393,7 +399,7 @@ export class BitrixIntegrationAvitoService {
         fields: {
           ENTITY_ID: leadId,
           ENTITY_TYPE: 'lead',
-          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${message.join('\n')}`,
+          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${messages.join('\n')}`,
         },
       },
     };
@@ -421,15 +427,15 @@ export class BitrixIntegrationAvitoService {
       now.toDateString() !== leadDateCreate.toDateString() &&
       B24LeadRejectStages.includes(STATUS_ID)
     ) {
-      leadStatusType = 'nonactive';
+      leadStatusType = B24LeadStatus.NONACTIVE;
     } else if (now.toDateString() === leadDateCreate.toDateString()) {
-      leadStatusType = 'active';
+      leadStatusType = B24LeadStatus.ACTIVE;
     } else {
-      leadStatusType = 'new';
+      leadStatusType = B24LeadStatus.NEW;
     }
 
     return {
-      lead_id: leadId,
+      lead_id: leadId.toString(),
       status: leadStatusType,
     };
   }
@@ -447,7 +453,7 @@ export class BitrixIntegrationAvitoService {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
-      fields.message.join('[br]>>');
+      fields.messages.join('[br]>>');
 
     const keyboardParams: ImbotApproveDistributeLeadFromAvitoByAi = {
       message: this.bitrixBotService.encodeText(message),

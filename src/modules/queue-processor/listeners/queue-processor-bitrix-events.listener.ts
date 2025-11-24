@@ -7,7 +7,7 @@ import type {
 } from '@/modules/queue-processor/interfaces/queue-events.interface';
 import { Logger } from '@nestjs/common';
 
-@QueueEventsListener(QUEUE_NAMES.QUEUE_BITRIX_EVENTS)
+@QueueEventsListener(QUEUE_NAMES.QUEUE_BITRIX_TEST)
 export class QueueBitrixEventsListener extends QueueEventsHost {
   private readonly logger = new Logger(QueueBitrixEventsListener.name);
 

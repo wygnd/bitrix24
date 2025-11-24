@@ -8,7 +8,7 @@ import { JobsOptions } from 'bullmq';
 @Injectable()
 export class QueueService {
   constructor(
-    @InjectQueue(QUEUE_NAMES.QUEUE_BITRIX_EVENTS)
+    @InjectQueue(QUEUE_NAMES.QUEUE_BITRIX_TEST)
     private queueBitrixSync: Queue,
   ) {}
 

@@ -7,7 +7,7 @@ import {
 } from '../../interfaces/bitrix.interface';
 import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
-import { B24Lead } from '@/modules/bitirx/modules/lead/lead.interface';
+import { B24Lead } from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 
 @Injectable()
 export class BitrixUserService {
