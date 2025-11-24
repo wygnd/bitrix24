@@ -15,7 +15,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
 
       let message = `[${statusCode}] ${method} ${url} - ${userAgent} => ${Date.now() - requestTime}ms`;
 
-      this.logger.log(message);
+      this.logger.verbose(message);
     });
 
     next();
