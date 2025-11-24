@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { WikiConfig } from '@/common/interfaces/wiki-config.interface';
+import { config } from 'rxjs';
 
 @Injectable()
 export class WikiApiServiceNew {
@@ -46,6 +47,12 @@ export class WikiApiServiceNew {
       body,
       config,
     );
+
+    return data;
+  }
+
+  async delete<T = any>(url: string, config?: AxiosRequestConfig) {
+    const { data } = await this.http.delete<T>(url, config);
 
     return data;
   }

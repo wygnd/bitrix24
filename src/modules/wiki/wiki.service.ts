@@ -66,4 +66,8 @@ export class WikiService {
       Omit<WikiSendResponseAvito, 'wiki_lead_id'>
     >(`/avito/leads/${fields.wiki_lead_id}`, fields);
   }
+
+  public async sendNotifyAboutDeleteLead(leadId: string) {
+    return this.wikiApiServiceNew.delete(`/api/avito/leads/${leadId}`);
+  }
 }

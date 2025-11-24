@@ -29,7 +29,8 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     const { name, data } = job;
 
     switch (name) {
-      case QUEUE_TASKS.MIDDLE.QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
+      case QUEUE_TASKS.MIDDLE
+        .QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
         this.bitrixImBotService.sendTestMessage(
           `[b]receive-client-request[/b][br]Добавлено в очередь: ${name}[br]` +
             JSON.stringify(data),
@@ -63,7 +64,8 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue }: Job) {
     switch (name) {
-      case QUEUE_TASKS.MIDDLE.QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
+      case QUEUE_TASKS.MIDDLE
+        .QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
         const { data } =
           returnvalue as QueueProcessorResponse<IntegrationAvitoDistributeLeadFromAvito>;
 
@@ -78,5 +80,12 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         });
         break;
     }
+  }
+
+  @OnWorkerEvent('failed')
+  onFailed(job: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `Ошибка выполнения задачи: ` + JSON.stringify(job),
+    );
   }
 }

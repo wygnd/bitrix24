@@ -1,5 +1,5 @@
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import {
@@ -7,12 +7,16 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
+import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
   private readonly logger = new Logger(QueueBitrixLightProcessor.name);
 
-  constructor(private readonly wikiService: WikiService) {
+  constructor(
+    private readonly wikiService: WikiService,
+    private readonly bitrixImBotService: BitrixImBotService,
+  ) {
     super();
   }
 
@@ -27,6 +31,13 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
     switch (name) {
       case QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE:
+        this.bitrixImBotService.sendTestMessage(
+          '[b]handle delete deal[/b][br]Задача добавлена в очередь: ' +
+            JSON.stringify(data),
+        );
+        response.data = await this.wikiService.sendNotifyAboutDeleteLead(
+          data as string,
+        );
         break;
 
       default:
@@ -39,4 +50,17 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
+  @OnWorkerEvent('failed')
+  onFailed(job: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `Ошибка выполнения задачи: ` + JSON.stringify(job),
+    );
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(job: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      '[b]handle delete deal[/b][br]Задача завершена: ' + JSON.stringify(job),
+    );
+  }
 }
