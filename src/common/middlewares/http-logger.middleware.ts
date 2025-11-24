@@ -6,7 +6,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
   private readonly logger = new Logger('HTTP');
 
   use(req: Request, res: Response, next: NextFunction): void {
-    const { ip, method, originalUrl: url } = req;
+    const { method, originalUrl: url } = req;
     const userAgent = req.get('user-agent') || '';
     const requestTime = Date.now();
 
@@ -15,7 +15,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
 
       let message = `[${statusCode}] ${method} ${url} - ${userAgent} => ${Date.now() - requestTime}ms`;
 
-      this.logger.verbose(message);
+      this.logger.debug(message);
     });
 
     next();
