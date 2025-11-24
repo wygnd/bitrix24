@@ -431,7 +431,7 @@ export class BitrixIntegrationAvitoService {
     } else if (now.toDateString() === leadDateCreate.toDateString()) {
       leadStatusType = B24LeadStatus.ACTIVE;
     } else {
-      leadStatusType = B24LeadStatus.NEW;
+      leadStatusType = B24LeadStatus.EXISTS;
     }
 
     return {
