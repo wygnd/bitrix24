@@ -175,7 +175,7 @@ export class BitrixIntegrationAvitoService {
                   ? minWorkflowUser
                   : '344',
               UF_CRM_1669804346: avito,
-              UF_CRM_1653291114976: message.join('[br][br]'),
+              UF_CRM_1653291114976: message.join('\n\n'),
               PHONE: [
                 {
                   VALUE: phone,
@@ -303,7 +303,7 @@ export class BitrixIntegrationAvitoService {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: message.join('[br][br]'),
+      UF_CRM_1653291114976: message.join('\n\n'),
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: {
