@@ -68,6 +68,6 @@ export class WikiService {
   }
 
   public async sendNotifyAboutDeleteLead(leadId: string) {
-    return this.wikiApiServiceNew.delete(`/api/avito/leads/${leadId}`);
+    return this.wikiApiServiceNew.delete(`/avito/leads/${leadId}`);
   }
 }
