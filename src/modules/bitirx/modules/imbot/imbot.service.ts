@@ -744,8 +744,7 @@ export class BitrixImBotService {
     });
 
     if (!approved) {
-      // todo: uncommend on monday
-      // this.avitoService.rejectDistributeLeadByAi(phone);
+      this.avitoService.rejectDistributeLeadByAi(phone);
       return false;
     }
 
@@ -771,7 +770,7 @@ export class BitrixImBotService {
     const { result } = await this.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE: message,
-      URL_PREVIEW: 'N'
+      URL_PREVIEW: 'N',
     });
 
     return result;
