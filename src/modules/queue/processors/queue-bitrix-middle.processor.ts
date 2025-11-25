@@ -30,6 +30,9 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data } = job;
+    this.bitrixImBotService.sendTestMessage(
+      `[bДобавлена задача [${name}] в очередь:[br][/b]` + JSON.stringify(data),
+    );
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -69,6 +72,10 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue }: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Задача [${name}] выполнена:[br][/b]` + JSON.stringify(returnvalue),
+    );
+
     switch (name) {
       case QUEUE_TASKS.MIDDLE
         .QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:

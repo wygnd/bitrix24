@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/wiki-api-new.service';
 import { DepartmentHeadDealCount } from '@/modules/bitirx/modules/department/interfaces/department-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
@@ -6,7 +6,12 @@ import { WikiApiServiceOld } from '@/modules/wiki/wiki-api-old.service';
 import { GetWorkingSalesInterface } from '@/modules/wiki/interfaces/wiki-get-working-sales.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { WikiSendResponseAvito } from '@/modules/wiki/interfaces/wiki-send-response-avito.interface';
+import {
+  WikiUpdateLeadRequest,
+  WikIUpdateLeadResponse,
+} from '@/modules/wiki/interfaces/wiki-update-lead.interface';
+import { AxiosResponse, isAxiosError } from 'axios';
+import { WikiDeleteLead } from '@/modules/wiki/interfaces/wiki-delete-lead.interface';
 
 @Injectable()
 export class WikiService {
@@ -60,14 +65,43 @@ export class WikiService {
   }
 
   public async sendResultReceiveClientRequestFromAvitoToWiki(
-    fields: WikiSendResponseAvito,
-  ) {
-    return this.wikiApiServiceNew.patch<
-      Omit<WikiSendResponseAvito, 'wiki_lead_id'>
-    >(`/avito/leads/${fields.wiki_lead_id}`, fields);
+    fields: WikiUpdateLeadRequest,
+  ): Promise<WikIUpdateLeadResponse> {
+    try {
+      return this.wikiApiServiceNew.patch<
+        Omit<WikiUpdateLeadRequest, 'wiki_lead_id'>,
+        WikIUpdateLeadResponse
+      >(`/avito/leads/${fields.wiki_lead_id}`, fields);
+    } catch (e) {
+      if (!isAxiosError(e)) throw e;
+
+      if (!e.response || e.response.status !== HttpStatus.NOT_FOUND) throw e;
+
+      return {
+        wiki_lead_id: 0,
+        lead_id: 0,
+        message: e.response.statusText,
+      };
+    }
   }
 
-  public async sendNotifyAboutDeleteLead(leadId: string) {
-    return this.wikiApiServiceNew.delete(`/avito/leads/${leadId}`);
+  public async sendNotifyAboutDeleteLead(
+    leadId: string,
+  ): Promise<WikiDeleteLead> {
+    try {
+      return this.wikiApiServiceNew.delete<WikiDeleteLead>(
+        `/avito/leads/${leadId}`,
+      );
+    } catch (e) {
+      if (!isAxiosError(e)) throw e;
+
+      if (!e.response || e.response.status !== HttpStatus.NOT_FOUND) throw e;
+
+      return {
+        message: e.response.statusText,
+        deleted: false,
+        lead_id: 0,
+      };
+    }
   }
 }

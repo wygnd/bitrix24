@@ -23,12 +23,15 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data } = job;
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Добавлена задача [${name}] в очередь:[br][/b]` + JSON.stringify(data),
+    );
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
       data: null,
     };
-1
+
     switch (name) {
       case QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE:
         response.data = await this.wikiService.sendNotifyAboutDeleteLead(
@@ -47,6 +50,13 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
+  @OnWorkerEvent('completed')
+  onCompleted({ name, returnvalue }: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Задача [${name}] выполнена:[br][/b]` + JSON.stringify(returnvalue),
+    );
+  }
+
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
     this.bitrixImBotService.sendTestMessage(
