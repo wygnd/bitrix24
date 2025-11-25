@@ -31,7 +31,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data } = job;
     this.bitrixImBotService.sendTestMessage(
-      `[bДобавлена задача [${name}] в очередь:[br][/b]` + JSON.stringify(data),
+      `[b]Добавлена задача [${name}] в очередь:[br][/b]` + JSON.stringify(data),
     );
     const response: QueueProcessorResponse = {
       message: '',
