@@ -30,9 +30,4 @@ export class BitrixController {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
-
-  @Get('/test')
-  async testGetFromWiki() {
-    return this.wikiService.getWorkingSalesFromWiki();
-  }
 }

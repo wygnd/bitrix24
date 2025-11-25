@@ -17,12 +17,17 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
+import { Request } from 'express';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
   constructor(private readonly headHunterService: HeadHunterService) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
+    const request = context.switchToHttp().getRequest<Request>();
+
+    console.log(request.headers);
+
     return next.handle().pipe(
       catchError((error: AxiosError<B24ErrorResponse>) => {
         if (!isAxiosError(error)) return throwError(() => error);
@@ -110,7 +115,13 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        return throwError(() => error);
+        return throwError(
+          () =>
+            new HttpException(
+              error.response?.data ?? error.message,
+              error.status ?? HttpStatus.INTERNAL_SERVER_ERROR,
+            ),
+        );
       }),
     );
   }
