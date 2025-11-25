@@ -771,6 +771,7 @@ export class BitrixImBotService {
     const { result } = await this.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE: message,
+      URL_PREVIEW: 'N'
     });
 
     return result;
