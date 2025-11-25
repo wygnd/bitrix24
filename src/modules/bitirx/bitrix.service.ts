@@ -35,10 +35,7 @@ export class BitrixService {
   private readonly bitrixDomain: string;
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
-  private readonly botId: string;
-  private readonly testChatId: string;
-  private readonly incomingWebhookToken: string;
-  private readonly zlataZiminaBitrixId: string;
+  private readonly bitrixConstants: BitrixConstants;
 
   constructor(
     private readonly configService: ConfigService,
@@ -73,16 +70,7 @@ export class BitrixService {
     this.http.defaults.headers.common['Accept'] = 'application/json';
 
     //   Constants
-    const {
-      BOT_ID,
-      TEST_CHAT_ID,
-      WEBHOOK_INCOMING_TOKEN,
-      ZLATA_ZIMINA_BITRIX_ID,
-    } = bitrixConstants;
-    this.botId = BOT_ID;
-    this.testChatId = TEST_CHAT_ID;
-    this.incomingWebhookToken = WEBHOOK_INCOMING_TOKEN;
-    this.zlataZiminaBitrixId = ZLATA_ZIMINA_BITRIX_ID;
+    this.bitrixConstants = bitrixConstants;
   }
 
   /**
@@ -352,7 +340,7 @@ export class BitrixService {
    * @constructor
    */
   get BOT_ID() {
-    return this.botId;
+    return this.bitrixConstants.BOT_ID;
   }
 
   /**
@@ -368,7 +356,7 @@ export class BitrixService {
    * @constructor
    */
   get TEST_CHAT_ID() {
-    return this.testChatId;
+    return this.bitrixConstants.TEST_CHAT_ID;
   }
 
   /**
@@ -376,7 +364,7 @@ export class BitrixService {
    * @constructor
    */
   get WEBHOOK_INCOMING_TOKEN() {
-    return this.incomingWebhookToken;
+    return this.bitrixConstants.WEBHOOK_INCOMING_TOKEN;
   }
 
   /**
@@ -388,7 +376,11 @@ export class BitrixService {
   }
 
   get ZLATA_ZIMINA_BITRIX_ID() {
-    return this.zlataZiminaBitrixId;
+    return this.bitrixConstants.ZLATA_ZIMINA_BITRIX_ID;
+  }
+
+  get ADDY_CASES_CHAT_ID() {
+    return this.bitrixConstants.ADDY.casesChatId;
   }
 
   public removeEmoji(message: string) {

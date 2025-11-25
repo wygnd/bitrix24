@@ -13,11 +13,14 @@ export default (): BitrixOptions => ({
     WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL:
       process.env.BITRIX_DATA_HR_RATIO_VACANCIES_REDIRECT_URL ?? '',
     ZLATA_ZIMINA_BITRIX_ID: process.env.BITRIX_DATA_ZIMINA_BITRIX_ID ?? '',
+    ADDY: {
+      casesChatId: process.env.BITRIX_DATA_ADDY_CASES_CHAT_ID ?? '',
+    },
     HR: {
       hrChatId: process.env.BITRIX_DATA_HR_CHAT_ID ?? '',
     },
     avito: {
-      avitoAiChatId: process.env.BITRIX_DATA_AVITO_AI_CHAT_ID ?? ''
-    }
+      avitoAiChatId: process.env.BITRIX_DATA_AVITO_AI_CHAT_ID ?? '',
+    },
   },
 });

@@ -712,9 +712,10 @@ export class BitrixImBotService {
 
     if (approved) {
       batchCommands['send_message'] = {
-        method: 'im.message.add',
+        method: 'imbot.message.add',
         params: {
-          DIALOG_ID: 220, // Ирина Наволоцкая,
+          BOT_ID: this.botId,
+          DIALOG_ID: this.bitrixService.ADDY_CASES_CHAT_ID, // Чат для кейсов,
           MESSAGE:
             'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
             this.bitrixService.generateDealUrl(dealId),

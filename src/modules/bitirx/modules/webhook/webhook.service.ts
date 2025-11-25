@@ -551,7 +551,8 @@ export class BitrixWebhookService {
                 'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
                 'Если есть правки, то:\n- НЕ завершай задачу\n' +
                 '- Пропиши в комментариях задачи список правок\n' +
-                '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' + 'Комментарий сделки РК:\n$result[get_advert_deal][0][UF_CRM_1716383143]',
+                '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
+                'Комментарий сделки РК:\n$result[get_advert_deal][0][UF_CRM_1716383143]',
               CREATED_BY: '460',
               RESPONSIBLE_ID: advertDepartment.UF_HEAD,
               UF_CRM_TASK: [`D_${dealId}`],
@@ -606,8 +607,8 @@ export class BitrixWebhookService {
     dealId: string,
   ) {
     if (ignored) {
-      this.messageService.sendPrivateMessage({
-        DIALOG_ID: '220', // Ирина Наволоцкая
+      this.bitrixBotService.sendMessage({
+        DIALOG_ID: this.bitrixService.ADDY_CASES_CHAT_ID, // Чат для кейсов
         MESSAGE:
           'Сделка завершена. Менеджер не отметил сайт для кейса[br]Сделка: ' +
           this.bitrixService.generateDealUrl(dealId),
