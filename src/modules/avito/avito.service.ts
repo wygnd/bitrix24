@@ -7,7 +7,7 @@ export class AvitoService {
   constructor(private readonly avitoApiService: AvitoApiService) {}
 
   /**
-   *
+   * Send request to avito service about rejected lead by AI
    * @param phone
    * @param message
    */

@@ -743,8 +743,17 @@ export class BitrixImBotService {
       KEYBOARD: '',
     });
 
+    this.sendTestMessage(
+      '[b]Обработка ИИ лида[/b][br]' +
+        JSON.stringify({ ...fields, approved, message, phone }),
+    );
+
     if (!approved) {
-      this.avitoService.rejectDistributeLeadByAi(phone);
+      this.avitoService
+        .rejectDistributeLeadByAi(phone)
+        .then((res) =>
+          this.sendTestMessage('Ответ от авито:[br]' + JSON.stringify(res)),
+        );
       return false;
     }
 
