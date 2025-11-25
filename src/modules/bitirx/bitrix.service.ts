@@ -388,6 +388,13 @@ export class BitrixService {
     return this.zlataZiminaBitrixId;
   }
 
+  public removeEmoji(message: string) {
+    return message.replace(
+      /([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g,
+      '',
+    );
+  }
+
   /**
    * Base post request to bitrix
    * @param url
