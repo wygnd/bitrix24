@@ -164,6 +164,7 @@ export class BitrixIntegrationAvitoService {
     // Ищем дубликаты
     const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
+    // Создаем лид если его не нашли
     if (result.length === 0) {
       const batchCommands: B24BatchCommands = {
         create_lead: {
@@ -309,7 +310,7 @@ export class BitrixIntegrationAvitoService {
       UF_CRM_1692711658572: {
         fileData: handledFiles,
       }, // Файлы
-      STATUS_ID: '', // Стадия сделки: Новый в работе
+      STATUS_ID: '', // Стадия сделки: Лид сообщение
       UF_CRM_1712667568: avito, // С какого авито обращение
       UF_CRM_1713765220416: avito_number, // Подменный номер авито
       UF_CRM_1580204442317: city, // Город
@@ -323,7 +324,7 @@ export class BitrixIntegrationAvitoService {
       // Если лид не в активных стадиях
       case B24LeadRejectStages.includes(STATUS_ID):
         updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser; // Меняем ответственного
-        updateLeadFields.STATUS_ID = 'UC_JTIP45'; // Новый в работе
+        updateLeadFields.STATUS_ID = 'UC_GEWKFD'; // Лид сообщение
 
         // Если менеджер уволен - меняем ответственного на менее занятого
         if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
@@ -331,7 +332,7 @@ export class BitrixIntegrationAvitoService {
 
       // Если лид в новых стадиях меняем стадию на новый в работе
       case B24LeadNewStages.includes(STATUS_ID):
-        updateLeadFields.STATUS_ID = 'UC_JTIP45';
+        updateLeadFields.STATUS_ID = 'UC_GEWKFD';
 
         // Если менеджер уволен - меняем ответственного на менее занятого
         if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
