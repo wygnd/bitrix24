@@ -169,7 +169,9 @@ export class AvitoCreateLeadDto {
   })
   @IsOptional()
   @IsString()
-  @Transform(({ value }) => value.toLowerCase())
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.toLowerCase() : value,
+  )
   @IsIn(Object.keys(AvitoClientRequestsType))
   @IsString()
   service_text: string = '';
