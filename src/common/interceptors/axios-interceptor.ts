@@ -24,10 +24,6 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
   constructor(private readonly headHunterService: HeadHunterService) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
-    const request = context.switchToHttp().getRequest<Request>();
-
-    console.log(request.headers);
-
     return next.handle().pipe(
       catchError((error: AxiosError<B24ErrorResponse>) => {
         if (!isAxiosError(error)) return throwError(() => error);

@@ -70,6 +70,7 @@ export class BitrixService {
 
     this.http.defaults.baseURL = this.bitrixDomain;
     this.http.defaults.headers['Content-Type'] = 'application/json';
+    this.http.defaults.headers.common['Accept'] = 'application/json';
 
     //   Constants
     const {

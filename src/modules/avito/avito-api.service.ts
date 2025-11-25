@@ -17,6 +17,7 @@ export class AvitoApiService {
 
     this.http.defaults.baseURL = baseUrl;
     this.http.defaults.headers.common['Content-Type'] = 'application/json';
+    this.http.defaults.headers.common['Accept'] = 'application/json';
   }
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {

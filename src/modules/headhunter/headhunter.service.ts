@@ -43,6 +43,8 @@ export class HeadHunterService {
       throw new Error('Invalid head hunter fields');
 
     this.http.defaults.baseURL = baseUrl;
+    this.http.defaults.headers.common['Content-Type'] = 'application/json';
+    this.http.defaults.headers.common['Accept'] = 'application/json';
 
     // Check auth data.
     // Send message about update credentials If not exists

@@ -24,6 +24,7 @@ export class WikiApiServiceOld {
 
     this.http.defaults.baseURL = baseApiUrlOld;
     this.http.defaults.headers.common['Content-Type'] = 'application/json';
+    this.http.defaults.headers.common['Accept'] = 'application/json';
   }
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {
