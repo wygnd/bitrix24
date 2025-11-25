@@ -18,6 +18,7 @@ import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 import { Request } from 'express';
+import { isObject } from 'class-validator';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
@@ -60,7 +61,11 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           );
         }
 
-        if (error.response?.data && 'error' in error.response.data) {
+        if (
+          error.response?.data &&
+          isObject(error.response.data) &&
+          'error' in error.response.data
+        ) {
           const { data } = error.response;
           const { error: errorName } = data;
 
