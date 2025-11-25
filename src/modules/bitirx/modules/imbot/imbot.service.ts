@@ -745,7 +745,7 @@ export class BitrixImBotService {
 
     this.sendTestMessage(
       '[b]Обработка ИИ лида[/b][br]' +
-        JSON.stringify({ ...fields, approved, message, phone }),
+        JSON.stringify({ ...fields, approved, phone }),
     );
 
     if (!approved) {
