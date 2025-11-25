@@ -17,7 +17,6 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
-import { Request } from 'express';
 import { isObject } from 'class-validator';
 
 @Injectable()
@@ -29,9 +28,10 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
       catchError((error: AxiosError<B24ErrorResponse>) => {
         if (!isAxiosError(error)) return throwError(() => error);
 
+        const status = error.response?.status;
         if (
-          (error.status && error.status === HttpStatus.UNAUTHORIZED) ||
-          error.status === HttpStatus.FORBIDDEN
+          (status && status === HttpStatus.UNAUTHORIZED) ||
+          status === HttpStatus.FORBIDDEN
         ) {
           switch (error?.request && error?.request.host) {
             case 'api.hh.ru':
@@ -62,8 +62,8 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
         }
 
         if (
-          error.response?.data &&
-          isObject(error.response.data) &&
+          error.response.data !== null &&
+          typeof error.response.data === 'object' &&
           'error' in error.response.data
         ) {
           const { data } = error.response;
