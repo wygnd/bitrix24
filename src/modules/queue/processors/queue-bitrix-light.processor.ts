@@ -28,13 +28,9 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       status: QueueProcessorStatus.OK,
       data: null,
     };
-
+1
     switch (name) {
       case QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE:
-        this.bitrixImBotService.sendTestMessage(
-          '[b]handle delete deal[/b][br]Задача добавлена в очередь: ' +
-            JSON.stringify(data),
-        );
         response.data = await this.wikiService.sendNotifyAboutDeleteLead(
           data as string,
         );
@@ -56,18 +52,5 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `Ошибка выполнения задачи: ` + JSON.stringify(job),
     );
-  }
-
-  @OnWorkerEvent('completed')
-  onCompleted(job: Job) {
-
-    switch (job.name) {
-      case QUEUE_TASKS.LIGHT.QUEUE_BX_EVENTS_SEND_WIKI_ON_LEAD_DELETE:
-        this.bitrixImBotService.sendTestMessage(
-          '[b]handle delete deal[/b][br]Задача завершена: ' +
-            JSON.stringify(job),
-        );
-        break;
-    }
   }
 }

@@ -39,10 +39,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     switch (name) {
       case QUEUE_TASKS.MIDDLE
         .QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
-        this.bitrixImBotService.sendTestMessage(
-          `[b]receive-client-request[/b][br]Добавлено в очередь: ${name}[br]` +
-            JSON.stringify(data),
-        );
         response.data = await this.handleTaskClientRequestFromAvito(
           data as AvitoCreateLeadDto,
         );
@@ -79,10 +75,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         const { data } =
           returnvalue as QueueProcessorResponse<IntegrationAvitoDistributeLeadFromAvito>;
 
-        this.bitrixImBotService.sendTestMessage(
-          `[b]receive-client-request[/b][br]Очередь завершена: ${name}[br]` +
-            JSON.stringify(data),
-        );
         this.wikiService.sendResultReceiveClientRequestFromAvitoToWiki({
           wiki_lead_id: data.wiki_lead_id,
           lead_id: data.lead_id,
