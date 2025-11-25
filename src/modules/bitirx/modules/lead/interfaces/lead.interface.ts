@@ -18,4 +18,5 @@ export enum B24LeadStatus {
   NONACTIVE = 'nonactive',
   ACTIVE = 'active',
   LOST = 'lost',
+  FINISH = 'finish',
 }

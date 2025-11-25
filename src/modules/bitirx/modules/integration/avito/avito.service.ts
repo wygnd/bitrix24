@@ -163,7 +163,10 @@ export class BitrixIntegrationAvitoService {
       [],
     );
     // Ищем дубликаты
-    const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+    const result = await this.bitrixLeadService.getDuplicateLeadsByPhone(
+      phone,
+      true,
+    );
 
     // Создаем лид если его не нашли
     if (result.length === 0) {
@@ -353,7 +356,7 @@ export class BitrixIntegrationAvitoService {
             params: {
               DIALOG_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
               MESSAGE:
-                '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! КЛИЕНТ ВАШЕГО МЕНЕДЖЕРА ИЩЕТ ДАЛЬШЕ! ' +
+                '[b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! КЛИЕНТ ВАШЕГО МЕНЕДЖЕРА ИЩЕТ ДАЛЬШЕ! ' +
                 'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
                 `Лид: ${this.bitrixService.generateLeadUrl(leadId)}` +
                 `[br]C авито: ${avito}` +
@@ -368,7 +371,7 @@ export class BitrixIntegrationAvitoService {
           params: {
             DIALOG_ID: updateLeadFields.ASSIGNED_BY_ID,
             MESSAGE:
-              '[b]TEST[/b][br][b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
+              '[b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! ВАШ КЛИЕНТ ИЩЕТ ДАЛЬШЕ! ВАМ НЕОБХОДИМО НАБРАТЬ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]Лид: ' +
               this.bitrixService.generateLeadUrl(leadId) +
               `[br]C авито: ${avito}[br]Сообщение:[br]>>${message.join('[br]>>')}[br][br][b]Скрипт:[/b]` +
               '[br]Имя, вижу, что Вы писали моему коллеге, на другое Авито, продолжаете искать подрядчика?' +
@@ -406,7 +409,7 @@ export class BitrixIntegrationAvitoService {
           params: {
             DIALOG_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
             MESSAGE:
-              `[b]TEST[/b][br]${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
+              `${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
               'Необходимо посмотреть действующие сделки ' +
               'и, при необходимости, распределить лид в работу[/b][br]' +
               this.bitrixService.generateLeadUrl(leadId) +

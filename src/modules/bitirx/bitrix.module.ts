@@ -31,6 +31,7 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
 import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/wiki.controller';
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
+import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AvitoModule } from '@/modules/avito/avito.module';
     BitrixEventsController,
     BitrixTaskController,
     BitrixWikiController,
+    BitrixLeadController,
   ],
   providers: [
     ...bitrixProviders,

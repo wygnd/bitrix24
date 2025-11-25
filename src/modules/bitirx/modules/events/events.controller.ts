@@ -4,7 +4,6 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixEventService } from '@/modules/bitirx/modules/events/event.service';
@@ -14,7 +13,6 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { EventAddDto } from '@/modules/bitirx/modules/events/dtos/event-add.dto';
 import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
 import { EventHandleUpdateTaskDto } from '@/modules/bitirx/modules/events/dtos/event-task-update.dto';
-import express from 'express';
 import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
 
 @ApiTags(B24ApiTags.EVENTS)
@@ -29,19 +27,11 @@ export class BitrixEventsController {
   }
 
   @UseGuards(BitrixEventGuard)
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('/handle/task/update')
-  async handleTaskUpdate(
-    @Body() fields: EventHandleUpdateTaskDto,
-    @Res() res: express.Response,
-  ) {
-    let status: HttpStatus = HttpStatus.OK;
-    const resultHandlingTask =
-      await this.eventsService.handleTaskUpdate(fields);
-
-    if (!resultHandlingTask) status = HttpStatus.ACCEPTED;
-
-    res.status(status).json(resultHandlingTask);
+  async handleTaskUpdate(@Body() fields: EventHandleUpdateTaskDto) {
+    await this.eventsService.handleTaskUpdate(fields);
+    return true;
   }
 
   @UseGuards(BitrixEventGuard)
