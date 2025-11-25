@@ -110,7 +110,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           }
         }
 
-        return throwError(() => new InternalServerErrorException(error));
+        return throwError(() => error);
       }),
     );
   }

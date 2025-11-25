@@ -53,7 +53,6 @@ export class WikiApiServiceNew {
 
   async delete<T = any>(url: string, config?: AxiosRequestConfig) {
     const { data } = await this.http.delete<T>(url, config);
-
     return data;
   }
 }

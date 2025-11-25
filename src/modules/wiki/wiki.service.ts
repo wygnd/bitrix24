@@ -85,11 +85,9 @@ export class WikiService {
     }
   }
 
-  public async sendNotifyAboutDeleteLead(
-    leadId: string,
-  ): Promise<WikiDeleteLead> {
+  public async sendNotifyAboutDeleteLead(leadId: string) {
     try {
-      return this.wikiApiServiceNew.delete<WikiDeleteLead>(
+      return await this.wikiApiServiceNew.delete<WikiDeleteLead>(
         `/avito/leads/${leadId}`,
       );
     } catch (e) {
@@ -98,8 +96,8 @@ export class WikiService {
       if (!e.response || e.response.status !== HttpStatus.NOT_FOUND) throw e;
 
       return {
-        message: e.response.statusText,
-        deleted: false,
+        message: e.response.data!.message,
+        deleted: 0,
         lead_id: 0,
       };
     }
