@@ -22,9 +22,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
-    const { name, data } = job;
+    const { name, data, id } = job;
     this.bitrixImBotService.sendTestMessage(
-      `[b]Добавлена задача [${name}] в очередь:[/b][br]` + JSON.stringify(data),
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
+        JSON.stringify(data),
     );
     const response: QueueProcessorResponse = {
       message: '',
@@ -51,9 +52,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue }: Job) {
+  onCompleted({ name, returnvalue, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
-      `[b]Задача [${name}] выполнена:[/b][br]` + JSON.stringify(returnvalue),
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
+        JSON.stringify(returnvalue),
     );
   }
 
