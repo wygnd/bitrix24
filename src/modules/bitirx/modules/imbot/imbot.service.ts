@@ -753,6 +753,9 @@ export class BitrixImBotService {
         .rejectDistributeLeadByAi(phone)
         .then((res) =>
           this.sendTestMessage('Ответ от авито:[br]' + JSON.stringify(res)),
+        )
+        .catch((err) =>
+          this.sendTestMessage('Ответ от авито:[br]' + JSON.stringify(err)),
         );
       return false;
     }
