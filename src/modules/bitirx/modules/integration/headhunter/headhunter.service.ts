@@ -150,22 +150,22 @@ export class BitrixHeadHunterService {
    */
   async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
     try {
-      const { resume_id, vacancy_id } = body.payload;
+      const { resume_id, vacancy_id, topic_id } = body.payload;
 
       const [vacancy, resume, negotiation] = await Promise.all<
         [
           Promise<HHVacancyInterface>,
           Promise<HHResumeInterface>,
-          Promise<HHNegotiationInterface>,
+          Promise<HHNegotiationInterface | null>,
         ]
       >([
         this.headHunterRestService.getVacancyById(vacancy_id),
         this.headHunterRestService.getResumeById(resume_id),
-        this.headHunterRestService.getNegotiationsById('2'),
+        this.headHunterRestService.getNegotiationsById(topic_id),
       ]);
 
       // Выходим, если отклик на стадии подумать
-      if (negotiation.employer_state.id === 'consider') {
+      if (negotiation && negotiation.employer_state.id === 'consider') {
         this.bitrixImBotService.sendTestMessage(
           `Отмена обработки отклика:[br]` + JSON.stringify(body),
         );

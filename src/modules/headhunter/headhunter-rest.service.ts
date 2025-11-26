@@ -122,8 +122,12 @@ export class HeadhunterRestService {
   }
 
   public async getNegotiationsById(negotiationId: string) {
-    return this.headHunterService.get<null, HHNegotiationInterface>(
-      `/negotiations/${negotiationId}`,
-    );
+    try {
+      return await this.headHunterService.get<null, HHNegotiationInterface>(
+        `/negotiations/${negotiationId}`,
+      );
+    } catch (error) {
+      return null;
+    }
   }
 }
