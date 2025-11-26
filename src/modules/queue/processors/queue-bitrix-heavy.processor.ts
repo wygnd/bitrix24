@@ -23,7 +23,11 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
-    const { name, data } = job;
+    const { name, data, id } = job;
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
+        JSON.stringify(data),
+    );
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
