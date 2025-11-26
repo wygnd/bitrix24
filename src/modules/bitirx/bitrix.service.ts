@@ -185,8 +185,6 @@ export class BitrixService {
   public isAvailableToDistributeOnManager() {
     const now = new Date();
 
-    console.log(now.getUTCHours(), now.getUTCMinutes(), now.getUTCDay());
-
     return (
       now.getDay() > 0 &&
       now.getDay() < 6 &&
