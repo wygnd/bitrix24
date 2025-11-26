@@ -200,6 +200,16 @@ export class BitrixLeadService {
       ),
     );
 
+    if (
+      responses.length === 0 ||
+      Object.keys(responses[0].result.result).length === 0
+    ) {
+      return {
+        count_leads: 0,
+        leads: {},
+      };
+    }
+
     index = 0;
     responses.map(({ result }) => {
       Object.entries(result.result).forEach(([_, leads]) => {
