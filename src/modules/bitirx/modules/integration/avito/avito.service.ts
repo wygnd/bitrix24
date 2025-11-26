@@ -165,6 +165,7 @@ export class BitrixIntegrationAvitoService {
           ? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID
           : await this.bitrixUserService.getMinWorkflowUser(sales)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
+
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));
     const handledFiles = files.reduce<[string, string][]>(
       (acc, { filename, content_base64 }) => {
@@ -198,9 +199,7 @@ export class BitrixIntegrationAvitoService {
                 },
               ],
               UF_CRM_1651577716: 6856, // Тип лида: пропущенный
-              UF_CRM_1692711658572: {
-                fileData: handledFiles,
-              }, // Файлы
+              UF_CRM_1692711658572: handledFiles, // Файлы
               STATUS_ID: 'UC_GEWKFD', // Стадия сделки: Новый в работе
               UF_CRM_1712667568: avito, // С какого авито обращение
               UF_CRM_1713765220416: avito_number, // Подменный номер авито
@@ -322,9 +321,7 @@ export class BitrixIntegrationAvitoService {
       UF_CRM_1653291114976: leadMessage,
       PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
-      UF_CRM_1692711658572: {
-        fileData: handledFiles,
-      }, // Файлы
+      UF_CRM_1692711658572: handledFiles, // Файлы
       STATUS_ID: '', // Стадия сделки: Лид сообщение
       UF_CRM_1712667568: avito, // С какого авито обращение
       UF_CRM_1713765220416: avito_number, // Подменный номер авито
