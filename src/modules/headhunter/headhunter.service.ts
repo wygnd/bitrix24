@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
@@ -11,6 +11,7 @@ import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.int
 
 @Injectable()
 export class HeadHunterService {
+  private readonly logger = new Logger(HeadHunterService.name);
   private readonly client_id: string;
   private readonly client_secret: string;
   private readonly redirect_uri: string;
@@ -75,7 +76,8 @@ export class HeadHunterService {
           return;
         }
         this.employer_id = employerId;
-      });
+      })
+      .catch((err) => this.logger.error(err));
   }
 
   async get<T = any, U = any>(url: string, config?: AxiosRequestConfig<T>) {
