@@ -5,17 +5,19 @@ import {
   QueueProcessorResponse,
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
-import {
-  HeadhunterWebhookCallDto
-} from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
   private readonly logger = new Logger(QueueBitrixHeavyProcessor.name);
 
-  constructor(private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService) {
+  constructor(
+    private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService,
+    private readonly bitrixImBotService: BitrixImBotService,
+  ) {
     super();
   }
 
@@ -30,7 +32,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
     switch (name) {
       case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_NEW_RESPONSE_OR_NEGOTIATION:
-        response.data = await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(data as HeadhunterWebhookCallDto);
+        response.data =
+          await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
+            data as HeadhunterWebhookCallDto,
+          );
         break;
 
       default:
@@ -44,4 +49,18 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
+  @OnWorkerEvent('completed')
+  onCompleted({ name, returnvalue, id }: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
+        JSON.stringify(returnvalue),
+    );
+  }
+
+  @OnWorkerEvent('failed')
+  onFailed(job: Job) {
+    this.bitrixImBotService.sendTestMessage(
+      `Ошибка выполнения задачи: ` + JSON.stringify(job),
+    );
+  }
 }
