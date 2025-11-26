@@ -13,7 +13,10 @@ import {
   B24ListParams,
 } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
-import { LeadAvitoStatus } from '@/modules/bitirx/modules/lead/interfaces/lead-avito-status.interface';
+import {
+  LeadAvitoStatus,
+  LeadAvitoStatusResponse,
+} from '@/modules/bitirx/modules/lead/interfaces/lead-avito-status.interface';
 import {
   B24LeadActiveStages,
   B24LeadConvertedStages,
@@ -88,16 +91,18 @@ export class BitrixLeadService {
     );
   }
 
-  public async getLeadsStatusesByDate(date: Date) {
+  public async getLeadsStatusesByDate(
+    date: Date,
+  ): Promise<LeadAvitoStatusResponse> {
     const filterLeadsByDate = {
       '!UF_CRM_1713765220416': '',
-      '>=DATE_CREATE': `${date.toDateString()}T00:00:00`,
-      '<=DATE_CREATE': `${date.toDateString()}T23:59:59`,
+      '>=DATE_CREATE': `${date.toLocaleDateString()}T00:00:00`,
+      '<=DATE_CREATE': `${date.toLocaleDateString()}T23:59:59`,
     };
     const filterLeadsByDateRequest = {
       '!UF_CRM_1713765220416': '',
-      '>=UF_CRM_1715671150': `${date.toDateString()}T00:00:00`,
-      '<=UF_CRM_1715671150': `${date.toDateString()}T23:59:59`,
+      '>=UF_CRM_1715671150': `${date.toLocaleDateString()}T00:00:00`,
+      '<=UF_CRM_1715671150': `${date.toLocaleDateString()}T23:59:59`,
     };
     const selectLeadFields = [
       'ID',
@@ -213,16 +218,16 @@ export class BitrixLeadService {
 
             switch (true) {
               case B24LeadActiveStages.includes(statusId) &&
-                dateCreate.toDateString() !== date.toDateString():
+                dateCreate.toISOString() !== date.toISOString():
                 leadStatus = B24LeadStatus.ACTIVE;
                 break;
 
               case B24LeadRejectStages.includes(statusId) &&
-                dateCreate.toDateString() !== date.toDateString():
+                dateCreate.toISOString() !== date.toISOString():
                 leadStatus = B24LeadStatus.NONACTIVE;
                 break;
 
-              case dateCreate.toDateString() === date.toDateString():
+              case dateCreate.toISOString() === date.toISOString():
                 leadStatus = B24LeadStatus.NEW;
                 break;
 
@@ -292,7 +297,7 @@ export class BitrixLeadService {
           const lead = leadsMap.get(leadId);
 
           if (!lead) return;
-          if (new Date(lead.date_cerate).toDateString() === date.toDateString())
+          if (new Date(lead.date_cerate).toISOString() === date.toISOString())
             return;
           if (leadStageHistory.length < 2) return;
 
