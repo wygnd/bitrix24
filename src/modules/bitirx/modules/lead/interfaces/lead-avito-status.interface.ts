@@ -7,3 +7,8 @@ export interface LeadAvitoStatus {
   date_last_request: string;
   status: B24LeadStatus;
 }
+
+export interface LeadAvitoStatusResponse {
+  count_leads: number;
+  leads: Record<string, LeadAvitoStatus>;
+}

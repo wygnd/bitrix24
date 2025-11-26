@@ -29,6 +29,8 @@ import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunt
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
 import { isAxiosError } from 'axios';
+import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
+import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -40,6 +42,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixDealService: BitrixDealService,
     private readonly headHunterRestService: HeadhunterRestService,
+    private readonly queueHeavyService: QueueHeavyService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -104,8 +107,34 @@ export class BitrixHeadHunterService {
     const { action_type } = body;
 
     switch (action_type) {
-      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
-        return this.handleNewResponseVacancyWebhook(body);
+      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
+        const { id: notificationId } = body;
+
+        // Проверяем, был ли отправлен запрос ранее
+        const redisNotificationKey =
+          REDIS_KEYS.HEADHUNTER_WEBHOOK_NOTIFICATION + notificationId;
+
+        let notificationWasReceived: string | null;
+
+        try {
+          notificationWasReceived =
+            await this.redisService.get<string>(redisNotificationKey);
+        } catch (error) {
+          throw new InternalServerErrorException(error);
+        }
+
+        if (notificationWasReceived)
+          throw new ConflictException('Notification was received');
+
+        this.redisService
+          .set<string>(redisNotificationKey, notificationId, 3600)
+          .catch(() => {});
+
+        // Если не было запроса, ставим задачу на обработку отклика
+        this.queueHeavyService.addTaskToHandleReceiveNewResponseOrNegotiation(
+          body,
+        );
+        return true;
     }
 
     return false;
@@ -120,40 +149,26 @@ export class BitrixHeadHunterService {
    * @param body
    */
   async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
-    const { id: notificationId, payload } = body;
-
-    const redisNotificationKey =
-      REDIS_KEYS.HEADHUNTER_WEBHOOK_NOTIFICATION + notificationId;
-
-    let notificationWasReceived: string | null;
-
     try {
-      notificationWasReceived =
-        await this.redisService.get<string>(redisNotificationKey);
-    } catch (error) {
-      throw new InternalServerErrorException(error);
-    }
+      const { resume_id, vacancy_id, topic_id } = body.payload;
 
-    if (notificationWasReceived)
-      throw new ConflictException('Notification was received');
-
-    try {
-      this.redisService.set<string>(redisNotificationKey, notificationId, 3600);
-    } catch (error) {
-      console.error('Error on save notify from hh to cache', error);
-    }
-
-    try {
-      const { resume_id, vacancy_id } = payload;
-
-      const [vacancy, resume] = await Promise.all<
-        [Promise<HHVacancyInterface>, Promise<HHResumeInterface>]
+      const [vacancy, resume, negotiation] = await Promise.all<
+        [
+          Promise<HHVacancyInterface>,
+          Promise<HHResumeInterface>,
+          Promise<HHNegotiationInterface | null>,
+        ]
       >([
         this.headHunterRestService.getVacancyById(vacancy_id),
         this.headHunterRestService.getResumeById(resume_id),
+        this.headHunterRestService.getNegotiationsById(topic_id),
       ]);
 
-      const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name ? resume.first_name.trim() : ''} ${resume.middle_name ? resume.middle_name.trim() : ''}`;
+      // Выходим, если отклик на стадии подумать
+      if (negotiation && negotiation.employer_state.id === 'consider')
+        return false;
+
+      const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
       const { result: resultGetUser } = await this.bitrixUserService.getUsers({
         filter: {
           EMAIL: vacancy.contacts.email,
@@ -176,7 +191,7 @@ export class BitrixHeadHunterService {
           DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
           MESSAGE: message,
         });
-        return;
+        return false;
       }
 
       const candidateContacts = resume.contact.reduce(
@@ -371,6 +386,8 @@ export class BitrixHeadHunterService {
           },
         },
       });
+
+      return false;
     }
   }
 

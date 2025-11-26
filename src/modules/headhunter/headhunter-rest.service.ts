@@ -11,6 +11,7 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 import { ConfigService } from '@nestjs/config';
 import { BitrixHRConstants } from '@/common/interfaces/bitrix-config.interface';
+import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
 
 @Injectable()
 export class HeadhunterRestService {
@@ -59,7 +60,7 @@ export class HeadhunterRestService {
         ({ archived, has_test, closed_for_applicants }) =>
           !archived && !has_test && !closed_for_applicants,
       )
-      .map((vacancy) => this.toDto(vacancy));
+      .map((vacancy) => this.toVacancyDto(vacancy));
 
     await this.redisService.set<HHVacancyDto[]>(
       REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
@@ -110,7 +111,7 @@ export class HeadhunterRestService {
     return vacancy;
   }
 
-  private toDto(vacancy: HHVacancyInterface) {
+  private toVacancyDto(vacancy: HHVacancyInterface) {
     return plainToInstance(HHVacancyDto, vacancy, {
       excludeExtraneousValues: true,
     });
@@ -118,5 +119,15 @@ export class HeadhunterRestService {
 
   public get HR_CHAT_ID() {
     return this.hrChatId;
+  }
+
+  public async getNegotiationsById(negotiationId: string) {
+    try {
+      return await this.headHunterService.get<null, HHNegotiationInterface>(
+        `/negotiations/${negotiationId}`,
+      );
+    } catch (error) {
+      return null;
+    }
   }
 }

@@ -78,7 +78,7 @@ export class HeadHunterService {
       });
   }
 
-  async get<T, U = any>(url: string, config?: AxiosRequestConfig<T>) {
+  async get<T = any, U = any>(url: string, config?: AxiosRequestConfig<T>) {
     const { data } = await this.http.get<T, AxiosResponse<U>>(url, config);
     return data as U;
   }

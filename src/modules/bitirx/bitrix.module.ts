@@ -81,6 +81,7 @@ import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.control
     BitrixDealService,
     BitrixWebhookService,
     BitrixIntegrationAvitoService,
+    BitrixHeadHunterService,
   ],
 })
 export class BitrixModule {}

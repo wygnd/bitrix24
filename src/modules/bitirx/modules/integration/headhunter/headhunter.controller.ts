@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param,
   Post,
   Query,
   UseGuards,
@@ -16,26 +15,18 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import {
-  B24ApiTags,
-  B24BatchResponseMap,
-} from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
 import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
-import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 import { HHBitrixVacancyDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-bitrix-vacancy.dto';
-import { BitrixService } from '@/modules/bitirx/bitrix.service';
-import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 
 @ApiTags(B24ApiTags.HEAD_HUNTER)
 @Controller('integration/headhunter')
 export class BitrixHeadHunterController {
   constructor(
     private readonly bitrixHeadHunterService: BitrixHeadHunterService,
-    private readonly bitrixService: BitrixService,
-    private readonly headHunterRestService: HeadhunterRestService,
   ) {}
 
   @ApiOperation({ summary: 'Handle hh.ru application' })
@@ -45,7 +36,7 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadHunterService.handleApp(fields, query);
   }
 
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     return this.bitrixHeadHunterService.receiveWebhook(body);

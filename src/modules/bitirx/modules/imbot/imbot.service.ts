@@ -744,20 +744,11 @@ export class BitrixImBotService {
       KEYBOARD: '',
     });
 
-    this.sendTestMessage(
-      '[b]Обработка ИИ лида[/b][br]' +
-        JSON.stringify({ ...fields, approved, phone }),
-    );
-
     if (!approved) {
       this.avitoService
         .rejectDistributeLeadByAi(phone)
-        .then((res) =>
-          this.sendTestMessage('Ответ от авито:[br]' + JSON.stringify(res)),
-        )
-        .catch((err) =>
-          this.sendTestMessage('Ответ от авито:[br]' + JSON.stringify(err)),
-        );
+        .then(() => {})
+        .catch(() => {});
       return false;
     }
 

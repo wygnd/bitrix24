@@ -52,8 +52,7 @@ export class WikiService {
           'https://bitrix24.grampus-server.ru/src/api/wiki/working-sales.php',
       });
 
-    if (!status)
-      throw new BadRequestException('Invalid get working sales from wiki');
+    if (!status) return [];
 
     this.redisService.set<string[]>(
       REDIS_KEYS.WIKI_WORKING_SALES,

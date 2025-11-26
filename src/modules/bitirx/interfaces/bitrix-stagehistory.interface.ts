@@ -5,5 +5,5 @@ export interface B24StageHistoryItem {
   CREATED_TIME: string;
   CATEGORY_ID: number;
   STAGE_SEMANTIC_ID: string;
-  STAGE_ID: string;
+  STATUS_ID: string;
 }
