@@ -10,6 +10,7 @@ import { QueueBitrixMiddleProcessor } from '@/modules/queue/processors/queue-bit
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
+import { QueueBitrixHeavyProcessor } from '@/modules/queue/processors/queue-bitrix-heavy.processor';
 
 @Global()
 @Module({
@@ -58,6 +59,7 @@ import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
     QueueHeavyService,
     QueueBitrixLightProcessor,
     QueueBitrixMiddleProcessor,
+    QueueBitrixHeavyProcessor,
   ],
   exports: [QueueLightService, QueueMiddleService, QueueHeavyService],
 })
