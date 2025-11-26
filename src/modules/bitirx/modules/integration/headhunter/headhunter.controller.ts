@@ -36,7 +36,7 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadHunterService.handleApp(fields, query);
   }
 
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('/webhook')
   async receiveWebhook(@Body() body: HeadhunterWebhookCallDto) {
     return this.bitrixHeadHunterService.receiveWebhook(body);

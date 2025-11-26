@@ -15,6 +15,9 @@ export const QUEUE_TASKS = {
     QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
       'bitrix:integration:avito:client_request',
   },
-  HEAVY: {},
+  HEAVY: {
+    QUEUE_BX_HANDLE_NEW_RESPONSE_OR_NEGOTIATION:
+      'bitrix:integration:headhunter:handle_request_or_negotiation',
+  },
   QUEUE_BX_TEST: 'bitrix:task:test',
 };
