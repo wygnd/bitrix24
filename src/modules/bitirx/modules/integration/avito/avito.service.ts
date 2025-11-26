@@ -493,7 +493,7 @@ export class BitrixIntegrationAvitoService {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
-      fields.message.join('[br]>>');
+      this.bitrixService.removeEmoji(fields.message.join('[br]>>'));
 
     const keyboardParams: ImbotApproveDistributeLeadFromAvitoByAi = {
       message: this.bitrixBotService.encodeText(message),
