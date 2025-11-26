@@ -185,11 +185,13 @@ export class BitrixService {
   public isAvailableToDistributeOnManager() {
     const now = new Date();
 
+    console.log(now.getUTCHours(), now.getUTCMinutes(), now.getUTCDay());
+
     return (
       now.getDay() > 0 &&
       now.getDay() < 6 &&
-      ((now.getHours() >= 9 && now.getHours() < 17) ||
-        (now.getHours() === 17 && now.getMinutes() <= 30))
+      ((now.getUTCHours() >= 6 && now.getUTCHours() < 14) ||
+        (now.getUTCHours() === 14 && now.getUTCMinutes() <= 30))
     );
   }
 
