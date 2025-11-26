@@ -168,7 +168,7 @@ export class BitrixHeadHunterService {
       if (negotiation && negotiation.employer_state.id === 'consider')
         return false;
 
-      const candidateName = `${resume.last_name.trim() ?? ''} ${resume.first_name ? resume.first_name.trim() : ''} ${resume.middle_name ? resume.middle_name.trim() : ''}`;
+      const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
       const { result: resultGetUser } = await this.bitrixUserService.getUsers({
         filter: {
           EMAIL: vacancy.contacts.email,
