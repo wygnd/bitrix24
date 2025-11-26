@@ -62,7 +62,7 @@ export class BitrixAvitoController {
   }
 
   @ApiOperation({
-    summary: 'сообщений из авито',
+    summary: 'Выгрузка сообщения из авито',
   })
   @ApiBody({ type: AvitoCreateLeadDto })
   @HttpCode(HttpStatus.ACCEPTED)

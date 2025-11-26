@@ -129,6 +129,13 @@ export class BitrixIntegrationAvitoService {
       ? this.distributeClientRequestFromAvitoByAI(fields)
       : this.queueMiddleService.addTaskForDistributeClientRequestFromAvito(
           fields,
+          {
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 1000,
+            },
+          },
         );
 
     return true;
