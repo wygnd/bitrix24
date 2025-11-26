@@ -103,8 +103,12 @@ export class BitrixHeadHunterService {
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
     const { action_type } = body;
 
+    this.bitrixImBotService.sendTestMessage(
+      '[b]Новое уведомление HH[/b][br]' + JSON.stringify(body),
+    );
+
     switch (action_type) {
-      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_VACANCY:
+      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
         return this.handleNewResponseVacancyWebhook(body);
     }
 
