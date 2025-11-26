@@ -273,7 +273,7 @@ export class BitrixLeadService {
             {
               items: Pick<
                 B24StageHistoryItem,
-                'CREATED_TIME' | 'OWNER_ID' | 'STAGE_ID'
+                'CREATED_TIME' | 'OWNER_ID' | 'STATUS_ID'
               >[];
             }
           >
@@ -291,12 +291,12 @@ export class BitrixLeadService {
           const leadId = commandName.split('-')[1];
           const lead = leadsMap.get(leadId);
 
-          if (
-            !lead ||
-            (leadStageHistory.length >= 2 &&
-              !B24LeadRejectStages.includes(leadStageHistory[1].STAGE_ID)) ||
-            new Date(lead.date_cerate).toDateString() === date.toDateString()
-          )
+          if (!lead) return;
+          if (new Date(lead.date_cerate).toDateString() === date.toDateString())
+            return;
+          if (leadStageHistory.length < 2) return;
+
+          if (!B24LeadRejectStages.includes(leadStageHistory[1].STATUS_ID))
             return;
 
           lead.status = B24LeadStatus.NONACTIVE;

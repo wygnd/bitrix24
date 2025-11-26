@@ -17,7 +17,16 @@ export class BitrixLeadController {
   constructor(private readonly bitrixLeadService: BitrixLeadService) {}
 
   @Get('/avito/statuses')
-  async getLeadsStatusesByDate(@Query('date', new ParseDatePipe()) date: Date) {
+  async getLeadsStatusesByDate(
+    @Query(
+      'date',
+      new ParseDatePipe({
+        default: () => new Date(),
+        optional: true,
+      }),
+    )
+    date: Date,
+  ) {
     return this.bitrixLeadService.getLeadsStatusesByDate(date);
   }
 }
