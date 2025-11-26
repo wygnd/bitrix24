@@ -15,6 +15,8 @@ services:
   redis:
     image: redis:latest
     container_name: bitrix-server-redis
+    env_file:
+      - .env
     ports:
       - "3001:6379"
     volumes:
