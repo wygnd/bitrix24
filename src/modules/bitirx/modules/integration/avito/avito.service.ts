@@ -31,6 +31,7 @@ import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitirx/module
 import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
 import { AvitoClientRequestsType } from '@/modules/bitirx/modules/integration/avito/avito.constants';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
+import { B24FileData } from '@/modules/bitirx/interfaces/bitrix-files.interface';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
@@ -161,9 +162,9 @@ export class BitrixIntegrationAvitoService {
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));
-    const handledFiles = files.reduce<[string, string][]>(
+    const handledFiles = files.reduce<B24FileData[]>(
       (acc, { filename, content_base64 }) => {
-        acc.push([filename, content_base64]);
+        acc.push({ fileData: [filename, content_base64] });
         return acc;
       },
       [],
@@ -307,7 +308,7 @@ export class BitrixIntegrationAvitoService {
 
     const leadDateCreate = new Date(DATE_CREATE);
     const now = new Date();
-    let leadStatusType = B24LeadStatus.LOST;
+    let leadStatusType: B24LeadStatus;
 
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {

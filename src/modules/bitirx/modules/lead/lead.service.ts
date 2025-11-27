@@ -23,6 +23,7 @@ import {
   B24LeadRejectStages,
 } from '@/modules/bitirx/modules/lead/lead.constants';
 import { B24StageHistoryItem } from '@/modules/bitirx/interfaces/bitrix-stagehistory.interface';
+import { B24LeadUpdateFields } from '@/modules/bitirx/modules/lead/interfaces/lead-update.interface';
 
 @Injectable()
 export class BitrixLeadService {
@@ -101,6 +102,15 @@ export class BitrixLeadService {
     );
   }
 
+  /**
+   * Get lead list by special parameters
+   *
+   * ---
+   *
+   * Получить список лидов по определенным параметрам
+   *
+   * @param fields
+   */
   public async getLeads(fields?: B24ListParams<B24Lead>) {
     return this.bitrixService.callMethod<B24ListParams<B24Lead>, B24Lead[]>(
       'crm.deal.list',
@@ -108,11 +118,29 @@ export class BitrixLeadService {
     );
   }
 
-  public async updateLead(leadId: string, fields: Partial<B24Lead>) {
-    return this
+  /**
+   * Update lead
+   *
+   * ---
+   *
+   * Обновление лида
+   *
+   * @param fields
+   */
+  public async updateLead(fields: B24LeadUpdateFields) {
+    return this.bitrixService.callMethod<B24LeadUpdateFields, boolean>(
+      'crm.lead.update',
+      fields,
+    );
   }
 
   /**
+   * Get lead list by date and define his statuses
+   *
+   * ---
+   *
+   * Получение списка лидов за определенную дату и определение их статусов
+   *
    *
    * @param date
    */
