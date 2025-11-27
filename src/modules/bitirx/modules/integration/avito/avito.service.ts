@@ -175,9 +175,6 @@ export class BitrixIntegrationAvitoService {
       true,
     );
 
-    console.log(handledFiles);
-    this.logger.debug(`Check handled files: ${handledFiles}`);
-
     // Создаем лид если его не нашли
     if (result.length === 0) {
       const batchCommands: B24BatchCommands = {
