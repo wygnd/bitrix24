@@ -49,7 +49,7 @@ async function bootstrap() {
         // defaultModelsExpandDepth: -1,
         // defaultModelExpandDepth: 0,
       },
-      customfavIcon: 'favicon.ico',
+      customfavIcon: './favicon.ico',
       customSiteTitle: 'Grampus Bitrix24',
     },
   );
