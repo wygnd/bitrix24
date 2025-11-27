@@ -74,6 +74,7 @@ import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.control
     BitrixWikiService,
   ],
   exports: [
+    BitrixLeadService,
     BitrixService,
     BitrixMessageService,
     BitrixImBotService,

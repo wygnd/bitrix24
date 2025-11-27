@@ -31,6 +31,15 @@ export class BitrixLeadService {
     private readonly redisService: RedisService,
   ) {}
 
+  /**
+   * Fetch lead from bitrix by ID
+   *
+   * ---
+   *
+   * Получение лида из битрикс по ID
+   *
+   * @param id
+   */
   public async getLeadById(id: string) {
     return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
       'crm.lead.get',
@@ -77,6 +86,14 @@ export class BitrixLeadService {
     return result;
   }
 
+  /**
+   *  Crete lead in bitrix
+   *
+   *  ---
+   *
+   *  Создание лида
+   * @param fields
+   */
   public async createLead(fields: Partial<B24Lead>) {
     return this.bitrixService.callMethod<Partial<B24Lead>, number>(
       'crm.lead.add',
@@ -91,6 +108,14 @@ export class BitrixLeadService {
     );
   }
 
+  public async updateLead(leadId: string, fields: Partial<B24Lead>) {
+    return this
+  }
+
+  /**
+   *
+   * @param date
+   */
   public async getLeadsStatusesByDate(
     date: Date,
   ): Promise<LeadAvitoStatusResponse> {
