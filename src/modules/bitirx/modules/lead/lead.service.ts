@@ -277,7 +277,7 @@ export class BitrixLeadService {
             UF_CRM_1715671150: dateLastRequest = '',
           }) => {
             if (leadsMap.has(leadId)) return;
-            let leadStatus = B24LeadStatus.LOST;
+            let leadStatus = B24LeadStatus.UNKNOWN;
             const dateCreate = new Date(DATE_CREATE);
 
             switch (true) {
