@@ -225,7 +225,7 @@ export class BitrixHeadHunterService {
       let email = '';
 
       // Если контакты не скрыты, формируем запрос на поиск кандидата по номеру телефона
-      if (resume.contact.length !== 0) {
+      if (Array.isArray(resume.contact) && resume.contact.length !== 0) {
         const candidateContacts = resume.contact.reduce(
           (acc, { kind, contact_value, value }) => {
             switch (kind) {
@@ -390,7 +390,7 @@ export class BitrixHeadHunterService {
         : (errorMessage = (e as Error).message);
 
       try {
-        errorMessage += '[br][br]' + JSON.parse(e);
+        errorMessage += '[br][br]' + JSON.parse(e.response);
       } catch (err) {}
 
       this.bitrixService.callBatch({
@@ -415,7 +415,7 @@ export class BitrixHeadHunterService {
             MESSAGE:
               'Ошибка обработки отклика[br]' +
               JSON.stringify(body) +
-              '[br]' +
+              '[br][br]' +
               errorMessage,
           },
         },
