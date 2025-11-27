@@ -5,7 +5,6 @@ import {
   B24BatchCommands,
   B24ListParams,
 } from '../../interfaces/bitrix.interface';
-import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24Lead } from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 
@@ -43,11 +42,15 @@ export class BitrixUserService {
   public async getMinWorkflowUser(users: string[] = []) {
     const commands = users.reduce((acc, userId) => {
       acc[`get_user-${userId}`] = {
-        method: 'user.get',
+        method: 'crm.lead.list',
         params: {
           filter: {
-            ID: userId,
+            ASSIGNED_BY_ID: userId,
+            '>=DATE_CREATE': new Date().toLocaleDateString(),
+            '@STATUS_ID': ['3', 'UC_GEWKFD'], // Новый и Лид сообщение
           },
+          select: ['ID'],
+          start: 0,
         },
       };
 

@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
@@ -34,7 +34,6 @@ import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
-  private readonly logger = new Logger(BitrixIntegrationAvitoService.name);
   private readonly avitoAiChatId: string;
 
   constructor(
@@ -160,8 +159,6 @@ export class BitrixIntegrationAvitoService {
           ? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID
           : await this.bitrixUserService.getMinWorkflowUser(sales)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
-
-
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));
     const handledFiles = files.reduce<[string, string][]>(
