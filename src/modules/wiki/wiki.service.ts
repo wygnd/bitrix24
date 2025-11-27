@@ -67,7 +67,7 @@ export class WikiService {
     fields: WikiUpdateLeadRequest,
   ): Promise<WikIUpdateLeadResponse> {
     try {
-      return this.wikiApiServiceNew.patch<
+      return await this.wikiApiServiceNew.patch<
         Omit<WikiUpdateLeadRequest, 'wiki_lead_id'>,
         WikIUpdateLeadResponse
       >(`/avito/leads/${fields.wiki_lead_id}`, fields);

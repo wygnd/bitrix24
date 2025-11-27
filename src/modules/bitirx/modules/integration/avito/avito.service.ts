@@ -138,7 +138,7 @@ export class BitrixIntegrationAvitoService {
 
   public async distributeClientRequestFromAvito(
     fields: AvitoCreateLeadDto,
-  ): Promise<IntegrationAvitoDistributeLeadFromAvito> {
+  ): Promise<any> {
     const {
       phone,
       avito_number,
@@ -160,6 +160,14 @@ export class BitrixIntegrationAvitoService {
           ? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID
           : await this.bitrixUserService.getMinWorkflowUser(sales)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
+
+    return files.reduce<[string, string][]>(
+      (acc, { filename, content_base64 }) => {
+        acc.push([filename, content_base64]);
+        return acc;
+      },
+      [],
+    );
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));
     const handledFiles = files.reduce<[string, string][]>(

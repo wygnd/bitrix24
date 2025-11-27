@@ -1,5 +1,6 @@
 import { Controller, Get, Redirect } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
+import { WikiService } from '@/modules/wiki/wiki.service';
 
 @ApiExcludeController()
 @Controller()
