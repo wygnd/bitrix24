@@ -278,21 +278,25 @@ export class BitrixLeadService {
           }) => {
             if (leadsMap.has(leadId)) return;
             let leadStatus = B24LeadStatus.UNKNOWN;
+
             const dateCreate = new Date(DATE_CREATE);
 
             switch (true) {
               case B24LeadActiveStages.includes(statusId) &&
-                dateCreate.toISOString() !== date.toISOString():
+                dateCreate.toLocaleDateString() !== date.toLocaleDateString():
                 leadStatus = B24LeadStatus.ACTIVE;
                 break;
 
               case B24LeadRejectStages.includes(statusId) &&
-                dateCreate.toISOString() !== date.toISOString():
+                dateCreate.toLocaleDateString() !== date.toLocaleDateString():
                 leadStatus = B24LeadStatus.NONACTIVE;
                 break;
 
-              case dateCreate.toISOString() === date.toISOString() ||
-                B24LeadNewStages.includes(statusId):
+              case dateCreate.toLocaleDateString() ===
+                date.toLocaleDateString() ||
+                (B24LeadNewStages.includes(statusId) &&
+                  dateCreate.toLocaleDateString() !==
+                    date.toLocaleDateString()):
                 leadStatus = B24LeadStatus.NEW;
                 break;
 
