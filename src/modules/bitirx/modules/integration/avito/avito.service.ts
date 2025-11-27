@@ -152,13 +152,12 @@ export class BitrixIntegrationAvitoService {
       time,
       files,
       wiki_lead_id,
+      users,
     } = fields;
-    const sales = await this.wikiService.getWorkingSalesFromWiki(true);
+    // const sales = await this.wikiService.getWorkingSalesFromWiki(true);
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
-        ? sales.length === 0
-          ? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID
-          : await this.bitrixUserService.getMinWorkflowUser(sales)
+        ? await this.bitrixUserService.getMinWorkflowUser(users)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));

@@ -5,7 +5,6 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
-  IsObject,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -18,7 +17,6 @@ import {
   B24FileReceive,
   B24MimeType,
 } from '@/modules/bitirx/interfaces/bitrix-file.interface';
-import type { IntegrationAvitoDistributeLeadFromAvitoServiceOptions } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
 
 export class AvitoCreateLeadFileDto implements B24FileReceive {
   @ApiProperty({
@@ -65,6 +63,10 @@ export class AvitoCreateLeadFileDto implements B24FileReceive {
 }
 
 export class AvitoCreateLeadDto {
+  @IsNotEmpty()
+  @IsArray()
+  users: string[];
+
   @ApiProperty({
     type: Number,
     description: 'unique wiki lead id',
