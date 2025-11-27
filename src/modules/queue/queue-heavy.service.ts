@@ -23,4 +23,11 @@ export class QueueHeavyService {
       data,
     );
   }
+
+  async addTaskToHandleReceiveNegotiationEmployerStateChange(data: any) {
+    return this.queueBitrixHeavy.add(
+      QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_NEGOTIATION_EMPLOYER_STATE_CHANGE,
+      data,
+    );
+  }
 }

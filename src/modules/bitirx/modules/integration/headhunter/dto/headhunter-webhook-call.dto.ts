@@ -1,71 +1,9 @@
 import { HeadhunterWebhookCallInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
-import { IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-class HeadHunterWebhookCallPayloadDto {
-  @ApiProperty({
-    type: String,
-    description: 'Payload topic id',
-    required: true,
-    example: '43653645765',
-  })
-  @IsNotEmpty()
-  @IsString()
-  topic_id: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'resume id',
-    required: true,
-    example: '3u6iyegfwyuti76327965367rgdfye',
-  })
-  @IsNotEmpty()
-  @IsString()
-  resume_id: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'vacancy id',
-    required: true,
-    example: '21342353456',
-  })
-  @IsNotEmpty()
-  @IsString()
-  vacancy_id: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'employer id',
-    required: true,
-    example: '3426345345',
-  })
-  @IsNotEmpty()
-  @IsString()
-  employer_id: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'webhook call date',
-    required: true,
-    example: '2025-10-24T11:14:55+0300',
-  })
-  @IsNotEmpty()
-  @IsString()
-  response_date: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'chat id',
-    required: true,
-    example: '23434534543',
-  })
-  @IsNotEmpty()
-  @IsString()
-  chat_id: string;
-}
-
 export class HeadhunterWebhookCallDto
-  implements HeadhunterWebhookCallInterface
+  implements HeadhunterWebhookCallInterface<any>
 {
   @ApiProperty({
     type: String,
@@ -80,18 +18,10 @@ export class HeadhunterWebhookCallDto
   @ApiProperty({
     type: Object,
     description: 'notification payload',
-    example: {
-      topic_id: '83465798743',
-      resume_id: 'aad8871c89723uhdfgbj',
-      vacancy_id: '437265',
-      employer_id: '4325453634',
-      response_date: '2025-10-24T11:14:55+0300',
-      chat_id: '78645687',
-    },
     required: true,
   })
   @IsNotEmpty()
-  payload: HeadHunterWebhookCallPayloadDto;
+  payload: any;
 
   @ApiProperty({
     type: String,
