@@ -224,8 +224,10 @@ export class BitrixHeadHunterService {
       let telegram = '';
       let email = '';
 
+      console.log('Check contact', resume.contact);
+
       // Если контакты не скрыты, формируем запрос на поиск кандидата по номеру телефона
-      if (Array.isArray(resume.contact) && resume.contact.length !== 0) {
+      if (Array.isArray(resume.contact) && resume.contact?.length !== 0) {
         const candidateContacts = resume.contact.reduce(
           (acc, { kind, contact_value, value }) => {
             switch (kind) {
@@ -308,7 +310,9 @@ export class BitrixHeadHunterService {
         get_deal_by_name: dealsByName,
       } = batchResponse.result;
 
-      if (dealsByPhone && dealsByPhone.length > 0) {
+      console.log('Check deals: ', dealsByPhone?.length);
+
+      if (dealsByPhone && dealsByPhone?.length > 0) {
         // Сначала ищем по телефону
         message +=
           'Совпадение со сделкой: ' +
@@ -382,6 +386,7 @@ export class BitrixHeadHunterService {
       });
       return true;
     } catch (e) {
+      console.log(e);
       // Обработка ошибки.
       // Отправляем в чат информацию
       let errorMessage = '';
