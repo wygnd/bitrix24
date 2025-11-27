@@ -13,6 +13,7 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
@@ -23,6 +24,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly wikiService: WikiService,
     private readonly bitrixTaskService: BitrixTaskService,
+    private readonly queueLightService: QueueLightService,
   ) {
     super();
   }

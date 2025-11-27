@@ -40,6 +40,11 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         );
         break;
 
+      //   todo: need add task in queue tasks to send request to new wiki
+      case QUEUE_TASKS.LIGHT
+        .QUEUE_BX_SEND_UPDATE_LEAD_NEW_WIKI_FROM_REQUEST_AVITO:
+        break;
+
       default:
         this.logger.warn(`not handled yet: ${name}`);
         response.message = 'Not handled';
