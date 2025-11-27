@@ -20,6 +20,7 @@ import {
 import {
   B24LeadActiveStages,
   B24LeadConvertedStages,
+  B24LeadNewStages,
   B24LeadRejectStages,
 } from '@/modules/bitirx/modules/lead/lead.constants';
 import { B24StageHistoryItem } from '@/modules/bitirx/interfaces/bitrix-stagehistory.interface';
@@ -290,7 +291,8 @@ export class BitrixLeadService {
                 leadStatus = B24LeadStatus.NONACTIVE;
                 break;
 
-              case dateCreate.toISOString() === date.toISOString():
+              case dateCreate.toISOString() === date.toISOString() ||
+                B24LeadNewStages.includes(statusId):
                 leadStatus = B24LeadStatus.NEW;
                 break;
 
