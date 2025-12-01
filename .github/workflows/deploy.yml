@@ -23,15 +23,12 @@ jobs:
             cd /home/projects/bitrix24
 
             echo "🔄 Pull latest changes"
-            git pull origin main
+            git pull origin deploy
 
             echo "🛑 Stopping containers"
-            docker compose down
-
-            echo "🔨 Building containers"
-            docker compose build
+            docker compose down backend
 
             echo "🚀 Starting containers"
-            docker compose up -d
+            docker compose up -d backend
 
             echo "✅ Deploy finished"
