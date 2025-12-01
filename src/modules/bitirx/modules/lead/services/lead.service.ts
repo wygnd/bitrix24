@@ -1,18 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { BitrixService } from '../../bitrix.service';
+import { Inject, Injectable } from '@nestjs/common';
+import { BitrixService } from '../../../bitrix.service';
 import {
   B24DuplicateFindByComm,
   B24DuplicateFindByCommResponse,
   B24Lead,
   B24LeadStatus,
-} from './interfaces/lead.interface';
+} from '../interfaces/lead.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import {
   B24BatchCommands,
   B24ListParams,
 } from '@/modules/bitirx/interfaces/bitrix.interface';
-import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import {
+  B24BatchResponseMap,
+  B24SuccessResponse,
+} from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import {
   LeadAvitoStatus,
   LeadAvitoStatusResponse,
@@ -22,15 +25,20 @@ import {
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
+  LEAD_OBSERVE_MANAGER_REPOSITORY,
 } from '@/modules/bitirx/modules/lead/lead.constants';
 import { B24StageHistoryItem } from '@/modules/bitirx/interfaces/bitrix-stagehistory.interface';
 import { B24LeadUpdateFields } from '@/modules/bitirx/modules/lead/interfaces/lead-update.interface';
+import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
 
 @Injectable()
 export class BitrixLeadService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
+    @Inject(LEAD_OBSERVE_MANAGER_REPOSITORY)
+    private readonly leadObserveManagerCallingRepository: typeof LeadObserveManagerCallingModel,
   ) {}
 
   /**
@@ -389,5 +397,83 @@ export class BitrixLeadService {
         {},
       ),
     };
+  }
+
+  public async observeManagerCalling({ calls }: LeadObserveManagerCallingDto) {
+    const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
+    let batchIndex = 0;
+
+    calls.forEach(({ phone }) => {
+      let cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
+
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsGetLeads.set(batchIndex, cmds);
+        batchIndex++;
+        cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
+      }
+
+      cmds[`find_lead=${phone}`] = {
+        method: 'crm.duplicate.findbycomm',
+        params: {
+          entity_type: 'LEAD',
+          type: 'PHONE',
+          values: [phone],
+        },
+      };
+
+      batchCommandsGetLeads.set(batchIndex, cmds);
+    });
+
+    const batchResponseGetLeads = await Promise.all<
+      Promise<B24BatchResponseMap<Record<string, { LEAD: number[] } | []>>>[]
+    >(
+      Array.from(batchCommandsGetLeads.values()).map((batchCommands) =>
+        this.bitrixService.callBatch(batchCommands),
+      ),
+    );
+
+    batchIndex = 0;
+    const batchCommandsGetLeadsInfo = new Map<number, B24BatchCommands>();
+    batchResponseGetLeads.forEach((b24Response) => {
+      Object.entries(b24Response.result.result).forEach(([command, result]) => {
+        if (Array.isArray(result)) return;
+
+        const [, , phone] = command.split('=');
+
+        let cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
+
+        result.LEAD.forEach((leadId) => {
+          if (Object.keys(cmds).length === 50) {
+            batchCommandsGetLeadsInfo.set(batchIndex, cmds);
+            batchIndex++;
+            cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
+          }
+
+          cmds[`get_lead_info=${leadId}=${phone}`] = {
+            method: 'crm.lead.list',
+            params: {
+              filter: {
+                ID: leadId,
+                '@STATUS_ID': B24LeadActiveStages,
+              },
+              select: ['ID', 'TITLE', 'ASSIGNED_BY_ID', 'STATUS_ID'],
+              start: 0,
+            },
+          };
+
+          batchCommandsGetLeadsInfo.set(batchIndex, cmds);
+        });
+      });
+    });
+
+    const batchResponseGetLeadsInfo = await Promise.all<
+      Promise<B24BatchResponseMap<Record<string, B24Lead[]>>>[]
+    >(
+      Array.from(batchCommandsGetLeadsInfo.values()).map((batchCommands) =>
+        this.bitrixService.callBatch(batchCommands),
+      ),
+    );
+
+    return batchResponseGetLeadsInfo;
   }
 }

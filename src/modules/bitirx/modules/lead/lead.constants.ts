@@ -28,3 +28,5 @@ export const B24LeadConvertedStages = [
   'CONVERTED', // Завершена
   'UC_LAZJ4H', // '10. Ожидаем подписанный договор',
 ];
+
+export const LEAD_OBSERVE_MANAGER_REPOSITORY = 'LEAD_OBSERVE_MANAGER_REPOSITORY';

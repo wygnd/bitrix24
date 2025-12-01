@@ -1,12 +1,15 @@
 import {
+  Body,
   Controller,
   Get,
+  HttpCode,
   HttpStatus,
   ParseDatePipe,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
+import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import {
   ApiHeader,
@@ -17,8 +20,15 @@ import {
 } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { LeadAvitoStatusResponseDto } from '@/modules/bitirx/modules/lead/dtos/lead-avito-status-response.dto';
+import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
 @ApiTags(B24ApiTags.LEADS)
+@ApiHeader({
+  name: 'Authorization',
+  description: 'authorization token',
+  example: 'bga token',
+  required: true,
+})
 @UseGuards(AuthGuard)
 @Controller('leads')
 export class BitrixLeadController {
@@ -35,12 +45,6 @@ export class BitrixLeadController {
     description: 'Дата',
     required: false,
     default: 'текущая дата во время запроса',
-  })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'authorization token',
-    example: 'bga token',
-    required: true,
   })
   @ApiResponse({
     type: LeadAvitoStatusResponseDto,
@@ -59,5 +63,14 @@ export class BitrixLeadController {
     date: Date,
   ) {
     return this.bitrixLeadService.getLeadsStatusesByDate(date);
+  }
+
+  @ApiOperation({
+    summary: 'Отслеживание звонов по лидам',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('/observe-manager-calling')
+  async observeManagerCalling(@Body() fields: LeadObserveManagerCallingDto) {
+    return this.bitrixLeadService.observeManagerCalling(fields);
   }
 }
