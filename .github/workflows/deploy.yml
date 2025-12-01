@@ -19,16 +19,9 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd /home/projects/bitrix24
-
-            echo "🔄 Pull latest changes"
             git pull origin deploy
-
-            echo "🛑 Stopping containers"
             docker compose down backend
-
-            echo "🚀 Starting containers"
             docker compose up -d backend
-
-            echo "✅ Deploy finished"
