@@ -352,12 +352,6 @@ export class BitrixImBotService {
           params,
         );
 
-      case 'distributeDealReject':
-        return this.handleDistributeNewDealReject(
-          fields as ImbotHandleDistributeNewDealReject,
-          params,
-        );
-
       default:
         throw new BadRequestException(
           'This distribute handle type is not handling yet',
@@ -461,6 +455,7 @@ export class BitrixImBotService {
   }
 
   /**
+   * @deprecated
    * Handle ONLY ADVERT DEAL. If user click on 'Reject' button
    *
    * ---
@@ -745,10 +740,7 @@ export class BitrixImBotService {
     });
 
     if (!approved) {
-      this.avitoService
-        .rejectDistributeLeadByAi(phone)
-        .then(() => {})
-        .catch(() => {});
+      this.avitoService.rejectDistributeLeadByAi(phone);
       return false;
     }
 

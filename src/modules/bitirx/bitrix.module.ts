@@ -2,7 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { BitrixController } from './bitrix.controller';
 import { BitrixService } from './bitrix.service';
 import { BitrixUserService } from './modules/user/user.service';
-import { BitrixLeadService } from './modules/lead/lead.service';
+import { BitrixLeadService } from './modules/lead/services/lead.service';
 import { BitrixMessageService } from './modules/im/im.service';
 import { BitrixImBotService } from './modules/imbot/imbot.service';
 import { RedisModule } from '../redis/redis.module';
@@ -32,6 +32,7 @@ import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
+import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.providers';
 
 @Module({
   imports: [
@@ -57,7 +58,10 @@ import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.control
     BitrixLeadController,
   ],
   providers: [
+    // other providers
     ...bitrixProviders,
+    ...bitrixLeadProviders,
+    // other services
     BitrixService,
     BitrixUserService,
     BitrixLeadService,

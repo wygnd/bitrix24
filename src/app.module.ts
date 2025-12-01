@@ -19,6 +19,7 @@ import { AvitoModule } from '@/modules/avito/avito.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
+import { DatabaseModule } from '@/modules/database/database.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { QueueModule } from '@/modules/queue/queue.module';
     }),
     ConfigAppModule,
     RedisModule,
+    DatabaseModule,
     BitrixModule,
     HeadHunterModule,
     WikiModule,

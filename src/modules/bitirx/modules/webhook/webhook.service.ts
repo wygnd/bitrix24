@@ -381,24 +381,6 @@ export class BitrixWebhookService {
             '$result[get_deal][UF_CRM_1716383143]'; // Комментарий к сделке;
         }
 
-        const advertRejectDealKeyboardParams: ImbotHandleDistributeNewDealReject =
-          {
-            handle: `distributeDealReject`,
-            dealId: deal_id,
-            userId: nextAdvertHead.bitrix_id,
-            dealTitle: deal_title,
-            userCounter: nextAdvertHead.counter,
-          };
-
-        messageKeyboard.push({
-          TEXT: 'Брак',
-          COMMAND: 'distributeNewDeal',
-          COMMAND_PARAMS: JSON.stringify(advertRejectDealKeyboardParams),
-          BG_COLOR_TOKEN: 'alert',
-          DISPLAY: 'LINE',
-          BLOCK: 'Y',
-        });
-
         batchCommandsSendMessage['get_deal'] = {
           method: 'crm.deal.get',
           params: {
