@@ -438,7 +438,7 @@ export class BitrixLeadService {
       Object.entries(b24Response.result.result).forEach(([command, result]) => {
         if (Array.isArray(result)) return;
 
-        const [, , phone] = command.split('=');
+        const [, phone] = command.split('=');
 
         let cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
 
