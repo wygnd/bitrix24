@@ -1,8 +1,13 @@
-export interface B24Lead extends Record<string, string> {
+import { B24CRMMultifield } from '@/modules/bitirx/interfaces/bitrix-types.interface';
+
+export type B24Lead = B24LeadDefault & Record<string, any>;
+
+export interface B24LeadDefault {
   ID: string;
   ASSIGNED_BY_ID: string;
   STATUS_ID: string;
   DATE_CREATE: string;
+  PHONE: B24CRMMultifield[];
 }
 
 export interface B24DuplicateFindByComm {

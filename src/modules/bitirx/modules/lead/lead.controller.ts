@@ -32,7 +32,9 @@ import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos
 @UseGuards(AuthGuard)
 @Controller('leads')
 export class BitrixLeadController {
-  constructor(private readonly bitrixLeadService: BitrixLeadService) {}
+  constructor(
+    private readonly bitrixLeadService: BitrixLeadService,
+  ) {}
 
   @ApiOperation({
     summary: 'Получить статусы лидов по дате',
