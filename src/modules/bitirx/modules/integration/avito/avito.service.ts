@@ -8,7 +8,7 @@ import {
   B24LeadStatus,
 } from '@/modules/bitirx/modules/lead/interfaces/lead.interface';
 import { isArray } from 'class-validator';
-import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
+import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
 import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { AvitoFindDuplicateLeadsDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito.dto';
@@ -154,7 +154,6 @@ export class BitrixIntegrationAvitoService {
       wiki_lead_id,
       users,
     } = fields;
-    // const sales = await this.wikiService.getWorkingSalesFromWiki(true);
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
         ? await this.bitrixUserService.getMinWorkflowUser(users)
@@ -415,7 +414,7 @@ export class BitrixIntegrationAvitoService {
               'Необходимо посмотреть действующие сделки ' +
               'и, при необходимости, распределить лид в работу[/b][br]' +
               this.bitrixService.generateLeadUrl(leadId) +
-              `С авито: ${avito}` +
+              `[br]С авито: ${avito}` +
               `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
           },
         };

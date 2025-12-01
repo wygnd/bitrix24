@@ -1,12 +1,8 @@
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
-  HttpException,
   HttpStatus,
-  ParseArrayPipe,
-  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -17,7 +13,6 @@ import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
 import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
-import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
 
 @ApiTags(B24ApiTags.AVITO)
 @UseGuards(AuthGuard)
@@ -25,7 +20,6 @@ import { BitrixLeadService } from '@/modules/bitirx/modules/lead/lead.service';
 export class BitrixAvitoController {
   constructor(
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
-    private readonly bitrixLeadService: BitrixLeadService,
   ) {}
 
   @ApiOperation({
