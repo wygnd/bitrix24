@@ -34,6 +34,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
+      renderPath: '/public',
       serveStaticOptions: {
         cacheControl: true,
       },
