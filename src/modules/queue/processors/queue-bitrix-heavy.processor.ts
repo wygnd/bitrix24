@@ -35,21 +35,12 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     };
 
     switch (name) {
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_NEW_RESPONSE_OR_NEGOTIATION:
-        response.message = 'handle new response or negotiation';
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+        response.message = 'handle new webhook from hh.ru';
         response.data =
           await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
             data as HeadhunterWebhookCallDto,
           );
-        break;
-
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_NEGOTIATION_EMPLOYER_STATE_CHANGE:
-        this.bitrixImBotService.sendTestMessage(
-          'Здесь должна быть обработка изменения стадии кандидата: ' +
-            JSON.stringify(data),
-        );
-        response.message = 'handle negotiation employer state change';
-        response.data = null;
         break;
 
       default:

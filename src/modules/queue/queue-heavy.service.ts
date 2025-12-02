@@ -15,11 +15,11 @@ export class QueueHeavyService {
    * Added task on handle update task
    * @param data
    */
-  async addTaskToHandleReceiveNewResponseOrNegotiation(
+  async addTaskToHandleReceiveNewRequestFromHH(
     data: HeadhunterWebhookCallDto,
   ) {
     return this.queueBitrixHeavy.add(
-      QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_NEW_RESPONSE_OR_NEGOTIATION,
+      QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH,
       data,
     );
   }

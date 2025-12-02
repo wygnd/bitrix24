@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import {
   B24CreateDeal,
@@ -10,6 +7,7 @@ import {
   B24DealFields,
   B24DealListParams,
   B24DealUserField,
+  B24UpdateDeal,
 } from './interfaces/deal.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
@@ -22,6 +20,16 @@ export class BitrixDealService {
     private readonly redisService: RedisService,
   ) {}
 
+  /**
+   * Getting deal by deal id
+   *
+   * ---
+   *
+   * Получение сделки по ID
+   *
+   * @param dealId
+   * @param action
+   */
   async getDealById(dealId: number | string, action: B24ActionType = 'cache') {
     if (action === 'cache') {
       const dealFromCache = await this.redisService.get<B24Deal>(
@@ -113,6 +121,10 @@ export class BitrixDealService {
     return this.bitrixService.callMethod('crm.stagehistory.list');
   }
 
-
-
+  async updateDeal(dealId: string, fields: Partial<B24Deal>) {
+    return this.bitrixService.callMethod<B24UpdateDeal>('crm.deal.update', {
+      id: dealId,
+      fields: fields,
+    });
+  }
 }

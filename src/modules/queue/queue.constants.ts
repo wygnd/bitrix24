@@ -18,6 +18,8 @@ export const QUEUE_TASKS = {
       'bitrix:integration:avito:client_request',
   },
   HEAVY: {
+    QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+      'bitrix:integration:headhunter:handle_webhook_from_hh',
     QUEUE_BX_HANDLE_NEW_RESPONSE_OR_NEGOTIATION:
       'bitrix:integration:headhunter:handle_request_or_negotiation',
     QUEUE_BX_HANDLE_NEGOTIATION_EMPLOYER_STATE_CHANGE:
