@@ -32,13 +32,13 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
       ],
       errorMessage: 'Too many requests',
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'static'),
-      renderPath: '/public',
-      serveStaticOptions: {
-        cacheControl: true,
-      },
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'static'),
+    //   renderPath: '/public',
+    //   serveStaticOptions: {
+    //     cacheControl: true,
+    //   },
+    // }),
     ConfigAppModule,
     RedisModule,
     BitrixModule,
