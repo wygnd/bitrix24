@@ -13,6 +13,7 @@ export interface BitrixConstants {
   ADDY: BitrixAddyConstants,
   HR: BitrixHRConstants;
   avito: BitrixAvitoConstants;
+  LEAD: BitrixLEADConstants;
 }
 
 export interface BitrixOptions {
@@ -30,4 +31,8 @@ export interface BitrixAvitoConstants {
 
 export interface BitrixAddyConstants {
   casesChatId: string;
+}
+
+export interface BitrixLEADConstants {
+  observeManagerCallingChatId: string;
 }

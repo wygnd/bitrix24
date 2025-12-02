@@ -22,5 +22,9 @@ export default (): BitrixOptions => ({
     avito: {
       avitoAiChatId: process.env.BITRIX_DATA_AVITO_AI_CHAT_ID ?? '',
     },
+    LEAD: {
+      observeManagerCallingChatId:
+        process.env.BITRIX_DATA_LEAD_OBSERVE_MANAGER_CALLING_CHAT_ID ?? '',
+    },
   },
 });

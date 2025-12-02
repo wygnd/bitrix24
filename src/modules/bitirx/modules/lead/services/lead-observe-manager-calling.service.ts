@@ -27,13 +27,20 @@ export class BitrixLeadObserveManagerCallingService {
     return this.leadObserveManagerCallingRepository.findAll(options);
   }
 
-  async removeCallingItems<T>(fieldName: string, items: T[]) {
+  async removeCallingItemsByItems<T>(fieldName: string, items: T[]) {
     return this.leadObserveManagerCallingRepository.destroy({
       where: {
         [fieldName]: {
           [Op.in]: items,
         },
       },
+    });
+  }
+
+  async clearCallingItems() {
+    return this.leadObserveManagerCallingRepository.destroy({
+      where: {},
+      truncate: true,
     });
   }
 }

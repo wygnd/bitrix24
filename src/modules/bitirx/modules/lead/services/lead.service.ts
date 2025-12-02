@@ -424,6 +424,9 @@ export class BitrixLeadService {
     const errors: string[] = [];
     const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
 
+    if (new Date().getDate() === 1)
+      await this.bitrixLeadObserveManagerCallingService.clearCallingItems();
+
     calls.forEach((call) => uniqueCalls.set(call.phone, call));
 
     // Собираем батч запрос для поиска лидов по номеру телефона и получения информации по лиду
@@ -596,7 +599,7 @@ export class BitrixLeadService {
           BOT_ID: this.bitrixService.BOT_ID,
           DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
           MESSAGE:
-            '[br]Менеджер не звонил в течение 5 дней.[br]' +
+            '[b]Менеджер не звонил в течение 5 дней.[/b][br][br]' +
             this.bitrixService.generateLeadUrl(bxLead.id),
         },
       };
@@ -678,7 +681,7 @@ export class BitrixLeadService {
   }
 
   private async removeLeadsObserveManagerCalling(leadIds: string[]) {
-    return this.bitrixLeadObserveManagerCallingService.removeCallingItems<string>(
+    return this.bitrixLeadObserveManagerCallingService.removeCallingItemsByItems<string>(
       'leadId',
       leadIds,
     );
