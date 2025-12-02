@@ -143,12 +143,15 @@ export class BitrixHeadHunterService {
    * Обрабатывает отклик на вакансию или приглашение от работодателя
    * @param body
    */
-  async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
-    switch (body.action_type) {
+  async handleNewResponseVacancyWebhook({
+    action_type,
+    payload,
+  }: HeadhunterWebhookCallDto) {
+    switch (action_type) {
       case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
         const dto = await validateField(
           HeadHunterWebhookNegotiationOrRequestPayloadDto,
-          body.payload,
+          payload,
         );
 
         return this.handleDealHRFromHeadhunterRequest({
@@ -160,7 +163,7 @@ export class BitrixHeadHunterService {
       case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
         const payloadDto = await validateField(
           HeadhunterWebhookNegotiationEmployerStateChangePayloadDto,
-          body.payload,
+          payload,
         );
 
         return this.handleDealHRFromHeadhunterRequest({
