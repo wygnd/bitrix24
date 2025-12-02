@@ -422,9 +422,12 @@ export class BitrixLeadService {
     const notifiedLeads = new Set<string>();
     let batchIndex = 0;
     const errors: string[] = [];
+    const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
+
+    calls.forEach((call) => uniqueCalls.set(call.phone, call));
 
     // Собираем батч запрос для поиска лидов по номеру телефона и получения информации по лиду
-    calls.forEach(({ phone, date }) => {
+    Array.from(uniqueCalls.values()).forEach(({ phone, date }) => {
       let cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
       const clearPhone = phone.replaceAll(/ -/g, '');
 
