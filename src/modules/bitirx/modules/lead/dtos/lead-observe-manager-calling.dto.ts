@@ -3,7 +3,6 @@ import {
   IsDate,
   IsIn,
   isISO8601,
-  IsISO8601,
   IsNotEmpty,
   IsString,
   ValidateNested,
@@ -100,7 +99,7 @@ export class LeadObserveManagerCallingResponseDto
   @ApiProperty({
     type: String,
     isArray: true,
-    description: 'Список пропущенных по непонятно причине лидов.',
+    description: 'Список пропущенных по непонятной причине лидов.',
     example: ['123', '456', '768'],
   })
   missingLeads: string[];
