@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BitrixService } from '../../../bitrix.service';
 import {
   B24DuplicateFindByComm,
@@ -12,10 +12,7 @@ import {
   B24BatchCommands,
   B24ListParams,
 } from '@/modules/bitirx/interfaces/bitrix.interface';
-import {
-  B24BatchResponseMap,
-  B24SuccessResponse,
-} from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import {
   LeadAvitoStatus,
   LeadAvitoStatusResponse,
@@ -25,11 +22,21 @@ import {
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
-  LEAD_OBSERVE_MANAGER_REPOSITORY,
-} from '@/modules/bitirx/modules/lead/lead.constants';
+} from '@/modules/bitirx/modules/lead/constants/lead.constants';
 import { B24StageHistoryItem } from '@/modules/bitirx/interfaces/bitrix-stagehistory.interface';
 import { B24LeadUpdateFields } from '@/modules/bitirx/modules/lead/interfaces/lead-update.interface';
-import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import {
+  LeadObserveManagerCallingDto,
+  LeadObserveManagerCallingItemDto,
+} from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import {
+  LeadObserveManagerCallingCreationalAttributes,
+  LeadObserveManagerCallingLeadBitrixItem,
+  LeadObserveManagerCallingResponse,
+} from '@/modules/bitirx/modules/lead/interfaces/lead-observe-manager-calling.interface';
+import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules/lead/services/lead-observe-manager-calling.service';
+import { Op } from 'sequelize';
+import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
 
 @Injectable()
@@ -37,8 +44,7 @@ export class BitrixLeadService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
-    @Inject(LEAD_OBSERVE_MANAGER_REPOSITORY)
-    private readonly leadObserveManagerCallingRepository: typeof LeadObserveManagerCallingModel,
+    private readonly bitrixLeadObserveManagerCallingService: BitrixLeadObserveManagerCallingService,
   ) {}
 
   /**
@@ -399,12 +405,28 @@ export class BitrixLeadService {
     };
   }
 
-  public async observeManagerCalling({ calls }: LeadObserveManagerCallingDto) {
+  /**
+   * Check manager calling. If calling not exists at 5 days ago - alert
+   *
+   * ---
+   *
+   * Проверка звонков менеджеров. Если менеджер не звонил в течение 5 дней - сообщение руководителю
+   * @param calls
+   */
+  public async observeManagerCalling({
+    calls,
+  }: LeadObserveManagerCallingDto): Promise<LeadObserveManagerCallingResponse> {
     const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
+    const updatedLeads = new Set<string>();
+    const missingLeads = new Set<string>();
+    const notifiedLeads = new Set<string>();
     let batchIndex = 0;
+    const errors: string[] = [];
 
-    calls.forEach(({ phone }) => {
+    // Собираем батч запрос для поиска лидов по номеру телефона и получения информации по лиду
+    calls.forEach(({ phone, date }) => {
       let cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
+      const clearPhone = phone.replaceAll(/ -/g, '');
 
       if (Object.keys(cmds).length === 50) {
         batchCommandsGetLeads.set(batchIndex, cmds);
@@ -412,7 +434,7 @@ export class BitrixLeadService {
         cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
       }
 
-      cmds[`find_lead=${phone}`] = {
+      cmds[`find_lead=${clearPhone}`] = {
         method: 'crm.duplicate.findbycomm',
         params: {
           entity_type: 'LEAD',
@@ -421,59 +443,241 @@ export class BitrixLeadService {
         },
       };
 
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsGetLeads.set(batchIndex, cmds);
+        batchIndex++;
+        cmds = batchCommandsGetLeads.get(batchIndex) ?? {};
+      }
+
+      cmds[`get_lead_info=${clearPhone}=${date.getTime()}`] = {
+        method: 'crm.lead.list',
+        params: {
+          filter: {
+            ID: `$result[find_lead=${clearPhone}][LEAD][0]`,
+            '@STATUS_ID': B24LeadActiveStages,
+          },
+          select: ['ID', 'TITLE', 'ASSIGNED_BY_ID', 'STATUS_ID', 'PHONE'],
+          start: 0,
+        },
+      };
+
       batchCommandsGetLeads.set(batchIndex, cmds);
     });
 
+    // Выполняем запрос
     const batchResponseGetLeads = await Promise.all<
-      Promise<B24BatchResponseMap<Record<string, { LEAD: number[] } | []>>>[]
+      Promise<
+        B24BatchResponseMap<
+          Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
+        >
+      >[]
     >(
       Array.from(batchCommandsGetLeads.values()).map((batchCommands) =>
         this.bitrixService.callBatch(batchCommands),
       ),
     );
 
-    batchIndex = 0;
-    const batchCommandsGetLeadsInfo = new Map<number, B24BatchCommands>();
+    const leadsFromBitrix = new Map<
+      string,
+      LeadObserveManagerCallingLeadBitrixItem
+    >();
+
+    // Проходимся по результату получения информации и лидах и заполняем мапу
     batchResponseGetLeads.forEach((b24Response) => {
+      const batchErrors = Object.values(b24Response.result.result_error);
+      if (batchErrors.length !== 0) {
+        batchErrors.forEach(({ error }) => errors.push(error));
+        return;
+      }
+
+      if (
+        Array.isArray(b24Response.result.result) &&
+        b24Response.result.result.length === 0
+      )
+        return;
+
       Object.entries(b24Response.result.result).forEach(([command, result]) => {
-        if (Array.isArray(result)) return;
+        const [commandName, phone, date] = command.split('=');
 
-        const [, phone] = command.split('=');
+        switch (commandName) {
+          case 'find_lead':
+            return;
 
-        let cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
+          case 'get_lead_info':
+            if (result.length === 0) return;
 
-        result.LEAD.forEach((leadId) => {
-          if (Object.keys(cmds).length === 50) {
-            batchCommandsGetLeadsInfo.set(batchIndex, cmds);
-            batchIndex++;
-            cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
-          }
+            const {
+              ID: leadId,
+              STATUS_ID: status,
+              ASSIGNED_BY_ID: assigned,
+            } = result[0];
 
-          cmds[`get_lead_info=${leadId}=${phone}`] = {
-            method: 'crm.lead.list',
-            params: {
-              filter: {
-                ID: leadId,
-                '@STATUS_ID': B24LeadActiveStages,
-              },
-              select: ['ID', 'TITLE', 'ASSIGNED_BY_ID', 'STATUS_ID'],
-              start: 0,
-            },
-          };
+            if (leadsFromBitrix.has(leadId)) return;
 
-          batchCommandsGetLeadsInfo.set(batchIndex, cmds);
-        });
+            leadsFromBitrix.set(leadId, {
+              id: leadId,
+              phone: phone,
+              status: status,
+              assigned: assigned,
+              dateCalling: new Date(Number(date)),
+            });
+            break;
+        }
       });
     });
 
-    const batchResponseGetLeadsInfo = await Promise.all<
-      Promise<B24BatchResponseMap<Record<string, B24Lead[]>>>[]
-    >(
-      Array.from(batchCommandsGetLeadsInfo.values()).map((batchCommands) =>
-        this.bitrixService.callBatch(batchCommands),
-      ),
-    );
+    // Если есть ошибки выводим их
+    if (errors.length !== 0) throw new BadRequestException(errors);
 
-    return batchResponseGetLeadsInfo;
+    // Получаем лиды из базы, у которых дата звонка -7 дней
+    const leadsFromDBWhichManagerDoesntCalling: Pick<
+      LeadObserveManagerCallingModel,
+      'id' | 'leadId' | 'dateCalling'
+    >[] = await this.bitrixLeadObserveManagerCallingService.getCallingList({
+      where: {
+        leadId: {
+          [Op.in]: Array.from(leadsFromBitrix.keys()),
+        },
+        dateCalling: {
+          [Op.lte]: Sequelize.literal("NOW() - INTERVAL '6d'"),
+        },
+      },
+      attributes: ['id', 'leadId', 'dateCalling'],
+    });
+
+    // Если не нашли в базе лидов, проходимся по тем, которые получили из битрикса
+    // записываем в базу и выходим
+    if (leadsFromDBWhichManagerDoesntCalling.length === 0) {
+      const updateLeadsResponse =
+        await this.updateOrAddOnDBLeadsObserveManagerCalling(
+          Array.from(leadsFromBitrix.values()),
+        );
+
+      updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
+
+      return {
+        message: 'Not found leads',
+        status: true,
+        notifiedLeads: [...notifiedLeads],
+        missingLeads: [...missingLeads],
+        updatedLeads: [...updatedLeads],
+      };
+    }
+
+    const batchCommandsNotifyAboutUnCallingManager = new Map<
+      number,
+      B24BatchCommands
+    >();
+    batchIndex = 0;
+
+    // Проходимся по списку найденных лидов и собираем пакет запросов для уведомления руководителей
+    leadsFromDBWhichManagerDoesntCalling.forEach(({ leadId }) => {
+      const bxLead = leadsFromBitrix.get(leadId);
+
+      if (!bxLead) {
+        missingLeads.add(leadId);
+        return;
+      }
+
+      let cmds = batchCommandsNotifyAboutUnCallingManager.get(batchIndex) ?? {};
+
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsNotifyAboutUnCallingManager.set(batchIndex, cmds);
+        batchIndex++;
+        cmds = batchCommandsNotifyAboutUnCallingManager.get(batchIndex) ?? {};
+      }
+
+      cmds[`send_message-${leadId}`] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixService.BOT_ID,
+          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+          MESSAGE:
+            '[br]Менеджер не звонил в течение 5 дней.[br]' +
+            this.bitrixService.generateLeadUrl(bxLead.id),
+        },
+      };
+
+      batchCommandsNotifyAboutUnCallingManager.set(batchIndex, cmds);
+      leadsFromBitrix.delete(leadId);
+      notifiedLeads.add(leadId);
+    });
+
+    // Выполняем запрос
+    Promise.all([
+      ...Array.from(batchCommandsNotifyAboutUnCallingManager.values()).map(
+        (cmds) => this.bitrixService.callBatch(cmds),
+      ),
+      // Удаляем обработанные лиды
+      this.removeLeadsObserveManagerCalling([...notifiedLeads]),
+    ]);
+
+    // Если больше лидов не осталось выходим
+    if (leadsFromBitrix.size === 0)
+      return {
+        status: true,
+        message: 'Leads notified successfully.',
+        notifiedLeads: [...notifiedLeads],
+        missingLeads: [...missingLeads],
+        updatedLeads: [...updatedLeads],
+      };
+
+    //   Если остались лиды, нужно занести в базу и обновить существующие
+    const updateLeadsResponse =
+      await this.updateOrAddOnDBLeadsObserveManagerCalling(
+        Array.from(leadsFromBitrix.values()),
+      );
+
+    updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
+
+    return {
+      status: true,
+      message: 'Leads notified and update successfully',
+      notifiedLeads: [...notifiedLeads],
+      missingLeads: [...missingLeads],
+      updatedLeads: [...updatedLeads],
+    };
+  }
+
+  /**
+   * Function calling function from lead observe manager calling service and return value.
+   *
+   * Update or create new calling in database
+   *
+   * ---
+   *
+   * Функция вызывает другую ф-и из сервиса для работы с БД и возвращает результат
+   *
+   * Обновление или создание новой записи лида в БД
+   *
+   * @param leads
+   * @private
+   */
+  private async updateOrAddOnDBLeadsObserveManagerCalling(
+    leads: LeadObserveManagerCallingLeadBitrixItem[],
+  ) {
+    return this.bitrixLeadObserveManagerCallingService.addOrUpdateCallingItems(
+      leads.reduce<LeadObserveManagerCallingCreationalAttributes[]>(
+        (acc, { id, phone, dateCalling }) => {
+          acc.push({
+            leadId: id,
+            dateCalling: dateCalling,
+            phone: phone,
+          });
+          return acc;
+        },
+        [],
+      ),
+      {
+        updateOnDuplicate: ['dateCalling'],
+      },
+    );
+  }
+
+  private async removeLeadsObserveManagerCalling(leadIds: string[]) {
+    return this.bitrixLeadObserveManagerCallingService.removeCallingItems<string>(
+      'leadId',
+      leadIds,
+    );
   }
 }

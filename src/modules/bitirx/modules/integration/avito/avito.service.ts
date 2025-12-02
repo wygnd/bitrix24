@@ -22,7 +22,7 @@ import {
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
-} from '@/modules/bitirx/modules/lead/lead.constants';
+} from '@/modules/bitirx/modules/lead/constants/lead.constants';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { ConfigService } from '@nestjs/config';

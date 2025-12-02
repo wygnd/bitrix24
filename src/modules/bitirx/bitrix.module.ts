@@ -33,6 +33,7 @@ import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wik
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
 import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.providers';
+import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules/lead/services/lead-observe-manager-calling.service';
 
 @Module({
   imports: [
@@ -58,23 +59,37 @@ import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.provider
     BitrixLeadController,
   ],
   providers: [
-    // other providers
+    // providers
     ...bitrixProviders,
     ...bitrixLeadProviders,
+
     // other services
     BitrixService,
+
+    // USERS
     BitrixUserService,
+
+    // LEADS
     BitrixLeadService,
+    BitrixLeadObserveManagerCallingService,
+
+    // MESSAGES AND CHATS
     BitrixMessageService,
     BitrixImBotService,
+
+    // DEALS
     BitrixDealService,
+
+    // TASKS
+    BitrixTaskService,
+
+    // INTEGRATIONS
     BitrixIntegrationAvitoService,
     BitrixPlacementService,
     BitrixHeadHunterService,
     BitrixWebhookService,
     BitrixDepartmentService,
     BitrixEventService,
-    BitrixTaskService,
     BitrixWikiService,
   ],
   exports: [
