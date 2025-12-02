@@ -207,6 +207,13 @@ export class BitrixHeadHunterService {
         this.headHunterRestService.getNegotiationsById(topicId),
       ]);
 
+      const resumeWasReceived = await this.redisService.get<string>(
+        REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+          `phone_interview:${resumeId}`,
+      );
+
+      if (resumeWasReceived && messageType !== 'bot') return false;
+
       let responseType = ``; // Начало сообщения
       let bitrixSearchTypeField = ''; // Тип поиска
 
@@ -220,6 +227,13 @@ export class BitrixHeadHunterService {
             if (messageType === 'bot') {
               bitrixSearchTypeField = '12008'; // Холодный поиск (Бот HH);
               responseType = '[b]Бот HH[/b]';
+
+              this.redisService.set<string>(
+                REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+                  `phone_interview:${resumeId}`,
+                resumeId,
+                600,
+              );
             }
             break;
 
@@ -375,13 +389,13 @@ export class BitrixHeadHunterService {
           'ЗАПЛАНИРУЙ ЗВОНОК';
 
         // Обновляем найденные лиды
-        Promise.all(
-          dealsByPhone.map(({ ID }) => {
-            this.bitrixDealService.updateDeal(ID, {
-              UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-            });
-          }),
-        );
+        // Promise.all(
+        //   dealsByPhone.map(({ ID }) => {
+        //     this.bitrixDealService.updateDeal(ID, {
+        //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+        //     });
+        //   }),
+        // );
       } else if (dealsByName.length > 0) {
         // Сначала ищем по ФИО и телефону
         const dealsFindByPhone = dealsByName.filter((deal) => {
@@ -408,13 +422,13 @@ export class BitrixHeadHunterService {
             'ЗАПЛАНИРУЙ ЗВОНОК!';
 
           // Обновляем найденные лиды
-          Promise.all(
-            dealsByPhone.map(({ ID }) => {
-              this.bitrixDealService.updateDeal(ID, {
-                UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-              });
-            }),
-          );
+          // Promise.all(
+          //   dealsByPhone.map(({ ID }) => {
+          //     this.bitrixDealService.updateDeal(ID, {
+          //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+          //     });
+          //   }),
+          // );
         }
       } else {
         // Если вообще не нашли дублей - создаем новую сделку

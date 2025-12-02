@@ -27,6 +27,7 @@ export const REDIS_KEYS = {
   HEADHUNTER_API_ACTIVE_VACANCIES: 'hh:api:active_vacancies',
   HEADHUNTER_DATA_RESUME: 'hh:data:resume:',
   HEADHUNTER_DATA_VACANCY: 'hh:data:vacancy:',
+  HEADHUNTER_DATA_RESUME_ACTIVITY: 'hh:data:resume:activity:',
 
   // WIKI
   WIKI_WORKING_SALES: 'wiki:sales:working',
