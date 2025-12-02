@@ -255,6 +255,7 @@ export class BitrixHeadHunterService {
 
       // Формируем ФИО
       const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''}`;
+      const candidateFullName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
 
       // Получаем ответственного за кандидата по email
       const { result: resultGetUser } = await this.bitrixUserService.getUsers({
@@ -293,6 +294,15 @@ export class BitrixHeadHunterService {
       let phone = '';
       let telegram = '';
       let email = '';
+      let bitrixVacancy = '';
+
+      try {
+        const vacancy = await this.getRatioVacancyBitrix(vacancyId);
+
+        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
+      } catch (e) {
+        bitrixVacancy = '';
+      }
 
       // Если контакты не скрыты, формируем запрос на поиск кандидата по номеру телефона
       if (Array.isArray(resume.contact) && resume.contact?.length !== 0) {
@@ -389,13 +399,16 @@ export class BitrixHeadHunterService {
           'ЗАПЛАНИРУЙ ЗВОНОК';
 
         // Обновляем найденные лиды
-        // Promise.all(
-        //   dealsByPhone.map(({ ID }) => {
-        //     this.bitrixDealService.updateDeal(ID, {
-        //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-        //     });
-        //   }),
-        // );
+        Promise.all(
+          dealsByPhone.map(({ ID }) => {
+            this.bitrixDealService.updateDeal(ID, {
+              UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+              ASSIGNED_BY_ID: bitrixUser?.ID,
+              UF_CRM_1638524000: bitrixVacancy, // Вакансия
+              STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
+            });
+          }),
+        );
       } else if (dealsByName.length > 0) {
         // Сначала ищем по ФИО и телефону
         const dealsFindByPhone = dealsByName.filter((deal) => {
@@ -422,28 +435,21 @@ export class BitrixHeadHunterService {
             'ЗАПЛАНИРУЙ ЗВОНОК!';
 
           // Обновляем найденные лиды
-          // Promise.all(
-          //   dealsByPhone.map(({ ID }) => {
-          //     this.bitrixDealService.updateDeal(ID, {
-          //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-          //     });
-          //   }),
-          // );
+          Promise.all(
+            dealsByPhone.map(({ ID }) => {
+              this.bitrixDealService.updateDeal(ID, {
+                UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+                ASSIGNED_BY_ID: bitrixUser?.ID,
+                UF_CRM_1638524000: bitrixVacancy, // Вакансия
+                STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
+              });
+            }),
+          );
         }
       } else {
         // Если вообще не нашли дублей - создаем новую сделку
-        let bitrixVacancy = '';
-
-        try {
-          const vacancy = await this.getRatioVacancyBitrix(vacancyId);
-
-          if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
-        } catch (e) {
-          bitrixVacancy = '';
-        }
-
         const { result: newDealId } = await this.bitrixDealService.createDeal({
-          TITLE: candidateName,
+          TITLE: candidateFullName,
           UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
           UF_CRM_1638524259: phone, // Номер телефона
           UF_CRM_1760598515308: telegram, // Телеграмм
