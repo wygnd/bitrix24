@@ -2,11 +2,11 @@ name: Deploy to Server
 
 on:
   push:
-    branches:
-      - deploy
+    branches: [ "deploy" ]
 
 jobs:
   deploy:
+    name: Update server by ssh
     runs-on: ubuntu-latest
 
     steps:
