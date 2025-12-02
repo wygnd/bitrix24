@@ -35,7 +35,6 @@ import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { HeadhunterHandleDealHROptions } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-handle-deal-from-headhunter.interface';
 import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
-import { HeadhunterWebhookNegotiationOrRequestPayload } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-negotiation-or-request.interface';
 import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
 
 @Injectable()
@@ -205,7 +204,7 @@ export class BitrixHeadHunterService {
         this.headHunterRestService.getNegotiationsById(topicId),
       ]);
 
-      let responseType = ``; // Начало сообщение
+      let responseType = ``; // Начало сообщения
       let bitrixSearchTypeField = ''; // Тип поиска
 
       if (negotiation) {
