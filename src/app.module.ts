@@ -19,6 +19,7 @@ import { AvitoModule } from '@/modules/avito/avito.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
   imports: [
@@ -45,6 +46,11 @@ import { QueueModule } from '@/modules/queue/queue.module';
     AppHttModule,
     AvitoModule,
     QueueModule,
+    PrometheusModule.register({
+      defaultLabels: {
+        enabled: true,
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [

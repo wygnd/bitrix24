@@ -1,0 +1,14 @@
+server:
+  http_listen_port: 9080
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: bitrix24_app_logs
+    static_configs:
+      - targets:
+          - /var/log/app/*.log  # Путь к логам приложения в контейнере
+        labels:
+          job: bitrix24_app_logs
+          __path__: /var/lib/docker/containers/*/*log
