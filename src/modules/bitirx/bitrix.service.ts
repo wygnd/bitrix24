@@ -383,6 +383,10 @@ export class BitrixService {
     return this.bitrixConstants.ADDY.casesChatId;
   }
 
+  get OBSERVE_MANAGER_CALLING_CHAT_ID() {
+    return this.bitrixConstants.LEAD.observeManagerCallingChatId;
+  }
+
   public removeEmoji(message: string) {
     return message.replace(
       /([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g,
