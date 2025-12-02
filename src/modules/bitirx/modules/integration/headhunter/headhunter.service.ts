@@ -541,14 +541,20 @@ export class BitrixHeadHunterService {
           const vacancyIndex = ratioVacanciesFromCache.findIndex(
             (v) => v.id === vacancy.id,
           );
+          const vacancyObject: HHBitrixVacancy = {
+            id: vacancy.id,
+            label: vacancy.name,
+            url: vacancy.alternate_url,
+            bitrixField: null,
+          };
+
           vacancyIndex !== -1
-            ? acc.push(ratioVacanciesFromCache[vacancyIndex])
-            : acc.push({
-                id: vacancy.id,
-                label: vacancy.name,
-                url: vacancy.alternate_url,
-                bitrixField: null,
-              });
+            ? acc.push({
+                ...vacancyObject,
+                bitrixField: ratioVacanciesFromCache[vacancyIndex].bitrixField,
+              })
+            : acc.push(vacancyObject);
+
           return acc;
         },
         [],
