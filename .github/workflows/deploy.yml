@@ -17,8 +17,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            eval "$(ssh-agent -s)"
-            ssh-add /root/.ssh/github_actions
             cd /home/projects/bitrix24
             git pull origin deploy
             docker compose down backend
