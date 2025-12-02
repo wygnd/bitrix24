@@ -11,6 +11,7 @@ import {
 import { Transform, Type } from 'class-transformer';
 import { LEAD_OBSERVE_MANAGER_CALLING_TYPES } from '@/modules/bitirx/modules/lead/constants/lead-observe-mananger-calling.constants';
 import { ApiProperty } from '@nestjs/swagger';
+import { LeadObserveManagerCallingResponse } from '@/modules/bitirx/modules/lead/interfaces/lead-observe-manager-calling.interface';
 
 export class LeadObserveManagerCallingItemDto {
   @ApiProperty({
@@ -69,4 +70,46 @@ export class LeadObserveManagerCallingDto {
   @ValidateNested()
   @Type(() => LeadObserveManagerCallingItemDto)
   calls: LeadObserveManagerCallingItemDto[];
+}
+
+export class LeadObserveManagerCallingResponseDto
+  implements LeadObserveManagerCallingResponse
+{
+  @ApiProperty({
+    type: Boolean,
+    description: 'Статус ответа',
+    example: true,
+  })
+  status: boolean;
+
+  @ApiProperty({
+    type: String,
+    description: 'Сообщение',
+    example: 'Leads notified successfully.',
+  })
+  message: string;
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'Список обновленных или занесенных в базу лидов',
+    example: ['123', '456', '768'],
+  })
+  updatedLeads: string[];
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'Список пропущенных по непонятно причине лидов.',
+    example: ['123', '456', '768'],
+  })
+  missingLeads: string[];
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'Список лидов, у которых звонок был 5 дней назад и более',
+    example: ['123', '456', '768'],
+  })
+  notifiedLeads: string[];
 }

@@ -5,7 +5,7 @@ import {
   LeadObserveManagerCallingAttributes,
   LeadObserveManagerCallingCreationalAttributes,
 } from '@/modules/bitirx/modules/lead/interfaces/lead-observe-manager-calling.interface';
-import { FindOptions } from 'sequelize';
+import { BulkCreateOptions, FindOptions, Op } from 'sequelize';
 
 @Injectable()
 export class BitrixLeadObserveManagerCallingService {
@@ -14,8 +14,11 @@ export class BitrixLeadObserveManagerCallingService {
     private readonly leadObserveManagerCallingRepository: typeof LeadObserveManagerCallingModel,
   ) {}
 
-  async addCalling(fields: LeadObserveManagerCallingCreationalAttributes) {
-    return this.leadObserveManagerCallingRepository.create(fields);
+  async addOrUpdateCallingItems(
+    fields: LeadObserveManagerCallingCreationalAttributes[],
+    options?: BulkCreateOptions<LeadObserveManagerCallingAttributes>,
+  ) {
+    return this.leadObserveManagerCallingRepository.bulkCreate(fields, options);
   }
 
   async getCallingList(
@@ -24,10 +27,12 @@ export class BitrixLeadObserveManagerCallingService {
     return this.leadObserveManagerCallingRepository.findAll(options);
   }
 
-  async removeCallingItem(leadId: string) {
+  async removeCallingItems<T>(fieldName: string, items: T[]) {
     return this.leadObserveManagerCallingRepository.destroy({
       where: {
-        leadId: leadId,
+        [fieldName]: {
+          [Op.in]: items,
+        },
       },
     });
   }
