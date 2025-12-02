@@ -9,6 +9,7 @@ import {
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import {
+  B24BatchCommand,
   B24BatchCommands,
   B24ListParams,
 } from '@/modules/bitirx/interfaces/bitrix.interface';
@@ -420,12 +421,10 @@ export class BitrixLeadService {
     const updatedLeads = new Set<string>();
     const missingLeads = new Set<string>();
     const notifiedLeads = new Set<string>();
+    const deletedLeads = new Set<string>();
     let batchIndex = 0;
     const errors: string[] = [];
     const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
-
-    if (new Date().getDate() === 1)
-      await this.bitrixLeadObserveManagerCallingService.clearCallingItems();
 
     calls.forEach((call) => uniqueCalls.set(call.phone, call));
 
@@ -541,9 +540,6 @@ export class BitrixLeadService {
       'id' | 'leadId' | 'dateCalling'
     >[] = await this.bitrixLeadObserveManagerCallingService.getCallingList({
       where: {
-        leadId: {
-          [Op.in]: Array.from(leadsFromBitrix.keys()),
-        },
         dateCalling: {
           [Op.lte]: Sequelize.literal("NOW() - INTERVAL '6d'"),
         },
@@ -564,27 +560,86 @@ export class BitrixLeadService {
       return {
         message: 'Not found leads',
         status: true,
-        notifiedLeads: [...notifiedLeads],
-        missingLeads: [...missingLeads],
-        updatedLeads: [...updatedLeads],
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
       };
     }
 
+    // Проходимся по списку найденных лидов и собираем пакет запросов для проверки активных лидов
+    const batchCommandsGetActiveLeads = new Map<string, B24BatchCommands>();
+    batchIndex = 0;
+    leadsFromDBWhichManagerDoesntCalling.forEach(({ leadId }) => {
+      let cmds = batchCommandsGetActiveLeads.get(leadId) ?? {};
+
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsGetActiveLeads.set(leadId, cmds);
+        batchIndex++;
+        cmds = batchCommandsGetActiveLeads.get(leadId) ?? {};
+      }
+
+      cmds[`check_active_lead=${leadId}`] = {
+        method: 'crm.lead.list',
+        params: {
+          filter: {
+            ID: leadId,
+            '@STATUS_ID': B24LeadActiveStages,
+          },
+          select: ['ID'],
+          start: 0,
+        },
+      };
+      batchCommandsGetActiveLeads.set(leadId, cmds);
+    });
+
+    // Делаем запрос для получения активных лидов с базы
+    const batchResponseGetActiveLeads = await Promise.all<
+      Promise<B24BatchResponseMap<B24Lead[]>>[]
+    >(
+      Array.from(batchCommandsGetActiveLeads.values()).map((cmds) =>
+        this.bitrixService.callBatch(cmds),
+      ),
+    );
+
+    // Проходимся по результату и записываем активные лиды
+    const leadsNeedNotify = new Set<string>();
+    batchResponseGetActiveLeads.forEach((b24Response) => {
+      const batchErrors = Object.values(b24Response.result.result_error);
+      if (batchErrors.length !== 0) {
+        batchErrors.forEach(({ error }) => errors.push(error));
+        return;
+      }
+
+      Object.entries(b24Response.result.result).forEach(([command, result]) => {
+        if (!result || result.length === 0) {
+          const [, leadId] = command.split('=');
+          deletedLeads.add(leadId);
+          return;
+        }
+
+        leadsNeedNotify.add(result[0].ID);
+      });
+    });
+
+    if (errors.length !== 0) throw new BadRequestException(errors);
+
+    // Проходимся по списку найденных лидов и собираем пакет запросов для уведомления
     const batchCommandsNotifyAboutUnCallingManager = new Map<
       number,
       B24BatchCommands
     >();
     batchIndex = 0;
-
-    // Проходимся по списку найденных лидов и собираем пакет запросов для уведомления руководителей
-    leadsFromDBWhichManagerDoesntCalling.forEach(({ leadId }) => {
-      const bxLead = leadsFromBitrix.get(leadId);
-
-      if (!bxLead) {
-        missingLeads.add(leadId);
-        return;
-      }
-
+    leadsNeedNotify.forEach((leadId) => {
       let cmds = batchCommandsNotifyAboutUnCallingManager.get(batchIndex) ?? {};
 
       if (Object.keys(cmds).length === 50) {
@@ -597,16 +652,16 @@ export class BitrixLeadService {
         method: 'imbot.message.add',
         params: {
           BOT_ID: this.bitrixService.BOT_ID,
-          DIALOG_ID: this.bitrixService.OBSERVE_MANAGER_CALLING_CHAT_ID,
+          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
           MESSAGE:
             '[b]Менеджер не звонил в течение 5 дней.[/b][br][br]' +
-            this.bitrixService.generateLeadUrl(bxLead.id),
+            this.bitrixService.generateLeadUrl(leadId),
         },
       };
 
       batchCommandsNotifyAboutUnCallingManager.set(batchIndex, cmds);
-      leadsFromBitrix.delete(leadId);
-      notifiedLeads.add(leadId);
+      leadsFromBitrix.delete(leadId); // Удаляем с изначального массива лидов
+      notifiedLeads.add(leadId); // Добавляем в массив для результата
     });
 
     // Выполняем запрос
@@ -614,8 +669,11 @@ export class BitrixLeadService {
       ...Array.from(batchCommandsNotifyAboutUnCallingManager.values()).map(
         (cmds) => this.bitrixService.callBatch(cmds),
       ),
-      // Удаляем обработанные лиды
-      this.removeLeadsObserveManagerCalling([...notifiedLeads]),
+      // Удаляем обработанные лиды и не активные лиды
+      this.removeLeadsObserveManagerCalling([
+        ...notifiedLeads,
+        ...deletedLeads,
+      ]),
     ]);
 
     // Если больше лидов не осталось выходим
@@ -623,9 +681,19 @@ export class BitrixLeadService {
       return {
         status: true,
         message: 'Leads notified successfully.',
-        notifiedLeads: [...notifiedLeads],
-        missingLeads: [...missingLeads],
-        updatedLeads: [...updatedLeads],
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
       };
 
     //   Если остались лиды, нужно занести в базу и обновить существующие
@@ -639,9 +707,19 @@ export class BitrixLeadService {
     return {
       status: true,
       message: 'Leads notified and update successfully',
-      notifiedLeads: [...notifiedLeads],
-      missingLeads: [...missingLeads],
-      updatedLeads: [...updatedLeads],
+      data: {
+        notifiedLeads: [...notifiedLeads],
+        missingLeads: [...missingLeads],
+        updatedLeads: [...updatedLeads],
+        deletedLeads: [...deletedLeads],
+      },
+      total: {
+        notifiedLeads: notifiedLeads.size,
+        missingLeads: missingLeads.size,
+        updatedLeads: updatedLeads.size,
+        deletedLeads: deletedLeads.size,
+        uniqueLeads: uniqueCalls.size,
+      },
     };
   }
 

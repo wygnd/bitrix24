@@ -71,23 +71,7 @@ export class LeadObserveManagerCallingDto {
   calls: LeadObserveManagerCallingItemDto[];
 }
 
-export class LeadObserveManagerCallingResponseDto
-  implements LeadObserveManagerCallingResponse
-{
-  @ApiProperty({
-    type: Boolean,
-    description: 'Статус ответа',
-    example: true,
-  })
-  status: boolean;
-
-  @ApiProperty({
-    type: String,
-    description: 'Сообщение',
-    example: 'Leads notified successfully.',
-  })
-  message: string;
-
+export class LeadObserveManageCallingResponseDataDto {
   @ApiProperty({
     type: String,
     isArray: true,
@@ -111,4 +95,79 @@ export class LeadObserveManagerCallingResponseDto
     example: ['123', '456', '768'],
   })
   notifiedLeads: string[];
+
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    description: 'Список лидов, которые были удалены',
+    example: ['123', '456', '768'],
+  })
+  deletedLeads: string[];
+}
+
+export class LeadObserveManageCallingResponseTotalDto {
+  @ApiProperty({
+    type: Number,
+    description: 'Кол-во изначально уникальных лидов',
+    example: 10,
+  })
+  uniqueLeads: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Кол-во обновленных или занесенных в базу лидов',
+    example: 10,
+  })
+  updatedLeads: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Кол-во пропущенных по непонятной причине лидов.',
+    example: 10,
+  })
+  missingLeads: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Кол-во лидов, у которых звонок был 5 дней назад и более',
+    example: 10,
+  })
+  notifiedLeads: number;
+
+  @ApiProperty({
+    type: Number,
+    description: 'Кол-во лидов, которые были удалены',
+    example: 10,
+  })
+  deletedLeads: number;
+}
+
+export class LeadObserveManagerCallingResponseDto
+  implements LeadObserveManagerCallingResponse
+{
+  @ApiProperty({
+    type: Boolean,
+    description: 'Статус ответа',
+    example: true,
+  })
+  status: boolean;
+
+  @ApiProperty({
+    type: String,
+    description: 'Сообщение',
+    example: 'Leads notified successfully.',
+  })
+  message: string;
+
+  @ApiProperty({
+    type: LeadObserveManageCallingResponseDataDto,
+    description: 'Результат: список лидов',
+  })
+  data: LeadObserveManageCallingResponseDataDto;
+
+  @ApiProperty({
+    type: LeadObserveManageCallingResponseTotalDto,
+    description: 'Результат: количество лидов',
+  })
+  total: LeadObserveManageCallingResponseTotalDto;
 }
