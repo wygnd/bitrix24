@@ -107,7 +107,7 @@ export class AvitoCreateLeadDto {
   })
   @IsNotEmpty()
   @IsString()
-  @IsPhoneNumber('RU')
+  // @IsPhoneNumber('RU')
   phone: string;
 
   @ApiProperty({
