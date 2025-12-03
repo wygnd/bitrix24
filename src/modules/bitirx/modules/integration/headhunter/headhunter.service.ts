@@ -294,6 +294,12 @@ export class BitrixHeadHunterService {
         `Резюме: ${resume.alternate_url}[br][br]`;
 
       // Инициализируем батч запрос для поиска дублей по сделкам HR
+      const selectFieldsFindDuplicateDeals = [
+        'ID',
+        'TITLE',
+        'UF_CRM_1638524259',
+        'STAGE_ID',
+      ];
       const batchCommands: B24BatchCommands = {
         get_deal_by_name: {
           method: 'crm.deal.list',
@@ -302,7 +308,7 @@ export class BitrixHeadHunterService {
               CATEGORY_ID: '14',
               '%TITLE': candidateName.trim(),
             },
-            select: ['ID', 'TITLE', 'UF_CRM_1638524259'],
+            select: selectFieldsFindDuplicateDeals,
           },
         },
       };
@@ -387,7 +393,7 @@ export class BitrixHeadHunterService {
               CATEGORY_ID: '14',
               '@UF_CRM_1638524259': filterPhones,
             },
-            select: ['ID', 'TITLE', 'UF_CRM_1638524259'],
+            select: selectFieldsFindDuplicateDeals,
           },
         };
       }
