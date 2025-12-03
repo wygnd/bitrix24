@@ -119,13 +119,15 @@ export class HeadHunterService {
     if (wasSendingNotification) return;
 
     await this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '190', // Екатерина Туркатова
+      DIALOG_ID: 'chat68032', // Chat Отклики HH.ru
       MESSAGE:
+        '[USER=190][/USER][br]' +
         'Необходимо обновить авторизацию на hh.ru: [br]' +
         'https://hh.ru/oauth/authorize?' +
         'response_type=code&' +
         `client_id=${this.client_id}` +
-        `&redirect_uri=${this.redirect_uri}`,
+        `&redirect_uri=${this.redirect_uri}[br][br]Строго от аккаунта hh.ru Екатерины Туркатовой`,
+      SYSTEM: 'Y',
     });
 
     await this.redisService.set<boolean>(
