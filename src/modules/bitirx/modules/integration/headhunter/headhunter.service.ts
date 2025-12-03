@@ -36,6 +36,7 @@ import { HeadhunterHandleDealHROptions } from '@/modules/bitirx/modules/integrat
 import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
 import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
+import { HeadhunterWebhookCallResponse } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -146,7 +147,7 @@ export class BitrixHeadHunterService {
   async handleNewResponseVacancyWebhook({
     action_type,
     payload,
-  }: HeadhunterWebhookCallDto) {
+  }: HeadhunterWebhookCallDto): Promise<HeadhunterWebhookCallResponse> {
     switch (action_type) {
       case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
         const dto = await validateField(
@@ -178,7 +179,10 @@ export class BitrixHeadHunterService {
         });
 
       default:
-        return false;
+        return {
+          status: false,
+          message: 'Unhandled event',
+        };
     }
   }
 
@@ -191,7 +195,9 @@ export class BitrixHeadHunterService {
    *
    * @param body
    */
-  async handleDealHRFromHeadhunterRequest(body: HeadhunterHandleDealHROptions) {
+  async handleDealHRFromHeadhunterRequest(
+    body: HeadhunterHandleDealHROptions,
+  ): Promise<HeadhunterWebhookCallResponse> {
     const { resumeId, vacancyId, topicId, messageType = 'manager' } = body;
     try {
       // Делаем запрос на получения вакансии, резюме и приглашения/отклика
@@ -207,12 +213,16 @@ export class BitrixHeadHunterService {
         this.headHunterRestService.getNegotiationsById(topicId),
       ]);
 
-      // const resumeWasReceived = await this.redisService.get<string>(
-      //   REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
-      //     `phone_interview:${resumeId}`,
-      // );
-      //
-      // if (resumeWasReceived && messageType !== 'bot') return false;
+      const resumeWasReceived = await this.redisService.get<string>(
+        REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+          `phone_interview:${resumeId}`,
+      );
+
+      if (resumeWasReceived && messageType !== 'bot')
+        return {
+          status: false,
+          message: 'Event was received whet state change',
+        };
 
       let responseType = ``; // Начало сообщения
       let bitrixSearchTypeField = ''; // Тип поиска
@@ -228,12 +238,12 @@ export class BitrixHeadHunterService {
               bitrixSearchTypeField = '12008'; // Холодный поиск (Бот HH);
               responseType = '[b]Бот HH[/b]';
 
-              // this.redisService.set<string>(
-              //   REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
-              //     `phone_interview:${resumeId}`,
-              //   resumeId,
-              //   600,
-              // );
+              this.redisService.set<string>(
+                REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+                  `phone_interview:${resumeId}`,
+                resumeId,
+                600,
+              );
             }
             break;
 
@@ -243,13 +253,13 @@ export class BitrixHeadHunterService {
             bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
             break;
 
-          // Стадия: Подумать
-          case 'consider':
-            return false;
-
           // Все другие статусы игнорировать
           default:
-            return false;
+            return {
+              status: false,
+              message:
+                'Stop script, cause state is not response or phone_interview',
+            };
         }
       }
 
@@ -398,17 +408,18 @@ export class BitrixHeadHunterService {
           }, '') +
           'ЗАПЛАНИРУЙ ЗВОНОК';
 
+        // todo: Update leads
         // Обновляем найденные лиды
-        Promise.all(
-          dealsByPhone.map(({ ID }) => {
-            this.bitrixDealService.updateDeal(ID, {
-              UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-              ASSIGNED_BY_ID: bitrixUser?.ID,
-              UF_CRM_1638524000: bitrixVacancy, // Вакансия
-              STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
-            });
-          }),
-        );
+        // Promise.all(
+        //   dealsByPhone.map(({ ID }) => {
+        //     this.bitrixDealService.updateDeal(ID, {
+        //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+        //       ASSIGNED_BY_ID: bitrixUser?.ID,
+        //       UF_CRM_1638524000: bitrixVacancy, // Вакансия
+        //       STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
+        //     });
+        //   }),
+        // );
       } else if (dealsByName.length > 0) {
         // Сначала ищем по ФИО и телефону
         const dealsFindByPhone = dealsByName.filter((deal) => {
@@ -434,17 +445,18 @@ export class BitrixHeadHunterService {
             }, '') +
             'ЗАПЛАНИРУЙ ЗВОНОК!';
 
+          // todo: Update leads
           // Обновляем найденные лиды
-          Promise.all(
-            dealsByPhone.map(({ ID }) => {
-              this.bitrixDealService.updateDeal(ID, {
-                UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-                ASSIGNED_BY_ID: bitrixUser?.ID,
-                UF_CRM_1638524000: bitrixVacancy, // Вакансия
-                STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
-              });
-            }),
-          );
+          // Promise.all(
+          //   dealsByPhone.map(({ ID }) => {
+          //     this.bitrixDealService.updateDeal(ID, {
+          //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+          //       ASSIGNED_BY_ID: bitrixUser?.ID,
+          //       UF_CRM_1638524000: bitrixVacancy, // Вакансия
+          //       STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
+          //     });
+          //   }),
+          // );
         }
       } else {
         // Если вообще не нашли дублей - создаем новую сделку
@@ -474,7 +486,10 @@ export class BitrixHeadHunterService {
         MESSAGE: message,
         URL_PREVIEW: 'N',
       });
-      return true;
+      return {
+        status: true,
+        message: 'Successfully run script',
+      };
     } catch (e) {
       // Обработка ошибки.
       // Отправляем в чат информацию
@@ -515,7 +530,10 @@ export class BitrixHeadHunterService {
         },
       });
 
-      return false;
+      return {
+        status: false,
+        message: 'Exit script, cause cathcing error',
+      };
     }
   }
 
