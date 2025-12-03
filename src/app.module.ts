@@ -20,6 +20,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { DatabaseModule } from '@/modules/database/database.module';
+import { CronModule } from '@/modules/cron/cron.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { DatabaseModule } from '@/modules/database/database.module';
     AppHttModule,
     AvitoModule,
     QueueModule,
+    CronModule
   ],
   controllers: [AppController],
   providers: [
