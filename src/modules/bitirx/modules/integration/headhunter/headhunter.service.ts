@@ -207,12 +207,12 @@ export class BitrixHeadHunterService {
         this.headHunterRestService.getNegotiationsById(topicId),
       ]);
 
-      const resumeWasReceived = await this.redisService.get<string>(
-        REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
-          `phone_interview:${resumeId}`,
-      );
-
-      if (resumeWasReceived && messageType !== 'bot') return false;
+      // const resumeWasReceived = await this.redisService.get<string>(
+      //   REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+      //     `phone_interview:${resumeId}`,
+      // );
+      //
+      // if (resumeWasReceived && messageType !== 'bot') return false;
 
       let responseType = ``; // Начало сообщения
       let bitrixSearchTypeField = ''; // Тип поиска
@@ -228,12 +228,12 @@ export class BitrixHeadHunterService {
               bitrixSearchTypeField = '12008'; // Холодный поиск (Бот HH);
               responseType = '[b]Бот HH[/b]';
 
-              this.redisService.set<string>(
-                REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
-                  `phone_interview:${resumeId}`,
-                resumeId,
-                600,
-              );
+              // this.redisService.set<string>(
+              //   REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+              //     `phone_interview:${resumeId}`,
+              //   resumeId,
+              //   600,
+              // );
             }
             break;
 
