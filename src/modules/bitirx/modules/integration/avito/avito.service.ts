@@ -189,6 +189,7 @@ export class BitrixIntegrationAvitoService {
               PHONE: [
                 {
                   VALUE: phone,
+                  VALUE_TYPE: 'WORK',
                 },
               ],
               UF_CRM_1651577716: 6856, // Тип лида: пропущенный
@@ -312,7 +313,6 @@ export class BitrixIntegrationAvitoService {
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
       UF_CRM_1653291114976: leadMessage,
-      PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
