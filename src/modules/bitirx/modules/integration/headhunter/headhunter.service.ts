@@ -37,6 +37,7 @@ import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
 import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
 import { HeadhunterWebhookCallResponse } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
+import { B24DealHRRejectedStages } from '@/modules/bitirx/modules/deal/constants/deal-hr.constants';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -398,6 +399,8 @@ export class BitrixHeadHunterService {
         get_deal_by_name: dealsByName = [],
       } = batchResponse.result;
 
+      const batchCommandsUpdateDealAndSendMessage: B24BatchCommands = {};
+
       if (dealsByPhone && dealsByPhone?.length > 0) {
         // Сначала ищем по телефону
         message +=
@@ -408,18 +411,23 @@ export class BitrixHeadHunterService {
           }, '') +
           'ЗАПЛАНИРУЙ ЗВОНОК';
 
-        // todo: Update leads
-        // Обновляем найденные лиды
-        // Promise.all(
-        //   dealsByPhone.map(({ ID }) => {
-        //     this.bitrixDealService.updateDeal(ID, {
-        //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-        //       ASSIGNED_BY_ID: bitrixUser?.ID,
-        //       UF_CRM_1638524000: bitrixVacancy, // Вакансия
-        //       STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
-        //     });
-        //   }),
-        // );
+        dealsByPhone.forEach(({ ID, STAGE_ID }) => {
+          // Если сделка в неактивной стадии выходим
+          if (B24DealHRRejectedStages.includes(STAGE_ID)) return;
+
+          batchCommandsUpdateDealAndSendMessage[`update_deal=${ID}`] = {
+            method: 'crm.deal.update',
+            params: {
+              id: ID,
+              fields: {
+                UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+                ASSIGNED_BY_ID: bitrixUser?.ID,
+                UF_CRM_1638524000: bitrixVacancy, // Вакансия
+                STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+              },
+            },
+          };
+        });
       } else if (dealsByName.length > 0) {
         // Сначала ищем по ФИО и телефону
         const dealsFindByPhone = dealsByName.filter((deal) => {
@@ -445,18 +453,24 @@ export class BitrixHeadHunterService {
             }, '') +
             'ЗАПЛАНИРУЙ ЗВОНОК!';
 
-          // todo: Update leads
           // Обновляем найденные лиды
-          // Promise.all(
-          //   dealsByPhone.map(({ ID }) => {
-          //     this.bitrixDealService.updateDeal(ID, {
-          //       UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-          //       ASSIGNED_BY_ID: bitrixUser?.ID,
-          //       UF_CRM_1638524000: bitrixVacancy, // Вакансия
-          //       STATUS_ID: 'C14:NEW', // Стадия сделки: Звонок
-          //     });
-          //   }),
-          // );
+          dealsFindByPhone.forEach(({ ID, STAGE_ID }) => {
+            // Если сделка в неактивной стадии выходим
+            if (B24DealHRRejectedStages.includes(STAGE_ID)) return;
+
+            batchCommandsUpdateDealAndSendMessage[`update_deal=${ID}`] = {
+              method: 'crm.deal.update',
+              params: {
+                id: ID,
+                fields: {
+                  UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+                  ASSIGNED_BY_ID: bitrixUser?.ID,
+                  UF_CRM_1638524000: bitrixVacancy, // Вакансия
+                  STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+                },
+              },
+            };
+          });
         }
       } else {
         // Если вообще не нашли дублей - создаем новую сделку
@@ -481,11 +495,17 @@ export class BitrixHeadHunterService {
               'Сделки не найдено.[br]Что то пошло не так при создании сделки');
       }
 
-      this.bitrixImBotService.sendMessage({
-        DIALOG_ID: 'chat68032',
-        MESSAGE: message,
-        URL_PREVIEW: 'N',
-      });
+      batchCommandsUpdateDealAndSendMessage['send_message_to_hr_chat'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixService.BOT_ID,
+          DIALOG_ID: 'chat68032',
+          MESSAGE: message,
+          URL_PREVIEW: 'N',
+        },
+      };
+
+      this.bitrixService.callBatch(batchCommandsUpdateDealAndSendMessage);
       return {
         status: true,
         message: 'Successfully run script',
