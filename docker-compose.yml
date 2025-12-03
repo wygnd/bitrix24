@@ -7,6 +7,8 @@ services:
     container_name: bitrix-server-backend
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
     env_file:
       - .env
     depends_on:
@@ -23,6 +25,8 @@ services:
       - "3001:6379"
     volumes:
       - /home/data/bitrix24/redisdata:/data
+    networks:
+      - monitoring
     command: redis-server --appendonly yes
     restart: always
 
@@ -32,7 +36,9 @@ services:
     container_name: bitrix-server-grafana_alloy
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./alloy-config.yaml:/etc/alloy/alloy-config.yaml
+      - ./config/alloy/alloy-config.yaml:/etc/alloy/alloy-config.yaml
+    networks:
+      - monitoring
     command: [ "-config.file=/etc/alloy/alloy-config.yaml" ]
     privileged: true
 
@@ -43,7 +49,9 @@ services:
     ports:
       - "3002:3100"
     volumes:
-      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - .config/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+    networks:
+      - monitoring
     command: -config.file=/etc/loki/loki-config.yaml
 
   # Сбор метрик
@@ -53,8 +61,20 @@ services:
     ports:
       - "3003:9090"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheusdata:/prometheus
+      - ./config/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    depends_on:
+      - backend
 
   # Дашборды
   grafana:
@@ -63,15 +83,22 @@ services:
     ports:
       - "3004:3000"
     environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
-      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
-      - grafanadata:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
     depends_on:
       - prometheus
-      - loki
+
+networks:
+  monitoring:
+    driver: bridge
 
 volumes:
-  grafanadata:
-  prometheusdata:
+  grafana_data:
+  prometheus_data:
