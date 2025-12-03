@@ -16,7 +16,7 @@ export class CronService {
       send_message: {
         method: 'im.message.add',
         params: {
-          DIALOG_ID: '376',
+          DIALOG_ID: '464',
           MESSAGE:
             'Доброе утро Ксюша![br]Выгрузи пожалуйста файл за последние 5 дней из АТС Мегафона по всем входящим и исходящим звонкам',
         },
