@@ -5,7 +5,8 @@ export const B24Emoji = {
     HEADHUNTER: {
       RESPONSE: '🟢',
       INVITE: '🟠',
-      BOT: '🟡'
-    }
-  }
+      BOT: '🟡',
+      ATTENTION: '❗',
+    },
+  },
 };

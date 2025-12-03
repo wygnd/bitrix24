@@ -446,7 +446,7 @@ export class BitrixHeadHunterService {
         // Если не нашли по номеру
         if (dealsFindByPhone.length === 0) {
           message +=
-            '[b]Найдены дубли по ФИО: [/b][br]' +
+            `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br]` +
             dealsByName.reduce((acc, { ID: dealId }) => {
               acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
               return acc;
