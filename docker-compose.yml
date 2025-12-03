@@ -39,7 +39,7 @@ services:
       - ./config/alloy/alloy-config.yaml:/etc/alloy/alloy-config.yaml
     networks:
       - monitoring
-    command: [ "-config.file=/etc/alloy/alloy-config.yaml" ]
+    command: [ "run", "-config.file=/etc/alloy/alloy-config.yaml" ]
     privileged: true
 
   # Хранение логов
@@ -101,4 +101,6 @@ networks:
 
 volumes:
   grafana_data:
+    driver: local
   prometheus_data:
+    driver: local
