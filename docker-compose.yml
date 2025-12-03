@@ -31,10 +31,10 @@ services:
     image: grafana/alloy:latest
     container_name: bitrix-server-grafana_alloy
     volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./alloy-config.yaml:/etc/alloy/alloy-config.yaml
     command: [ "-config.file=/etc/alloy/alloy-config.yaml" ]
-    depends_on:
-      - loki
+    privileged: true
 
   # Хранение логов
   loki:
@@ -44,7 +44,6 @@ services:
       - "3002:3100"
     volumes:
       - ./loki-config.yaml:/etc/loki/loki-config.yaml
-      - loki-data:/loki
     command: -config.file=/etc/loki/loki-config.yaml
 
   # Сбор метрик
@@ -55,7 +54,7 @@ services:
       - "3003:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
+      - prometheusdata:/prometheus
 
   # Дашборды
   grafana:
@@ -68,12 +67,11 @@ services:
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
-      - grafana-data:/var/lib/grafana
+      - grafanadata:/var/lib/grafana
     depends_on:
       - prometheus
       - loki
 
 volumes:
-  grafana-data:
-  prometheus-data:
-  loki-data:
+  grafanadata:
+  prometheusdata:
