@@ -6,6 +6,10 @@ import { BitrixService } from '@/modules/bitirx/bitrix.service';
 export class CronService {
   constructor(private readonly bitrixService: BitrixService) {}
 
+  /**
+   * Add task on notify ksenya about uploading calling from megafon.
+   * Task running every work day at 9:10 am
+   */
   @Cron('* 10 9 * * 1-5')
   async handleCronNotifyAboutNeedLoadCallingFromMegafon() {
     this.bitrixService.callBatch({
