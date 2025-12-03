@@ -19,5 +19,4 @@ jobs:
           script: |
             cd /home/projects/bitrix24
             git pull origin deploy
-            docker compose down backend
-            docker compose up -d
+            docker compose up -d --build backend
