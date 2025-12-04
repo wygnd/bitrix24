@@ -1,9 +1,12 @@
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+
 export interface TokensAttributes {
   id: number;
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   expires: number;
-  expiresAt: number;
+  service: TokensServices;
+  notice?: string;
 }
 
-export type TokensCreationalAttributes = Pick<TokensAttributes, 'id'>;
+export type TokensCreationalAttributes = Omit<TokensAttributes, 'id'>;

@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { BitrixMessageService } from './modules/im/im.service';
-import { BitrixService } from '@/modules/bitirx/bitrix.service';
 
 @ApiExcludeController()
 @ApiTags('Base methods')

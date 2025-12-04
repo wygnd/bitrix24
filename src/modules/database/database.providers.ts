@@ -3,6 +3,7 @@ import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { DEVELOPMENT, PRODUCTION } from '@/constants';
 import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
 import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
+import { TokensModel } from '@/modules/tokens/tokens.entity';
 
 export const databaseProviders = [
   {
@@ -33,7 +34,7 @@ export const databaseProviders = [
         throw new Error('DATABASE MODULE: Invalid database config');
 
       const sequelize = new Sequelize(config);
-      sequelize.addModels([LeadObserveManagerCallingModel]);
+      sequelize.addModels([LeadObserveManagerCallingModel, TokensModel]);
       await sequelize.sync({
         force: false,
         alter: false,

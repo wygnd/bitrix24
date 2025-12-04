@@ -32,8 +32,8 @@ import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
-import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.providers';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules/lead/services/lead-observe-manager-calling.service';
+import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
   imports: [
@@ -42,6 +42,7 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules
     forwardRef(() => HeadHunterModule),
     WikiModule,
     AvitoModule,
+    TokensModule,
   ],
   controllers: [
     BitrixController,
@@ -61,7 +62,6 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules
   providers: [
     // providers
     ...bitrixProviders,
-    ...bitrixLeadProviders,
 
     // other services
     BitrixService,
