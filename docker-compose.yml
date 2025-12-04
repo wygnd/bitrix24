@@ -32,19 +32,6 @@ services:
     command: redis-server --requirepass  ${REDIS_PASSWORD}
     restart: always
 
-  # Сбор логов
-  alloy:
-    image: grafana/alloy:latest
-    container_name: bitrix-server-grafana_alloy
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-    networks:
-      - monitoring
-    command:
-      - run
-      - /etc/alloy/config.alloy
-    privileged: true
-
   # Хранение логов
   loki:
     image: grafana/loki:latest
@@ -62,6 +49,13 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
 
   # Мониторинг
   prometheus:
