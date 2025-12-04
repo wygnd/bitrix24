@@ -35,19 +35,17 @@ scrape_configs:
           status:
 
     static_configs:
-      - targets:
-          - localhost
-        labels:
-          service: nestjs
-          env: production
-          __path__: /var/lib/docker/containers/*/*-json.log
-
-  - job_name: docker
-    pipeline_stages:
-      - docker: { }
-
-    static_configs:
       - targets: [ localhost ]
         labels:
           job: docker-logs
-          __path__: /var/lib/docker/containers/*/*json.log
+          container_name: bitrix-server-backend
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+  - job_name: docker-other
+    pipeline_stages:
+      - docker: {}
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: docker-other
+          __path__: /var/lib/docker/containers/*/*-json.log
