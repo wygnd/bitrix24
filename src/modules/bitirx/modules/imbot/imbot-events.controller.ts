@@ -53,7 +53,7 @@ export class BitrixImbotEventsController {
         this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
           refreshToken: auth.refresh_token,
           accessToken: auth.access_token,
-          expires: auth.expires,
+          expires: auth.expires * 1000,
         }),
         // Old
         this.redisService.set<string>(

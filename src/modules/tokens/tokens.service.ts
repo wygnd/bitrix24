@@ -31,10 +31,14 @@ export class TokensService {
         },
       })
       .then((response) =>
-        plainToInstance(TokensDto, response, {
-          excludeExtraneousValues: true,
-        }),
+        response
+          ? plainToInstance(TokensDto, response, {
+              excludeExtraneousValues: true,
+            })
+          : null,
       );
+
+    if (!tokenFromDB) return null;
 
     this.redisService.set<TokensDto>(
       REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + service,

@@ -1,13 +1,7 @@
-import {
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
-import { REDIS_CLIENT, REDIS_KEYS } from '../redis/redis.constants';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 import {
   BitrixOauthResponse,
   BitrixTokens,
@@ -27,6 +21,8 @@ import {
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import emojiStrip from 'emoji-strip';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @Injectable()
 export class BitrixService {
@@ -44,6 +40,7 @@ export class BitrixService {
     private readonly redisService: RedisService,
     @Inject('BitrixApiService')
     private readonly http: AxiosInstance,
+    private readonly tokensService: TokensService,
   ) {
     const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
     const bitrixConstants =
@@ -150,27 +147,30 @@ export class BitrixService {
     )
       return this.tokens;
 
-    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    ]);
+    const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
 
-    if (!refreshToken) throw new UnauthorizedException('Invalid refresh token');
+    // const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
+    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
+    //   this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
+    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
+    // ]);
 
-    if (!accessToken) return this.updateAccessToken(refreshToken);
+    if (!tokens || !tokens.refreshToken)
+      throw new UnauthorizedException('Invalid refresh token');
 
-    if (expiresAccessToken && Date.now() < expiresAccessToken * 1000) {
+    const { accessToken, refreshToken, expires } = tokens;
+
+    if (expires && Date.now() < expires * 1000) {
       this.tokens = {
         access_token: accessToken,
         refresh_token: refreshToken,
-        expires: expiresAccessToken ? +expiresAccessToken : 0,
+        expires: expires,
       };
 
       return this.tokens;
     }
 
-    return this.updateAccessToken(refreshToken);
+    return this.updateAccessToken(tokens.refreshToken);
   }
 
   /**
@@ -202,27 +202,33 @@ export class BitrixService {
       refresh_token: refresh_token,
     };
 
-    try {
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_ACCESS_TOKEN,
-        access_token,
-      );
-      await this.redisService.set<number>(
-        REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-        expires,
-      );
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_REFRESH_TOKEN,
-        refresh_token,
-      );
-    } catch (error) {
-      console.log(
-        `Exception error on update access token and save in redis: `,
-        error,
-      );
+    this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expires: expires,
+    });
 
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    // try {
+    //   // await this.redisService.set<string>(
+    //   //   REDIS_KEYS.BITRIX_ACCESS_TOKEN,
+    //   //   access_token,
+    //   // );
+    //   // await this.redisService.set<number>(
+    //   //   REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
+    //   //   expires,
+    //   // );
+    //   // await this.redisService.set<string>(
+    //   //   REDIS_KEYS.BITRIX_REFRESH_TOKEN,
+    //   //   refresh_token,
+    //   // );
+    // } catch (error) {
+    //   console.log(
+    //     `Exception error on update access token and save in redis: `,
+    //     error,
+    //   );
+    //
+    //   throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    // }
 
     return this.tokens;
   }
@@ -269,19 +275,19 @@ export class BitrixService {
    * Update tokens and save in cache
    */
   public async updateTokens() {
-    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    ]);
+    const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
+    // const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
+    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
+    //   this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
+    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
+    // ]);
 
-    if (!accessToken || !expiresAccessToken || !refreshToken)
-      throw new UnauthorizedException('Invalid update tokens');
+    if (!tokens) throw new UnauthorizedException('Invalid update tokens');
 
     this.tokens = {
-      access_token: accessToken,
-      expires: expiresAccessToken,
-      refresh_token: refreshToken,
+      access_token: tokens.accessToken,
+      expires: tokens.expires,
+      refresh_token: tokens.refreshToken ?? '',
     };
 
     return this.tokens;
@@ -317,14 +323,6 @@ export class BitrixService {
    */
   get WEBHOOK_INCOMING_TOKEN() {
     return this.bitrixConstants.WEBHOOK_INCOMING_TOKEN;
-  }
-
-  /**
-   * Get access token
-   * @constructor
-   */
-  get ACCESS_TOKEN() {
-    return this.tokens.access_token;
   }
 
   /**
