@@ -49,12 +49,11 @@ services:
     ports:
       - "3002:3100"
     volumes:
-      - ./config/loki/loki-config.yaml:/etc/loki/config.yaml
+      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki_data:/loki
     networks:
       - monitoring
-    command:
-      - 'config.file=/etc/loki/config.yaml'
-      - '-config.expand-env=true'
+    command: -config.file=/etc/loki/local-config.yaml
 
   # Сбор метрик
   prometheus:
@@ -102,6 +101,7 @@ networks:
     driver: bridge
 
 volumes:
+  loki_data:
   grafana_data:
     driver: local
   prometheus_data:
