@@ -175,7 +175,7 @@ export class BitrixService {
 
     const { accessToken, refreshToken, expires } = tokens;
 
-    if (expires && Date.now() < expires * 1000) {
+    if (expires && Date.now() < expires) {
       this.tokens = {
         access_token: accessToken,
         refresh_token: refreshToken,
