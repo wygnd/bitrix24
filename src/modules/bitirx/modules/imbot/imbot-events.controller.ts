@@ -50,7 +50,7 @@ export class BitrixImbotEventsController {
     try {
       const { auth } = data;
       Promise.all([
-        this.tokensService.updateToken(TokensServices.BITRIX_APP, {
+        this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
           refreshToken: auth.refresh_token,
           accessToken: auth.access_token,
           expires: auth.expires,

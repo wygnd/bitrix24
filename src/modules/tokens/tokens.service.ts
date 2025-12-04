@@ -7,6 +7,7 @@ import { plainToClass, plainToInstance } from 'class-transformer';
 import { TokensDto } from '@/modules/tokens/dtos/tokens.dto';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { TokensCreateOrUpdateResponse } from '@/modules/tokens/interfaces/tokens-create-or-update-response.interface';
 
 @Injectable()
 export class TokensService {
@@ -61,6 +62,44 @@ export class TokensService {
     return token;
   }
 
+  public async updateOrCreateToken(
+    service: TokensServices,
+    fields: Partial<TokensCreationalAttributes>,
+  ): Promise<TokensCreateOrUpdateResponse> {
+    const isUpdated = await this.updateToken(service, fields);
+
+    if (isUpdated)
+      return {
+        message: 'Token was updated',
+        status: true,
+      };
+
+    if (!fields.accessToken)
+      return {
+        message: 'Token was not updated',
+        status: false,
+      };
+
+    try {
+      await this.createToken({
+        accessToken: fields.accessToken,
+        refreshToken: fields.refreshToken,
+        expires: fields.expires ?? 0,
+        service: service,
+      });
+
+      return {
+        message: 'Token was created',
+        status: true,
+      };
+    } catch (e) {
+      return {
+        message: `Error: ${e}`,
+        status: false,
+      };
+    }
+  }
+
   public async updateToken(
     serviceToken: TokensServices,
     fields: Partial<TokensCreationalAttributes>,
@@ -72,6 +111,8 @@ export class TokensService {
         },
         returning: true,
       });
+
+      if (!token) return false;
 
       this.redisService.set<TokensDto>(
         REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + serviceToken,
