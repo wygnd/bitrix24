@@ -7,6 +7,8 @@ import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
+  process.env.TZ = 'Europe/Moscow';
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
 
   const config = app.get(ConfigService);
