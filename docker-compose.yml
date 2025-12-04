@@ -36,10 +36,9 @@ services:
     container_name: bitrix-server-grafana_alloy
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./config/alloy/alloy-config.yaml:/etc/alloy/alloy-config.yaml
     networks:
       - monitoring
-    command: [ "run", "-config.file=/etc/alloy/alloy-config.yaml" ]
+    command: [ "run", "-config.file=/etc/alloy/config.alloy" ]
     privileged: true
 
   # Хранение логов
@@ -52,7 +51,9 @@ services:
       - .config/loki/loki-config.yaml:/etc/loki/loki-config.yaml
     networks:
       - monitoring
-    command: -config.file=/etc/loki/loki-config.yaml
+    command:
+      - 'config.file=/etc/loki/loki-config.yaml'
+      - '-config.expand-env=true'
 
   # Сбор метрик
   prometheus:

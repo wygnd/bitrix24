@@ -8,7 +8,7 @@ scrape_configs:
   - job_name: bitrix24_app_logs
     static_configs:
       - targets:
-          - /var/log/app/*.log  # Путь к логам приложения в контейнере
+          - /var/log/app/*.log
         labels:
           job: bitrix24_app_logs
           __path__: /var/lib/docker/containers/*/*log
