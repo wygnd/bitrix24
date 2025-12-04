@@ -21,6 +21,7 @@ import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { DatabaseModule } from '@/modules/database/database.module';
 import { CronModule } from '@/modules/cron/cron.module';
+import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { CronModule } from '@/modules/cron/cron.module';
     AppHttModule,
     AvitoModule,
     QueueModule,
-    CronModule
+    CronModule,
+    TokensModule,
   ],
   controllers: [AppController],
   providers: [

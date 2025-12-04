@@ -31,6 +31,9 @@ export const REDIS_KEYS = {
 
   // WIKI
   WIKI_WORKING_SALES: 'wiki:sales:working',
+
+  // APPLICATION
+  APPLICATION_TOKEN_BY_SERVICE: 'application:token:',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;
