@@ -80,20 +80,20 @@ services:
     depends_on:
       - backend
 
-  mimir:
-    container_name: bitrix-server-mimir
-    image: grafana/mimir:latest
-    restart: on-failure
-    command:
-      - -config.file=/etc/mimir-config/mimir.yaml
-    volumes:
-      - ./config/mimir:/etc/mimir-config
-    ports:
-      - '3005:9009'
-    depends_on:
-      - prometheus
-    networks:
-      - monitoring
+  #  mimir:
+  #    container_name: bitrix-server-mimir
+  #    image: grafana/mimir:latest
+  #    restart: on-failure
+  #    command:
+  #      - -config.file=/etc/mimir-config/mimir.yaml
+  #    volumes:
+  #      - ./config/mimir:/etc/mimir-config
+  #    ports:
+  #      - '3005:9009'
+  #    depends_on:
+  #      - prometheus
+  #    networks:
+  #      - monitoring
 
   node_exporter:
     container_name: bitrix-server-node_exporter
