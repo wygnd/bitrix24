@@ -17,7 +17,6 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
-import { isObject } from 'class-validator';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {

@@ -124,6 +124,27 @@ export class BitrixService {
   }
 
   // todo: callBatchV2 which form batches packages from items
+  // async callBatches<T extends object>(
+  //   commands: B24BatchCommands,
+  //   halt = false,
+  // ) {
+  //   const totalBatches = Math.ceil(Object.keys(commands).length / 50);
+  //   let index = 0;
+  //
+  //   // const batchResponse = Promise.all(
+  //   //   Array.from(
+  //   //     Object.entries(commands)
+  //   //       .reduce<Map<string, B24BatchCommands>>(
+  //   //         (acc, [commandName, command]) => {
+  //   //
+  //   //           return acc;
+  //   //         },
+  //   //         new Map(),
+  //   //       )
+  //   //       .values(),
+  //   //   ),
+  //   // );
+  // }
 
   public isAvailableToDistributeOnManager() {
     const now = new Date();
@@ -148,12 +169,6 @@ export class BitrixService {
       return this.tokens;
 
     const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
-
-    // const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-    //   this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    // ]);
 
     if (!tokens || !tokens.refreshToken)
       throw new UnauthorizedException('Invalid refresh token');
@@ -208,28 +223,6 @@ export class BitrixService {
       expires: expires,
     });
 
-    // try {
-    //   // await this.redisService.set<string>(
-    //   //   REDIS_KEYS.BITRIX_ACCESS_TOKEN,
-    //   //   access_token,
-    //   // );
-    //   // await this.redisService.set<number>(
-    //   //   REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-    //   //   expires,
-    //   // );
-    //   // await this.redisService.set<string>(
-    //   //   REDIS_KEYS.BITRIX_REFRESH_TOKEN,
-    //   //   refresh_token,
-    //   // );
-    // } catch (error) {
-    //   console.log(
-    //     `Exception error on update access token and save in redis: `,
-    //     error,
-    //   );
-    //
-    //   throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    // }
-
     return this.tokens;
   }
 
@@ -276,11 +269,6 @@ export class BitrixService {
    */
   public async updateTokens() {
     const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
-    // const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-    //   this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-    //   this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    // ]);
 
     if (!tokens) throw new UnauthorizedException('Invalid update tokens');
 

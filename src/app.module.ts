@@ -11,7 +11,7 @@ import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middlewar
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
+import { AxiosGlobalInterceptor } from '@/common/interceptors/axios.interceptor';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -36,9 +36,11 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/api/{*test}'],
       serveStaticOptions: {
         cacheControl: true,
       },
+      serveRoot: '/public',
     }),
     ConfigAppModule,
     RedisModule,

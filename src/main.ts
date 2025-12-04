@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 
 async function bootstrap() {
   process.env.TZ = 'Europe/Moscow';
@@ -15,10 +16,16 @@ async function bootstrap() {
 
   const PORT = config.get<number>('PORT') ?? 3000;
 
+  // global interceptors
+  app.useGlobalInterceptors(new TimeoutInterceptor());
+
+  // global pipes
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
+  // increase body json size
   app.useBodyParser('json', { limit: '10mb' });
 
+  // enable cors
   app.enableCors({
     origin: [
       'https://bitrix-hr-app-production.up.railway.app',
@@ -48,10 +55,8 @@ async function bootstrap() {
         displayRequestDuration: true,
         operationsSorter: 'alpha',
         tagsSorter: 'alpha',
-        // defaultModelsExpandDepth: -1,
-        // defaultModelExpandDepth: 0,
       },
-      customfavIcon: './favicon.ico',
+      customfavIcon: '/public/favicon.ico',
       customSiteTitle: 'Grampus Bitrix24',
     },
   );

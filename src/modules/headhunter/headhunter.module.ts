@@ -6,9 +6,15 @@ import { HeadHunterController } from '@/modules/headhunter/headhunter.controller
 import { RedisModule } from '@/modules/redis/redis.module';
 import { BitrixModule } from '@/modules/bitirx/bitrix.module';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
+import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
-  imports: [HttpModule, RedisModule, forwardRef(() => BitrixModule)],
+  imports: [
+    HttpModule,
+    RedisModule,
+    forwardRef(() => BitrixModule),
+    TokensModule,
+  ],
   controllers: [HeadHunterController],
   providers: [...headHunterProviders, HeadHunterService, HeadhunterRestService],
   exports: [HeadHunterService, HeadhunterRestService],
