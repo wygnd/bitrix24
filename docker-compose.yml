@@ -27,9 +27,7 @@ services:
       - /home/data/bitrix24/redisdata:/data
     networks:
       - monitoring
-    command:
-      - redis-server --appendonly yes
-      - redis-server --requirepass  ${REDIS_PASSWORD}
+    command: redis-server --requirepass  ${REDIS_PASSWORD}
     restart: always
 
   # Сбор логов
