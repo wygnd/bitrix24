@@ -118,7 +118,7 @@ export class TokensService {
 
       if (!token) return false;
 
-      this.redisService.set<TokensDto>(
+      await this.redisService.set<TokensDto>(
         REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + serviceToken,
         token,
       );

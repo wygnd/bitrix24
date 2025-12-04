@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  HttpCode,
   HttpException,
   HttpStatus,
   Inject,
@@ -31,6 +32,7 @@ export class BitrixImbotEventsController {
   @ApiOperation({
     summary: 'Handle bot events',
   })
+  @HttpCode(HttpStatus.OK)
   @Post('/bot')
   async handleBot(@Body() body: any) {
     try {
@@ -45,6 +47,7 @@ export class BitrixImbotEventsController {
   }
 
   @ApiExcludeEndpoint()
+  @HttpCode(HttpStatus.OK)
   @Post('/app/install')
   async installApp(@Body() data: B24EventBodyOnInstallApp) {
     try {
@@ -75,6 +78,7 @@ export class BitrixImbotEventsController {
         SYSTEM: 'Y',
       });
     } catch (error) {
+      console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }

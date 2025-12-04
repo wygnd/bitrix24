@@ -164,7 +164,7 @@ export class BitrixService {
     if (
       this.tokens &&
       this.tokens?.access_token &&
-      Date.now() < this.tokens?.expires * 1000
+      Date.now() < this.tokens?.expires
     )
       return this.tokens;
 
