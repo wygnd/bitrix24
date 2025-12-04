@@ -7,3 +7,14 @@ positions:
 
 clients:
   - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system
+    pipeline_stages:
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs  # A `job` label is fairly standard in prometheus and useful for linking metrics and logs.
+          host: yourhost # A `host` label will help identify logs from this machine vs others
+          __path__: /var/log/*.log
