@@ -15,6 +15,5 @@ scrape_configs:
       - targets:
           - localhost
         labels:
-          job: varlogs  # A `job` label is fairly standard in prometheus and useful for linking metrics and logs.
-          host: yourhost # A `host` label will help identify logs from this machine vs others
-          __path__: /var/log/*.log
+          job: docker-logs
+          __path__: /var/lib/docker/containers/*/*-json.log
