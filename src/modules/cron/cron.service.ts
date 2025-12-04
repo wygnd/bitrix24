@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { BitrixService } from '@/modules/bitirx/bitrix.service';
+import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 
 @Injectable()
 export class CronService {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixMessageService: BitrixMessageService) {}
 
   /**
    * Add task on notify ksenya about uploading calling from megafon.
@@ -13,24 +13,11 @@ export class CronService {
   @Cron('0 10 9 * * 1-5', {
     timeZone: 'Europe/Moscow',
   })
-  async handleCronNotifyAboutNeedLoadCallingFromMegafon() {
-    this.bitrixService.callBatch({
-      send_message: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: '464',
-          MESSAGE:
-            'Доброе утро Ксюша![br]Выгрузи пожалуйста файл за последние 5 дней из АТС Мегафона по всем входящим и исходящим звонкам',
-        },
-      },
-      notify_about_message: {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.bitrixService.BOT_ID,
-          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-          MESSAGE: '[USER=376][/USER][br]Отправлено сообщение по крону',
-        },
-      },
+  async handleCronNotifyAboutNeedLoadCallingFromMegafon(): Promise<void> {
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '464',
+      MESSAGE:
+        'Доброе утро Ксюша![br]Выгрузи пожалуйста файл за последние 5 дней из АТС Мегафона по всем входящим и исходящим звонкам',
     });
   }
 }
