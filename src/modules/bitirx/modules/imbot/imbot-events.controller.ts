@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpException,
@@ -32,7 +33,15 @@ export class BitrixImbotEventsController {
   })
   @Post('/bot')
   async handleBot(@Body() body: any) {
-    console.log(body);
+    try {
+      return this.bitrixMessageService.sendPrivateMessage({
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+        MESSAGE: `[b]/events/bot[/b][br]Обработка приложения [b](Node)![/b][br][br]${JSON.stringify(body) ?? ''}`,
+        SYSTEM: 'Y',
+      });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 
   @ApiExcludeEndpoint()
