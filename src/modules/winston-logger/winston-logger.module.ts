@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { WinstonModule } from 'nest-winston';
+import { WinstonLogger, WinstonModule } from 'nest-winston';
 import winston from 'winston';
 import { join } from 'path';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
 @Module({
   imports: [
@@ -10,9 +11,10 @@ import { join } from 'path';
         const loggerDirectory = join(process.cwd(), '..', '..', '..', 'logs');
 
         return {
+          level: 'info',
           exitOnError: false,
           transports: [
-            new winston.transports.DailyRotateFile({
+            new DailyRotateFile({
               filename: join(loggerDirectory, 'logger-%DATE%.log'),
               datePattern: 'YYYY-MM-DD',
               maxFiles: '60d',
@@ -27,5 +29,7 @@ import { join } from 'path';
       },
     }),
   ],
+  providers: [WinstonLogger],
+  exports: [WinstonLogger],
 })
 export class WinstonLoggerModule {}
