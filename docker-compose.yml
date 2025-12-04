@@ -50,15 +50,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  promtail:
-    image: grafana/promtail:latest
-    volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - ./config/promtail/promtail.yml:/etc/promtail/config.yml
-    networks:
-      - monitoring
-    command: -config.file=/etc/promtail/config.yml
-
   # Мониторинг
   prometheus:
     image: prom/prometheus:latest
@@ -100,6 +91,17 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./config/promtail/promtail.yml:/etc/promtail/config.yml
+    ports:
+      - '3006:9080'
+    networks:
+      - monitoring
+    command: -config.file=/etc/promtail/config.yml
 
 networks:
   monitoring:
