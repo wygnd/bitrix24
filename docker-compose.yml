@@ -49,11 +49,11 @@ services:
     ports:
       - "3002:3100"
     volumes:
-      - ./config/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - ./config/loki/loki-config.yaml:/etc/loki/config.yaml
     networks:
       - monitoring
     command:
-      - 'config.file=/etc/loki/loki-config.yaml'
+      - 'config.file=/etc/loki/config.yaml'
       - '-config.expand-env=true'
 
   # Сбор метрик

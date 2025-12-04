@@ -1,12 +1,12 @@
 server:
+  http_listen_address: 0.0.0.0
   http_listen_port: 3100
 
 ingester:
-  lifecycler:
-    ring:
-      kvstore:
-        store: inmemory
-  chunk_idle_period: 5m
+  ring:
+    kvstore:
+      store: inmemory
+chunk_idle_period: 5m
 
 schema_config:
   configs:
