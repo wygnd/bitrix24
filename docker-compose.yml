@@ -38,7 +38,8 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     networks:
       - monitoring
-    command: [ "run", "-config.file=/etc/alloy/config.alloy" ]
+    command:
+      - '-config.file=/etc/alloy/config.alloy'
     privileged: true
 
   # Хранение логов
@@ -48,7 +49,7 @@ services:
     ports:
       - "3002:3100"
     volumes:
-      - .config/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - ./config/loki/loki-config.yaml:/etc/loki/loki-config.yaml
     networks:
       - monitoring
     command:
