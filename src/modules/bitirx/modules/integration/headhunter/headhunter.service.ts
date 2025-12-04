@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException, } from '@nestjs/common';
 import { HeadhunterRedirectDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-redirect.dto';
 import {
   HeadHunterAuthData,
@@ -14,29 +9,40 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 import { RedisService } from '@/modules/redis/redis.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
-import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
-import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
 import {
-  ContactPhone,
-  HHResumeInterface,
-} from '@/modules/headhunter/interfaces/headhunter-resume.interface';
-import { CandidateContactInterface } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
+  HeadhunterWebhookCallDto
+} from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
+import { ContactPhone, HHResumeInterface, } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
+import {
+  CandidateContactInterface
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
 import { B24BatchResponseMap } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
 import { BitrixDealService } from '@/modules/bitirx/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitirx/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
-import { HHBitrixVacancy } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
+import {
+  HHBitrixVacancy
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
 import { isAxiosError } from 'axios';
 import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
 import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
 import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
-import { HeadhunterHandleDealHROptions } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-handle-deal-from-headhunter.interface';
+import {
+  HeadhunterHandleDealHROptions
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-handle-deal-from-headhunter.interface';
 import { validateField } from '@/common/validators/validate-field.validator';
-import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
-import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
-import { HeadhunterWebhookCallResponse } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
+import {
+  HeadHunterWebhookNegotiationOrRequestPayloadDto
+} from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
+import {
+  HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
+} from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
+import {
+  HeadhunterWebhookCallResponse
+} from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
 import { B24DealHRRejectedStages } from '@/modules/bitirx/modules/deal/constants/deal-hr.constants';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 
@@ -161,6 +167,7 @@ export class BitrixHeadHunterService {
           resumeId: dto.resume_id,
           vacancyId: dto.vacancy_id,
           topicId: dto.topic_id,
+          messageType: 'manager',
         });
 
       case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
@@ -226,8 +233,8 @@ export class BitrixHeadHunterService {
           message: 'Event was received whet state change',
         };
 
-      let responseType = ``; // Начало сообщения
-      let bitrixSearchTypeField = ''; // Тип поиска
+      let responseType = `${B24Emoji.HR.HEADHUNTER.RESPONSE}[b]Отклик[/b]`; // Начало сообщения
+      let bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
 
       if (negotiation) {
         switch (negotiation.employer_state.id) {
@@ -251,8 +258,6 @@ export class BitrixHeadHunterService {
 
           // Отклик
           case 'response':
-            responseType = `${B24Emoji.HR.HEADHUNTER.RESPONSE}[b]Отклик[/b]`;
-            bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
             break;
 
           // Все другие статусы игнорировать
