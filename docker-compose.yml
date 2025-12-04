@@ -49,11 +49,16 @@ services:
     ports:
       - "3002:3100"
     volumes:
-      - ./config/loki/loki-config.yaml:/etc/loki/local-config.yaml
       - loki_data:/loki
     networks:
       - monitoring
     command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -tries=1 -O- http://localhost:3100/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
   # Сбор метрик
   prometheus:
@@ -95,6 +100,12 @@ services:
       - monitoring
     depends_on:
       - prometheus
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3000/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 networks:
   monitoring:
@@ -103,6 +114,4 @@ networks:
 volumes:
   loki_data:
   grafana_data:
-    driver: local
   prometheus_data:
-    driver: local
