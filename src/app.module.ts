@@ -16,10 +16,9 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { PinoModule } from '@/modules/pino/pino.module';
 
 @Module({
   imports: [
@@ -52,6 +51,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
         enabled: true,
       },
     }),
+    PinoModule,
   ],
   controllers: [AppController],
   providers: [

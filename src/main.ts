@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
@@ -53,6 +54,8 @@ async function bootstrap() {
       customSiteTitle: 'Grampus Bitrix24',
     },
   );
+
+  app.useLogger(app.get(Logger));
 
   await app.listen(PORT);
 }
