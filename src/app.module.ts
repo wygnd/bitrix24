@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, } from '@nestjs/common';
 import { ConfigAppModule } from './config/config.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BitrixModule } from './modules/bitirx/bitrix.module';
@@ -18,7 +13,6 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-import { PinoModule } from '@/modules/pino/pino.module';
 
 @Module({
   imports: [
@@ -51,7 +45,6 @@ import { PinoModule } from '@/modules/pino/pino.module';
         enabled: true,
       },
     }),
-    PinoModule,
   ],
   controllers: [AppController],
   providers: [

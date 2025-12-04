@@ -80,38 +80,6 @@ services:
     depends_on:
       - backend
 
-  #  mimir:
-  #    container_name: bitrix-server-mimir
-  #    image: grafana/mimir:latest
-  #    restart: on-failure
-  #    command:
-  #      - -config.file=/etc/mimir-config/mimir.yaml
-  #    volumes:
-  #      - ./config/mimir:/etc/mimir-config
-  #    ports:
-  #      - '3005:9009'
-  #    depends_on:
-  #      - prometheus
-  #    networks:
-  #      - monitoring
-
-  node_exporter:
-    container_name: bitrix-server-node_exporter
-    image: prom/node-exporter
-    restart: on-failure
-    ports:
-      - '3006:9100'
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - '^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)'
-    depends_on:
-      - prometheus
-
   # Дашборды
   grafana:
     image: grafana/grafana:latest
