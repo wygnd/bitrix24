@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
 import {
   B24CreateDeal,
@@ -112,7 +109,4 @@ export class BitrixDealService {
   async getDealStageHistory() {
     return this.bitrixService.callMethod('crm.stagehistory.list');
   }
-
-
-
 }

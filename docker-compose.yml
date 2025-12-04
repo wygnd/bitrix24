@@ -13,6 +13,8 @@ services:
       - .env
     depends_on:
       - redis
+    volumes:
+      - /home/data/bitrix24/backend-data:/app/logs
     networks:
       - monitoring
     restart: unless-stopped
@@ -97,7 +99,9 @@ services:
     container_name: bitrix-server-promtail
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /home/data/bitrix24/backend-data:/app/logs:ro
       - ./config/promtail/promtail.yml:/etc/promtail/config.yml
+      - ./home/data/bitrix24/promtail-positions:/tmp
     networks:
       - monitoring
     command: -config.file=/etc/promtail/config.yml

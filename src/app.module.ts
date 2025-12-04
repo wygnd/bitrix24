@@ -18,6 +18,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { QueueModule } from '@/modules/queue/queue.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.module';
 
 @Module({
   imports: [
@@ -30,13 +33,14 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
       ],
       errorMessage: 'Too many requests',
     }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'static'),
-    //   renderPath: '/public',
-    //   serveStaticOptions: {
-    //     cacheControl: true,
-    //   },
-    // }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'static'),
+      exclude: ['/api/{*test}'],
+      serveStaticOptions: {
+        cacheControl: true,
+      },
+      serveRoot: '/public',
+    }),
     ConfigAppModule,
     RedisModule,
     BitrixModule,
@@ -50,6 +54,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
         enabled: true,
       },
     }),
+    WinstonLoggerModule,
   ],
   controllers: [AppController],
   providers: [
