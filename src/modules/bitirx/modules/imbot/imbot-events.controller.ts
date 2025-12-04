@@ -13,6 +13,8 @@ import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { B24EventBodyOnInstallApp } from '@/modules/bitirx/modules/imbot/interfaces/imbot-events.interface';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @ApiTags(B24ApiTags.EVENTS)
 @Controller('events')
@@ -22,6 +24,7 @@ export class BitrixImbotEventsController {
     @Inject(REDIS_CLIENT)
     private readonly redisService: RedisService,
     private readonly bitrixService: BitrixService,
+    private readonly tokensService: TokensService,
   ) {}
 
   @ApiOperation({
@@ -38,6 +41,12 @@ export class BitrixImbotEventsController {
     try {
       const { auth } = data;
       Promise.all([
+        this.tokensService.updateToken(TokensServices.BITRIX_APP, {
+          refreshToken: auth.refresh_token,
+          accessToken: auth.access_token,
+          expires: auth.expires,
+        }),
+        // Old
         this.redisService.set<string>(
           REDIS_KEYS.BITRIX_ACCESS_TOKEN,
           auth.access_token,
