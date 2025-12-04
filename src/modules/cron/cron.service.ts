@@ -10,7 +10,9 @@ export class CronService {
    * Add task on notify ksenya about uploading calling from megafon.
    * Task running every work day at 9:10 am
    */
-  @Cron('* 10 9 * * 1-5')
+  @Cron('* 10 9 * * 1-5', {
+    timeZone: 'Europe/Moscow',
+  })
   async handleCronNotifyAboutNeedLoadCallingFromMegafon() {
     this.bitrixService.callBatch({
       send_message: {
