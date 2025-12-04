@@ -55,6 +55,8 @@ services:
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail.yml:/etc/promtail/config.yml
+    networks:
+      - monitoring
     command: -config.file=/etc/promtail/config.yml
 
   # Мониторинг
