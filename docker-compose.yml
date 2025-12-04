@@ -39,7 +39,8 @@ services:
     networks:
       - monitoring
     command:
-      - '-config.file=/etc/alloy/config.alloy'
+      - run
+      - /etc/alloy/config.alloy
     privileged: true
 
   # Хранение логов

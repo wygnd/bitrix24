@@ -1,14 +1,79 @@
-server:
-  http_listen_port: 9080
+logging {
+	level = "debug"
 
-clients:
-  - url: http://loki:3100/loki/api/v1/push
+	// Forward internal logs to the local Loki instance.
+	write_to = [loki.relabel.alloy_logs.receiver]
+}
 
-scrape_configs:
-  - job_name: bitrix24_app_logs
-    static_configs:
-      - targets:
-          - /var/log/app/*.log
-        labels:
-          job: bitrix24_app_logs
-          __path__: /var/lib/docker/containers/*/*log
+loki.relabel "alloy_logs" {
+	rule {
+		target_label = "instance"
+		replacement = constants.hostname
+	}
+
+	rule {
+		target_label = "job"
+		replacement = "integrations/self"
+	}
+
+	forward_to = [loki.write.loki.receiver]
+}
+
+tracing {
+	// Write all spans. Don't do this in production!
+	sampling_fraction = 1.0
+
+	// Forward internal spans to the local Tempo instance.
+	write_to = [otelcol.exporter.otlp.tempo.input]
+}
+
+// Collect metrics from the local running Alloy instance and forward to Prometheus.
+prometheus.exporter.self "alloy" {}
+prometheus.scrape "alloy" {
+	targets    = prometheus.exporter.self.alloy.targets
+	forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// prometheus.exporter.node_exporter "node_exporter" {}
+prometheus.scrape "node_exporter" {
+  targets = [
+    {"__address__" = "node_exporter:9100", "job" = "node_exporter"},
+  ]
+  forward_to = [prometheus.remote_write.mimir.receiver]
+}
+
+// Collect profiles from the local running Alloy instance and forward to Pyroscope.
+pyroscope.scrape "default" {
+	targets = [
+		{"__address__" = "localhost:12345", "service_name" = "alloy"},
+	]
+	forward_to = [pyroscope.write.pyroscope.receiver]
+}
+
+prometheus.remote_write "mimir" {
+	endpoint {
+		url = "http://mimir:9009/api/v1/push"
+	}
+}
+
+loki.write "loki" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}
+
+otelcol.exporter.otlp "tempo" {
+	client {
+		endpoint = "tempo:4317"
+
+		tls {
+			insecure = true
+		}
+	}
+}
+
+pyroscope.write "pyroscope" {
+	endpoint {
+		url = "http://pyroscope:4040"
+	}
+}
