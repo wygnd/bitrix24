@@ -411,7 +411,30 @@ export class BitrixLeadService {
   public async observeManagerCalling(
     fields: LeadObserveManagerCallingDto,
   ): Promise<QueueAddTaskResponse> {
-    this.queueHeavyService.addTaskToHandleObserveManagerCalling(fields);
+    let index = 0;
+    const uniqueCalls = new Set<string>();
+    const batchCalls = new Map<number, LeadObserveManagerCallingItemDto[]>();
+
+    fields.calls.forEach((call) => {
+      if (uniqueCalls.has(call.phone)) return;
+      let calls = batchCalls.get(index) ?? [];
+
+      if (calls.length === 500) {
+        index++;
+        calls = batchCalls.get(index) ?? [];
+      }
+
+      calls.push(call);
+      uniqueCalls.add(call.phone);
+
+      batchCalls.set(index, calls);
+    });
+
+    batchCalls.forEach((calls) => {
+      this.queueHeavyService.addTaskToHandleObserveManagerCalling({
+        calls: calls,
+      });
+    });
     return {
       status: true,
       message: 'Add in queue',
