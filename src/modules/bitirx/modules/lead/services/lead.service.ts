@@ -728,16 +728,8 @@ export class BitrixLeadService {
         },
       };
     } catch (e) {
-      console.log(e);
-      this.bitrixService.callMethod('im.message.add', {
-        BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-        MESSAGE: `[b]Catch error:[/b][br]${e.message}`,
-      });
-      return {
-        status: false,
-        message: 'Catch error: ' + e.message,
-      };
+      console.log(e.response);
+      throw e;
     }
   }
 

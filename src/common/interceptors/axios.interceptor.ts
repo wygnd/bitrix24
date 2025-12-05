@@ -61,7 +61,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
         }
 
         if (
-          error.response.data !== null &&
+          error.response?.data &&
           typeof error.response.data === 'object' &&
           'error' in error.response.data
         ) {
@@ -108,6 +108,7 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             //   503
             case 'QUERY_LIMIT_EXCEEDED':
             case 'OVERLOAD_LIMIT':
+            case 'ERR_BAD_RESPONSE':
               return throwError(() => new ServiceUnavailableException(data));
 
             default:

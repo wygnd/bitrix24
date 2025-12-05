@@ -51,7 +51,8 @@ export type B24ErrorType =
   | 'expired_token'
   | 'user_access_error'
   | 'ERROR_CORE'
-  | 'BOT_ID_ERROR';
+  | 'BOT_ID_ERROR'
+  | 'ERR_BAD_RESPONSE';
 
 export interface B24ErrorResponse {
   error: B24ErrorType;
