@@ -12,6 +12,11 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
 import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
+const {
+  QUEUE_BX_HANDLE_WEBHOOK_FROM_HH,
+  QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING,
+} = QUEUE_TASKS.HEAVY;
+
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
   private readonly logger = new Logger(QueueBitrixHeavyProcessor.name);
@@ -26,14 +31,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
-    const {
-      QUEUE_BX_HANDLE_WEBHOOK_FROM_HH,
-      QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING,
-    } = QUEUE_TASKS.HEAVY;
     const { name, data, id } = job;
     this.bitrixImBotService.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
-        JSON.stringify(data),
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
     );
     const response: QueueProcessorResponse = {
       message: '',
@@ -79,9 +79,20 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
-    this.bitrixImBotService.sendTestMessage(
-      `[b]Ошибка выполнения задачи: [${job.name}][/b][br]` +
-        JSON.stringify(job),
-    );
+    const { name, id } = job;
+
+    switch (name) {
+      case QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+        this.bitrixImBotService.sendTestMessage(
+          `[b]Ошибка выполнения задачи [${name}][${id}]: [/b][br] ${JSON.stringify({ ...job, data: '' })}`,
+        );
+        break;
+
+      default:
+        this.bitrixImBotService.sendTestMessage(
+          `[b]Ошибка выполнения задачи: [${name}][${id}][/b][br]` +
+            JSON.stringify(job),
+        );
+    }
   }
 }

@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Queue } from 'bullmq';
-import {
-  HeadhunterWebhookCallDto
-} from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
 import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
 @Injectable()
