@@ -33,7 +33,6 @@ import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wik
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
 import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.providers';
-import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.module';
 
 @Module({
   imports: [
@@ -42,7 +41,6 @@ import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.mod
     forwardRef(() => HeadHunterModule),
     WikiModule,
     AvitoModule,
-    WinstonLoggerModule,
   ],
   controllers: [
     BitrixController,

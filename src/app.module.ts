@@ -20,7 +20,6 @@ import { QueueModule } from '@/modules/queue/queue.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.module';
 
 @Module({
   imports: [
@@ -54,7 +53,6 @@ import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.mod
         enabled: true,
       },
     }),
-    WinstonLoggerModule,
   ],
   controllers: [AppController],
   providers: [
