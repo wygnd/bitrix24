@@ -35,17 +35,14 @@ scrape_configs:
           job: backend-console
   #          __path__: /var/lib/docker/containers/*/*-json.log
 
-  - job_name: backend-file
-    pipeline_stages:
-      - labels:
-          job: backend-file
+
+  - job_name: backend-files
     static_configs:
       - targets: [ localhost ]
         labels:
-          job: backend-file
           service: nestjs
-          env: production
-          __path__: /app/logs/*.log
+          job: backend-files
+          __path__: /app/logs/.log
 
   - job_name: docker-other
     pipeline_stages:
