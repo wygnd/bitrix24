@@ -55,7 +55,7 @@ export class BitrixDealController {
   async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
     try {
       const deal = await this.bitrixDealService.getDealById(dealId);
-      this.logger.debug('Check deal: ' + JSON.stringify(deal));
+      this.logger.info(`Check deal: ${JSON.stringify(deal)}`);
       return deal;
     } catch (error) {
       console.log(error);

@@ -12,7 +12,6 @@ export class WinstonLogger {
 
     const transportOptions = {
       file: new winston.transports.DailyRotateFile({
-        level: 'info',
         filename: `${name}-%DATE%.log`,
         dirname: join(loggerDir, name),
         format: winston.format.combine(
@@ -44,7 +43,7 @@ export class WinstonLogger {
 
     this.logger = winston.createLogger({
       level: 'info',
-      format: winston.format.combine(),
+      format: winston.format.json(),
       transports: [transportOptions.file, transportOptions.console],
       exceptionHandlers: [transportOptions.file, transportOptions.console],
       exitOnError: false,
@@ -65,13 +64,5 @@ export class WinstonLogger {
 
   public debug(message: string) {
     this.logger.debug(message);
-  }
-
-  public data(message: string) {
-    this.logger.data(message);
-  }
-
-  public notice(message: string) {
-    this.logger.notice(message);
   }
 }

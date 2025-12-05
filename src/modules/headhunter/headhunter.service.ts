@@ -31,16 +31,9 @@ export class HeadHunterService {
 
     if (!headHunterConfig) throw Error('Invalid head hunter config');
 
-    const { clientId, clientSecret, baseUrl, applicationToken, redirectUri } =
-      headHunterConfig;
+    const { clientId, clientSecret, baseUrl, redirectUri } = headHunterConfig;
 
-    if (
-      !clientId ||
-      !clientSecret ||
-      !baseUrl ||
-      !applicationToken ||
-      !redirectUri
-    )
+    if (!clientId || !clientSecret || !baseUrl || !redirectUri)
       throw new Error('Invalid head hunter fields');
 
     this.http.defaults.baseURL = baseUrl;

@@ -33,7 +33,7 @@ scrape_configs:
       - targets: [ localhost ]
         labels:
           job: backend-console
-          __path__: /var/lib/docker/containers/*/*-json.log
+  #          __path__: /var/lib/docker/containers/*/*-json.log
 
   - job_name: backend-file
     pipeline_stages:
