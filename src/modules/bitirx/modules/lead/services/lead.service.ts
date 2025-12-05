@@ -38,8 +38,6 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
-import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
-import { QueueAddTaskResponse } from '@/modules/queue/interfaces/queue-add-task-response.interface';
 
 @Injectable()
 export class BitrixLeadService {
@@ -47,7 +45,6 @@ export class BitrixLeadService {
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
     private readonly bitrixLeadObserveManagerCallingService: BitrixLeadObserveManagerCallingService,
-    private readonly queueHeavyService: QueueHeavyService,
   ) {}
 
   /**
@@ -408,44 +405,6 @@ export class BitrixLeadService {
     };
   }
 
-  public async observeManagerCalling(
-    fields: LeadObserveManagerCallingDto,
-  ): Promise<QueueAddTaskResponse> {
-    let index = 0;
-    const uniqueCalls = new Set<string>();
-    const batchCalls = new Map<number, LeadObserveManagerCallingItemDto[]>();
-
-    fields.calls.forEach((call) => {
-      if (uniqueCalls.has(call.phone)) return;
-      let calls = batchCalls.get(index) ?? [];
-
-      if (calls.length === 250) {
-        index++;
-        calls = batchCalls.get(index) ?? [];
-      }
-
-      calls.push(call);
-      uniqueCalls.add(call.phone);
-
-      batchCalls.set(index, calls);
-    });
-
-    batchCalls.forEach((calls) => {
-      this.queueHeavyService.addTaskToHandleObserveManagerCalling(
-        {
-          calls: calls,
-        },
-        {
-          delay: 2000,
-        },
-      );
-    });
-    return {
-      status: true,
-      message: 'add in queue',
-    };
-  }
-
   /**
    * Check manager calling. If calling not exists at 5 days ago - alert
    *
@@ -529,9 +488,10 @@ export class BitrixLeadService {
         ),
       );
     } catch (err) {
+      console.log(err.response.data);
       return {
         status: false,
-        message: `An error occurred. ${err.message}`,
+        message: `Exception error on get leads by phone. ${err.message}`,
       };
     }
 
@@ -630,15 +590,15 @@ export class BitrixLeadService {
     }
 
     // Проходимся по списку найденных лидов и собираем пакет запросов для проверки активных лидов
-    const batchCommandsGetActiveLeads = new Map<string, B24BatchCommands>();
+    const batchCommandsGetActiveLeads = new Map<number, B24BatchCommands>();
     batchIndex = 0;
     leadsFromDBWhichManagerDoesntCalling.forEach(({ leadId }) => {
-      let cmds = batchCommandsGetActiveLeads.get(leadId) ?? {};
+      let cmds = batchCommandsGetActiveLeads.get(batchIndex) ?? {};
 
       if (Object.keys(cmds).length === 50) {
-        batchCommandsGetActiveLeads.set(leadId, cmds);
+        batchCommandsGetActiveLeads.set(batchIndex, cmds);
         batchIndex++;
-        cmds = batchCommandsGetActiveLeads.get(leadId) ?? {};
+        cmds = batchCommandsGetActiveLeads.get(batchIndex) ?? {};
       }
 
       cmds[`check_active_lead=${leadId}`] = {
@@ -652,7 +612,7 @@ export class BitrixLeadService {
           start: 0,
         },
       };
-      batchCommandsGetActiveLeads.set(leadId, cmds);
+      batchCommandsGetActiveLeads.set(batchIndex, cmds);
     });
 
     // Делаем запрос для получения активных лидов с базы
@@ -669,7 +629,7 @@ export class BitrixLeadService {
     } catch (err) {
       return {
         status: false,
-        message: `An error occurred. ${err.message}`,
+        message: `Exception error on get active leads by phone from DB. ${err.message}`,
       };
     }
 
@@ -739,9 +699,10 @@ export class BitrixLeadService {
         ]),
       ]);
     } catch (err) {
+      console.log(err.respone.data);
       return {
         status: false,
-        message: `An error occurred. ${err.message}`,
+        message: `Exception error on notify about fineded uncalling leads. ${err.message}`,
       };
     }
 

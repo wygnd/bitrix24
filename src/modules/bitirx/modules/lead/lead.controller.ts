@@ -90,6 +90,6 @@ export class BitrixLeadController {
   @HttpCode(HttpStatus.OK)
   @Post('/observe-manager-calling')
   async observeManagerCalling(@Body() fields: LeadObserveManagerCallingDto) {
-    return this.bitrixLeadService.observeManagerCalling(fields);
+    return this.bitrixLeadService.handleObserveManagerCalling(fields);
   }
 }
