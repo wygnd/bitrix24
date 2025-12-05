@@ -1,9 +1,4 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod, } from '@nestjs/common';
 import { ConfigAppModule } from './config/config.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BitrixModule } from './modules/bitirx/bitrix.module';
@@ -34,7 +29,7 @@ import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.mod
       errorMessage: 'Too many requests',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'static'),
+      rootPath: join(__dirname, 'public'),
       exclude: ['/api/{*test}'],
       serveStaticOptions: {
         cacheControl: true,
