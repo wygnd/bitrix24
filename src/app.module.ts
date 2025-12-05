@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod, } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigAppModule } from './config/config.module';
 import { RedisModule } from './modules/redis/redis.module';
 import { BitrixModule } from './modules/bitirx/bitrix.module';
