@@ -72,22 +72,19 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     );
   }
 
+  @OnWorkerEvent('closed')
+  onClosed(job: Job) {
+    const { name, id, stacktrace, failedReason } = job;
+    const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
+
+    this.bitrixImBotService.sendTestMessage(message);
+  }
+
   @OnWorkerEvent('failed')
   @OnWorkerEvent('error')
   onFailed(job: Job) {
-    const { name, id } = job;
-    let message: string;
-
-    switch (name) {
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
-        message = `[b]Ошибка выполнения задачи [${name}][${id}]: [/b][br] ${JSON.stringify({ ...job, data: '' })}`;
-        break;
-
-      default:
-        message =
-          `[b]Ошибка выполнения задачи: [${name}][${id}][/b][br]` +
-          JSON.stringify(job);
-    }
+    const { name, id, stacktrace, failedReason } = job;
+    const message = `[b]Ошибка выполнения задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
 
     this.bitrixImBotService.sendTestMessage(message);
   }
