@@ -25,10 +25,13 @@ import type { B24ListParams } from '@/modules/bitirx/interfaces/bitrix.interface
 import { B24Deal } from '@/modules/bitirx/modules/deal/interfaces/deal.interface';
 import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitirx/modules/deal/dtos/deal-event.dto';
 import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags('Deals')
 @Controller('deals')
 export class BitrixDealController {
+  private readonly logger = new WinstonLogger(BitrixDealController.name);
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly bitrixDealService: BitrixDealService,
@@ -51,7 +54,9 @@ export class BitrixDealController {
   @Get('/deal/:deal_id')
   async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
     try {
-      return this.bitrixDealService.getDealById(dealId);
+      const deal = await this.bitrixDealService.getDealById(dealId);
+      this.logger.debug('Check deal: ' + JSON.stringify(deal));
+      return deal;
     } catch (error) {
       console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
