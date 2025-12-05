@@ -21,13 +21,13 @@ export interface LeadObserveManagerCallingLeadBitrixItem {
 export interface LeadObserveManagerCallingResponse {
   status: boolean;
   message: string;
-  data: {
+  data?: {
     updatedLeads: string[];
     missingLeads: string[];
     notifiedLeads: string[];
     deletedLeads: string[];
   };
-  total: {
+  total?: {
     updatedLeads: number;
     missingLeads: number;
     notifiedLeads: number;
