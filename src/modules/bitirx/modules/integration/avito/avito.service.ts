@@ -14,7 +14,6 @@ import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { AvitoFindDuplicateLeadsDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito.dto';
 import { AvitoChatInfo } from '@/modules/bitirx/modules/integration/avito/interfaces/avito.interface';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
-import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24Department } from '@/modules/bitirx/modules/department/department.interface';
 import {
@@ -43,7 +42,6 @@ export class BitrixIntegrationAvitoService {
     private readonly bitrixMessageService: BitrixMessageService,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly bitrixUserService: BitrixUserService,
-    private readonly wikiService: WikiService,
     @Inject(forwardRef(() => BitrixImBotService))
     private readonly bitrixBotService: BitrixImBotService,
     private readonly queueMiddleService: QueueMiddleService,

@@ -60,13 +60,15 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           );
         }
 
+        console.log(error.response.data);
+
         if (
           error.response?.data &&
           typeof error.response.data === 'object' &&
           'error' in error.response.data
         ) {
           const { data } = error.response;
-          const { error: errorName } = data;
+          const { error: errorName = '' } = data;
 
           switch (errorName) {
             // 400
@@ -103,7 +105,12 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             //   500
             case 'INTERNAL_SERVER_ERROR':
             case 'ERROR_UNEXPECTED_ANSWER':
-              return throwError(() => new InternalServerErrorException(data));
+              return throwError(
+                () =>
+                  new InternalServerErrorException(
+                    'Internal server error from bitrix',
+                  ),
+              );
 
             //   503
             case 'QUERY_LIMIT_EXCEEDED':

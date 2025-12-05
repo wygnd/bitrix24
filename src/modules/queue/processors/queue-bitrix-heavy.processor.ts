@@ -9,6 +9,8 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
 import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
+import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
@@ -17,12 +19,17 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   constructor(
     private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService,
     private readonly bitrixImBotService: BitrixImBotService,
+    private readonly bitrixLeadService: BitrixLeadService,
   ) {
     super();
   }
 
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
+    const {
+      QUEUE_BX_HANDLE_WEBHOOK_FROM_HH,
+      QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING,
+    } = QUEUE_TASKS.HEAVY;
     const { name, data, id } = job;
     this.bitrixImBotService.sendTestMessage(
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
@@ -35,11 +42,19 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     };
 
     switch (name) {
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+      case QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
         response.message = 'handle new webhook from hh.ru';
         response.data =
           await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
             data as HeadhunterWebhookCallDto,
+          );
+        break;
+
+      case QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+        response.message = 'handle observe manager calling task';
+        response.data =
+          await this.bitrixLeadService.handleObserveManagerCalling(
+            data as LeadObserveManagerCallingDto,
           );
         break;
 
@@ -65,7 +80,8 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
     this.bitrixImBotService.sendTestMessage(
-      `Ошибка выполнения задачи: ` + JSON.stringify(job),
+      `[b]Ошибка выполнения задачи: [${job.name}][/b][br]` +
+        JSON.stringify(job),
     );
   }
 }

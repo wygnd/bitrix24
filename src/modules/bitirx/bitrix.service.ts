@@ -1,11 +1,28 @@
-import { BadRequestException, Inject, Injectable, UnauthorizedException, } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
-import { BitrixOauthResponse, BitrixTokens, } from './interfaces/bitrix-auth.interface';
-import { BitrixConfig, BitrixConstants, } from '@/common/interfaces/bitrix-config.interface';
-import { B24BatchResponseMap, B24SuccessResponse, } from './interfaces/bitrix-api.interface';
-import { B24AvailableMethods, B24BatchCommands, } from './interfaces/bitrix.interface';
+import {
+  BitrixOauthResponse,
+  BitrixTokens,
+} from './interfaces/bitrix-auth.interface';
+import {
+  BitrixConfig,
+  BitrixConstants,
+} from '@/common/interfaces/bitrix-config.interface';
+import {
+  B24BatchResponseMap,
+  B24SuccessResponse,
+} from './interfaces/bitrix-api.interface';
+import {
+  B24AvailableMethods,
+  B24BatchCommands,
+} from './interfaces/bitrix.interface';
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import emojiStrip from 'emoji-strip';
@@ -188,8 +205,6 @@ export class BitrixService {
       throw new UnauthorizedException('Invalid refresh token');
 
     const { accessToken, refreshToken, expires } = tokens;
-
-    console.log(expires && Date.now() < expires, expires);
 
     if (expires && Date.now() < expires) {
       this.tokens = {

@@ -24,6 +24,8 @@ export const QUEUE_TASKS = {
       'bitrix:integration:headhunter:handle_request_or_negotiation',
     QUEUE_BX_HANDLE_NEGOTIATION_EMPLOYER_STATE_CHANGE:
       'bitrix:integration:headhunter:handle_negotiation_employer_state_change',
+    QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+      'bitrix:leads:handle_observe_manager_calling',
   },
   QUEUE_BX_TEST: 'bitrix:task:test',
 };
