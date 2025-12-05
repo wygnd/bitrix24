@@ -110,6 +110,7 @@ export class TokensService {
     fields: Partial<TokensCreationalAttributes>,
   ) {
     try {
+      console.log('Trying update tokens: ', fields);
       const [, [token]] = await this.tokensRepository.update(fields, {
         where: {
           service: serviceToken,
@@ -124,6 +125,8 @@ export class TokensService {
         token,
         3600,
       );
+
+      console.log('Token was updated: ', token);
 
       return true;
     } catch (err) {
