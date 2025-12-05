@@ -1,23 +1,11 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException, } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
-import {
-  BitrixOauthResponse,
-  BitrixTokens,
-} from './interfaces/bitrix-auth.interface';
-import {
-  BitrixConfig,
-  BitrixConstants,
-} from '@/common/interfaces/bitrix-config.interface';
-import {
-  B24BatchResponseMap,
-  B24SuccessResponse,
-} from './interfaces/bitrix-api.interface';
-import {
-  B24AvailableMethods,
-  B24BatchCommands,
-} from './interfaces/bitrix.interface';
+import { BitrixOauthResponse, BitrixTokens, } from './interfaces/bitrix-auth.interface';
+import { BitrixConfig, BitrixConstants, } from '@/common/interfaces/bitrix-config.interface';
+import { B24BatchResponseMap, B24SuccessResponse, } from './interfaces/bitrix-api.interface';
+import { B24AvailableMethods, B24BatchCommands, } from './interfaces/bitrix.interface';
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import emojiStrip from 'emoji-strip';
@@ -124,27 +112,53 @@ export class BitrixService {
   }
 
   // todo: callBatchV2 which form batches packages from items
-  // async callBatches<T extends object>(
-  //   commands: B24BatchCommands,
-  //   halt = false,
-  // ) {
-  //   const totalBatches = Math.ceil(Object.keys(commands).length / 50);
-  //   let index = 0;
-  //
-  //   // const batchResponse = Promise.all(
-  //   //   Array.from(
-  //   //     Object.entries(commands)
-  //   //       .reduce<Map<string, B24BatchCommands>>(
-  //   //         (acc, [commandName, command]) => {
-  //   //
-  //   //           return acc;
-  //   //         },
-  //   //         new Map(),
-  //   //       )
-  //   //       .values(),
-  //   //   ),
-  //   // );
-  // }
+  async callBatches<T extends object>(
+    commands: B24BatchCommands,
+    halt = false,
+  ) {
+    let index = 0;
+    let errors: string[] = [];
+    const batchCommandsMap = new Map<number, B24BatchCommands>();
+
+    Object.entries(commands).forEach(([cmdName, cmd]) => {
+      let cmds = batchCommandsMap.get(index) ?? {};
+
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsMap.set(index, cmds);
+        index++;
+        cmds = batchCommandsMap.get(index) ?? {};
+      }
+
+      cmds[cmdName] = cmd;
+
+      batchCommandsMap.set(index, cmds);
+    });
+
+    const batchResponses = await Promise.all(
+      Array.from(batchCommandsMap.values()).map((bcmds) =>
+        this.callBatch<B24BatchResponseMap>(bcmds, halt),
+      ),
+    );
+
+    batchResponses.forEach((bres) => {
+      if (
+        (Array.isArray(bres.result.result_error) &&
+          bres.result.result_error.length === 0) ||
+        Object.keys(bres.result.result_error).length === 0
+      )
+        return;
+
+      Object.entries(bres.result.result_error).forEach(
+        ([cmdName, { error }]) => {
+          errors.push(`${cmdName}: ${error}`);
+        },
+      );
+    });
+
+    if (errors.length > 0) throw new BadRequestException(errors);
+
+    return batchResponses;
+  }
 
   public isAvailableToDistributeOnManager() {
     const now = new Date();
@@ -174,6 +188,8 @@ export class BitrixService {
       throw new UnauthorizedException('Invalid refresh token');
 
     const { accessToken, refreshToken, expires } = tokens;
+
+    console.log(expires && Date.now() < expires, expires);
 
     if (expires && Date.now() < expires) {
       this.tokens = {
@@ -220,7 +236,7 @@ export class BitrixService {
     this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
       accessToken: access_token,
       refreshToken: refresh_token,
-      expires: expires,
+      expires: expires * 1000,
     });
 
     return this.tokens;
