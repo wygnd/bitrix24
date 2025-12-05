@@ -488,10 +488,22 @@ export class BitrixLeadService {
         ),
       );
     } catch (err) {
-      console.log(err.response.data);
       return {
         status: false,
         message: `Exception error on get leads by phone. ${err.message}`,
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
       };
     }
 
@@ -630,6 +642,19 @@ export class BitrixLeadService {
       return {
         status: false,
         message: `Exception error on get active leads by phone from DB. ${err.message}`,
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
       };
     }
 
@@ -674,7 +699,7 @@ export class BitrixLeadService {
         method: 'imbot.message.add',
         params: {
           BOT_ID: this.bitrixService.BOT_ID,
-          DIALOG_ID: this.bitrixService.OBSERVE_MANAGER_CALLING_CHAT_ID,
+          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
           MESSAGE:
             '[b]Менеджер не звонил в течение 5 дней.[/b][br][br]' +
             this.bitrixService.generateLeadUrl(leadId),
@@ -699,10 +724,22 @@ export class BitrixLeadService {
         ]),
       ]);
     } catch (err) {
-      console.log(err.respone.data);
       return {
         status: false,
         message: `Exception error on notify about fineded uncalling leads. ${err.message}`,
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
       };
     }
 
