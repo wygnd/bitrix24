@@ -12,11 +12,6 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
 import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
-const {
-  QUEUE_BX_HANDLE_WEBHOOK_FROM_HH,
-  QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING,
-} = QUEUE_TASKS.HEAVY;
-
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
   private readonly logger = new Logger(QueueBitrixHeavyProcessor.name);
@@ -42,7 +37,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     };
 
     switch (name) {
-      case QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
         response.message = 'handle new webhook from hh.ru';
         response.data =
           await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
@@ -50,7 +45,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
           );
         break;
 
-      case QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
         response.message = 'handle observe manager calling task';
         response.data =
           await this.bitrixLeadService.handleObserveManagerCalling(
@@ -78,21 +73,22 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
+  @OnWorkerEvent('error')
   onFailed(job: Job) {
     const { name, id } = job;
+    let message: string;
 
     switch (name) {
-      case QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
-        this.bitrixImBotService.sendTestMessage(
-          `[b]Ошибка выполнения задачи [${name}][${id}]: [/b][br] ${JSON.stringify({ ...job, data: '' })}`,
-        );
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+        message = `[b]Ошибка выполнения задачи [${name}][${id}]: [/b][br] ${JSON.stringify({ ...job, data: '' })}`;
         break;
 
       default:
-        this.bitrixImBotService.sendTestMessage(
+        message =
           `[b]Ошибка выполнения задачи: [${name}][${id}][/b][br]` +
-            JSON.stringify(job),
-        );
+          JSON.stringify(job);
     }
+
+    this.bitrixImBotService.sendTestMessage(message);
   }
 }

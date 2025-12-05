@@ -431,9 +431,17 @@ export class BitrixLeadService {
     });
 
     batchCalls.forEach((calls) => {
-      this.queueHeavyService.addTaskToHandleObserveManagerCalling({
-        calls: calls,
-      });
+      this.queueHeavyService.addTaskToHandleObserveManagerCalling(
+        {
+          calls: calls,
+        },
+        {
+          backoff: {
+            type: 'exponential',
+            delay: 3000,
+          },
+        },
+      );
     });
     return {
       status: true,
@@ -461,7 +469,9 @@ export class BitrixLeadService {
     const errors: string[] = [];
     const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
 
-    calls.forEach((call) => uniqueCalls.set(call.phone, call));
+    calls.forEach((call) =>
+      uniqueCalls.set(call.phone, { ...call, date: new Date(call.date) }),
+    );
 
     // Собираем батч запрос для поиска лидов по номеру телефона и получения информации по лиду
     Array.from(uniqueCalls.values()).forEach(({ phone, date }) => {
