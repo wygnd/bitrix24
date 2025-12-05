@@ -110,9 +110,6 @@ export class TokensService {
     fields: Partial<TokensCreationalAttributes>,
   ) {
     try {
-      console.log(
-        `Trying update tokens: ${fields?.accessToken}|refresh: ${fields?.refreshToken}`,
-      );
       const [, [token]] = await this.tokensRepository.update(fields, {
         where: {
           service: serviceToken,
@@ -126,10 +123,6 @@ export class TokensService {
         REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + serviceToken,
         token,
         3600,
-      );
-
-      console.log(
-        `Token was updated: access: ${token.accessToken}|refresh: ${token.refreshToken}`,
       );
 
       return true;
