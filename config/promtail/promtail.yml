@@ -21,7 +21,7 @@ scrape_configs:
             - static_labels:
                 service: nestjs
                 env: production
-            - regex:git c
+            - regex:
                 expression: '\[(?<level>DEBUG|ERROR|WARN|LOG|INFO)\]'
             - regex:
                 expression: '\[(?<status>\d{3})\]\s(?<method>GET|POST|PUT|PATCH|DELETE)\s(?<path>\/\S*)\s-\s(?<user_agent>[^=]+)\s=>\s(?<duration_ms>\d+)ms'
