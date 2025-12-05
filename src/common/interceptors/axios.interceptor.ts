@@ -60,8 +60,6 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
           );
         }
 
-        console.log(error.response.data);
-
         if (
           error.response?.data &&
           typeof error.response.data === 'object' &&

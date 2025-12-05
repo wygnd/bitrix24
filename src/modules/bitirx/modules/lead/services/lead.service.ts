@@ -442,7 +442,7 @@ export class BitrixLeadService {
     });
     return {
       status: true,
-      message: 'Add in queue',
+      message: 'add in queue',
     };
   }
 
@@ -512,17 +512,28 @@ export class BitrixLeadService {
     });
 
     // Выполняем запрос
-    const batchResponseGetLeads = await Promise.all<
-      Promise<
-        B24BatchResponseMap<
-          Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
-        >
-      >[]
-    >(
-      Array.from(batchCommandsGetLeads.values()).map((batchCommands) =>
-        this.bitrixService.callBatch(batchCommands),
-      ),
-    );
+    let batchResponseDictionary: B24BatchResponseMap<
+      Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
+    >[];
+
+    try {
+      batchResponseDictionary = await Promise.all<
+        Promise<
+          B24BatchResponseMap<
+            Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
+          >
+        >[]
+      >(
+        Array.from(batchCommandsGetLeads.values()).map((batchCommands) =>
+          this.bitrixService.callBatch(batchCommands),
+        ),
+      );
+    } catch (err) {
+      return {
+        status: false,
+        message: `An error occurred. ${err.message}`,
+      };
+    }
 
     const leadsFromBitrix = new Map<
       string,
@@ -530,7 +541,7 @@ export class BitrixLeadService {
     >();
 
     // Проходимся по результату получения информации и лидах и заполняем мапу
-    batchResponseGetLeads.forEach((b24Response) => {
+    batchResponseDictionary.forEach((b24Response) => {
       const batchErrors = Object.values(b24Response.result.result_error);
       if (batchErrors.length !== 0) {
         batchErrors.forEach(({ error }) => errors.push(error));
@@ -645,13 +656,22 @@ export class BitrixLeadService {
     });
 
     // Делаем запрос для получения активных лидов с базы
-    const batchResponseGetActiveLeads = await Promise.all<
-      Promise<B24BatchResponseMap<B24Lead[]>>[]
-    >(
-      Array.from(batchCommandsGetActiveLeads.values()).map((cmds) =>
-        this.bitrixService.callBatch(cmds),
-      ),
-    );
+    let batchResponseGetActiveLeads: B24BatchResponseMap<B24Lead[]>[];
+
+    try {
+      batchResponseGetActiveLeads = await Promise.all<
+        Promise<B24BatchResponseMap<B24Lead[]>>[]
+      >(
+        Array.from(batchCommandsGetActiveLeads.values()).map((cmds) =>
+          this.bitrixService.callBatch(cmds),
+        ),
+      );
+    } catch (err) {
+      return {
+        status: false,
+        message: `An error occurred. ${err.message}`,
+      };
+    }
 
     // Проходимся по результату и записываем активные лиды
     const leadsNeedNotify = new Set<string>();
@@ -707,16 +727,23 @@ export class BitrixLeadService {
     });
 
     // Выполняем запрос
-    Promise.all([
-      ...Array.from(batchCommandsNotifyAboutUnCallingManager.values()).map(
-        (cmds) => this.bitrixService.callBatch(cmds),
-      ),
-      // Удаляем обработанные лиды и не активные лиды
-      this.removeLeadsObserveManagerCalling([
-        ...notifiedLeads,
-        ...deletedLeads,
-      ]),
-    ]);
+    try {
+      Promise.all([
+        ...Array.from(batchCommandsNotifyAboutUnCallingManager.values()).map(
+          (cmds) => this.bitrixService.callBatch(cmds),
+        ),
+        // Удаляем обработанные лиды и не активные лиды
+        this.removeLeadsObserveManagerCalling([
+          ...notifiedLeads,
+          ...deletedLeads,
+        ]),
+      ]);
+    } catch (err) {
+      return {
+        status: false,
+        message: `An error occurred. ${err.message}`,
+      };
+    }
 
     // Если больше лидов не осталось выходим
     if (leadsFromBitrix.size === 0)
