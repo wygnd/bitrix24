@@ -419,7 +419,7 @@ export class BitrixLeadService {
       if (uniqueCalls.has(call.phone)) return;
       let calls = batchCalls.get(index) ?? [];
 
-      if (calls.length === 500) {
+      if (calls.length === 250) {
         index++;
         calls = batchCalls.get(index) ?? [];
       }
@@ -436,10 +436,7 @@ export class BitrixLeadService {
           calls: calls,
         },
         {
-          backoff: {
-            type: 'exponential',
-            delay: 3000,
-          },
+          delay: 2000,
         },
       );
     });
