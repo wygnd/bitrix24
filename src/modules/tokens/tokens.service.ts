@@ -61,6 +61,7 @@ export class TokensService {
     this.redisService.set<TokensDto>(
       REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + token.service,
       token,
+      3600,
     );
 
     return token;
@@ -121,6 +122,7 @@ export class TokensService {
       await this.redisService.set<TokensDto>(
         REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + serviceToken,
         token,
+        3600,
       );
 
       return true;
