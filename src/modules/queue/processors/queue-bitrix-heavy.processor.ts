@@ -81,10 +81,18 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  @OnWorkerEvent('error')
-  onFailed(job: Job) {
+  onFailed(job: Job, error: Error) {
     const { name, id, stacktrace, failedReason } = job;
-    const message = `[b]Ошибка выполнения задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
+    const message =
+      `[b]Ошибка выполнения задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}[br][br]` +
+      error.message;
+
+    this.bitrixImBotService.sendTestMessage(message);
+  }
+
+  @OnWorkerEvent('error')
+  onError(error: Error) {
+    const message = `[b]Ошибка выполнения задачи:[b][br]${error.message}`;
 
     this.bitrixImBotService.sendTestMessage(message);
   }
