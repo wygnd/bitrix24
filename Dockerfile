@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY package-lock*.json ./
+COPY /static ./
 
 RUN npm ci
 
@@ -21,6 +22,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY package-lock*.json ./
+COPY /static ./
 
 RUN npm ci --omit=dev
 

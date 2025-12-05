@@ -29,7 +29,7 @@ import { WinstonLoggerModule } from '@/modules/winston-logger/winston-logger.mod
       errorMessage: 'Too many requests',
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, 'public'),
+      rootPath: join(__dirname, '..', 'static'),
       exclude: ['/api/{*test}'],
       serveStaticOptions: {
         cacheControl: true,
