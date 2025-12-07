@@ -98,10 +98,11 @@ services:
     image: grafana/promtail:latest
     container_name: bitrix-server-promtail
     volumes:
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /home/data/bitrix24/backend-data:/app/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./config/promtail/promtail.yml:/etc/promtail/config.yml
-      - ./home/data/bitrix24/promtail-positions:/tmp
+      - /home/data/bitrix24/promtail-positions:/tmp
+      - /var/log:/var/log:ro
     networks:
       - monitoring
     command: -config.file=/etc/promtail/config.yml

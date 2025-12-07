@@ -9,46 +9,33 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/*log
+
+  - job_name: application
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: backend-logs
+          __path__: /app/logs/*.log
+
   - job_name: backend-console
-    pipeline_stages:
-      - docker: { }
-      - replace:
-          expression: '\x1b\[[0-9;]*m'
-          replace: ''
-      - match:
-          selector: '{container_name="bitrix-server-backend"}'
-          stages:
-            - static_labels:
-                service: nestjs
-                env: production
-            - regex:
-                expression: '\[(?<level>DEBUG|ERROR|WARN|LOG|INFO)\]'
-            - regex:
-                expression: '\[(?<status>\d{3})\]\s(?<method>GET|POST|PUT|PATCH|DELETE)\s(?<path>\/\S*)\s-\s(?<user_agent>[^=]+)\s=>\s(?<duration_ms>\d+)ms'
-            - labels:
-                level:
-                method:
-                status:
-    static_configs:
-      - targets: [ localhost ]
-        labels:
-          job: backend-console
-  #          __path__: /var/lib/docker/containers/*/*-json.log
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
 
-
-  - job_name: backend-files
-    static_configs:
-      - targets: [ localhost ]
-        labels:
-          service: nestjs
-          job: backend-files
-          __path__: /app/logs/.log
-
-  - job_name: docker-other
-    pipeline_stages:
-      - docker: { }
-    static_configs:
-      - targets: [ localhost ]
-        labels:
-          job: docker-other
-          __path__: /var/lib/docker/containers/*/*-json.log
+    relabel_configs:
+      - source_labels: [ __meta_docker_container_name ]
+        regex: .*bitrix-server-backend*
+        action: keep
