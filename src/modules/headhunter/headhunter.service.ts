@@ -8,6 +8,8 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { BitrixService } from '@/modules/bitirx/bitrix.service';
 import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.interface';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @Injectable()
 export class HeadHunterService {
@@ -25,16 +27,24 @@ export class HeadHunterService {
     private readonly http: AxiosInstance,
     private readonly bitrixMessageService: BitrixMessageService,
     private readonly bitrixService: BitrixService,
+    private readonly tokensService: TokensService,
   ) {
     const headHunterConfig =
       configService.get<HeadHunterConfig>('headHunterConfig');
 
     if (!headHunterConfig) throw Error('Invalid head hunter config');
 
-    const { clientId, clientSecret, baseUrl, redirectUri } = headHunterConfig;
+    // Check config not empty values
+    const checkEmptyValues = Object.entries(headHunterConfig).filter(
+      ([, c]) => !c,
+    );
 
-    if (!clientId || !clientSecret || !baseUrl || !redirectUri)
-      throw new Error('Invalid head hunter fields');
+    if (checkEmptyValues.length !== 0)
+      throw new Error(
+        `Invalid head hunter fields: ${checkEmptyValues.map(([name]) => name).join(', ')}`,
+      );
+
+    const { clientId, clientSecret, baseUrl, redirectUri } = headHunterConfig;
 
     this.http.defaults.baseURL = baseUrl;
     this.http.defaults.headers.common['Content-Type'] = 'application/json';
@@ -42,35 +52,24 @@ export class HeadHunterService {
 
     // Check auth data.
     // Send message about update credentials If not exists
-    this.redisService
-      .get<HeadHunterAuthTokens>(REDIS_KEYS.HEADHUNTER_AUTH_DATA)
-      .then(async (data) => {
-        if (!data) {
-          await this.notifyAboutInvalidCredentials();
-          return new Error('Invalid hh auth data');
-        }
+    this.tokensService.getToken(TokensServices.HH).then(async (tokens) => {
+      if (!tokens) {
+        this.notifyAboutInvalidCredentials();
+        this.logger.error('Invalid headhunter authorization');
+        return;
+      }
 
-        const { access_token } = data;
+      this.http.defaults.headers.common['Authorization'] =
+        `Bearer ${tokens.accessToken}`;
 
-        this.http.defaults.headers['Authorization'] = `Bearer ${access_token}`;
-      })
-      .catch((error) => new Error(error));
+      this.get<object, HHMeInterface>('/me').then((me) => {
+        this.employer_id = me.employer.id;
+      });
+    });
 
     this.client_id = clientId;
     this.client_secret = clientSecret;
     this.redirect_uri = redirectUri;
-
-    this.redisService
-      .get<string>(REDIS_KEYS.HEADHUNTER_EMPLOYER_ID)
-      .then(async (employerId) => {
-        if (!employerId) {
-          const me = await this.get<object, HHMeInterface>('/me');
-          this.employer_id = me.employer.id;
-          return;
-        }
-        this.employer_id = employerId;
-      })
-      .catch((err) => this.logger.error(err));
   }
 
   async get<T = any, U = any>(url: string, config?: AxiosRequestConfig<T>) {
@@ -112,13 +111,15 @@ export class HeadHunterService {
     if (wasSendingNotification) return;
 
     await this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '190', // Екатерина Туркатова
+      DIALOG_ID: 'chat68032', // Chat Отклики HH.ru
       MESSAGE:
+        '[USER=190][/USER][br]' +
         'Необходимо обновить авторизацию на hh.ru: [br]' +
         'https://hh.ru/oauth/authorize?' +
         'response_type=code&' +
         `client_id=${this.client_id}` +
-        `&redirect_uri=${this.redirect_uri}`,
+        `&redirect_uri=${this.redirect_uri}[br][br]Строго от аккаунта hh.ru Екатерины Туркатовой`,
+      SYSTEM: 'Y',
     });
 
     await this.redisService.set<boolean>(
@@ -137,27 +138,31 @@ export class HeadHunterService {
       `Bearer ${tokens.access_token}`;
 
     // Temporary
-    await this.bitrixMessageService.sendPrivateMessage({
+    this.bitrixMessageService.sendPrivateMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE:
         'Обновлены токены авторизации для hh.ru[br]' + JSON.stringify(tokens),
     });
+
+    return true;
   }
 
   private async getAuthData() {
     const now = new Date();
 
     if (!this.auth_data) {
-      const tokensFromCache = await this.redisService.get<HeadHunterAuthTokens>(
-        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-      );
+      const tokens = await this.tokensService.getToken(TokensServices.HH);
 
-      if (!tokensFromCache) {
-        await this.notifyAboutInvalidCredentials();
+      if (!tokens) {
+        this.notifyAboutInvalidCredentials();
         return null;
       }
 
-      this.auth_data = tokensFromCache;
+      this.auth_data = {
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken ?? '',
+        expires: tokens.expires,
+      };
       return this.auth_data;
     }
 
@@ -166,23 +171,25 @@ export class HeadHunterService {
     const expiresDate = new Date(expires);
 
     if (now.toLocaleDateString() !== expiresDate.toLocaleDateString()) {
-      const tokens = await this.redisService.get<HeadHunterAuthTokens>(
-        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-      );
+      const tokens = await this.tokensService.getToken(TokensServices.HH);
 
-      if (!tokens || !tokens.expires || !tokens.access_token) {
-        await this.notifyAboutInvalidCredentials();
+      if (!tokens) {
+        this.notifyAboutInvalidCredentials();
         return null;
       }
 
       const expiresCacheDate = new Date(tokens.expires);
 
       if (expiresCacheDate.toLocaleDateString() !== now.toLocaleDateString()) {
-        await this.notifyAboutInvalidCredentials();
+        this.notifyAboutInvalidCredentials();
         return null;
       }
 
-      this.auth_data = tokens;
+      this.auth_data = {
+        access_token: tokens.accessToken,
+        refresh_token: tokens.refreshToken ?? '',
+        expires: tokens.expires,
+      };
       return this.auth_data;
     }
 

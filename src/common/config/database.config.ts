@@ -4,7 +4,7 @@ export default (): { databaseConfig: DatabaseConfig } => ({
   databaseConfig: {
     production: {
       dialect: 'postgres',
-      host: process.env.DB_HOST_PRODUCTION || 'localhost',
+      host: process.env.DB_HOST_PRODUCTION || '',
       port: process.env.DB_PORT_PRODUCTION ? +process.env.DB_PORT_PRODUCTION : 5432,
       database: process.env.DB_NAME_PRODUCTION,
       username: process.env.DB_USERNAME_PRODUCTION,

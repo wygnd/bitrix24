@@ -1,5 +1,6 @@
 import { HeadhunterWebhookNegotiationEmployerStateChangePayload } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-negotiation-employer-state-change.interface';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
   implements HeadhunterWebhookNegotiationEmployerStateChangePayload
@@ -10,6 +11,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   employer_manager_id: string;
 
   @ApiProperty({
@@ -18,6 +21,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   from_state: string;
 
   @ApiProperty({
@@ -26,6 +31,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   resume_id: string;
 
   @ApiProperty({
@@ -34,6 +41,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   to_state: string;
 
   @ApiProperty({
@@ -42,6 +51,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   topic_id: string;
 
   @ApiProperty({
@@ -50,6 +61,8 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   transferred_at: string;
 
   @ApiProperty({
@@ -58,5 +71,7 @@ export class HeadhunterWebhookNegotiationEmployerStateChangePayloadDto
     required: true,
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   vacancy_id: string;
 }

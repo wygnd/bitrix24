@@ -35,6 +35,10 @@ import { B24BatchCommands } from '@/modules/bitirx/interfaces/bitrix.interface';
 import { HeadhunterHandleDealHROptions } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-handle-deal-from-headhunter.interface';
 import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
+import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
+import { HeadhunterWebhookCallResponse } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
+import { B24DealHRRejectedStages } from '@/modules/bitirx/modules/deal/constants/deal-hr.constants';
+import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -108,8 +112,6 @@ export class BitrixHeadHunterService {
    * @param body
    */
   async receiveWebhook(body: HeadhunterWebhookCallDto) {
-    const { action_type, payload } = body;
-
     const { id: notificationId } = body;
 
     // Проверяем, был ли отправлен запрос ранее
@@ -132,32 +134,8 @@ export class BitrixHeadHunterService {
       .set<string>(redisNotificationKey, notificationId, 3600)
       .catch(() => {});
 
-    switch (action_type) {
-      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
-        await validateField(
-          HeadHunterWebhookNegotiationOrRequestPayloadDto,
-          payload,
-        );
-
-        // Если не было запроса, ставим задачу на обработку отклика
-        this.queueHeavyService.addTaskToHandleReceiveNewResponseOrNegotiation(
-          body,
-        );
-        return true;
-
-      // todo
-      // case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
-      //   await validateField(
-      //     HeadhunterWebhookNegotiationEmployerStateChangePayloadDto,
-      //     payload,
-      //   );
-      //   this.queueHeavyService.addTaskToHandleReceiveNegotiationEmployerStateChange(
-      //     body,
-      //   );
-      //   return true;
-    }
-
-    return false;
+    this.queueHeavyService.addTaskToHandleReceiveNewRequestFromHH(body);
+    return true;
   }
 
   /**
@@ -168,21 +146,376 @@ export class BitrixHeadHunterService {
    * Обрабатывает отклик на вакансию или приглашение от работодателя
    * @param body
    */
-  async handleNewResponseVacancyWebhook(body: HeadhunterWebhookCallDto) {
-    const payloadDto = await validateField(
-      HeadHunterWebhookNegotiationOrRequestPayloadDto,
-      body.payload,
-    );
+  async handleNewResponseVacancyWebhook({
+    action_type,
+    payload,
+  }: HeadhunterWebhookCallDto): Promise<HeadhunterWebhookCallResponse> {
+    switch (action_type) {
+      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
+        const dto = await validateField(
+          HeadHunterWebhookNegotiationOrRequestPayloadDto,
+          payload,
+        );
 
+        return this.handleDealHRFromHeadhunterRequest({
+          resumeId: dto.resume_id,
+          vacancyId: dto.vacancy_id,
+          topicId: dto.topic_id,
+          messageType: 'manager',
+        });
+
+      case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
+        const payloadDto = await validateField(
+          HeadhunterWebhookNegotiationEmployerStateChangePayloadDto,
+          payload,
+        );
+
+        return this.handleDealHRFromHeadhunterRequest({
+          resumeId: payloadDto.resume_id,
+          vacancyId: payloadDto.vacancy_id,
+          topicId: payloadDto.topic_id,
+          messageType:
+            payloadDto.from_state === 'consider' &&
+            payloadDto.to_state === 'phone_interview'
+              ? 'bot'
+              : 'manager',
+        });
+
+      default:
+        return {
+          status: false,
+          message: 'Unhandled event',
+        };
+    }
+  }
+
+  /**
+   * Find or create deal and send message in chat
+   *
+   * ---
+   *
+   * Ищет или создает сделку и отправляет сообщение в чат
+   *
+   * @param body
+   */
+  async handleDealHRFromHeadhunterRequest(
+    body: HeadhunterHandleDealHROptions,
+  ): Promise<HeadhunterWebhookCallResponse> {
+    const { resumeId, vacancyId, topicId, messageType = 'manager' } = body;
     try {
-      switch (body.action_type) {
-        case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
-          return await this.handleDealHRFromHeadhunterRequest({
-            resumeId: payloadDto.resume_id,
-            vacancyId: payloadDto.vacancy_id,
-            topicId: payloadDto.topic_id,
-          });
+      // Делаем запрос на получения вакансии, резюме и приглашения/отклика
+      const [vacancy, resume, negotiation] = await Promise.all<
+        [
+          Promise<HHVacancyInterface>,
+          Promise<HHResumeInterface>,
+          Promise<HHNegotiationInterface | null>,
+        ]
+      >([
+        this.headHunterRestService.getVacancyById(vacancyId),
+        this.headHunterRestService.getResumeById(resumeId),
+        this.headHunterRestService.getNegotiationsById(topicId),
+      ]);
+
+      const resumeWasReceived = await this.redisService.get<string>(
+        REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+          `phone_interview:${resumeId}`,
+      );
+
+      if (resumeWasReceived && messageType !== 'bot')
+        return {
+          status: false,
+          message: 'Event was received whet state change',
+        };
+
+      let responseType = `${B24Emoji.HR.HEADHUNTER.RESPONSE}[b]Отклик[/b]`; // Начало сообщения
+      let bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
+
+      if (negotiation) {
+        switch (negotiation.employer_state.id) {
+          // Стадия: Первичный контакт
+          case 'phone_interview':
+            responseType = `${B24Emoji.HR.HEADHUNTER.INVITE}[b]Холодка[/b]`;
+            bitrixSearchTypeField = '6598'; // Тип поиска: Холодный поиск
+
+            if (messageType === 'bot') {
+              bitrixSearchTypeField = '12008'; // Холодный поиск (Бот HH);
+              responseType = `${B24Emoji.HR.HEADHUNTER.BOT}[b]Бот HH[/b]`;
+
+              this.redisService.set<string>(
+                REDIS_KEYS.HEADHUNTER_DATA_RESUME_ACTIVITY +
+                  `phone_interview:${resumeId}`,
+                resumeId,
+                600,
+              );
+            }
+            break;
+
+          // Отклик
+          case 'response':
+            break;
+
+          // Все другие статусы игнорировать
+          default:
+            return {
+              status: false,
+              message:
+                'Stop script, cause state is not response or phone_interview',
+            };
+        }
       }
+
+      // Формируем ФИО
+      const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''}`;
+      const candidateFullName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
+
+      // Получаем ответственного за кандидата по email
+      const { result: resultGetUser } = await this.bitrixUserService.getUsers({
+        filter: {
+          EMAIL: vacancy.contacts.email,
+        },
+      });
+
+      const bitrixUser =
+        resultGetUser && resultGetUser?.length !== 0 ? resultGetUser[0] : null;
+
+      // Формируем сообщение
+      let message =
+        (bitrixUser
+          ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
+          : '') +
+        `${responseType} на вакансию ${vacancy.name}[br]` +
+        `Кандидат: ${candidateName}[br]` +
+        `Резюме: ${resume.alternate_url}[br][br]`;
+
+      // Инициализируем батч запрос для поиска дублей по сделкам HR
+      const selectFieldsFindDuplicateDeals = [
+        'ID',
+        'TITLE',
+        'UF_CRM_1638524259',
+        'STAGE_ID',
+      ];
+      const batchCommands: B24BatchCommands = {
+        get_deal_by_name: {
+          method: 'crm.deal.list',
+          params: {
+            filter: {
+              CATEGORY_ID: '14',
+              '%TITLE': candidateName.trim(),
+            },
+            select: selectFieldsFindDuplicateDeals,
+          },
+        },
+      };
+
+      let filterPhones: string[] = [];
+      let phone = '';
+      let telegram = '';
+      let email = '';
+      let bitrixVacancy = '';
+
+      try {
+        const vacancy = await this.getRatioVacancyBitrix(vacancyId);
+
+        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
+      } catch (e) {
+        bitrixVacancy = '';
+      }
+
+      // Если контакты не скрыты, формируем запрос на поиск кандидата по номеру телефона
+      if (Array.isArray(resume.contact) && resume.contact?.length !== 0) {
+        const candidateContacts = resume.contact.reduce(
+          (acc, { kind, contact_value, value }) => {
+            switch (kind) {
+              case 'phone':
+                if (
+                  !/[()]/.test(contact_value) &&
+                  (value as ContactPhone)?.city
+                ) {
+                  acc[kind] = contact_value.replace(
+                    ` ${value.city} `,
+                    ` (${value.city}) `,
+                  );
+                } else {
+                  acc[kind] = contact_value;
+                }
+
+                break;
+
+              case 'email':
+                acc[kind] = contact_value;
+                break;
+            }
+
+            return acc;
+          },
+          {} as CandidateContactInterface,
+        );
+
+        phone = candidateContacts.phone;
+        telegram = candidateContacts.telegram ?? '';
+        email = candidateContacts.email ?? '';
+
+        // Так как битрикс не дает апи и не форматирует номера телефонов,
+        // придется в ручную формировать все варианты номеров телефоном
+        filterPhones = [
+          phone,
+          phone.replace(/[()]/gim, ''),
+          phone.replace(/-/gim, ' '),
+          phone.replace(/[-()]/gim, ''),
+          phone.replace(/[ \-()]/gim, ''),
+        ];
+
+        if (phone[0] == '8') {
+          filterPhones.push(
+            candidateContacts.phone.replace('8 ', '+7 '),
+            candidateContacts.phone.replace('8 ', '+7 ').replace(/[()]/gim, ''),
+            candidateContacts.phone.replace('8 ', '+7 ').replace(/-/gim, ' '),
+            candidateContacts.phone
+              .replace('8 ', '+7 ')
+              .replace(/[-()]/gim, ''),
+            candidateContacts.phone
+              .replace('8 ', '+7 ')
+              .replace(/[ \-()]/gim, ''),
+          );
+        }
+
+        // Формируем запрос на получение дублей по номеру телефона
+        batchCommands['get_deal_by_phone'] = {
+          method: 'crm.deal.list',
+          params: {
+            filter: {
+              CATEGORY_ID: '14',
+              '@UF_CRM_1638524259': filterPhones,
+            },
+            select: selectFieldsFindDuplicateDeals,
+          },
+        };
+      }
+
+      // Делаем запрос на получение дублей
+      const { result: batchResponse } = await this.bitrixService.callBatch<
+        B24BatchResponseMap<{
+          get_deal_by_name: B24Deal[];
+          get_deal_by_phone?: B24Deal[];
+        }>
+      >(batchCommands, false);
+
+      const {
+        get_deal_by_phone: dealsByPhone = [],
+        get_deal_by_name: dealsByName = [],
+      } = batchResponse.result;
+
+      const batchCommandsUpdateDealAndSendMessage: B24BatchCommands = {};
+
+      if (dealsByPhone && dealsByPhone?.length > 0) {
+        // Сначала ищем по телефону
+        message +=
+          'Совпадение со сделкой: ' +
+          dealsByPhone.reduce((acc, { ID: dealId }) => {
+            acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+            return acc;
+          }, '') +
+          '[b]ЗАПЛАНИРУЙ ЗВОНОК[/b]';
+
+        dealsByPhone.forEach(({ ID, STAGE_ID }) => {
+          // Если сделка в неактивной стадии выходим
+          if (B24DealHRRejectedStages.includes(STAGE_ID)) return;
+
+          batchCommandsUpdateDealAndSendMessage[`update_deal=${ID}`] = {
+            method: 'crm.deal.update',
+            params: {
+              id: ID,
+              fields: {
+                UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+                ASSIGNED_BY_ID: bitrixUser?.ID,
+                UF_CRM_1638524000: bitrixVacancy, // Вакансия
+                STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+              },
+            },
+          };
+        });
+      } else if (dealsByName.length > 0) {
+        // Сначала ищем по ФИО и телефону
+        const dealsFindByPhone = dealsByName.filter((deal) => {
+          return !!filterPhones.find(
+            (phone) => phone == deal['UF_CRM_1638524259'],
+          );
+        });
+
+        // Если не нашли по номеру
+        if (dealsFindByPhone.length === 0) {
+          message +=
+            `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br]` +
+            dealsByName.reduce((acc, { ID: dealId }) => {
+              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+              return acc;
+            }, '');
+        } else {
+          message +=
+            '[b]Совпадение со сделкой: [/b][br]' +
+            dealsFindByPhone.reduce((acc, { ID: dealId }) => {
+              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+              return acc;
+            }, '') +
+            '[b]ЗАПЛАНИРУЙ ЗВОНОК![/b]';
+
+          // Обновляем найденные лиды
+          dealsFindByPhone.forEach(({ ID, STAGE_ID }) => {
+            // Если сделка в неактивной стадии выходим
+            if (B24DealHRRejectedStages.includes(STAGE_ID)) return;
+
+            batchCommandsUpdateDealAndSendMessage[`update_deal=${ID}`] = {
+              method: 'crm.deal.update',
+              params: {
+                id: ID,
+                fields: {
+                  UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+                  ASSIGNED_BY_ID: bitrixUser?.ID,
+                  UF_CRM_1638524000: bitrixVacancy, // Вакансия
+                  STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+                },
+              },
+            };
+          });
+        }
+      } else {
+        // Если вообще не нашли дублей - создаем новую сделку
+        const { result: newDealId } = await this.bitrixDealService.createDeal({
+          TITLE: candidateFullName,
+          UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+          UF_CRM_1638524259: phone, // Номер телефона
+          UF_CRM_1760598515308: telegram, // Телеграмм
+          UF_CRM_1638524275: email, // E-mail
+          UF_CRM_1638524306: resume.alternate_url, // Ссылка на резюме
+          ASSIGNED_BY_ID: bitrixUser?.ID || '',
+          CATEGORY_ID: '14',
+          STAGE_ID: 'C14:NEW',
+          UF_CRM_1638524000: bitrixVacancy, // Вакансия
+        });
+
+        newDealId
+          ? (message +=
+              '[b]Создана сделка:[/b][br]' +
+              this.bitrixService.generateDealUrl(newDealId))
+          : (message =
+              'Сделки не найдено.[br]Что то пошло не так при создании сделки');
+      }
+
+      batchCommandsUpdateDealAndSendMessage['send_message_to_hr_chat'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixService.BOT_ID,
+          DIALOG_ID: 'chat68032',
+          MESSAGE: message,
+          URL_PREVIEW: 'N',
+        },
+      };
+
+      this.bitrixService.callBatch(batchCommandsUpdateDealAndSendMessage);
+      return {
+        status: true,
+        message: 'Successfully run script',
+      };
     } catch (e) {
       // Обработка ошибки.
       // Отправляем в чат информацию
@@ -203,8 +536,8 @@ export class BitrixHeadHunterService {
             DIALOG_ID: this.headHunterRestService.HR_CHAT_ID,
             MESSAGE:
               'Ошибка обработки отклика. Необходимо обработать вручную[br]' +
-              `Резюме: https://hh.ru/resume/${payloadDto.resume_id}[br]` +
-              `Вакансия: https://vologda.hh.ru/vacancy/${payloadDto.vacancy_id}[br]` +
+              `Резюме: https://hh.ru/resume/${resumeId}[br]` +
+              `Вакансия: https://vologda.hh.ru/vacancy/${vacancyId}[br]` +
               errorMessage,
             SYSTEM: 'Y',
           },
@@ -223,252 +556,11 @@ export class BitrixHeadHunterService {
         },
       });
 
-      return false;
-    }
-  }
-
-  /**
-   * Find or create deal and send message in chat
-   *
-   * ---
-   *
-   * Ищет или создает сделку и отправляет сообщение в чат
-   *
-   * @param resumeId
-   * @param vacancyId
-   * @param topicId
-   */
-  async handleDealHRFromHeadhunterRequest({
-    resumeId,
-    vacancyId,
-    topicId,
-  }: HeadhunterHandleDealHROptions) {
-    // Делаем запрос на получения вакансии, резюме и приглашения/отклика
-    const [vacancy, resume, negotiation] = await Promise.all<
-      [
-        Promise<HHVacancyInterface>,
-        Promise<HHResumeInterface>,
-        Promise<HHNegotiationInterface | null>,
-      ]
-    >([
-      this.headHunterRestService.getVacancyById(vacancyId),
-      this.headHunterRestService.getResumeById(resumeId),
-      this.headHunterRestService.getNegotiationsById(topicId),
-    ]);
-
-    let responseType = 'Отклик';
-    let bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
-
-    if (negotiation) {
-      switch (negotiation.employer_state.id) {
-        // Стадия: Первичный контакт
-        case 'phone_interview':
-          responseType = 'Холодка';
-          bitrixSearchTypeField = '6598'; // Тип поиска: Холодный поиск
-          break;
-
-        // Стадия: Подумать
-        case 'consider':
-          return false;
-      }
-    }
-
-    // Формируем ФИО
-    const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
-
-    // Получаем ответственного за кандидата по email
-    const { result: resultGetUser } = await this.bitrixUserService.getUsers({
-      filter: {
-        EMAIL: vacancy.contacts.email,
-      },
-    });
-
-    const bitrixUser =
-      resultGetUser && resultGetUser?.length !== 0 ? resultGetUser[0] : null;
-
-    // Формируем сообщение
-    let message =
-      (bitrixUser
-        ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
-        : '') +
-      `${responseType} на вакансию ${vacancy.name}[br]` +
-      `Кандидат: ${candidateName}[br]` +
-      `Резюме: ${resume.alternate_url}[br][br]`;
-
-    // Инициализируем батч запрос для поиска дублей по сделкам HR
-    const batchCommands: B24BatchCommands = {
-      get_deal_by_name: {
-        method: 'crm.deal.list',
-        params: {
-          filter: {
-            CATEGORY_ID: '14',
-            '%TITLE': candidateName.trim(),
-          },
-          select: ['ID', 'TITLE', 'UF_CRM_1638524259'],
-        },
-      },
-    };
-
-    let filterPhones: string[] = [];
-    let phone = '';
-    let telegram = '';
-    let email = '';
-
-    // Если контакты не скрыты, формируем запрос на поиск кандидата по номеру телефона
-    if (Array.isArray(resume.contact) && resume.contact?.length !== 0) {
-      const candidateContacts = resume.contact.reduce(
-        (acc, { kind, contact_value, value }) => {
-          switch (kind) {
-            case 'phone':
-              if (
-                !/[()]/.test(contact_value) &&
-                (value as ContactPhone)?.city
-              ) {
-                acc[kind] = contact_value.replace(
-                  ` ${value.city} `,
-                  ` (${value.city}) `,
-                );
-              } else {
-                acc[kind] = contact_value;
-              }
-
-              break;
-
-            case 'email':
-              acc[kind] = contact_value;
-              break;
-          }
-
-          return acc;
-        },
-        {} as CandidateContactInterface,
-      );
-
-      phone = candidateContacts.phone;
-      telegram = candidateContacts.telegram ?? '';
-      email = candidateContacts.email ?? '';
-
-      // Так как битрикс не дает апи и не форматирует номера телефонов,
-      // придется в ручную формировать все варианты номеров телефоном
-      filterPhones = [
-        phone,
-        phone.replace(/[()]/gim, ''),
-        phone.replace(/-/gim, ' '),
-        phone.replace(/[-()]/gim, ''),
-        phone.replace(/[ \-()]/gim, ''),
-      ];
-
-      if (phone[0] == '8') {
-        filterPhones.push(
-          candidateContacts.phone.replace('8 ', '+7 '),
-          candidateContacts.phone.replace('8 ', '+7 ').replace(/[()]/gim, ''),
-          candidateContacts.phone.replace('8 ', '+7 ').replace(/-/gim, ' '),
-          candidateContacts.phone.replace('8 ', '+7 ').replace(/[-()]/gim, ''),
-          candidateContacts.phone
-            .replace('8 ', '+7 ')
-            .replace(/[ \-()]/gim, ''),
-        );
-      }
-
-      // Формируем запрос на получение дублей по номеру телефона
-      batchCommands['get_deal_by_phone'] = {
-        method: 'crm.deal.list',
-        params: {
-          filter: {
-            CATEGORY_ID: '14',
-            '@UF_CRM_1638524259': filterPhones,
-          },
-          select: ['ID', 'TITLE', 'UF_CRM_1638524259'],
-        },
+      return {
+        status: false,
+        message: 'Exit script, cause cathcing error',
       };
     }
-
-    // Делаем запрос на получение дублей
-    const { result: batchResponse } = await this.bitrixService.callBatch<
-      B24BatchResponseMap<{
-        get_deal_by_name: B24Deal[];
-        get_deal_by_phone?: B24Deal[];
-      }>
-    >(batchCommands, false);
-
-    const {
-      get_deal_by_phone: dealsByPhone = [],
-      get_deal_by_name: dealsByName = [],
-    } = batchResponse.result;
-
-    if (dealsByPhone && dealsByPhone?.length > 0) {
-      // Сначала ищем по телефону
-      message +=
-        'Совпадение со сделкой: ' +
-        dealsByPhone.reduce((acc, { ID: dealId }) => {
-          acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-          return acc;
-        }, '') +
-        'ЗАПЛАНИРУЙ ЗВОНОК';
-    } else if (dealsByName.length > 0) {
-      // Сначала ищем по ФИО и телефону
-      const dealsFindByPhone = dealsByName.filter((deal) => {
-        return !!filterPhones.find(
-          (phone) => phone == deal['UF_CRM_1638524259'],
-        );
-      });
-
-      // Если не нашли по номеру
-      if (dealsFindByPhone.length === 0) {
-        message +=
-          '[b]Найдены дубли по ФИО: [/b][br]' +
-          dealsByName.reduce((acc, { ID: dealId }) => {
-            acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-            return acc;
-          }, '');
-      } else {
-        message +=
-          '[b]Совпадение со сделкой: [/b][br]' +
-          dealsFindByPhone.reduce((acc, { ID: dealId }) => {
-            acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-            return acc;
-          }, '') +
-          'ЗАПЛАНИРУЙ ЗВОНОК!';
-      }
-    } else {
-      // Если вообще не нашли дублей - создаем новую сделку
-      let bitrixVacancy = '';
-
-      try {
-        const vacancy = await this.getRatioVacancyBitrix(vacancyId);
-
-        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
-      } catch (e) {
-        bitrixVacancy = '';
-      }
-
-      const { result: newDealId } = await this.bitrixDealService.createDeal({
-        TITLE: candidateName,
-        UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-        UF_CRM_1638524259: phone, // Номер телефона
-        UF_CRM_1760598515308: telegram, // Телеграмм
-        UF_CRM_1638524275: email, // E-mail
-        UF_CRM_1638524306: resume.alternate_url, // Ссылка на резюме
-        ASSIGNED_BY_ID: bitrixUser?.ID || '',
-        CATEGORY_ID: '14',
-        STAGE_ID: 'C14:NEW',
-        UF_CRM_1638524000: bitrixVacancy, // Вакансия
-      });
-
-      newDealId
-        ? (message +=
-            '[b]Создана сделка:[/b][br]' +
-            this.bitrixService.generateDealUrl(newDealId))
-        : (message =
-            'Сделки не найдено.[br]Что то пошло не так при создании сделки');
-    }
-
-    this.bitrixImBotService.sendMessage({
-      DIALOG_ID: 'chat68032',
-      MESSAGE: message,
-      URL_PREVIEW: 'N',
-    });
-    return true;
   }
 
   /**
@@ -493,14 +585,20 @@ export class BitrixHeadHunterService {
           const vacancyIndex = ratioVacanciesFromCache.findIndex(
             (v) => v.id === vacancy.id,
           );
+          const vacancyObject: HHBitrixVacancy = {
+            id: vacancy.id,
+            label: vacancy.name,
+            url: vacancy.alternate_url,
+            bitrixField: null,
+          };
+
           vacancyIndex !== -1
-            ? acc.push(ratioVacanciesFromCache[vacancyIndex])
-            : acc.push({
-                id: vacancy.id,
-                label: vacancy.name,
-                url: vacancy.alternate_url,
-                bitrixField: null,
-              });
+            ? acc.push({
+                ...vacancyObject,
+                bitrixField: ratioVacanciesFromCache[vacancyIndex].bitrixField,
+              })
+            : acc.push(vacancyObject);
+
           return acc;
         },
         [],

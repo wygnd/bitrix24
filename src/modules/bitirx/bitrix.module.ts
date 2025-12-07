@@ -32,7 +32,8 @@ import { BitrixWikiController } from '@/modules/bitirx/modules/integration/wiki/
 import { BitrixWikiService } from '@/modules/bitirx/modules/integration/wiki/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
-import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.providers';
+import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules/lead/services/lead-observe-manager-calling.service';
+import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.provider
     forwardRef(() => HeadHunterModule),
     WikiModule,
     AvitoModule,
+    TokensModule,
   ],
   controllers: [
     BitrixController,
@@ -58,23 +60,36 @@ import { bitrixLeadProviders } from '@/modules/bitirx/modules/lead/lead.provider
     BitrixLeadController,
   ],
   providers: [
-    // other providers
+    // providers
     ...bitrixProviders,
-    ...bitrixLeadProviders,
+
     // other services
     BitrixService,
+
+    // USERS
     BitrixUserService,
+
+    // LEADS
     BitrixLeadService,
+    BitrixLeadObserveManagerCallingService,
+
+    // MESSAGES AND CHATS
     BitrixMessageService,
     BitrixImBotService,
+
+    // DEALS
     BitrixDealService,
+
+    // TASKS
+    BitrixTaskService,
+
+    // INTEGRATIONS
     BitrixIntegrationAvitoService,
     BitrixPlacementService,
     BitrixHeadHunterService,
     BitrixWebhookService,
     BitrixDepartmentService,
     BitrixEventService,
-    BitrixTaskService,
     BitrixWikiService,
   ],
   exports: [

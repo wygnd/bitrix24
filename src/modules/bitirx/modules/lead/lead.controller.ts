@@ -20,7 +20,10 @@ import {
 } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { LeadAvitoStatusResponseDto } from '@/modules/bitirx/modules/lead/dtos/lead-avito-status-response.dto';
-import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import {
+  LeadObserveManagerCallingDto,
+  LeadObserveManagerCallingResponseDto,
+} from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
 
 @ApiTags(B24ApiTags.LEADS)
 @ApiHeader({
@@ -67,10 +70,26 @@ export class BitrixLeadController {
 
   @ApiOperation({
     summary: 'Отслеживание звонов по лидам',
+    description:
+      'Поиск лидов в активной стадии и проверка их в базе.<br/>' +
+      'Если лид есть в базе и прошло более 5 дней с момента звонка, посылаем уведомление в чат',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Успешный ответ',
+    type: LeadObserveManagerCallingResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Ошибка при выполнении батч запроса',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Внутренняя ошибка сервера',
   })
   @HttpCode(HttpStatus.OK)
   @Post('/observe-manager-calling')
   async observeManagerCalling(@Body() fields: LeadObserveManagerCallingDto) {
-    return this.bitrixLeadService.observeManagerCalling(fields);
+    return this.bitrixLeadService.handleObserveManagerCalling(fields);
   }
 }

@@ -12,6 +12,7 @@ export class WinstonLogger {
 
     const transportOptions = {
       file: new winston.transports.DailyRotateFile({
+        level: 'info',
         filename: `${name}-%DATE%.log`,
         dirname: join(loggerDir, name),
         format: winston.format.combine(

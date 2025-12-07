@@ -11,7 +11,7 @@ import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middlewar
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AxiosGlobalInterceptor } from '@/common/interceptors/axios-interceptor';
+import { AxiosGlobalInterceptor } from '@/common/interceptors/axios.interceptor';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -20,6 +20,10 @@ import { QueueModule } from '@/modules/queue/queue.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { QueueModule } from '@/modules/queue/queue.module';
+import { DatabaseModule } from '@/modules/database/database.module';
+import { CronModule } from '@/modules/cron/cron.module';
+import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
   imports: [
@@ -42,6 +46,7 @@ import { join } from 'path';
     }),
     ConfigAppModule,
     RedisModule,
+    DatabaseModule,
     BitrixModule,
     HeadHunterModule,
     WikiModule,
@@ -53,6 +58,8 @@ import { join } from 'path';
         enabled: true,
       },
     }),
+    CronModule,
+    TokensModule,
   ],
   controllers: [AppController],
   providers: [

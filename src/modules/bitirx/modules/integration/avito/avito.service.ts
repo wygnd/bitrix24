@@ -14,7 +14,6 @@ import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
 import { AvitoFindDuplicateLeadsDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito.dto';
 import { AvitoChatInfo } from '@/modules/bitirx/modules/integration/avito/interfaces/avito.interface';
 import { BitrixUserService } from '@/modules/bitirx/modules/user/user.service';
-import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24User } from '@/modules/bitirx/modules/user/user.interface';
 import { B24Department } from '@/modules/bitirx/modules/department/department.interface';
 import {
@@ -22,7 +21,7 @@ import {
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
-} from '@/modules/bitirx/modules/lead/lead.constants';
+} from '@/modules/bitirx/modules/lead/constants/lead.constants';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { ConfigService } from '@nestjs/config';
@@ -43,7 +42,6 @@ export class BitrixIntegrationAvitoService {
     private readonly bitrixMessageService: BitrixMessageService,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly bitrixUserService: BitrixUserService,
-    private readonly wikiService: WikiService,
     @Inject(forwardRef(() => BitrixImBotService))
     private readonly bitrixBotService: BitrixImBotService,
     private readonly queueMiddleService: QueueMiddleService,
@@ -189,6 +187,7 @@ export class BitrixIntegrationAvitoService {
               PHONE: [
                 {
                   VALUE: phone,
+                  VALUE_TYPE: 'WORK',
                 },
               ],
               UF_CRM_1651577716: 6856, // Тип лида: пропущенный
@@ -312,7 +311,6 @@ export class BitrixIntegrationAvitoService {
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
       UF_CRM_1653291114976: leadMessage,
-      PHONE: [{ VALUE: phone, VALUE_TYPE: 'WORK' }],
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
@@ -486,7 +484,7 @@ export class BitrixIntegrationAvitoService {
     const message =
       '[b]AI Avito[/b][br]Нужно отправить лид в работу:[br]' +
       `С авито: ${fields.avito}[br][br]>>` +
-      this.bitrixService.removeEmoji(fields.message.join('[br]>>'));
+      fields.message.join('[br]>>').replaceAll(/\n/gi, '[br]>>');
 
     const keyboardParams: ImbotApproveDistributeLeadFromAvitoByAi = {
       message: this.bitrixBotService.encodeText(message),

@@ -1,13 +1,12 @@
 import {
-  HttpException,
-  HttpStatus,
+  BadRequestException,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
-import { REDIS_CLIENT, REDIS_KEYS } from '../redis/redis.constants';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 import {
   BitrixOauthResponse,
   BitrixTokens,
@@ -26,6 +25,9 @@ import {
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import emojiStrip from 'emoji-strip';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @Injectable()
 export class BitrixService {
@@ -43,6 +45,7 @@ export class BitrixService {
     private readonly redisService: RedisService,
     @Inject('BitrixApiService')
     private readonly http: AxiosInstance,
+    private readonly tokensService: TokensService,
   ) {
     const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
     const bitrixConstants =
@@ -125,61 +128,53 @@ export class BitrixService {
     return response as T;
   }
 
-  /**
-   * @deprecated
-   * @param {B24BatchCommands} commands - object of list commands where key is unique id command and value is command object
-   * @param {boolean} halt
-   */
-  async callBatchOld<T>(commands: B24BatchCommands, halt = false) {
-    const { access_token } = await this.getTokens();
+  // todo: callBatchV2 which form batches packages from items
+  async callBatches<T extends object>(
+    commands: B24BatchCommands,
+    halt = false,
+  ) {
+    let index = 0;
+    let errors: string[] = [];
+    const batchCommandsMap = new Map<number, B24BatchCommands>();
 
-    const commandsEncoded = Object.entries(commands).reduce(
-      (acc, [commandName, { method, params }]) => {
-        acc[commandName] = `${method}?${this.parseToUrlParams(params)}`;
-        return acc;
-      },
-      {},
-    );
+    Object.entries(commands).forEach(([cmdName, cmd]) => {
+      let cmds = batchCommandsMap.get(index) ?? {};
 
-    const response = (await this.post('/rest/batch', {
-      cmd: commandsEncoded,
-      halt: halt,
-      auth: access_token,
-    })) as B24BatchResponseMap;
-
-    const errors = Object.entries(response.result.result_error).reduce(
-      (acc, [command, errorData]) => {
-        acc += `${command}: ${errorData.error}\n`;
-        return acc;
-      },
-      '' as string,
-    );
-
-    if (errors && halt) throw new Error(errors);
-
-    return response as T;
-  }
-
-  private parseToUrlParams(params: object, prefix = '') {
-    return Object.entries(params).reduce((acc, [key, value]) => {
-      const keyWithPrefix = prefix ? `${prefix}[${key}]` : key;
-
-      if (typeof value === 'object') {
-        acc += this.parseToUrlParams(value, keyWithPrefix);
-        return acc;
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsMap.set(index, cmds);
+        index++;
+        cmds = batchCommandsMap.get(index) ?? {};
       }
 
-      if (Array.isArray(value)) {
-        value.forEach(
-          (item, index) => (acc += `${keyWithPrefix}[${index}]=${item}&`),
-        );
-        return acc;
-      }
+      cmds[cmdName] = cmd;
 
-      acc += `${keyWithPrefix}=${value}&`;
+      batchCommandsMap.set(index, cmds);
+    });
 
-      return acc;
-    }, '');
+    const batchResponses = await Promise.all(
+      Array.from(batchCommandsMap.values()).map((bcmds) =>
+        this.callBatch<B24BatchResponseMap>(bcmds, halt),
+      ),
+    );
+
+    batchResponses.forEach((bres) => {
+      if (
+        (Array.isArray(bres.result.result_error) &&
+          bres.result.result_error.length === 0) ||
+        Object.keys(bres.result.result_error).length === 0
+      )
+        return;
+
+      Object.entries(bres.result.result_error).forEach(
+        ([cmdName, { error }]) => {
+          errors.push(`${cmdName}: ${error}`);
+        },
+      );
+    });
+
+    if (errors.length > 0) throw new BadRequestException(errors);
+
+    return batchResponses;
   }
 
   public isAvailableToDistributeOnManager() {
@@ -200,31 +195,28 @@ export class BitrixService {
     if (
       this.tokens &&
       this.tokens?.access_token &&
-      Date.now() < this.tokens?.expires * 1000
+      Date.now() < this.tokens?.expires
     )
       return this.tokens;
 
-    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    ]);
+    const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
 
-    if (!refreshToken) throw new UnauthorizedException('Invalid refresh token');
+    if (!tokens || !tokens.refreshToken)
+      throw new UnauthorizedException('Invalid refresh token');
 
-    if (!accessToken) return this.updateAccessToken(refreshToken);
+    const { accessToken, refreshToken, expires } = tokens;
 
-    if (expiresAccessToken && Date.now() < expiresAccessToken * 1000) {
+    if (expires && Date.now() < expires) {
       this.tokens = {
         access_token: accessToken,
         refresh_token: refreshToken,
-        expires: expiresAccessToken ? +expiresAccessToken : 0,
+        expires: expires,
       };
 
       return this.tokens;
     }
 
-    return this.updateAccessToken(refreshToken);
+    return this.updateAccessToken(tokens.refreshToken);
   }
 
   /**
@@ -256,27 +248,11 @@ export class BitrixService {
       refresh_token: refresh_token,
     };
 
-    try {
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_ACCESS_TOKEN,
-        access_token,
-      );
-      await this.redisService.set<number>(
-        REDIS_KEYS.BITRIX_ACCESS_EXPIRES,
-        expires,
-      );
-      await this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_REFRESH_TOKEN,
-        refresh_token,
-      );
-    } catch (error) {
-      console.log(
-        `Exception error on update access token and save in redis: `,
-        error,
-      );
-
-      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
+      accessToken: access_token,
+      refreshToken: refresh_token,
+      expires: expires * 1000,
+    });
 
     return this.tokens;
   }
@@ -307,6 +283,12 @@ export class BitrixService {
     return label ? `[url=${url}]${label}[/url]` : url;
   }
 
+  /**
+   * Return string url task
+   * @param userId
+   * @param taskId
+   * @param label
+   */
   public generateTaskUrl(userId: string, taskId: string, label?: string) {
     const url = `https://grampus.bitrix24.ru/company/personal/user/${userId}/tasks/task/view/${taskId}/`;
 
@@ -317,19 +299,14 @@ export class BitrixService {
    * Update tokens and save in cache
    */
   public async updateTokens() {
-    const [accessToken, expiresAccessToken, refreshToken] = await Promise.all([
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_ACCESS_TOKEN),
-      this.redisService.get<number>(REDIS_KEYS.BITRIX_ACCESS_EXPIRES),
-      this.redisService.get<string>(REDIS_KEYS.BITRIX_REFRESH_TOKEN),
-    ]);
+    const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
 
-    if (!accessToken || !expiresAccessToken || !refreshToken)
-      throw new UnauthorizedException('Invalid update tokens');
+    if (!tokens) throw new UnauthorizedException('Invalid update tokens');
 
     this.tokens = {
-      access_token: accessToken,
-      expires: expiresAccessToken,
-      refresh_token: refreshToken,
+      access_token: tokens.accessToken,
+      expires: tokens.expires,
+      refresh_token: tokens.refreshToken ?? '',
     };
 
     return this.tokens;
@@ -368,13 +345,14 @@ export class BitrixService {
   }
 
   /**
-   * Get access token
+   * Returning Zlata Zimina bitrix user_id
+   *
+   * ---
+   *
+   * Возвращает ID Пользователя Битрикс24: Злата Зимина
+   *
    * @constructor
    */
-  get ACCESS_TOKEN() {
-    return this.tokens.access_token;
-  }
-
   get ZLATA_ZIMINA_BITRIX_ID() {
     return this.bitrixConstants.ZLATA_ZIMINA_BITRIX_ID;
   }
@@ -383,11 +361,21 @@ export class BitrixService {
     return this.bitrixConstants.ADDY.casesChatId;
   }
 
+  get OBSERVE_MANAGER_CALLING_CHAT_ID() {
+    return this.bitrixConstants.LEAD.observeManagerCallingChatId;
+  }
+
+  /**
+   * Remove emoji from string
+   *
+   * ---
+   *
+   * Удаляет смайлы из строки
+   *
+   * @param message
+   */
   public removeEmoji(message: string) {
-    return message.replace(
-      /([\uE000-\uF8FF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDDFF])/g,
-      '',
-    );
+    return emojiStrip(message) as string;
   }
 
   /**

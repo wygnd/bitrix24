@@ -5,3 +5,8 @@ export interface HeadhunterWebhookCallInterface<T> {
   action_type: string;
   user_id: string;
 }
+
+export interface HeadhunterWebhookCallResponse {
+  status: boolean;
+  message: string;
+}

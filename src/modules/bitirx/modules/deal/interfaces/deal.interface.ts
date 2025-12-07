@@ -82,3 +82,8 @@ interface B24DealFieldItem {
 export type B24DealFields = {
   [k in keyof B24Deal]: B24DealField & B24DealUserField;
 };
+
+export interface B24UpdateDeal {
+  id: string;
+  fields: Partial<B24Deal>;
+}

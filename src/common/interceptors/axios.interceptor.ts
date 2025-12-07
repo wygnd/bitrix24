@@ -17,7 +17,6 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
-import { isObject } from 'class-validator';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
@@ -62,12 +61,12 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
         }
 
         if (
-          error.response.data !== null &&
+          error.response?.data &&
           typeof error.response.data === 'object' &&
           'error' in error.response.data
         ) {
           const { data } = error.response;
-          const { error: errorName } = data;
+          const { error: errorName = '' } = data;
 
           switch (errorName) {
             // 400
@@ -104,11 +103,17 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
             //   500
             case 'INTERNAL_SERVER_ERROR':
             case 'ERROR_UNEXPECTED_ANSWER':
-              return throwError(() => new InternalServerErrorException(data));
+              return throwError(
+                () =>
+                  new InternalServerErrorException(
+                    'Internal server error from bitrix',
+                  ),
+              );
 
             //   503
             case 'QUERY_LIMIT_EXCEEDED':
             case 'OVERLOAD_LIMIT':
+            case 'ERR_BAD_RESPONSE':
               return throwError(() => new ServiceUnavailableException(data));
 
             default:
