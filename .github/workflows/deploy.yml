@@ -2,17 +2,14 @@ name: Deploy to Server
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "deploy" ]
 
 jobs:
   deploy:
+    name: Update server by ssh
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -21,17 +18,13 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /home/projects/bitrix24
-
-            echo "🔄 Pull latest changes"
-            git pull origin main
-
-            echo "🛑 Stopping containers"
+            git pull origin deploy
             docker compose down
-
-            echo "🔨 Building containers"
-            docker compose build
-
-            echo "🚀 Starting containers"
             docker compose up -d
 
-            echo "✅ Deploy finished"
+      - name: Notify about error
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d text="❌ Деплой в ветку ${{ github.ref }} завершился с ошибкой!\nКомит: ${{ github.event.head_commit.message }}"

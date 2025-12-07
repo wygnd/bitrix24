@@ -1,4 +1,4 @@
-FROM node:24-alpine as builder
+FROM node:24-alpine AS builder
 LABEL authors="wygnd"
 
 WORKDIR /app
@@ -21,6 +21,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY package-lock*.json ./
+COPY static ./static
 
 RUN npm ci --omit=dev
 

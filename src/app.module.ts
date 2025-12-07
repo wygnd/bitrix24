@@ -16,6 +16,8 @@ import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
+import { QueueModule } from '@/modules/queue/queue.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { QueueModule } from '@/modules/queue/queue.module';
@@ -51,6 +53,11 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     AppHttModule,
     AvitoModule,
     QueueModule,
+    PrometheusModule.register({
+      defaultLabels: {
+        enabled: true,
+      },
+    }),
     CronModule,
     TokensModule,
   ],

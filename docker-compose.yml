@@ -1,4 +1,5 @@
 services:
+  # Backend
   backend:
     build:
       context: .
@@ -6,20 +7,112 @@ services:
     container_name: bitrix-server-backend
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
     env_file:
       - .env
     depends_on:
       - redis
+    volumes:
+      - /home/data/bitrix24/logs/debug:/app/logs
+    networks:
+      - monitoring
     restart: unless-stopped
 
+  # Redis
   redis:
     image: redis:latest
     container_name: bitrix-server-redis
     env_file:
-      - .env
+      - ./.env
     ports:
       - "3001:6379"
     volumes:
       - /home/data/bitrix24/redisdata:/data
-    command: redis-server --appendonly yes
+    networks:
+      - monitoring
+    command: redis-server --requirepass  ${REDIS_PASSWORD}
     restart: always
+
+  # Storage logs
+  loki:
+    image: grafana/loki:latest
+    container_name: bitrix-server-grafana_loki
+    ports:
+      - "3002:3100"
+    volumes:
+      - loki_data:/loki
+    networks:
+      - monitoring
+    command: -config.file=/etc/loki/local-config.yaml
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -tries=1 -O- http://localhost:3100/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bitrix-server-prometheus
+    ports:
+      - "3003:9090"
+    volumes:
+      - ./config/prometheus:/etc/prometheus-config
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring
+    command:
+      - --config.file=/etc/prometheus-config/prometheus.yaml
+    restart: on-failure
+    depends_on:
+      - backend
+
+  # Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bitrix-server-grafana
+    ports:
+      - "3004:3000"
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana:/etc/grafana-config
+      - ./config/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3000/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Collection lgos
+  promtail:
+    image: grafana/promtail:latest
+    container_name: bitrix-server-promtail
+    volumes:
+      - /home/data/bitrix24/logs/debug:/app/logs:ro # logging backend files
+      - /var/run/docker.sock:/var/run/docker.sock # logging backend console
+      - ./config/promtail/promtail.yml:/etc/promtail/config.yml
+      - /home/data/bitrix24/promtail-positions:/tmp
+      - /var/log:/var/log:ro # logging other logs. Ex: nginx
+    networks:
+      - monitoring
+    command: -config.file=/etc/promtail/config.yml
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  loki_data:
+  grafana_data:
+  prometheus_data:
