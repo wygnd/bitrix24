@@ -14,7 +14,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - /home/data/bitrix24/backend-data:/app/logs
+      - /home/data/bitrix24/logs/debug:/app/logs
     networks:
       - monitoring
     restart: unless-stopped
@@ -98,11 +98,11 @@ services:
     image: grafana/promtail:latest
     container_name: bitrix-server-promtail
     volumes:
-      - /home/data/bitrix24/backend-data:/app/logs:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/data/bitrix24/logs/debug:/app/logs:ro
+      - /home/data/bitrix24/logs/docker:/var/run/docker.sock
       - ./config/promtail/promtail.yml:/etc/promtail/config.yml
       - /home/data/bitrix24/promtail-positions:/tmp
-      - /var/log:/var/log:ro
+      - /home/data/bitrix24/logs/system:/var/log:ro
     networks:
       - monitoring
     command: -config.file=/etc/promtail/config.yml
