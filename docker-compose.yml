@@ -15,6 +15,7 @@ services:
       - redis
     volumes:
       - /home/data/bitrix24/logs/debug:/app/logs
+    network_mode: host
     restart: always
 
   # Redis
