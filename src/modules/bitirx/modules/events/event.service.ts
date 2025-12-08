@@ -46,4 +46,8 @@ export class BitrixEventService {
     this.queueLightService.addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID);
     return true;
   }
+
+  async getEventList() {
+    return this.bitrixService.callMethod('event.get')
+  }
 }

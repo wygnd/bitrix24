@@ -1,13 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixEventService } from '@/modules/bitirx/modules/events/event.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { EventAddDto } from '@/modules/bitirx/modules/events/dtos/event-add.dto';
@@ -20,10 +21,18 @@ import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-l
 export class BitrixEventsController {
   constructor(private readonly eventsService: BitrixEventService) {}
 
+  @ApiOperation({ summary: 'Register new events' })
   @UseGuards(AuthGuard)
   @Post('/add')
   async addEvent(@Body() fields: EventAddDto) {
     return this.eventsService.addEvent(fields);
+  }
+
+  @ApiOperation({ summary: 'Get Event List' })
+  @UseGuards(AuthGuard)
+  @Get('/list')
+  async getEventList() {
+    return this.eventsService.getEventList();
   }
 
   @UseGuards(BitrixEventGuard)

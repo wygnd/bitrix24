@@ -39,9 +39,12 @@ import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/mod
 import { HeadhunterWebhookCallResponse } from '@/modules/bitirx/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
 import { B24DealHRRejectedStages } from '@/modules/bitirx/modules/deal/constants/deal-hr.constants';
 import { B24Emoji } from '@/modules/bitirx/bitrix.constants';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixHeadHunterService {
+  private readonly logger = new WinstonLogger(BitrixHeadHunterService.name);
+
   constructor(
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly headHunterApi: HeadHunterService,
@@ -266,7 +269,7 @@ export class BitrixHeadHunterService {
 
       // Формируем ФИО
       const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''}`;
-      const candidateFullName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''} ${resume.middle_name ? resume.middle_name?.trim() : ''}`;
+      const candidateFullName = `${candidateName} ${resume?.middle_name ? resume.middle_name?.trim() : ''}`;
 
       // Получаем ответственного за кандидата по email
       const { result: resultGetUser } = await this.bitrixUserService.getUsers({
@@ -284,7 +287,7 @@ export class BitrixHeadHunterService {
           ? `[USER=${bitrixUser.ID}]${bitrixUser.NAME} ${bitrixUser.LAST_NAME}[/USER][br]`
           : '') +
         `${responseType} на вакансию ${vacancy.name}[br]` +
-        `Кандидат: ${candidateName}[br]` +
+        `Кандидат: ${candidateFullName}[br]` +
         `Резюме: ${resume.alternate_url}[br][br]`;
 
       // Инициализируем батч запрос для поиска дублей по сделкам HR
@@ -555,6 +558,7 @@ export class BitrixHeadHunterService {
           },
         },
       });
+      this.logger.error(`Ошибка обработки отклика => ${JSON.stringify(body)}`);
 
       return {
         status: false,
