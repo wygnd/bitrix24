@@ -7,6 +7,7 @@ import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
+import expressBasicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   process.env.TZ = 'Europe/Moscow';
@@ -62,8 +63,16 @@ async function bootstrap() {
       },
       customfavIcon: '/public/favicon.ico',
       customSiteTitle: 'Grampus Bitrix24',
+
     },
   );
+
+  app.use(['api', 'api-json', expressBasicAuth({
+    challenge: true,
+    users: {
+      [config.getOrThrow('config.username')]: config.getOrThrow('config.password')
+    }
+  })]);
 
   await app.listen(PORT);
 }
