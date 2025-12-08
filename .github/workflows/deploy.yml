@@ -28,7 +28,6 @@ jobs:
               echo "✅ Already up to date. Exit"
               exit 0
              fi
-            
             git pull origin master
             docker compose down
             docker compose up -d
@@ -38,4 +37,4 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
           -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-          -d text="❌ Деплой в ветку ${{ github.ref }} завершился с ошибкой!\nКомит: ${{ github.event.head_commit.message }}"
+          -d text="❌ Деплой в ветку ${{ github.ref }} завершился с ошибкой!\r\nКомит: ${{ github.event.head_commit.message }}"
