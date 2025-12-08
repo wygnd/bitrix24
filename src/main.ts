@@ -67,12 +67,12 @@ async function bootstrap() {
     },
   );
 
-  app.use(['api', 'api-json', expressBasicAuth({
-    challenge: true,
-    users: {
-      [config.getOrThrow('config.username')]: config.getOrThrow('config.password')
-    }
-  })]);
+  // app.use(['api', 'api-json', expressBasicAuth({
+  //   challenge: true,
+  //   users: {
+  //     [config.getOrThrow('config.username')]: config.getOrThrow('config.password')
+  //   }
+  // })]);
 
   await app.listen(PORT);
 }
