@@ -8,4 +8,9 @@ export class AppController {
   @Get()
   @Redirect('/api', 301)
   async main() {}
+
+  @Get('/health')
+  async getStatus() {
+    return { status: 'ok' };
+  }
 }
