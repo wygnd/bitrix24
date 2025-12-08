@@ -7,18 +7,30 @@ services:
     container_name: bitrix-server-backend
     ports:
       - "3000:3000"
-      - "5432:5432"
     environment:
       - NODE_ENV=production
     env_file:
       - .env
     depends_on:
       - redis
+      - postgres
     volumes:
       - /home/data/bitrix24/logs/debug:/app/logs
     networks:
       - monitoring
-    restart: unless-stopped
+    restart: always
+
+  postgres:
+    image: postgres:latest
+    container_name: bitrix-server-postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./env
+    volumes:
+      - /home/data/bitrix24/database/postgres:/var/lib/postgresql/data
+    networks:
+      - monitoring
 
   # Redis
   redis:
