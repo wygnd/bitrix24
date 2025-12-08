@@ -85,7 +85,7 @@ export class HeadhunterRestService {
     await this.redisService.set<HHResumeInterface>(
       REDIS_KEYS.HEADHUNTER_DATA_RESUME + resumeId,
       resume,
-      3600,
+      1800,
     );
 
     return resume;
@@ -105,7 +105,7 @@ export class HeadhunterRestService {
     await this.redisService.set<HHVacancyInterface>(
       REDIS_KEYS.HEADHUNTER_DATA_VACANCY + vacancyId,
       vacancy,
-      3600,
+      1800,
     );
 
     return vacancy;

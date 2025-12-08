@@ -271,8 +271,6 @@ export class BitrixHeadHunterService {
       const candidateName = `${resume.last_name?.trim() ?? ''} ${resume.first_name ? resume.first_name?.trim() : ''}`;
       const candidateFullName = `${candidateName} ${resume?.middle_name ? resume.middle_name?.trim() : ''}`;
 
-      this.logger.info(`Check candidate name: ${candidateName} <=> ${candidateFullName}`);
-
       // Получаем ответственного за кандидата по email
       const { result: resultGetUser } = await this.bitrixUserService.getUsers({
         filter: {

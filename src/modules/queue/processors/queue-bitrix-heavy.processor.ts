@@ -29,42 +29,50 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
-    const { name, data, id } = job;
-    this.bitrixImBotService.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
-    );
-    this.logger.info(`Добавлена задача [${name}][${id}] в очередь`);
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
       data: null,
     };
 
-    switch (name) {
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
-        response.message = 'handle new webhook from hh.ru';
-        response.data =
-          await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
-            data as HeadhunterWebhookCallDto,
-          );
-        break;
+    try {
+      const { name, data, id } = job;
+      this.bitrixImBotService.sendTestMessage(
+        `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
+      );
+      this.logger.info(`Добавлена задача [${name}][${id}] в очередь`);
 
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
-        response.message = 'handle observe manager calling task';
-        response.data =
-          await this.bitrixLeadService.handleObserveManagerCalling(
-            data as LeadObserveManagerCallingDto,
-          );
-        break;
+      switch (name) {
+        case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+          response.message = 'handle new webhook from hh.ru';
+          response.data =
+            await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
+              data as HeadhunterWebhookCallDto,
+            );
+          break;
 
-      default:
-        this.logger.warn(`not handled yet: ${name}`);
-        response.message = 'Not handled';
-        response.status = QueueProcessorStatus.NOT_HANDLED;
-        break;
+        case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+          response.message = 'handle observe manager calling task';
+          response.data =
+            await this.bitrixLeadService.handleObserveManagerCalling(
+              data as LeadObserveManagerCallingDto,
+            );
+          break;
+
+        default:
+          this.logger.warn(`not handled yet: ${name}`);
+          response.message = 'Not handled';
+          response.status = QueueProcessorStatus.NOT_HANDLED;
+          break;
+      }
+
+      return response;
+    } catch (e) {
+      this.logger.error(e);
+      response.message = e;
+      response.status = QueueProcessorStatus.INVALID;
+      return response;
     }
-
-    return response;
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
