@@ -1,6 +1,5 @@
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
 import {
   QueueProcessorResponse,
   QueueProcessorStatus,
@@ -11,10 +10,13 @@ import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/h
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
 import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
 import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
-  private readonly logger = new Logger(QueueBitrixHeavyProcessor.name);
+  private readonly logger = new WinstonLogger(
+    `queue:handle:${QueueBitrixHeavyProcessor.name}`,
+  );
 
   constructor(
     private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService,
@@ -30,6 +32,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
     );
+    this.logger.info('Добавлена задача [${name}][${id}] в очередь');
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -70,6 +73,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(returnvalue),
     );
+    this.logger.info(
+      `Задача [${name}][${id}] выполнена: ${JSON.stringify(returnvalue)}`,
+    );
   }
 
   @OnWorkerEvent('closed')
@@ -78,6 +84,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
 
     this.bitrixImBotService.sendTestMessage(message);
+    this.logger.info(
+      `Закрытие задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
+    );
   }
 
   @OnWorkerEvent('failed')
@@ -88,6 +97,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       error.message;
 
     this.bitrixImBotService.sendTestMessage(message);
+    this.logger.error(
+      `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')} => ${error.message}`,
+    );
   }
 
   @OnWorkerEvent('error')
@@ -95,5 +107,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]Ошибка выполнения задачи:[b][br]${error.message}`;
 
     this.bitrixImBotService.sendTestMessage(message);
+    this.logger.error(`Ошибка выполнения задачи: => ${error.message}`);
   }
 }

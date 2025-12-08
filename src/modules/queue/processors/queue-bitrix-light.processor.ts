@@ -1,17 +1,19 @@
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
 import {
   QueueProcessorResponse,
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
-  private readonly logger = new Logger(QueueBitrixLightProcessor.name);
+  private readonly logger = new WinstonLogger(
+    `queue:handle:${QueueBitrixLightProcessor.name}`,
+  );
 
   constructor(
     private readonly wikiService: WikiService,
@@ -27,6 +29,9 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
+    this.logger.info(
+      `Добавлена задача [${name}][${id}] в очередь => ${JSON.stringify(data)}`,
+    );
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -38,11 +43,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         response.data = await this.wikiService.sendNotifyAboutDeleteLead(
           data as string,
         );
-        break;
-
-      //   todo: need add task in queue tasks to send request to new wiki
-      case QUEUE_TASKS.LIGHT
-        .QUEUE_BX_SEND_UPDATE_LEAD_NEW_WIKI_FROM_REQUEST_AVITO:
         break;
 
       default:
@@ -62,6 +62,9 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(returnvalue),
     );
+    this.logger.info(
+      `Задача [${name}][${id}] выполнена => ${JSON.stringify(returnvalue)}`,
+    );
   }
 
   @OnWorkerEvent('failed')
@@ -69,5 +72,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `Ошибка выполнения задачи: ` + JSON.stringify(job),
     );
+
+    this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);
   }
 }

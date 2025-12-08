@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import winston from 'winston';
 import { join } from 'path';
 import 'winston-daily-rotate-file';
@@ -6,15 +6,17 @@ import 'winston-daily-rotate-file';
 @Injectable()
 export class WinstonLogger {
   private readonly logger: winston.Logger;
+  private readonly consoleLogger: Logger;
 
   constructor(name: string) {
     const loggerDir = join(process.cwd(), 'logs');
+    this.consoleLogger = new Logger(name);
 
     const transportOptions = {
       file: new winston.transports.DailyRotateFile({
         level: 'info',
         filename: `${name}-%DATE%.log`,
-        dirname: join(loggerDir, name),
+        dirname: join(loggerDir, ...name.split(":")),
         format: winston.format.combine(
           winston.format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss',
@@ -45,25 +47,32 @@ export class WinstonLogger {
     this.logger = winston.createLogger({
       level: 'info',
       format: winston.format.json(),
-      transports: [transportOptions.file, transportOptions.console],
-      exceptionHandlers: [transportOptions.file, transportOptions.console],
+      transports: [transportOptions.file],
+      exceptionHandlers: [transportOptions.file],
       exitOnError: false,
     });
   }
 
-  public error(message: string, trace?: string) {
-    this.logger.error(trace ? `${message} - ${trace}` : message);
+  public error(
+    message: string,
+    trace?: string,
+    disableConsoleLog: boolean = false,
+  ) {
+    const log = trace ? `${message} - ${trace}` : message;
+
+    this.logger.error(log);
+    if (!disableConsoleLog) this.consoleLogger.error(log);
   }
 
-  public warn(message: string) {
+  public warn(message: string, disableConsoleLog: boolean = false) {
     this.logger.warn(message);
+
+    if (!disableConsoleLog) this.consoleLogger.warn(message);
   }
 
-  public info(message: string) {
+  public info(message: string, disableConsoleLog: boolean = false) {
     this.logger.info(message);
-  }
 
-  public debug(message: string) {
-    this.logger.debug(message);
+    if (!disableConsoleLog) this.consoleLogger.debug(message);
   }
 }

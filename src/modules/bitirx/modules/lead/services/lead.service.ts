@@ -38,9 +38,12 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixLeadService {
+  private readonly logger = new WinstonLogger(BitrixLeadService.name);
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,

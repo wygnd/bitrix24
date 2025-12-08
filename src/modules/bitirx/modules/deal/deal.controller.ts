@@ -54,9 +54,7 @@ export class BitrixDealController {
   @Get('/deal/:deal_id')
   async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
     try {
-      const deal = await this.bitrixDealService.getDealById(dealId);
-      this.logger.info(`Check deal title: ${deal.ID}: ${deal.TITLE}`);
-      return deal;
+      return this.bitrixDealService.getDealById(dealId);
     } catch (error) {
       console.log(error);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);

@@ -1,6 +1,5 @@
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Job } from 'bullmq';
-import { Logger } from '@nestjs/common';
 import {
   QueueProcessorResponse,
   QueueProcessorStatus,
@@ -13,18 +12,19 @@ import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
-import { QueueLightService } from '@/modules/queue/queue-light.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
-  private readonly logger = new Logger(QueueBitrixMiddleProcessor.name);
+  private readonly logger = new WinstonLogger(
+    `queue:handle:${QueueBitrixMiddleProcessor.name}`,
+  );
 
   constructor(
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly wikiService: WikiService,
     private readonly bitrixTaskService: BitrixTaskService,
-    private readonly queueLightService: QueueLightService,
   ) {
     super();
   }
@@ -33,7 +33,11 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
     this.bitrixImBotService.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` + JSON.stringify(data),
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
+        JSON.stringify(data),
+    );
+    this.logger.info(
+      `Добавлена задача [${name}][${id}] в очередь => ${JSON.stringify(data)}`,
     );
     const response: QueueProcessorResponse = {
       message: '',
@@ -75,7 +79,12 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]` + JSON.stringify(returnvalue),
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
+        JSON.stringify(returnvalue),
+    );
+
+    this.logger.info(
+      `Задача [${name}][${id}] выполнена => ${JSON.stringify(returnvalue)}`,
     );
 
     switch (name) {
@@ -98,5 +107,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `Ошибка выполнения задачи: ` + JSON.stringify(job),
     );
+
+    this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);
   }
 }

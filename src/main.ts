@@ -6,6 +6,7 @@ import { ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
+import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 
 async function bootstrap() {
   process.env.TZ = 'Europe/Moscow';
@@ -21,6 +22,9 @@ async function bootstrap() {
 
   // global pipes
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+
+  // global filters
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // increase body json size
   app.useBodyParser('json', { limit: '10mb' });
