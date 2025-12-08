@@ -36,6 +36,7 @@
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/terminus": "^11.0.0",
+    "@nestjs/throttler": "^6.5.0",
     "@sequelize/postgres": "^7.0.0-alpha.46",
     "@willsoto/nestjs-prometheus": "^6.0.2",
     "axios": "^1.12.2",
