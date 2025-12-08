@@ -23,6 +23,7 @@ COPY package*.json ./
 COPY package-lock*.json ./
 COPY static ./static
 
+ENV NODE_ENV=production
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
