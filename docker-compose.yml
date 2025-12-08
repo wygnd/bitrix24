@@ -24,7 +24,7 @@ services:
     image: postgres:latest
     container_name: bitrix-server-postgres
     ports:
-      - "5432:5432"
+      - "3005:5432"
     env_file:
       - ./.env
     volumes:
