@@ -75,14 +75,10 @@ export class WikiService {
         status: fields.status,
       });
     } catch (e) {
-      if (!isAxiosError(e)) throw e;
-
-      if (!e.response || e.response.status !== HttpStatus.NOT_FOUND) throw e;
-
       return {
         wiki_lead_id: 0,
         lead_id: 0,
-        message: e.response.statusText,
+        message: e.response.statusText ?? 'Invalid update lead',
       };
     }
   }
@@ -93,12 +89,8 @@ export class WikiService {
         `/avito/leads/${leadId}`,
       );
     } catch (e) {
-      if (!isAxiosError(e)) throw e;
-
-      if (!e.response || e.response.status !== HttpStatus.NOT_FOUND) throw e;
-
       return {
-        message: e.response.data!.message,
+        message: e.response.data.message ?? 'Invalid remove lead',
         deleted: 0,
         lead_id: 0,
       };
