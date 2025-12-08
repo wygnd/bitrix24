@@ -9,6 +9,7 @@ import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
 import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
+import { B24EventRemoveDto } from '@/modules/bitirx/modules/events/dtos/event-remove.dto';
 
 @Injectable()
 export class BitrixEventService {
@@ -48,6 +49,10 @@ export class BitrixEventService {
   }
 
   async getEventList() {
-    return this.bitrixService.callMethod('event.get')
+    return this.bitrixService.callMethod('event.get');
+  }
+
+  async removeEvent(fields: B24EventRemoveDto) {
+    return this.bitrixService.callMethod('event.unbind', fields);
   }
 }

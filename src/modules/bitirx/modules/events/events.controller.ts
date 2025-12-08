@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -15,6 +16,7 @@ import { EventAddDto } from '@/modules/bitirx/modules/events/dtos/event-add.dto'
 import { BitrixEventGuard } from '@/modules/bitirx/guards/bitrix-event.guard';
 import { EventHandleUpdateTaskDto } from '@/modules/bitirx/modules/events/dtos/event-task-update.dto';
 import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-lead-delete.dto';
+import { B24EventRemoveDto } from '@/modules/bitirx/modules/events/dtos/event-remove.dto';
 
 @ApiTags(B24ApiTags.EVENTS)
 @Controller('events')
@@ -23,7 +25,7 @@ export class BitrixEventsController {
 
   @ApiOperation({ summary: 'Register new events' })
   @UseGuards(AuthGuard)
-  @Post('/add')
+  @Post('event/add')
   async addEvent(@Body() fields: EventAddDto) {
     return this.eventsService.addEvent(fields);
   }
@@ -33,6 +35,13 @@ export class BitrixEventsController {
   @Get('/list')
   async getEventList() {
     return this.eventsService.getEventList();
+  }
+
+  @ApiOperation({ summary: 'Remove event listener' })
+  @UseGuards(AuthGuard)
+  @Delete('event/remove')
+  async removeEvent(@Body() fields: B24EventRemoveDto) {
+    return this.eventsService.removeEvent(fields);
   }
 
   @UseGuards(BitrixEventGuard)
