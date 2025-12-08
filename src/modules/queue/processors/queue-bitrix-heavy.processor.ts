@@ -33,7 +33,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
     );
-    this.logger.info('Добавлена задача [${name}][${id}] в очередь');
+    this.logger.info(`Добавлена задача [${name}][${id}] в очередь`);
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,

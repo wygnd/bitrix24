@@ -331,6 +331,7 @@ export class BitrixHeadHunterService {
             switch (kind) {
               case 'phone':
                 if (
+                  contact_value &&
                   !/[()]/.test(contact_value) &&
                   (value as ContactPhone)?.city
                 ) {
@@ -354,7 +355,7 @@ export class BitrixHeadHunterService {
           {} as CandidateContactInterface,
         );
 
-        phone = candidateContacts.phone;
+        phone = candidateContacts.phone ?? '';
         telegram = candidateContacts.telegram ?? '';
         email = candidateContacts.email ?? '';
 
@@ -526,10 +527,6 @@ export class BitrixHeadHunterService {
       isAxiosError(e)
         ? (errorMessage = e.message)
         : (errorMessage = (e as Error).message);
-
-      try {
-        errorMessage += '[br][br]' + JSON.parse(e.response);
-      } catch (err) {}
 
       this.bitrixService.callBatch({
         send_message_to_hr: {
