@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Redirect } from '@nestjs/common';
+import { Body, Controller, Get, Post, Redirect } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensCreationalAttributes } from '@/modules/tokens/interfaces/tokens-attributes.interface';
@@ -32,7 +32,7 @@ export class AppController {
   @Redirect('/api', 301)
   async main() {}
 
-  @Get('/create-tokens')
+  @Post('/create-tokens')
   async creteTokens(@Body() fields: CreateTokensDto) {
     return this.tokensService.createToken(fields);
   }
