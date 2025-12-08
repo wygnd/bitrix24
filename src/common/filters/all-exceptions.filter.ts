@@ -16,25 +16,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     let status: number;
     let message: string | object;
-    let stack: string;
 
     switch (true) {
       case exception instanceof HttpException:
         status = exception.getStatus();
-        message = exception.getResponse();
-        stack = exception.stack ?? '';
+        message =
+          typeof exception.getResponse() === 'object'
+            ? exception.getResponse()
+            : exception;
         break;
 
       case exception instanceof Error:
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         message = exception.message;
-        stack = exception.stack ?? '';
         break;
 
       default:
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         message = 'Internal server error';
-        stack = '';
     }
 
     this.logger.error(
@@ -44,7 +43,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       message: message,
-      stack: stack,
     });
   }
 }
