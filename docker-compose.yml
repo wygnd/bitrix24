@@ -13,7 +13,6 @@ services:
       - .env
     depends_on:
       - redis
-      - postgres
     volumes:
       - /home/data/bitrix24/logs/debug:/app/logs
     networks:
