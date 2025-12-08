@@ -10,9 +10,12 @@ import { EventLeadDeleteDto } from '@/modules/bitirx/modules/events/dtos/event-l
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { B24EventRemoveDto } from '@/modules/bitirx/modules/events/dtos/event-remove.dto';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixEventService {
+  private readonly logger = new WinstonLogger(BitrixEventService.name);
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly taskService: BitrixTaskService,
@@ -44,7 +47,9 @@ export class BitrixEventService {
   }
 
   async handleLeadDelete({ data }: EventLeadDeleteDto) {
-    this.queueLightService.addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID);
+    this.queueLightService.addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID).then(res => {
+      this.logger.info(`Added in queue: ${JSON.stringify(data)} => ${res.toJSON()}`);
+    });
     return true;
   }
 
