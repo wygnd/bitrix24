@@ -37,8 +37,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         stack = '';
     }
 
-    console.log(status);
-    this.logger.error(`[${status}]: Exception error: ${message}`);
+    this.logger.error(
+      `[${status}]: Exception error: ${JSON.stringify(message)}`,
+    );
 
     response.status(status).json({
       statusCode: status,
