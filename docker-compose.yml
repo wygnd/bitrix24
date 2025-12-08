@@ -20,21 +20,6 @@ services:
       - monitoring
     restart: always
 
-  postgres:
-    image: postgres:latest
-    container_name: bitrix-server-postgres
-    ports:
-      - "3005:5432"
-    environment:
-      POSTGRES_USER: ${DB_USERNAME_PRODUCTION}
-      POSTGRES_PASSWORD: ${DB_PASSWORD_PRODUCTION}
-      POSTGRES_DB: ${DB_NAME_PRODUCTION}
-    volumes:
-      - /home/data/bitrix24/database/postgres:/var/lib/postgresql
-    networks:
-      - monitoring
-    restart: always
-
   # Redis
   redis:
     image: redis:latest
