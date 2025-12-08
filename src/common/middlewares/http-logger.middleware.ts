@@ -8,7 +8,13 @@ export class HttpLoggerMiddleware implements NestMiddleware {
   private readonly fileLogger = new WinstonLogger('HTTP');
 
   use(req: Request, res: Response, next: NextFunction): void {
-    const { method, originalUrl: url, body, params, query } = req;
+    const {
+      method,
+      originalUrl: url,
+      body = {},
+      params = {},
+      query = {},
+    } = req;
     const userAgent = req.get('user-agent') || '';
     const requestTime = Date.now();
 
@@ -19,7 +25,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
 
       this.logger.debug(message);
       this.fileLogger.info(
-        `${message} | params: ${params} | query: ${query} | body: ${body}`,
+        `${message} | params: ${JSON.stringify(params)} | query: ${JSON.stringify(query)} | body: ${JSON.stringify(body)}`,
         true,
       );
     });
