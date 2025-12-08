@@ -227,7 +227,7 @@ export class BitrixHeadHunterService {
       if (resumeWasReceived && messageType !== 'bot')
         return {
           status: false,
-          message: 'Event was received whet state change',
+          message: 'Event was received when state change',
         };
 
       let responseType = `${B24Emoji.HR.HEADHUNTER.RESPONSE}[b]Отклик[/b]`; // Начало сообщения
