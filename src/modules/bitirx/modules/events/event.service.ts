@@ -46,10 +46,16 @@ export class BitrixEventService {
     return false;
   }
 
-  async handleLeadDelete({ data }: EventLeadDeleteDto) {
-    this.queueLightService.addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID).then(res => {
-      this.logger.info(`Added in queue: ${JSON.stringify(data)} => ${res.toJSON()}`);
-    });
+  async handleLeadDelete(fields: EventLeadDeleteDto) {
+    const { data } = fields;
+
+    this.queueLightService
+      .addTaskSendWikiRequestOnDeleteLead(data.FIELDS.ID)
+      .then((res) => {
+        this.logger.info(
+          `Added in queue: ${JSON.stringify(fields)} => ${res.toJSON()}`,
+        );
+      });
     return true;
   }
 
