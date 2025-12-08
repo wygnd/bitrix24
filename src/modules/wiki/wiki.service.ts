@@ -70,7 +70,10 @@ export class WikiService {
       return await this.wikiApiServiceNew.patch<
         Omit<WikiUpdateLeadRequest, 'wiki_lead_id'>,
         WikIUpdateLeadResponse
-      >(`/avito/leads/${fields.wiki_lead_id}`, fields);
+      >(`/avito/leads/${fields.wiki_lead_id}`, {
+        lead_id: fields.lead_id,
+        status: fields.status,
+      });
     } catch (e) {
       if (!isAxiosError(e)) throw e;
 

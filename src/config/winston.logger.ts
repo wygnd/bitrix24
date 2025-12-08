@@ -8,7 +8,7 @@ export class WinstonLogger {
   private readonly logger: winston.Logger;
   private readonly consoleLogger: Logger;
 
-  constructor(name: string) {
+  constructor(name: string, filePath: string[] = []) {
     const loggerDir = join(process.cwd(), 'logs');
     this.consoleLogger = new Logger(name);
 
@@ -16,7 +16,7 @@ export class WinstonLogger {
       file: new winston.transports.DailyRotateFile({
         level: 'info',
         filename: `${name}-%DATE%.log`,
-        dirname: join(loggerDir, ...name.split(":")),
+        dirname: join(loggerDir, ...filePath, name),
         format: winston.format.combine(
           winston.format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss',

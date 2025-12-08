@@ -14,9 +14,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
-  private readonly logger = new WinstonLogger(
-    `queue:handle:${QueueBitrixHeavyProcessor.name}`,
-  );
+  private readonly logger = new WinstonLogger(QueueBitrixHeavyProcessor.name, [
+    'queue',
+    'handle',
+  ]);
 
   constructor(
     private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService,

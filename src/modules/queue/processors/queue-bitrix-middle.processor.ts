@@ -16,9 +16,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
-  private readonly logger = new WinstonLogger(
-    `queue:handle:${QueueBitrixMiddleProcessor.name}`,
-  );
+  private readonly logger = new WinstonLogger(QueueBitrixMiddleProcessor.name, [
+    'queue',
+    'handle',
+  ]);
 
   constructor(
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,

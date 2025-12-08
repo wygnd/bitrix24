@@ -11,9 +11,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
-  private readonly logger = new WinstonLogger(
-    `queue:handle:${QueueBitrixLightProcessor.name}`,
-  );
+  private readonly logger = new WinstonLogger(QueueBitrixLightProcessor.name, [
+    'queue',
+    'handle',
+  ]);
 
   constructor(
     private readonly wikiService: WikiService,
