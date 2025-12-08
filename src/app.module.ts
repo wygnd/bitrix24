@@ -10,11 +10,10 @@ import { BitrixModule } from './modules/bitirx/bitrix.module';
 import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middleware';
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AxiosGlobalInterceptor } from '@/common/interceptors/axios.interceptor';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { AppHttModule } from '@/modules/http/http.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -26,15 +25,6 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
 
 @Module({
   imports: [
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 10000,
-          limit: 5,
-        },
-      ],
-      errorMessage: 'Too many requests',
-    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'static'),
       exclude: ['/api/{*test}'],
@@ -65,10 +55,6 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: AxiosGlobalInterceptor,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
     },
   ],
 })
