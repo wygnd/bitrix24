@@ -564,6 +564,7 @@ export class BitrixHeadHunterService {
     }
   }
 
+  // todo: add table
   /**
    * Return ratio vacancy
    *
@@ -580,7 +581,7 @@ export class BitrixHeadHunterService {
     const vacancies = await this.headHunterRestService.getActiveVacancies(true);
 
     // Сравниваем вакансии по кол-ву элементов
-    if (ratioVacanciesFromCache) {
+    if (ratioVacanciesFromCache && ratioVacanciesFromCache.length > 0) {
       const newRatioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
         (acc, vacancy) => {
           const vacancyIndex = ratioVacanciesFromCache.findIndex(
