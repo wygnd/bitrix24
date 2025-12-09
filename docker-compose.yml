@@ -110,7 +110,7 @@ services:
     depends_on:
       - prometheus
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q --tries=1 -O- http://localhost:3000/api/health" ]
+      test: wget -q --tries=1 -O- http://localhost:3000/api/health
       interval: 10s
       timeout: 5s
       retries: 5
