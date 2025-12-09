@@ -7,7 +7,7 @@ import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
-import expressBasicAuth from 'express-basic-auth';
+import basicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   process.env.TZ = 'Europe/Moscow';
@@ -47,6 +47,23 @@ async function bootstrap() {
     .setDescription('The automatization process in bitrix24 for Grampus')
     .setVersion('1.0')
     .build();
+
+  const apiUsername = config.get<string>('config.apiOptions.username');
+  const apiPassword = config.get<string>('config.apiOptions.password');
+
+  if (!apiUsername || !apiPassword)
+    throw new Error('Invalid swagger options config');
+
+  app.use(
+    ['/api', '/api-json'],
+    basicAuth({
+      challenge: true,
+      users: {
+        [apiUsername]: apiPassword,
+      },
+    }),
+  );
+
   SwaggerModule.setup(
     'api',
     app,
@@ -63,16 +80,8 @@ async function bootstrap() {
       },
       customfavIcon: '/public/favicon.ico',
       customSiteTitle: 'Grampus Bitrix24',
-
     },
   );
-
-  // app.use(['api', 'api-json', expressBasicAuth({
-  //   challenge: true,
-  //   users: {
-  //     [config.getOrThrow('config.username')]: config.getOrThrow('config.password')
-  //   }
-  // })]);
 
   await app.listen(PORT);
 }

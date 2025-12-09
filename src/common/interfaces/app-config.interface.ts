@@ -3,7 +3,7 @@ export interface AppConfig {
   apiOptions: AppConfigApiOptions;
 }
 
-interface AppConfigApiOptions {
+export interface AppConfigApiOptions {
   username?: string;
   password?: string;
 }
