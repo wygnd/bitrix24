@@ -88,8 +88,8 @@ async function bootstrap() {
   );
 
   // reset default count max listeners
-  EventEmitter.defaultMaxListeners = 100;
-  app.use(EventEmitter);
+  // EventEmitter.defaultMaxListeners = 100;
+  // app.use(EventEmitter);
 
   await app.listen(PORT);
 }
