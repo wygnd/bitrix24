@@ -97,6 +97,7 @@ export class BitrixBotController {
   @UseGuards(AuthGuard)
   @Post('/message/add')
   async sendMessage(@Body() fields: ImbotMessageAddDto) {
+    console.log(JSON.stringify(fields));
     return this.bitrixBotService.sendMessage(fields);
   }
 
