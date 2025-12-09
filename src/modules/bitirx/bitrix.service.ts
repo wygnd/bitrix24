@@ -378,6 +378,17 @@ export class BitrixService {
     return emojiStrip(message) as string;
   }
 
+  public formatPrice(
+    price: number,
+    locale: string = 'ru-RU',
+    currency: string = 'RUB',
+  ) {
+    return new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: currency,
+    }).format(price);
+  }
+
   /**
    * Base post request to bitrix
    * @param url

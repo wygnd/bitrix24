@@ -11,7 +11,8 @@ export enum B24ApiTags {
   HEAD_HUNTER = 'Head Hunter',
   WEBHOOK = 'Webhook',
   TASKS = 'Tasks',
-  WIKI = 'Wiki'
+  WIKI = 'Wiki',
+  ADDY = 'Addy',
 }
 
 export interface B24Timestamp {

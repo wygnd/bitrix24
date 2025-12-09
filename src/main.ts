@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
@@ -10,9 +10,12 @@ import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import basicAuth from 'express-basic-auth';
 
 async function bootstrap() {
-  process.env.TZ = 'Europe/Moscow';
-
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
+
+  // enable versioning
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
 
   const config = app.get(ConfigService);
 

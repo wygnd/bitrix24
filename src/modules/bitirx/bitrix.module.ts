@@ -34,6 +34,10 @@ import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitirx/modules/lead/lead.controller';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitirx/modules/lead/services/lead-observe-manager-calling.service';
 import { TokensModule } from '@/modules/tokens/tokens.module';
+import { BitrixAddySupportService } from '@/modules/bitirx/modules/integration/addy/services/addy-support.service';
+import { BitrixAddySupportControllerV1 } from '@/modules/bitirx/modules/integration/addy/controllers/addy-support.controller';
+import { BitrixAddyPaymentsControllerV1 } from '@/modules/bitirx/modules/integration/addy/controllers/addy-payments.controller';
+import { BitrixAddyPaymentsService } from '@/modules/bitirx/modules/integration/addy/services/addy-payments.service';
 
 @Module({
   imports: [
@@ -58,6 +62,8 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     BitrixTaskController,
     BitrixWikiController,
     BitrixLeadController,
+    BitrixAddySupportControllerV1,
+    BitrixAddyPaymentsControllerV1,
   ],
   providers: [
     // providers
@@ -91,6 +97,8 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     BitrixDepartmentService,
     BitrixEventService,
     BitrixWikiService,
+    BitrixAddySupportService,
+    BitrixAddyPaymentsService,
   ],
   exports: [
     BitrixLeadService,

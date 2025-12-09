@@ -10,7 +10,7 @@ export interface BitrixConstants {
   WEBHOOK_INCOMING_TOKEN: string;
   WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL: string;
   ZLATA_ZIMINA_BITRIX_ID: string;
-  ADDY: BitrixAddyConstants,
+  ADDY: BitrixAddyConstants;
   HR: BitrixHRConstants;
   avito: BitrixAvitoConstants;
   LEAD: BitrixLEADConstants;
@@ -31,6 +31,16 @@ export interface BitrixAvitoConstants {
 
 export interface BitrixAddyConstants {
   casesChatId: string;
+  support: BitrixAddySupportOptions;
+  payment: BitrixAddyPaymentOptions;
+}
+
+export interface BitrixAddySupportOptions {
+  bitrixChatId: string;
+}
+
+export interface BitrixAddyPaymentOptions {
+  bitrixChatId: string;
 }
 
 export interface BitrixLEADConstants {

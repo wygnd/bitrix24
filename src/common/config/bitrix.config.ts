@@ -15,6 +15,12 @@ export default (): BitrixOptions => ({
     ZLATA_ZIMINA_BITRIX_ID: process.env.BITRIX_DATA_ZIMINA_BITRIX_ID ?? '',
     ADDY: {
       casesChatId: process.env.BITRIX_DATA_ADDY_CASES_CHAT_ID ?? '',
+      support: {
+        bitrixChatId: process.env.BITRIX_DATA_ADDY_SUPPORT_CHAT_ID ?? '',
+      },
+      payment: {
+        bitrixChatId: process.env.BITRIX_DATA_ADDY_PAYMENT_CHAT_ID ?? '',
+      },
     },
     HR: {
       hrChatId: process.env.BITRIX_DATA_HR_CHAT_ID ?? '',
