@@ -8,6 +8,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import basicAuth from 'express-basic-auth';
+import EventEmitter from 'node:events';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
@@ -85,6 +86,10 @@ async function bootstrap() {
       customSiteTitle: 'Grampus Bitrix24',
     },
   );
+
+  // reset default count max listeners
+  EventEmitter.defaultMaxListeners = 0;
+  app.use(EventEmitter);
 
   await app.listen(PORT);
 }
