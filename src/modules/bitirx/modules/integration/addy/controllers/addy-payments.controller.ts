@@ -33,6 +33,7 @@ export class BitrixAddyPaymentsControllerV1 {
     name: 'Authorization',
     description: 'Токен авторизации',
     example: 'bga token',
+    required: true,
   })
   @ApiResponse({
     type: BitrixAddyPaymentsSendMessageResponseDto,
@@ -46,6 +47,10 @@ export class BitrixAddyPaymentsControllerV1 {
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Ошибка авторизации',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Ошбика на стороне битрикс24',
   })
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
