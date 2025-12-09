@@ -48,10 +48,6 @@ export class BitrixAddyPaymentsControllerV1 {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Ошибка авторизации',
   })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Ошбика на стороне битрикс24',
-  })
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/messages/add')
