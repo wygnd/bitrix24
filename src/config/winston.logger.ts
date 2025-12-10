@@ -19,7 +19,7 @@ export class WinstonLogger {
         dirname: join(loggerDir, ...filePath, name),
         format: winston.format.combine(
           winston.format.timestamp({
-            format: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+            format: dayjs().locale('ru').format('YYYY-MM-DD HH:mm:ss'),
           }),
           winston.format.errors({ stack: true }),
           winston.format.printf(
