@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { BitrixMessageService } from '@/modules/bitirx/modules/im/im.service';
+import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 
 @Injectable()
 export class CronService {

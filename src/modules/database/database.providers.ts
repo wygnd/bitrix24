@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { DEVELOPMENT, PRODUCTION } from '@/constants';
 import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
-import { LeadObserveManagerCallingModel } from '@/modules/bitirx/modules/lead/entities/lead-observe-manager-calling.entity';
+import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
 import { TokensModel } from '@/modules/tokens/tokens.entity';
 
 export const databaseProviders = [

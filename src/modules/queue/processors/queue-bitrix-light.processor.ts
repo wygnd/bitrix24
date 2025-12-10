@@ -6,7 +6,7 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
-import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })

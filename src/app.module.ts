@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigAppModule } from './config/config.module';
 import { RedisModule } from './modules/redis/redis.module';
-import { BitrixModule } from './modules/bitirx/bitrix.module';
+import { BitrixModule } from './modules/bitrix/bitrix.module';
 import { HttpLoggerMiddleware } from '@/common/middlewares/http-logger.middleware';
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { AppController } from '@/app.controller';

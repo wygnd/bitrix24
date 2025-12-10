@@ -5,11 +5,11 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { BitrixHeadHunterService } from '@/modules/bitirx/modules/integration/headhunter/headhunter.service';
-import { HeadhunterWebhookCallDto } from '@/modules/bitirx/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
-import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
-import { BitrixLeadService } from '@/modules/bitirx/modules/lead/services/lead.service';
-import { LeadObserveManagerCallingDto } from '@/modules/bitirx/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { BitrixHeadHunterService } from '@/modules/bitrix/modules/integration/headhunter/headhunter.service';
+import { HeadhunterWebhookCallDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
+import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
+import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
+import { LeadObserveManagerCallingDto } from '@/modules/bitrix/modules/lead/dtos/lead-observe-manager-calling.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })

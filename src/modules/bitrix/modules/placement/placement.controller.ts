@@ -1,0 +1,84 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
+import {
+  PlacementBodyRequestDto,
+  PlacementQueryRequestDto,
+} from '@/modules/bitrix/modules/placement/dtos/placement-request.dto';
+import type { Response } from 'express';
+import { BitrixPlacementService } from '@/modules/bitrix/modules/placement/placement.service';
+import { PlacementBindDto } from '@/modules/bitrix/modules/placement/dtos/placement-bind.dto';
+import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/placement-unbind.dto';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { BitrixPlacementGuard } from '@/modules/bitrix/guards/bitrix-widget.guard';
+
+@ApiTags(B24ApiTags.PLACEMENT)
+@Controller('placement')
+export class BitrixPlacementController {
+  constructor(
+    private readonly bitrixPlacementService: BitrixPlacementService,
+  ) {}
+
+  @UseGuards(BitrixPlacementGuard)
+  @Post('/crm/deal/detail-tab')
+  async handleCrmDealDetailTab(
+    @Body() body: PlacementBodyRequestDto,
+    @Query() query: PlacementQueryRequestDto,
+    @Res() res: Response,
+  ) {
+    return this.bitrixPlacementService.receiveOpenWidgetCRMDetailTab(
+      res,
+      body,
+      query,
+    );
+  }
+
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Authorization header',
+    required: true,
+    example: 'bga token',
+  })
+  @UseGuards(AuthGuard)
+  @Post('/bind')
+  async bindWidget(@Body() fields: PlacementBindDto) {
+    return false;
+    // return this.bitrixPlacementService.bind(fields);
+  }
+
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Authorization header',
+    required: true,
+    example: 'bga token',
+  })
+  @UseGuards(AuthGuard)
+  @Post('/unbind')
+  async unbindWidget(@Body() fields: PlacementUnbindDto) {
+    return false;
+    // return this.bitrixPlacementService.unbind(fields);
+  }
+
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Authorization header',
+    required: true,
+    example: 'bga token',
+  })
+  @ApiOperation({
+    summary: 'Получить список зарегистрированных виджетов',
+  })
+  @UseGuards(AuthGuard)
+  @Get('/bind/list')
+  async getWidgetList() {
+    return this.bitrixPlacementService.getBindPlacementList();
+  }
+}

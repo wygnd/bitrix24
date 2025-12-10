@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
-import { B24ErrorResponse } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { B24ErrorResponse } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 
 @Injectable()
