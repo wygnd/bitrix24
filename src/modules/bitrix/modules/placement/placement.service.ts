@@ -52,20 +52,20 @@ export class BitrixPlacementService {
       );
       const { CATEGORY_ID } = await this.bitrixDealService.getDealById(ID);
 
+      let redirectUrl = this.configService.get<string>(
+        'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
+      );
+
+      if (!redirectUrl) throw new InternalServerErrorException();
+
       switch (CATEGORY_ID) {
         case B24Categories.HR:
-          const redirectUrl = this.configService.get<string>(
-            'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
-          );
-
-          if (!redirectUrl) throw new InternalServerErrorException();
-
-          response.redirect(301, `${redirectUrl}?member_id=${body.member_id}`);
-          return true;
-
-        default:
-          return false;
+          redirectUrl += `?member_id=${body.member_id}`;
+          break;
       }
+
+      response.redirect(301, redirectUrl);
+      return true;
     } catch (e) {
       this.logger.error(e);
       return false;
