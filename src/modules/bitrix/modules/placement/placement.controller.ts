@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Query,
@@ -61,10 +62,9 @@ export class BitrixPlacementController {
     example: 'bga token',
   })
   @UseGuards(AuthGuard)
-  @Post('/unbind')
+  @Delete('/unbind')
   async unbindWidget(@Body() fields: PlacementUnbindDto) {
-    return false;
-    // return this.bitrixPlacementService.unbind(fields);
+    return this.bitrixPlacementService.unbind(fields);
   }
 
   @ApiHeader({
