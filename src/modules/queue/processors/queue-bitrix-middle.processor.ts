@@ -5,13 +5,13 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { AvitoCreateLeadDto } from '@/modules/bitirx/modules/integration/avito/dtos/avito-create-lead.dto';
-import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitirx/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
-import { BitrixIntegrationAvitoService } from '@/modules/bitirx/modules/integration/avito/avito.service';
-import { BitrixImBotService } from '@/modules/bitirx/modules/imbot/imbot.service';
+import { AvitoCreateLeadDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito-create-lead.dto';
+import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
+import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
+import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WikiService } from '@/modules/wiki/wiki.service';
-import { BitrixTaskService } from '@/modules/bitirx/modules/task/task.service';
-import { B24TaskExtended } from '@/modules/bitirx/modules/task/interfaces/task.interface';
+import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
+import { B24TaskExtended } from '@/modules/bitrix/modules/task/interfaces/task.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })

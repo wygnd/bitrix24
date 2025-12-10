@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QUEUE_NAMES } from '@/modules/queue/queue.constants';
 import { QueueBitrixLightProcessor } from '@/modules/queue/processors/queue-bitrix-light.processor';
-import { BitrixModule } from '@/modules/bitirx/bitrix.module';
+import { BitrixModule } from '@/modules/bitrix/bitrix.module';
 import { QueueBitrixMiddleProcessor } from '@/modules/queue/processors/queue-bitrix-middle.processor';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';

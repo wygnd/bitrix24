@@ -1,7 +1,7 @@
 import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
-import { B24ApiTags } from '@/modules/bitirx/interfaces/bitrix-api.interface';
+import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { HHVacancyDto } from '@/modules/headhunter/dtos/headhunter-vacancy.dto';
 
