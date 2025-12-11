@@ -4,6 +4,9 @@ export interface HeadHunterAuthData {
   expires_in: number;
 }
 
-export interface HeadHunterAuthTokens extends HeadHunterAuthData {
+export interface HeadHunterAuthTokens extends Omit<
+  HeadHunterAuthData,
+  'expires_in'
+> {
   expires: number;
 }

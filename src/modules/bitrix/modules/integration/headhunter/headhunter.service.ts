@@ -79,7 +79,7 @@ export class BitrixHeadHunterService {
 
       const now = new Date();
       // Save tokens in redis
-      await Promise.all([
+      const resUpdateTokens = await Promise.all([
         this.redisService.set<HeadHunterAuthTokens>(
           REDIS_KEYS.HEADHUNTER_AUTH_DATA,
           {
@@ -95,10 +95,12 @@ export class BitrixHeadHunterService {
         }),
       ]);
 
-      // update token on url
-      await this.headHunterApi.updateToken();
+      console.log(resUpdateTokens);
 
-      await this.bitrixImBotService.sendMessage({
+      // update token on url
+      this.headHunterApi.updateToken().then((res) => console.log(res));
+
+      this.bitrixImBotService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
