@@ -6,12 +6,18 @@ import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
+import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
+import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 
 @Injectable()
 export class BitrixWikiService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly wikiService: WikiService,
+    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixImbotService: BitrixImBotService,
   ) {}
 
   /**
@@ -194,15 +200,56 @@ export class BitrixWikiService {
   }
 
   public async sendNoticeWaitingPayment({
-    user_bitrix_id: userBitrixId,
-    name_of_org: nameOfOrganization,
-    deal_id: dealId,
+    user_bitrix_id: userId,
+    name_of_org: organizationName,
+    message,
+    deal_id,
     lead_id,
     request,
   }: B24WikiPaymentsNoticeWaitingOptions) {
     let leadId = lead_id ? lead_id : request?.lead_id;
+    let dealId = deal_id;
+    let deal: B24Deal | undefined;
+    const isBudget = /Бюджет/gi.test(message);
 
-    if (!leadId && !dealId)
-      throw new BadRequestException('Invalid lead_id or deal_id');
+    if (!leadId) throw new BadRequestException('Invalid lead_id or deal_id');
+
+    if (!dealId) {
+      deal =
+        (
+          await this.bitrixDealService.getDeals({
+            filter: {
+              UF_CRM_1731418991: leadId,
+            },
+            select: ['ID'],
+            start: 1,
+          })
+        )[0] ?? undefined;
+
+      dealId = deal?.ID;
+    }
+
+    const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
+      message: this.bitrixImbotService.encodeText(message),
+      dialogId: request.user_role,
+      organizationName: organizationName,
+      dealId: dealId,
+      isBudget: isBudget,
+      userId: userId,
+    };
+
+    return this.bitrixImbotService.sendMessage({
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE: message,
+      KEYBOARD: [
+        {
+          TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
+          COMMAND: 'paymentWasReceived',
+          COMMAND_PARAMS: JSON.stringify(keyboardParams),
+          BLOCK: 'Y',
+          BG_COLOR_TOKEN: isBudget ? 'secondary' : 'primary',
+        },
+      ],
+    });
   }
 }

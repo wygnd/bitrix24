@@ -43,9 +43,12 @@ import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixImBotService {
+  private readonly logger = new WinstonLogger(BitrixImBotService.name);
   private readonly botId: string;
   private readonly distributeDealMessages: string[];
 
@@ -217,113 +220,80 @@ export class BitrixImBotService {
   }
 
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
+    this.logger.info(`New command handler: ${JSON.stringify(body)}`);
     const { event, data } = body;
 
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
 
-    const { MESSAGE, MESSAGE_ID } = data.PARAMS;
+    const { MESSAGE, MESSAGE_ID, DIALOG_ID } = data.PARAMS;
     const [command, _] = MESSAGE.split(' ', 2);
     const commandParamsDecoded: unknown = JSON.parse(
       MESSAGE.replace(command, ''),
     );
+    let response: Promise<unknown>;
+    let status: boolean;
 
     switch (command) {
       case '/distributeNewDeal':
-        return this.handleDistributeNewDeal(
+        response = this.handleDistributeNewDeal(
           commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
           data.PARAMS,
         );
+        return true;
 
       case '/approveSmmAdvertLayouts':
-        return this.handleApproveSmmAdvertLayout(
+        response = this.handleApproveSmmAdvertLayout(
           commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
           MESSAGE_ID,
         );
+        status = true;
+        break;
 
       case '/approveSiteDealForAdvert':
-        return this.handleApproveSiteForAdvert(
+        response = this.handleApproveSiteForAdvert(
           commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
           MESSAGE_ID,
         );
+        status = true;
+        break;
 
       case '/approveSiteForCase':
-        return this.handleApproveSiteForCase(
+        response = this.handleApproveSiteForCase(
           commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
           MESSAGE_ID,
         );
+        status = true;
+        break;
 
       case '/approveDistributeDealFromAvitoByAI':
-        return this.handleApproveDistributeDealFromAvitoByAI(
+        response = this.handleApproveDistributeDealFromAvitoByAI(
           commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
           MESSAGE_ID,
         );
+        status = true;
+        break;
+
+      case '/approveReceivedPayment':
+        response = this.handleApprovePayment(
+          commandParamsDecoded as ImbotKeyboardPaymentsNoticeWaiting,
+          MESSAGE_ID,
+          DIALOG_ID,
+        );
+        status = true;
+        break;
 
       default:
-        throw new HttpException('Command not handled yet', HttpStatus.ACCEPTED);
-    }
-  }
-
-  async notifyAboutConvertedDeal(eventData: OnImCommandKeyboardDto) {
-    const { MESSAGE, MESSAGE_ID } = eventData.data.PARAMS;
-    const [, fields] = MESSAGE.split(' ', 2);
-    const { dealId, isFits, oldMessage } = JSON.parse(
-      fields,
-    ) as NotifyConvertedDeal;
-
-    const commands: B24BatchCommands = {
-      update_message: {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.bitrixService.BOT_ID,
-          MESSAGE_ID: MESSAGE_ID,
-          MESSAGE:
-            `[b]Обработано: ${isFits ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
-            Buffer.from(oldMessage).toString('utf8'),
-          KEYBOARD: '',
-        },
-      },
-      update_deal: {
-        method: 'crm.deal.update',
-        params: {
-          id: dealId,
-          fields: {
-            UF_CRM_1760972834021: '1',
-          },
-        },
-      },
-    };
-
-    if (isFits) {
-      commands['send_message'] = {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: 220, // Ирина Новолоцкая
-          MESSAGE:
-            'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
-            this.bitrixService.generateDealUrl(dealId),
-        },
-      };
+        status = false;
+        response = Promise.resolve('');
+        break;
     }
 
-    const response = await this.bitrixService.callBatch<
-      B24BatchResponseMap<{
-        update_message: boolean;
-        send_message: number;
-        update_deal: boolean;
-      }>
-    >(commands);
+    response.then((result) => {
+      this.logger.info(`Result handled button: ${JSON.stringify(result)}`);
+    });
 
-    const errors = Object.values(response.result.result_error);
-    if (errors.length !== 0) {
-      const message = errors.reduce((acc, { error, error_description }) => {
-        acc += `${error}---${error_description}|||`;
-        return acc;
-      }, '');
-      throw new Error(`Invalid on batch request: ${message}`);
-    }
-
-    return true;
+    return status;
   }
 
   /**
@@ -744,6 +714,41 @@ export class BitrixImBotService {
 
     this.avitoIntegrationService.distributeClientRequestFromAvito(fields);
     return true;
+  }
+
+  /**
+   *
+   * @param message
+   * @param messageId
+   * @param dialogId
+   */
+  public async handleApprovePayment(
+    { message }: ImbotKeyboardPaymentsNoticeWaiting,
+    messageId: number,
+    dialogId: string,
+  ) {
+    const messageDecoded = this.decodeText(message);
+
+    // Обновляем сообение и
+    this.bitrixService.callBatch({
+      update_message: {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.botId,
+          MESSAGE_ID: messageId,
+          MESSAGE: '',
+          KEYBOARD: '',
+        },
+      },
+      send_new_message: {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.botId,
+          DIALOG_ID: dialogId,
+          MESSAGE: messageDecoded,
+        },
+      },
+    });
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {
