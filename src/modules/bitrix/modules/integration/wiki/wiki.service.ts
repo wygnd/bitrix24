@@ -37,10 +37,12 @@ export class BitrixWikiService {
       uniquePhones.set(phone, datetime);
     });
 
+    // Получаем менеджеров, которые работают
     const users = await this.wikiService.getWorkingSalesFromWiki();
     const batchCommandsBatches: B24BatchCommands[] = [];
     let batchIndex = 0;
 
+    // Проходим по номерам и добавляем запросы для поиска дубликатов
     uniquePhones.forEach((datetime, phone) => {
       if (
         batchIndex in batchCommandsBatches &&
@@ -65,6 +67,7 @@ export class BitrixWikiService {
         };
     });
 
+    // Выполняем запрос
     const batchResponse = await Promise.all(
       batchCommandsBatches.map((batchCommands) =>
         this.bitrixService
@@ -76,6 +79,7 @@ export class BitrixWikiService {
     const phonesNeedCreateLead: Map<string, string> = new Map();
     const resultPhones: Set<UnloadLostCallingResponse> = new Set();
 
+    // Проходимся по результату запроса от битркис
     batchResponse.forEach((batchResponseList) => {
       Object.entries(batchResponseList).forEach(([command, bResponse]) => {
         const [_, phone, datetime] = command.split('=');
@@ -95,6 +99,7 @@ export class BitrixWikiService {
 
     if (phonesNeedCreateLead.size === 0) return [...resultPhones];
 
+    // Если был указан флаг needCreate: создаем лиды
     if (needCreate === 1) {
       const batchCommandsCreateLeadsBatches: B24BatchCommands[] = [];
       batchIndex = 0;
@@ -191,16 +196,13 @@ export class BitrixWikiService {
   public async sendNoticeWaitingPayment({
     user_bitrix_id: userBitrixId,
     name_of_org: nameOfOrganization,
-    deal_id,
+    deal_id: dealId,
     lead_id,
     request,
   }: B24WikiPaymentsNoticeWaitingOptions) {
     let leadId = lead_id ? lead_id : request?.lead_id;
-    let dealId = deal_id;
 
     if (!leadId && !dealId)
       throw new BadRequestException('Invalid lead_id or deal_id');
-
-    return request.user_role;
   }
 }

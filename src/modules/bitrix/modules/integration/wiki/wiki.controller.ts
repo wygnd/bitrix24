@@ -47,10 +47,11 @@ export class BitrixWikiController {
   async sendNoticePaymentWaiting(
     @Body() fields: B24WikiPaymentsNoticeWaitingDto,
   ) {
-    this.logger.info(`New request: ${JSON.stringify(fields)}`);
-    this.bitrixWikiService.sendNoticeWaitingPayment(fields).then((result) => {
-      this.logger.info(`Request response: ${JSON.stringify(result)}`);
-    });
-    return true;
+    return this.bitrixWikiService.sendNoticeWaitingPayment(fields);
+    // this.logger.info(`New request: ${JSON.stringify(fields)}`);
+    // this.bitrixWikiService.sendNoticeWaitingPayment(fields).then((result) => {
+    //   this.logger.info(`Request response: ${JSON.stringify(result)}`);
+    // });
+    // return true;
   }
 }
