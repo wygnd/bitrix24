@@ -20,6 +20,7 @@ import { PlacementBindDto } from '@/modules/bitrix/modules/placement/dtos/placem
 import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/placement-unbind.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixPlacementGuard } from '@/modules/bitrix/guards/bitrix-widget.guard';
+import { B24PlacementWidgetCallCardDto } from '@/modules/bitrix/modules/placement/dtos/placement-widget-call-card.dto';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -47,7 +48,7 @@ export class BitrixPlacementController {
   })
   @UseGuards(BitrixPlacementGuard)
   @Post('/crm/telephony/call-card')
-  async handleCallCardWidget(@Body() fields: any) {
+  async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
     return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
   }
 

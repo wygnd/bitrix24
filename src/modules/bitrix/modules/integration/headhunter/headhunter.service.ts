@@ -40,6 +40,8 @@ import { HeadhunterWebhookCallResponse } from '@/modules/bitrix/modules/integrat
 import { B24DealHRRejectedStages } from '@/modules/bitrix/modules/deal/constants/deal-hr.constants';
 import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { WinstonLogger } from '@/config/winston.logger';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -54,6 +56,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixDealService: BitrixDealService,
     private readonly headHunterRestService: HeadhunterRestService,
     private readonly queueHeavyService: QueueHeavyService,
+    private readonly tokensService: TokensService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -76,14 +79,21 @@ export class BitrixHeadHunterService {
 
       const now = new Date();
       // Save tokens in redis
-      await this.redisService.set<HeadHunterAuthTokens>(
-        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-        {
-          ...res,
-          expires: now.setDate(now.getDate() + 14),
-        },
-        1209600,
-      );
+      await Promise.all([
+        this.redisService.set<HeadHunterAuthTokens>(
+          REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+          {
+            ...res,
+            expires: now.setDate(now.getDate() + 14),
+          },
+          res.expires_in,
+        ),
+        this.tokensService.updateToken(TokensServices.HH, {
+          accessToken: res.access_token,
+          refreshToken: res.refresh_token,
+          expires: new Date().getTime() + res.expires_in * 1000,
+        }),
+      ]);
 
       // update token on url
       await this.headHunterApi.updateToken();

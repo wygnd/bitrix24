@@ -19,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { B24Categories } from '@/modules/bitrix/bitrix.constants';
+import { B24PlacementWidgetCallCardDto } from '@/modules/bitrix/modules/placement/dtos/placement-widget-call-card.dto';
 
 @Injectable()
 export class BitrixPlacementService {
@@ -106,7 +107,7 @@ export class BitrixPlacementService {
     }
   }
 
-  public async handleOpenWidgetCallCard(fields: any) {
+  public async handleOpenWidgetCallCard(fields: B24PlacementWidgetCallCardDto) {
     this.bitrixImbotService.sendTestMessage(
       `New open widget:[br]${JSON.stringify(fields)}`,
     );
