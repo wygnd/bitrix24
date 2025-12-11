@@ -24,6 +24,7 @@ import {
   LeadObserveManagerCallingDto,
   LeadObserveManagerCallingResponseDto,
 } from '@/modules/bitrix/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags(B24ApiTags.LEADS)
 @ApiHeader({
@@ -35,6 +36,8 @@ import {
 @UseGuards(AuthGuard)
 @Controller('leads')
 export class BitrixLeadController {
+  private readonly logger = new WinstonLogger(BitrixLeadService.name);
+
   constructor(private readonly bitrixLeadService: BitrixLeadService) {}
 
   @ApiOperation({
@@ -90,6 +93,9 @@ export class BitrixLeadController {
   @HttpCode(HttpStatus.OK)
   @Post('/observe-manager-calling')
   async observeManagerCalling(@Body() fields: LeadObserveManagerCallingDto) {
-    return this.bitrixLeadService.handleObserveManagerCalling(fields);
+    const result =
+      await this.bitrixLeadService.handleObserveManagerCalling(fields);
+    this.logger.info(`Observe manager calling: ${JSON.stringify(result)}`);
+    return result;
   }
 }

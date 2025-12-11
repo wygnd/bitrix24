@@ -702,7 +702,7 @@ export class BitrixLeadService {
         method: 'imbot.message.add',
         params: {
           BOT_ID: this.bitrixService.BOT_ID,
-          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+          DIALOG_ID: 'chat57186', // Предложения РК/SEO новым клиентам
           MESSAGE:
             '[b]Менеджер не звонил в течение 5 дней.[/b][br][br]' +
             this.bitrixService.generateLeadUrl(leadId),

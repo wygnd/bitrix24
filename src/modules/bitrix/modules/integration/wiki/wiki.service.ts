@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-unload-lost-calling.interface';
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { WikiService } from '@/modules/wiki/wiki.service';
+import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
 
 @Injectable()
 export class BitrixWikiService {
@@ -185,5 +186,21 @@ export class BitrixWikiService {
     }
 
     return [...resultPhones];
+  }
+
+  public async sendNoticeWaitingPayment({
+    user_bitrix_id: userBitrixId,
+    name_of_org: nameOfOrganization,
+    deal_id,
+    lead_id,
+    request,
+  }: B24WikiPaymentsNoticeWaitingOptions) {
+    let leadId = lead_id ? lead_id : request?.lead_id;
+    let dealId = deal_id;
+
+    if (!leadId && !dealId)
+      throw new BadRequestException('Invalid lead_id or deal_id');
+
+    return request.user_role;
   }
 }
