@@ -108,12 +108,12 @@ export class HeadHunterService {
   }
 
   async notifyAboutInvalidCredentials() {
-    // const wasSendingNotification = await this.redisService.get<boolean>(
-    //   REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
-    // );
-    // console.log(wasSendingNotification);
-    //
-    // if (wasSendingNotification) return;
+    const wasSendingNotification = await this.redisService.get<boolean>(
+      REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
+    );
+    console.log(wasSendingNotification);
+
+    if (wasSendingNotification) return;
 
     await this.bitrixMessageService.sendPrivateMessage({
       DIALOG_ID: 'chat68032', // Chat Отклики HH.ru
