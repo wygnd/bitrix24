@@ -62,9 +62,13 @@ export class HeadHunterService {
       this.http.defaults.headers.common['Authorization'] =
         `Bearer ${tokens.accessToken}`;
 
-      this.get<object, HHMeInterface>('/me').then((me) => {
-        this.employer_id = me.employer.id;
-      });
+      this.get<object, HHMeInterface>('/me')
+        .then((me) => {
+          this.employer_id = me.employer.id;
+        })
+        .catch(() => {
+          this.notifyAboutInvalidCredentials();
+        });
     });
 
     this.client_id = clientId;
@@ -104,11 +108,12 @@ export class HeadHunterService {
   }
 
   async notifyAboutInvalidCredentials() {
-    const wasSendingNotification = await this.redisService.get<boolean>(
-      REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
-    );
-
-    if (wasSendingNotification) return;
+    // const wasSendingNotification = await this.redisService.get<boolean>(
+    //   REDIS_KEYS.HEADHUNTER_NEED_UPDATE_AUTH_SENDING,
+    // );
+    // console.log(wasSendingNotification);
+    //
+    // if (wasSendingNotification) return;
 
     await this.bitrixMessageService.sendPrivateMessage({
       DIALOG_ID: 'chat68032', // Chat Отклики HH.ru

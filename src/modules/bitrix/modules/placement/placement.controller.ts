@@ -42,6 +42,9 @@ export class BitrixPlacementController {
     );
   }
 
+  @Post('/crm/telephony/call-card')
+  async handleCallCardWidget() {}
+
   @ApiHeader({
     name: 'Authorization',
     description: 'Authorization header',
