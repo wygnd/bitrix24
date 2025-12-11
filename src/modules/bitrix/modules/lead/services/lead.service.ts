@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../../bitrix.service';
 import {
   B24DuplicateFindByComm,
@@ -38,12 +38,9 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
-import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixLeadService {
-  private readonly logger = new WinstonLogger(BitrixLeadService.name);
-
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
@@ -428,6 +425,7 @@ export class BitrixLeadService {
     const errors: string[] = [];
     const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
 
+    // Делаем номера уникальными
     calls.forEach((call) =>
       uniqueCalls.set(call.phone, { ...call, date: new Date(call.date) }),
     );
@@ -478,6 +476,7 @@ export class BitrixLeadService {
       Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
     >[];
 
+    // Обработка ошибок
     try {
       batchResponseDictionary = await Promise.all<
         Promise<
@@ -515,7 +514,7 @@ export class BitrixLeadService {
       LeadObserveManagerCallingLeadBitrixItem
     >();
 
-    // Проходимся по результату получения информации и лидах и заполняем мапу
+    // Проходимся по результату получения информации и лидах и заполняем leadsFromBitrix
     batchResponseDictionary.forEach((b24Response) => {
       const batchErrors = Object.values(b24Response.result.result_error);
       if (batchErrors.length !== 0) {
@@ -560,9 +559,21 @@ export class BitrixLeadService {
     });
 
     // Если есть ошибки выводим их
-    if (errors.length !== 0) throw new BadRequestException(errors);
+    if (errors.length !== 0)
+      return {
+        message: `Exception error on batch request: get leads by phone: ${errors.join(', ')}`,
+        status: false,
+      };
 
-    // Получаем лиды из базы, у которых дата звонка -7 дней
+    // Обновляем записи в БД в соответствии с полученной информацией по лидам
+    const updateLeadsResponse =
+      await this.updateOrAddOnDBLeadsObserveManagerCalling(
+        Array.from(leadsFromBitrix.values()),
+      );
+
+    updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
+
+    // Получаем лиды из базы, у которых дата звонка больше 7 дней
     const leadsFromDBWhichManagerDoesntCalling: Pick<
       LeadObserveManagerCallingModel,
       'id' | 'leadId' | 'dateCalling'
@@ -575,16 +586,8 @@ export class BitrixLeadService {
       attributes: ['id', 'leadId', 'dateCalling'],
     });
 
-    // Если не нашли в базе лидов, проходимся по тем, которые получили из битрикса
-    // записываем в базу и выходим
-    if (leadsFromDBWhichManagerDoesntCalling.length === 0) {
-      const updateLeadsResponse =
-        await this.updateOrAddOnDBLeadsObserveManagerCalling(
-          Array.from(leadsFromBitrix.values()),
-        );
-
-      updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
-
+    // Если не нашли в базе лидов: выходим
+    if (leadsFromDBWhichManagerDoesntCalling.length === 0)
       return {
         message: 'Not found leads',
         status: true,
@@ -602,7 +605,6 @@ export class BitrixLeadService {
           uniqueLeads: uniqueCalls.size,
         },
       };
-    }
 
     // Проходимся по списку найденных лидов и собираем пакет запросов для проверки активных лидов
     const batchCommandsGetActiveLeads = new Map<number, B24BatchCommands>();
@@ -630,9 +632,11 @@ export class BitrixLeadService {
       batchCommandsGetActiveLeads.set(batchIndex, cmds);
     });
 
-    // Делаем запрос для получения активных лидов с базы
+    // Делаем запрос в битрикс для фильтрации активных лидов с базы
     let batchResponseGetActiveLeads: B24BatchResponseMap<B24Lead[]>[];
 
+    // Обработка ошибок
+    // Делаем запрос
     try {
       batchResponseGetActiveLeads = await Promise.all<
         Promise<B24BatchResponseMap<B24Lead[]>>[]
@@ -681,7 +685,32 @@ export class BitrixLeadService {
       });
     });
 
-    if (errors.length !== 0) throw new BadRequestException(errors);
+    // Если есть ошибки выводим их
+    if (errors.length !== 0)
+      return {
+        message: `Exception error on get active leads by phone from DB: ${errors.join(', ')}`,
+        status: false,
+      };
+
+    // Если нет лидов выходим
+    if (leadsNeedNotify.size === 0)
+      return {
+        message: 'Leads updated successfully',
+        status: true,
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
+      };
 
     // Проходимся по списку найденных лидов и собираем пакет запросов для уведомления
     const batchCommandsNotifyAboutUnCallingManager = new Map<
@@ -714,6 +743,7 @@ export class BitrixLeadService {
       notifiedLeads.add(leadId); // Добавляем в массив для результата
     });
 
+    // Обработка ошибок
     // Выполняем запрос
     try {
       Promise.all([
@@ -746,37 +776,9 @@ export class BitrixLeadService {
       };
     }
 
-    // Если больше лидов не осталось выходим
-    if (leadsFromBitrix.size === 0)
-      return {
-        status: true,
-        message: 'Leads notified successfully.',
-        data: {
-          notifiedLeads: [...notifiedLeads],
-          missingLeads: [...missingLeads],
-          updatedLeads: [...updatedLeads],
-          deletedLeads: [...deletedLeads],
-        },
-        total: {
-          notifiedLeads: notifiedLeads.size,
-          missingLeads: missingLeads.size,
-          updatedLeads: updatedLeads.size,
-          deletedLeads: deletedLeads.size,
-          uniqueLeads: uniqueCalls.size,
-        },
-      };
-
-    //   Если остались лиды, нужно занести в базу и обновить существующие
-    const updateLeadsResponse =
-      await this.updateOrAddOnDBLeadsObserveManagerCalling(
-        Array.from(leadsFromBitrix.values()),
-      );
-
-    updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
-
     return {
       status: true,
-      message: 'Leads notified and update successfully',
+      message: 'Leads notified successfully.',
       data: {
         notifiedLeads: [...notifiedLeads],
         missingLeads: [...missingLeads],
@@ -794,15 +796,11 @@ export class BitrixLeadService {
   }
 
   /**
-   * Function calling function from lead observe manager calling service and return value.
-   *
-   * Update or create new calling in database
+   * Update or create new leads in DB
    *
    * ---
    *
-   * Функция вызывает другую ф-и из сервиса для работы с БД и возвращает результат
-   *
-   * Обновление или создание новой записи лида в БД
+   * Обновляет или создает новые записи лидов в БД
    *
    * @param leads
    * @private
