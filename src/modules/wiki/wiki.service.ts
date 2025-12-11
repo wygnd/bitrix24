@@ -10,7 +10,6 @@ import {
   WikiUpdateLeadRequest,
   WikIUpdateLeadResponse,
 } from '@/modules/wiki/interfaces/wiki-update-lead.interface';
-import { AxiosResponse, isAxiosError } from 'axios';
 import { WikiDeleteLead } from '@/modules/wiki/interfaces/wiki-delete-lead.interface';
 
 @Injectable()
@@ -47,17 +46,16 @@ export class WikiService {
     }
 
     const { sales, status } =
-      await this.wikiApiServiceOld.get<GetWorkingSalesInterface>('', {
-        baseURL:
-          'https://bitrix24.grampus-server.ru/src/api/wiki/working-sales.php',
-      });
+      await this.wikiApiServiceOld.get<GetWorkingSalesInterface>(
+        '?action=get_working_sales',
+      );
 
     if (!status) return [];
 
     this.redisService.set<string[]>(
       REDIS_KEYS.WIKI_WORKING_SALES,
       sales,
-      3600, // 1 hour
+      900, // 15 minutes
     );
 
     return sales;
