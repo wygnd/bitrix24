@@ -31,6 +31,13 @@ export class BitrixPlacementService {
     private readonly bitrixDealService: BitrixDealService,
   ) {}
 
+  public async testReceiveRedirectUrl(query: any, params: any, body: any) {
+    this.bitrixImbotService.sendTestMessage(
+      `[b]Telphin handle redirect uri[/b][br]query: ${JSON.stringify(query)}[br]params: ${JSON.stringify(params)}[br]body: ${JSON.stringify(body)}`,
+    );
+    return '<h1>Успех</h1>';
+  }
+
   public async receiveOpenWidgetCRMDetailTab(
     response: Response,
     body: PlacementBodyRequestDto,

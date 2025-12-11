@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Post,
   Query,
   Res,
@@ -50,6 +51,20 @@ export class BitrixPlacementController {
   @Post('/crm/telephony/call-card')
   async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
     return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
+  }
+
+  // todo: temporary remove
+  @Post('/crm/telephony/redirect-url')
+  async handleRedirectUrlFromTelphin(
+    @Query() query: any,
+    @Param() params: any,
+    @Body() body: any,
+  ) {
+    return this.bitrixPlacementService.testReceiveRedirectUrl(
+      query,
+      params,
+      body,
+    );
   }
 
   @ApiHeader({
