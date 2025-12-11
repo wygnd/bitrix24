@@ -42,8 +42,14 @@ export class BitrixPlacementController {
     );
   }
 
+  @ApiOperation({
+    summary: 'Handle call card widget from bitrix24',
+  })
+  @UseGuards(BitrixPlacementGuard)
   @Post('/crm/telephony/call-card')
-  async handleCallCardWidget() {}
+  async handleCallCardWidget(@Body() fields: any) {
+    return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
+  }
 
   @ApiHeader({
     name: 'Authorization',

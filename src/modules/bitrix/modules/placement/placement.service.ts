@@ -105,4 +105,12 @@ export class BitrixPlacementService {
       return [];
     }
   }
+
+  public async handleOpenWidgetCallCard(fields: any) {
+    this.bitrixImbotService.sendTestMessage(
+      `New open widget:[br]${JSON.stringify(fields)}`,
+    );
+
+    return true;
+  }
 }
