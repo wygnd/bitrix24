@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
@@ -18,6 +17,8 @@ import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
 import { EventHandleUpdateTaskDto } from '@/modules/bitrix/modules/events/dtos/event-task-update.dto';
 import { EventLeadDeleteDto } from '@/modules/bitrix/modules/events/dtos/event-lead-delete.dto';
 import { B24EventRemoveDto } from '@/modules/bitrix/modules/events/dtos/event-remove.dto';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
+import { BitrixVoxImplantEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 
 @ApiTags(B24ApiTags.EVENTS)
 @Controller('events')
@@ -60,8 +61,11 @@ export class BitrixEventsController {
     return this.eventsService.handleLeadDelete(fields);
   }
 
+  @UseGuards(BitrixVoxImplantEventGuard)
   @Post('/handle/calling/end')
-  async handleOnVoximplantCallEnd(@Body() fields: any, @Query() query: any) {
-    return this.eventsService.handleVoximplantCallEnd(fields, query);
+  async handleOnVoximplantCallEnd(
+    @Body() fields: B24EventVoxImplantCallEndDto,
+  ) {
+    return this.eventsService.handleVoxImplantCallEnd(fields);
   }
 }

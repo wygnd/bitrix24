@@ -3,12 +3,9 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Post,
   Query,
-  Render,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -24,7 +21,6 @@ import { PlacementBindDto } from '@/modules/bitrix/modules/placement/dtos/placem
 import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/placement-unbind.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixPlacementGuard } from '@/modules/bitrix/guards/bitrix-widget.guard';
-import { B24PlacementWidgetCallCardDto } from '@/modules/bitrix/modules/placement/dtos/placement-widget-call-card.dto';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -45,26 +41,6 @@ export class BitrixPlacementController {
       body,
       query,
     );
-  }
-
-  @ApiOperation({
-    summary: 'Handle call card widget from bitrix24',
-  })
-  @UseGuards(BitrixPlacementGuard)
-  @HttpCode(HttpStatus.OK)
-  @Post('/crm/telephony/call-card')
-  @Render('bitrix/widgets/call-card')
-  async handleCallCardWidget(
-    @Body() fields: B24PlacementWidgetCallCardDto,
-    @Res() response: Response,
-  ) {
-    // return {
-    //   title: 'Test card',
-    //   description: 'this test card',
-    //   class: 'alert alert-primary',
-    // };
-    // return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
-    return true;
   }
 
   // todo: temporary remove

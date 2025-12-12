@@ -448,4 +448,8 @@ export class BitrixService {
 
     return `<a href="${url}">${url}</a>`;
   }
+
+  get WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.finishCallToken;
+  }
 }
