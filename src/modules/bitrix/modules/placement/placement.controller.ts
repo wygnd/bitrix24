@@ -55,7 +55,12 @@ export class BitrixPlacementController {
   @Post('/crm/telephony/call-card')
   @Render('bitrix/widgets/call-card')
   async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
-    return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
+    return {
+      title: 'Test card',
+      description: 'this test card',
+      class: 'alert alert-primary',
+    };
+    // return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
   }
 
   // todo: temporary remove
