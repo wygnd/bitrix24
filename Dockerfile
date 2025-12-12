@@ -22,6 +22,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY package-lock*.json ./
 COPY static ./static
+COPY views ./views
 
 ENV NODE_ENV=production
 RUN npm ci --omit=dev
