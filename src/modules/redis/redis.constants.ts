@@ -18,6 +18,9 @@ export const REDIS_KEYS = {
   BITRIX_DATA_TASK_ITEM: 'bitrix:task:item:',
   BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE: 'bitrix:lead:duplicate:phone:',
 
+  // BITRIX WIDGET
+  BITRIX_WIDGET_CALL_CARD: 'bitrix:widget:call_card:',
+
   // HEAD HUNTER API
   HEADHUNTER_ACCESS_TOKEN: 'hh:access_token',
   HEADHUNTER_WEBHOOK_NOTIFICATION: 'hh:webhook:',

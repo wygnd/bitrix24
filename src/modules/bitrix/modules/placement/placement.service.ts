@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   PlacementBindOptions,
   PlacementUnbindOptions,
@@ -20,6 +24,10 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { B24Categories } from '@/modules/bitrix/bitrix.constants';
 import { B24PlacementWidgetCallCardDto } from '@/modules/bitrix/modules/placement/dtos/placement-widget-call-card.dto';
+import { B24PlacementWidgetCallCardPlacementOptions } from '@/modules/bitrix/modules/placement/interfaces/placement-widget-call-card.interface';
+import { RedisService } from '@/modules/redis/redis.service';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 
 @Injectable()
 export class BitrixPlacementService {
@@ -29,6 +37,8 @@ export class BitrixPlacementService {
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
     private readonly bitrixDealService: BitrixDealService,
+    private readonly redisService: RedisService,
+    private readonly bitrixLeadService: BitrixLeadService,
   ) {}
 
   public async testReceiveRedirectUrl(query: any, params: any, body: any) {
@@ -114,11 +124,49 @@ export class BitrixPlacementService {
     }
   }
 
-  public async handleOpenWidgetCallCard(fields: B24PlacementWidgetCallCardDto) {
-    this.bitrixImbotService.sendTestMessage(
-      `New open widget:[br]${JSON.stringify(fields)}`,
-    );
+  public async handleOpenWidgetCallCard({
+    PLACEMENT_OPTIONS,
+  }: B24PlacementWidgetCallCardDto) {
+    try {
+      const {
+        PHONE_NUMBER: phone,
+        CRM_ENTITY_ID: leadId,
+      }: B24PlacementWidgetCallCardPlacementOptions =
+        JSON.parse(PLACEMENT_OPTIONS);
 
-    return true;
+      const wasCalling = await this.redisService.get<string>(
+        REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
+      );
+
+      if (wasCalling) throw new ConflictException('Calling was send');
+
+      this.redisService.set<string>(
+        REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
+        phone,
+        120, // 120 sec
+      );
+
+      if (!leadId) {
+        // Ищем дубликаты
+        const duplicateLeads =
+          await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+
+        // Если нет дубликатов: создаем лид
+        if (duplicateLeads.length === 0) {
+          this.bitrixLeadService
+            .createLead({
+              ASSIGNED_BY_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
+            })
+            .catch((err) => {
+              this.logger.error(`Execute error on create lead: ${err}`);
+            });
+        }
+      }
+
+      return true;
+    } catch (e) {
+      this.logger.error(e, undefined, true);
+      throw e;
+    }
   }
 }

@@ -113,7 +113,9 @@ export class BitrixLeadService {
   public async createLead(fields: Partial<B24Lead>) {
     return this.bitrixService.callMethod<Partial<B24Lead>, number>(
       'crm.lead.add',
-      fields,
+      {
+        fields: fields,
+      },
     );
   }
 
