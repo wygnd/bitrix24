@@ -25,7 +25,6 @@ import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/plac
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixPlacementGuard } from '@/modules/bitrix/guards/bitrix-widget.guard';
 import { B24PlacementWidgetCallCardDto } from '@/modules/bitrix/modules/placement/dtos/placement-widget-call-card.dto';
-import { Throttle } from '@nestjs/throttler';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @Controller('placement')
@@ -53,7 +52,6 @@ export class BitrixPlacementController {
   })
   @UseGuards(BitrixPlacementGuard)
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 1, ttl: 5000 } })
   @Post('/crm/telephony/call-card')
   @Render('bitrix/widgets/call-card')
   async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
