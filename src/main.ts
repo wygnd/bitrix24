@@ -9,6 +9,7 @@ import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import basicAuth from 'express-basic-auth';
 import EventEmitter from 'node:events';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
@@ -86,6 +87,10 @@ async function bootstrap() {
       customSiteTitle: 'Grampus Bitrix24',
     },
   );
+
+  app.useStaticAssets(join(process.cwd(), 'static'));
+  app.setBaseViewsDir(join(process.cwd(), 'views'));
+  app.setViewEngine('hbs');
 
   await app.listen(PORT);
 }

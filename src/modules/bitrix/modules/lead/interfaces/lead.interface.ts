@@ -7,7 +7,7 @@ export interface B24LeadDefault {
   ASSIGNED_BY_ID: string;
   STATUS_ID: string;
   DATE_CREATE: string;
-  PHONE: Partial<Omit<B24CRMMultifield, 'ID'>>[];
+  PHONE: Omit<B24CRMMultifield, 'ID' | 'TYPE_ID'>[];
 }
 
 export interface B24DuplicateFindByComm {

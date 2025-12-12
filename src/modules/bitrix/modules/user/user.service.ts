@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { B24User, B24UserListParams } from './user.interface';
+import { B24User, B24UserListParams } from './interfaces/user.interface';
 import {
   B24BatchCommands,
   B24ListParams,

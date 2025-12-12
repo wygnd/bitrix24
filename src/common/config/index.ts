@@ -5,6 +5,7 @@ import applicationConfig from './app.config';
 import headHunterConfig from './headhunter.config';
 import wikiConfig from './wiki.config';
 import avitoConfig from './avito.config';
+import telphinConfig from './telphin.config';
 
 export const configList = [
   bitrixConfig,
@@ -14,4 +15,5 @@ export const configList = [
   headHunterConfig,
   wikiConfig,
   avitoConfig,
+  telphinConfig,
 ];

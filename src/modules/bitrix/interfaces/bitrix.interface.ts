@@ -40,7 +40,9 @@ export type B24AvailableMethods =
   | 'crm.timeline.comment.add'
   | 'crm.timeline.item.pin'
   | 'crm.activity.add'
-  | 'event.get';
+  | 'event.get'
+  | 'im.notify.personal.add'
+  | 'im.notify.system.add';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
