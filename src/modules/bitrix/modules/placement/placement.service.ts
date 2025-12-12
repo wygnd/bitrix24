@@ -157,6 +157,7 @@ export class BitrixPlacementService {
         description: '',
       };
 
+      // Так как битрикс отправляет много запросов, ограничимся одним запросом не уникальным запросом
       const wasCalling = await this.redisService.get<string>(
         REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
       );
@@ -169,6 +170,7 @@ export class BitrixPlacementService {
         120, // 120 sec
       );
 
+      // получаем информацию о клиенте telphin и пользователя с битрикс, кому позвонили
       const [telphinUserInfo, user] = await Promise.all<
         [Promise<TelphinUserInfo | null>, Promise<B24UserCurrent | null>]
       >([
@@ -176,6 +178,7 @@ export class BitrixPlacementService {
         this.bitrixService.getUserIdByAuth(AUTH_ID),
       ]);
 
+      // если не получили информацию: пробрасываем ошибку
       if (!telphinUserInfo)
         throw new InternalServerErrorException('Invalid get info from telphin');
 
@@ -183,6 +186,7 @@ export class BitrixPlacementService {
 
       const { client_id: telphinClientId } = telphinUserInfo;
 
+      // Получаем текущие звонки и внутренний номер менеджера, кому звонят
       const [targetCalls, extension] = await Promise.all<
         [Promise<TelphinCallItem[]>, Promise<TelphinExtensionItem | null>]
       >([
@@ -196,13 +200,19 @@ export class BitrixPlacementService {
       if (!extension)
         throw new BadRequestException('Extension by user bitrix id not found');
 
+      // Ищем внутренний номер в текущем списке звонков(кто на данный момент в звонке)
       const targetExtension = targetCalls.find(
         ({ call_flow, caller_extension: { id: extId } }) =>
           extId === extension.id && call_flow === 'IN',
       );
 
-      if(!targetExtension) throw new BadRequestException('Extension in current calls was not found');
+      // Если не находим перца: выходим
+      if (!targetExtension)
+        throw new BadRequestException(
+          'Extension in current calls was not found',
+        );
 
+      // Если не передан leadId, пытаемся найти лид по номеру телефона
       if (!leadId || leadId == '0') {
         // Ищем дубликаты
         const duplicateLeads =
