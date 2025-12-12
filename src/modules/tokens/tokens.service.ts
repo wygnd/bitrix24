@@ -8,9 +8,12 @@ import { TokensDto } from '@/modules/tokens/dtos/tokens.dto';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { TokensCreateOrUpdateResponse } from '@/modules/tokens/interfaces/tokens-create-or-update-response.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class TokensService {
+  private readonly logger = new WinstonLogger(TokensService.name);
+
   constructor(
     @Inject(TOKENS_REPOSITORY)
     private readonly tokensRepository: typeof TokensModel,
@@ -98,6 +101,7 @@ export class TokensService {
         status: true,
       };
     } catch (e) {
+      console.log(e);
       return {
         message: `Error: ${e}`,
         status: false,
@@ -127,6 +131,9 @@ export class TokensService {
 
       return true;
     } catch (err) {
+      this.logger.error(
+        `Execute function: updateToken was throwing error: ${err}`,
+      );
       return false;
     }
   }
