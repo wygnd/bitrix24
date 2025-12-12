@@ -54,13 +54,18 @@ export class BitrixPlacementController {
   @HttpCode(HttpStatus.OK)
   @Post('/crm/telephony/call-card')
   @Render('bitrix/widgets/call-card')
-  async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
-    return {
-      title: 'Test card',
-      description: 'this test card',
-      class: 'alert alert-primary',
-    };
+  async handleCallCardWidget(
+    @Body() fields: B24PlacementWidgetCallCardDto,
+    @Res() response: Response,
+  ) {
+    // return {
+    //   title: 'Test card',
+    //   description: 'this test card',
+    //   class: 'alert alert-primary',
+    // };
     // return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
+    response.redirect('https://bitrix-grampus.ru/hr-app/');
+    return true;
   }
 
   // todo: temporary remove
