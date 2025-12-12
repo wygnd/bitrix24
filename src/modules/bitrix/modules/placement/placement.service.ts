@@ -156,6 +156,12 @@ export class BitrixPlacementService {
           this.bitrixLeadService
             .createLead({
               ASSIGNED_BY_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
+              PHONE: [
+                {
+                  VALUE: phone,
+                  VALUE_TYPE: 'WORK',
+                },
+              ],
             })
             .catch((err) => {
               this.logger.error(`Execute error on create lead: ${err}`);
