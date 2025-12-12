@@ -11,3 +11,10 @@ export interface B24PlacementOptions {
 export interface B24PlacementOptionsPlacementOptionsParsed {
   ID: string;
 }
+
+export interface B24PlacementQueryOptions {
+  DOMAIN: string;
+  PROTOCOL: string;
+  LANG: string;
+  APP_SID: string;
+}

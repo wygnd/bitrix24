@@ -3,7 +3,7 @@ import {
   B24ListOrder,
   B24ListParams,
   B24SelectOptions,
-} from '../../interfaces/bitrix.interface';
+} from '../../../interfaces/bitrix.interface';
 
 export interface B24User {
   ID: string;

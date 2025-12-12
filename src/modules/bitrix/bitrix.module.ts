@@ -38,6 +38,7 @@ import { BitrixAddySupportService } from '@/modules/bitrix/modules/integration/a
 import { BitrixAddySupportControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-support.controller';
 import { BitrixAddyPaymentsControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-payments.controller';
 import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/addy/services/addy-payments.service';
+import { TelphinModule } from '@/modules/telphin/telphin.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
     WikiModule,
     AvitoModule,
     TokensModule,
+    TelphinModule,
   ],
   controllers: [
     BitrixController,
