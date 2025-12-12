@@ -146,7 +146,7 @@ export class BitrixPlacementService {
         120, // 120 sec
       );
 
-      if (!leadId) {
+      if (!leadId || leadId == "0") {
         // Ищем дубликаты
         const duplicateLeads =
           await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);

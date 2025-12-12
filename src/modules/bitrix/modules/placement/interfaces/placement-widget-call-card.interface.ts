@@ -14,8 +14,8 @@ export interface B24PlacementWidgetCallCardPlacementOptions {
   PHONE_NUMBER: string;
   LINE_NUMBER: string;
   LINE_NAME: string;
-  CRM_ENTITY_TYPE: string;
-  CRM_ENTITY_ID?: string;
+  CRM_ENTITY_TYPE?: string;
+  CRM_ENTITY_ID: string;
   CRM_ACTIVITY_ID: string;
   CRM_BINDINGS: B24PlacementWidgetCallCardPlacementOptionsBinding[];
   CALL_DIRECTION: string;
