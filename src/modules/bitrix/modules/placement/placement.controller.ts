@@ -53,12 +53,9 @@ export class BitrixPlacementController {
   @UseGuards(BitrixPlacementGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/crm/telephony/call-card')
-  // @Render('bitrix/widgets/call-card')
+  @Render('bitrix/widgets/call-card')
   async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
-    return {
-      message: 'Успех',
-    };
-    // return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
+    return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
   }
 
   // todo: temporary remove
