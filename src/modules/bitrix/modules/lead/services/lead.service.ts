@@ -57,12 +57,16 @@ export class BitrixLeadService {
    * @param id
    */
   public async getLeadById(id: string) {
-    return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
-      'crm.lead.get',
-      {
-        ID: id,
-      },
-    );
+    try {
+      return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
+        'crm.lead.get',
+        {
+          ID: id,
+        },
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
   public async getDuplicateLeadsByPhone(phone: string, force: boolean = false) {

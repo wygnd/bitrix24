@@ -23,6 +23,7 @@ import { QueueModule } from '@/modules/queue/queue.module';
 import { DatabaseModule } from '@/modules/database/database.module';
 import { CronModule } from '@/modules/cron/cron.module';
 import { TokensModule } from '@/modules/tokens/tokens.module';
+import { TelphinModule } from '@/modules/telphin/telphin.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
     }),
     CronModule,
     TokensModule,
+    TelphinModule,
   ],
   controllers: [AppController],
   providers: [

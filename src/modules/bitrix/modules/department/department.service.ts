@@ -14,7 +14,7 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { RedisService } from '@/modules/redis/redis.service';
 import { NotFoundError } from 'rxjs';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24User } from '@/modules/bitrix/modules/user/user.interface';
+import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
 import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
 import dayjs from 'dayjs';
 import { DepartmentHeadDealCount } from '@/modules/bitrix/modules/department/interfaces/department-api.interface';

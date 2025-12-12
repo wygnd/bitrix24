@@ -10,7 +10,7 @@ import {
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24User } from '@/modules/bitrix/modules/user/user.interface';
+import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
 import {
   WebhookUserData,
   WebhookUserItem,

@@ -3,9 +3,12 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
+  Render,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -48,7 +51,9 @@ export class BitrixPlacementController {
     summary: 'Handle call card widget from bitrix24',
   })
   @UseGuards(BitrixPlacementGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('/crm/telephony/call-card')
+  @Render('bitrix/widgets/call-card')
   async handleCallCardWidget(@Body() fields: B24PlacementWidgetCallCardDto) {
     return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
   }

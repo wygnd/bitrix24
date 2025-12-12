@@ -39,7 +39,7 @@ export class TokensModel extends Model<
   declare expires: number;
 
   @Column({
-    type: DataType.ENUM(...Object.values(TokensServices)),
+    type: DataType.STRING,
     allowNull: false,
     unique: true,
   })

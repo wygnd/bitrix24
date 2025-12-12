@@ -27,3 +27,8 @@ interface B24PlacementWidgetCallCardPlacementOptionsBinding {
   ENTITY_TYPE: string;
   ENTITY_ID: string;
 }
+
+export interface B24PlacementWidgetCallCardResponse {
+  title: string;
+  description: string;
+}

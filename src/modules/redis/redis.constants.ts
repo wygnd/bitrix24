@@ -37,6 +37,12 @@ export const REDIS_KEYS = {
 
   // APPLICATION
   APPLICATION_TOKEN_BY_SERVICE: 'application:token:',
+
+  // TELPHIN
+  TELPHIN_USER_INFO: 'telphin:user:info',
+  TELPHIN_EXTENSION_LIST: 'telphin:extension:list',
+  TELPHIN_EXTENSION_ITEM: 'telphin:extension:item:',
+  TELPHIN_EXTENSION_ITEM_BY_BITRIX_ID: 'telphin:extension:item:bitrix_id:',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

@@ -28,6 +28,8 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import emojiStrip from 'emoji-strip';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+import { WinstonLogger } from '@/config/winston.logger';
+import { B24UserCurrent } from '@/modules/bitrix/modules/user/interfaces/user-current.interface';
 
 @Injectable()
 export class BitrixService {
@@ -38,6 +40,10 @@ export class BitrixService {
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
   private readonly bitrixConstants: BitrixConstants;
+  private readonly logger = new WinstonLogger(
+    BitrixService.name,
+    'bitrix:service'.split(':'),
+  );
 
   constructor(
     private readonly configService: ConfigService,
@@ -412,5 +418,34 @@ export class BitrixService {
 
   public getRandomElement<T = any>(items: T[]) {
     return items[Math.floor(Math.random() * items.length)];
+  }
+
+  public async getUserIdByAuth(authId: string) {
+    try {
+      const { result } = await this.post<
+        object,
+        B24SuccessResponse<B24UserCurrent>
+      >(
+        '/rest/user.current',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${authId}`,
+          },
+        },
+      );
+      return result ?? null;
+    } catch (e) {
+      this.logger.error(e.toString());
+      return null;
+    }
+  }
+
+  public generateLeadUrlHtml(leadId: string, label?: string) {
+    const url = `${this.bitrixDomain}/crm/lead/details/${leadId}/`;
+
+    if (label) return `<a href="${url}">${label}</a>`;
+
+    return `<a href="${url}">${url}</a>`;
   }
 }
