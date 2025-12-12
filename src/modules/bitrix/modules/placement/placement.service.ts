@@ -158,17 +158,17 @@ export class BitrixPlacementService {
       };
 
       // Так как битрикс отправляет много запросов, ограничимся одним запросом не уникальным запросом
-      const wasCalling = await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
-      );
-
-      if (wasCalling) throw new ConflictException('Calling was send');
-
-      this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
-        phone,
-        120, // 120 sec
-      );
+      // const wasCalling = await this.redisService.get<string>(
+      //   REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
+      // );
+      //
+      // if (wasCalling) throw new ConflictException('Calling was send');
+      //
+      // this.redisService.set<string>(
+      //   REDIS_KEYS.BITRIX_WIDGET_CALL_CARD + phone,
+      //   phone,
+      //   120, // 120 sec
+      // );
 
       // получаем информацию о клиенте telphin и пользователя с битрикс, кому позвонили
       const [telphinUserInfo, user] = await Promise.all<
