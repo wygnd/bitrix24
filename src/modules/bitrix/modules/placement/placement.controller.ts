@@ -64,7 +64,6 @@ export class BitrixPlacementController {
     //   class: 'alert alert-primary',
     // };
     // return this.bitrixPlacementService.handleOpenWidgetCallCard(fields);
-    response.redirect('https://bitrix-grampus.ru/hr-app/');
     return true;
   }
 

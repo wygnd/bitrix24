@@ -66,4 +66,17 @@ export class BitrixEventService {
   async removeEvent(fields: B24EventRemoveDto) {
     return this.bitrixService.callMethod('event.unbind', fields);
   }
+
+  async handleVoximplantCallEnd(body: any, query: any) {
+    this.bitrixService.callMethod('imbot.message.add', {
+      BOT_ID: this.bitrixService.BOT_ID,
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      MESSAGE:
+        '[b]Звонок завершен[/b][br]Body: ' +
+        JSON.stringify(body) +
+        '[br][br]Query: ' +
+        JSON.stringify(query),
+    });
+    return true;
+  }
 }

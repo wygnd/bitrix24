@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
@@ -57,5 +58,10 @@ export class BitrixEventsController {
   @Post('/handle/lead/delete')
   async handleLeadDelete(@Body() fields: EventLeadDeleteDto) {
     return this.eventsService.handleLeadDelete(fields);
+  }
+
+  @Post('/handle/calling/end')
+  async handleOnVoximplantCallEnd(@Body() fields: any, @Query() query: any) {
+    return this.eventsService.handleVoximplantCallEnd(fields, query);
   }
 }
