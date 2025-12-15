@@ -698,6 +698,10 @@ export class BitrixWebhookService {
           extId === extension.id && call_flow === 'IN',
       );
 
+      this.logger.info(
+        `Check current extension: ${extension.id} and calls: ${JSON.stringify(targetExtension)}`,
+      );
+
       // Если не находим перца: выходим
       if (!targetExtension)
         throw new BadRequestException(
