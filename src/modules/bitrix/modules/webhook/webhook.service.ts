@@ -642,9 +642,9 @@ export class BitrixWebhookService {
     return true;
   }
 
-  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallEndDto, params: any) {
+  async handleVoxImplantCallFinish(fields: B24EventVoxImplantCallEndDto) {
     return this.bitrixBotService.sendTestMessage(
-      `[b]Calling Инициализация звонка[/b][br]Body: ${JSON.stringify(fields)}[br]Query: ${JSON.stringify(params)}`,
+      `[b]Calling Инициализация звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
     );
   }
 }
