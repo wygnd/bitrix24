@@ -1,6 +1,10 @@
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
 import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
 import {
@@ -33,6 +37,16 @@ import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webh
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { isAxiosError } from 'axios';
 import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
+import { TelphinService } from '@/modules/telphin/telphin.service';
+import { TelphinCallItem } from '@/modules/telphin/interfaces/telphin-call.interface';
+import { TelphinExtensionItem } from '@/modules/telphin/interfaces/telphin-extension.interface';
+import {
+  B24LeadActiveStages,
+  B24LeadConvertedStages,
+  B24LeadRejectStages,
+} from '@/modules/bitrix/modules/lead/constants/lead.constants';
+import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -41,6 +55,7 @@ export class BitrixWebhookService {
     WebhookDepartmentInfo
   >;
   private lastSelectedDepartmentId: string = '';
+  private readonly logger = new WinstonLogger(BitrixWebhookService.name);
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -48,6 +63,8 @@ export class BitrixWebhookService {
     private readonly bitrixDepartmentService: BitrixDepartmentService,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
+    private readonly bitrixLeadService: BitrixLeadService,
+    private readonly telphinService: TelphinService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -643,8 +660,111 @@ export class BitrixWebhookService {
   }
 
   async handleVoxImplantCallFinish(fields: B24EventVoxImplantCallEndDto) {
-    return this.bitrixBotService.sendTestMessage(
+    this.bitrixBotService.sendTestMessage(
       `[b]Calling Инициализация звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
     );
+    try {
+      const { PHONE_NUMBER: phone, PORTAL_USER_ID: userId } = fields.data;
+      let leadId = '';
+
+      if (userId !== '522') return;
+
+      // получаем информацию о клиенте telphin и пользователя с битрикс, кому позвонили
+      const telphinUserInfo = await this.telphinService.getUserInfo();
+
+      // если не получили информацию: пробрасываем ошибку
+      if (!telphinUserInfo)
+        throw new InternalServerErrorException('Invalid get info from telphin');
+
+      const { client_id: telphinClientId } = telphinUserInfo;
+
+      // Получаем текущие звонки и внутренний номер менеджера, кому звонят
+      const [targetCalls, extension] = await Promise.all<
+        [Promise<TelphinCallItem[]>, Promise<TelphinExtensionItem | null>]
+      >([
+        this.telphinService.getCurrentCalls(telphinClientId),
+        this.telphinService.getClientExtensionByBitrixUserId(
+          telphinClientId,
+          userId,
+        ),
+      ]);
+
+      if (!extension)
+        throw new BadRequestException('Extension by user bitrix id not found');
+
+      // Ищем внутренний номер в текущем списке звонков(кто на данный момент в звонке)
+      const targetExtension = targetCalls.find(
+        ({ call_flow, caller_extension: { id: extId } }) =>
+          extId === extension.id && call_flow === 'IN',
+      );
+
+      // Если не находим перца: выходим
+      if (!targetExtension)
+        throw new BadRequestException(
+          'Extension in current calls was not found',
+        );
+
+      // Если не передан leadId, пытаемся найти лид по номеру телефона
+      // Ищем дубликаты
+      const duplicateLeads =
+        await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+
+      // Если нет дубликатов: создаем лид
+      if (duplicateLeads.length === 0) {
+        const { result } = await this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          PHONE: [
+            {
+              VALUE: phone,
+              VALUE_TYPE: 'WORK',
+            },
+          ],
+        });
+
+        if (!result) throw new BadRequestException('Ошибка при создании лида');
+
+        leadId = result.toString();
+      }
+
+      const lead = await this.bitrixLeadService.getLeadById(leadId);
+
+      if (!lead || !lead.result)
+        throw new BadRequestException('Lead not found.');
+
+      const { STATUS_ID: statusId } = lead.result;
+
+      switch (true) {
+        // Если лид в активных стадиях
+        case B24LeadActiveStages.includes(statusId):
+        case B24LeadConvertedStages.includes(statusId):
+          break;
+
+        // Если лид в неактивных стадиях
+        case B24LeadRejectStages.includes(statusId):
+          this.bitrixLeadService
+            .updateLead({
+              id: leadId,
+              fields: {
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+                ASSIGNED_BY_ID: userId,
+              },
+            })
+            .then((res) => {
+              this.logger.info(`Result update lead: ${JSON.stringify(res)}`);
+            })
+            .catch((err) => {
+              this.logger.error(
+                `Execute error on update lead in rejected stages: ${JSON.stringify(err)}`,
+              );
+            });
+          break;
+      }
+
+      return true;
+    } catch (e) {
+      this.logger.error(e, e?.stack, true);
+      return false;
+    }
   }
 }
