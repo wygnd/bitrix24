@@ -452,4 +452,10 @@ export class BitrixService {
   get WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN() {
     return this.bitrixConstants.WEBHOOK.voxImplant.finishCallToken;
   }
+
+  public sortItemsByField<T = any>(items: T[], field: keyof T): T[] {
+    return items.sort((prev, next) => {
+      return prev[field] > next[field] ? 1 : next[field] > prev[field] ? -1 : 0;
+    });
+  }
 }

@@ -154,7 +154,8 @@ export class BitrixIntegrationAvitoService {
     } = fields;
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
-        ? await this.bitrixUserService.getMinWorkflowUser(users)
+        ? ((await this.bitrixUserService.getMinWorkflowUser(users)) ??
+          this.bitrixService.ZLATA_ZIMINA_BITRIX_ID)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));

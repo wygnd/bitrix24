@@ -40,6 +40,12 @@ export class BitrixUserService {
    * @param users
    */
   public async getMinWorkflowUser(users: string[] = []) {
+    const minWorkflowUsers = await this.getMinWorkflowUsersSorted(users);
+
+    return minWorkflowUsers.length === 0 ? null : minWorkflowUsers[0].user_id;
+  }
+
+  public async getMinWorkflowUsersSorted(users: string[] = []) {
     const commands = users.reduce((acc, userId) => {
       acc[`get_user-${userId}`] = {
         method: 'crm.lead.list',
@@ -88,6 +94,6 @@ export class BitrixUserService {
               ? -1
               : 0;
         },
-      )[0].user_id;
+      );
   }
 }
