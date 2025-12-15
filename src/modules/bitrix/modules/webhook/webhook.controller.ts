@@ -15,6 +15,7 @@ import { BitrixWebhookGuard } from '@/modules/bitrix/guards/bitrix-webhook.guard
 import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook.dto';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
@@ -69,5 +70,14 @@ export class BitrixWebhookController {
       body.document_id[2],
     );
     return true;
+  }
+
+  // @UseGuards(BitrixVoxImplantEventGuard)
+  @Post('/bitrix/voximplant/call/initialization')
+  async handleWebhookVoxImplantInitCallingFromBitrix(
+    @Body() fields: B24EventVoxImplantCallEndDto,
+    @Query() params: any,
+  ) {
+    return this.bitrixWebhookService.handleVoxImplantCallInit(fields, params);
   }
 }

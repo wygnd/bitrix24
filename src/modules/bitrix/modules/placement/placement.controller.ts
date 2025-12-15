@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Post,
   Query,
   Res,
@@ -40,20 +39,6 @@ export class BitrixPlacementController {
       res,
       body,
       query,
-    );
-  }
-
-  // todo: temporary remove
-  @Post('/crm/telephony/redirect-url')
-  async handleRedirectUrlFromTelphin(
-    @Query() query: any,
-    @Param() params: any,
-    @Body() body: any,
-  ) {
-    return this.bitrixPlacementService.testReceiveRedirectUrl(
-      query,
-      params,
-      body,
     );
   }
 

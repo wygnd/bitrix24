@@ -48,7 +48,7 @@ import { TelphinModule } from '@/modules/telphin/telphin.module';
     WikiModule,
     AvitoModule,
     TokensModule,
-    TelphinModule,
+    forwardRef(() => TelphinModule),
   ],
   controllers: [
     BitrixController,

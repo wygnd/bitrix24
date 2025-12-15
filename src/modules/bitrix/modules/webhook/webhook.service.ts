@@ -32,6 +32,7 @@ import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { isAxiosError } from 'axios';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -639,5 +640,11 @@ export class BitrixWebhookService {
     });
 
     return true;
+  }
+
+  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallEndDto, params: any) {
+    return this.bitrixBotService.sendTestMessage(
+      `[b]Calling Инициализация звонка[/b][br]Body: ${JSON.stringify(fields)}[br]Query: ${JSON.stringify(params)}`,
+    );
   }
 }
