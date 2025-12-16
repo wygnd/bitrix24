@@ -700,7 +700,7 @@ export class BitrixWebhookService {
         attempts: 3,
         backoff: {
           type: 'exponential',
-          delay: 25,
+          delay: 1000,
         },
       },
     );
