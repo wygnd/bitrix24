@@ -44,6 +44,8 @@ import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/d
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 import { B24WebhookVoxImplantOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { B24EventVoxImplantStartInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
+import { B24VoxImplantCallStartDataOptions } from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -64,6 +66,7 @@ export class BitrixWebhookService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
+    private readonly queueLightService: QueueLightService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -690,9 +693,23 @@ export class BitrixWebhookService {
     };
   }
 
-  async handleVoxImplantCallStart(fields: B24EventVoxImplantStartInitDto) {
+  async handleVoxImplantCallStartTask(fields: B24EventVoxImplantStartInitDto) {
+    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
+      fields.data,
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 25,
+        },
+      },
+    );
+    return true;
+  }
+
+  async handleVoxImplantCallStart(fields: B24VoxImplantCallStartDataOptions) {
     const callData = this.redisService.get<B24WebhookVoxImplantOptions>(
-      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + fields.data.CALL_ID,
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + fields.CALL_ID,
     );
 
     if (!callData)
