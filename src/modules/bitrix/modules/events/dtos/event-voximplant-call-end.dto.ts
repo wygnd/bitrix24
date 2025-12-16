@@ -5,6 +5,7 @@ import {
   B24CallType,
 } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 
 export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDataOptions {
   @ApiProperty({
@@ -13,6 +14,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Идентификатор звонка из метода',
     example: 'externalCall.3af452b8f8df728be3da71ea6bcbdf96.89764587',
   })
+  @IsNotEmpty()
+  @IsString()
   CALL_ID: string;
 
   @ApiProperty({
@@ -21,6 +24,9 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Тип вызова',
     example: B24CallType.OUTGOING,
   })
+  @IsNotEmpty()
+  @IsString()
+  @IsIn(Object.values(B24CallType))
   CALL_TYPE: B24CallType;
 
   @ApiProperty({
@@ -30,6 +36,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
       'Номер, с которого звонит абонент (если тип звонка 2 - Входящий) или номер, которому звонит оператор (если тип звонка 1 - Исходящий).',
     example: '+79213246721',
   })
+  @IsNotEmpty()
+  @IsString()
   PHONE_NUMBER: string;
 
   @ApiProperty({
@@ -39,6 +47,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
       'Номер, на который поступил звонок (если тип звонка 2 - Входящий) или номер, с которого был совершен звонок (если тип звонка 1 - Исходящий).',
     example: 'REST_APP:123',
   })
+  @IsNotEmpty()
+  @IsString()
   PORTAL_NUMBER: string;
 
   @ApiProperty({
@@ -48,6 +58,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
       'Идентификатор ответившего оператора (если тип звонка 2 - Входящий) или идентификатор позвонившего оператора (если тип звонка 1 - Исходящий).',
     example: '231',
   })
+  @IsNotEmpty()
+  @IsString()
   PORTAL_USER_ID: string;
 
   @ApiProperty({
@@ -56,6 +68,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Длительность звонка.',
     example: '3',
   })
+  @IsNotEmpty()
+  @IsString()
   CALL_DURATION: string;
 
   @ApiProperty({
@@ -64,6 +78,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Дата в ISO формате.',
     example: '2023-10-15T17:26:57+03:00',
   })
+  @IsNotEmpty()
+  @IsString()
   CALL_START_DATE: string;
 
   @ApiProperty({
@@ -72,6 +88,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Стоимость звонка.',
     example: '0',
   })
+  @IsNotEmpty()
+  @IsString()
   COST: string;
 
   @ApiProperty({
@@ -80,6 +98,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Валюта звонка (RUR, USD, EUR).',
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   COST_CURRENCY: string;
 
   @ApiProperty({
@@ -88,6 +108,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Код вызова',
     example: B24CallFailedCode.SUCCESS,
   })
+  @IsNotEmpty()
+  @IsString()
   CALL_FAILED_CODE: B24CallFailedCode;
 
   @ApiProperty({
@@ -96,6 +118,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'Текстовое описание кода вызова',
     example: '',
   })
+  @IsNotEmpty()
+  @IsString()
   CALL_FAILED_REASON: string;
 
   @ApiProperty({
@@ -104,6 +128,8 @@ export class B24EventVoxImplantCallEndDataDto implements B24VoxImplantCallEndDat
     description: 'ID дела CRM, связанного со звонком.',
     example: '3005970',
   })
+  @IsNotEmpty()
+  @IsString()
   CRM_ACTIVITY_ID: string;
 }
 

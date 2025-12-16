@@ -42,6 +42,8 @@ import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.s
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
+import { B24WebhookVoxImplantOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import { B24EventVoxImplantStartInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -657,7 +659,11 @@ export class BitrixWebhookService {
   }
 
   async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
-    const { CALL_TYPE: callType, CALLER_ID: phone } = fields.data;
+    const {
+      CALL_TYPE: callType,
+      CALLER_ID: phone,
+      CALL_ID: callId,
+    } = fields.data;
 
     if (callType !== B24CallType.INCOMING)
       return {
@@ -665,10 +671,16 @@ export class BitrixWebhookService {
         message: 'Calling is not incoming',
       };
 
-    const leads = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
-
     this.bitrixBotService.sendTestMessage(
       `[b]Инициализация звонка[/b][br]` + JSON.stringify(fields),
+    );
+
+    this.redisService.set<B24WebhookVoxImplantOptions>(
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + callId,
+      {
+        callId: callId,
+        extensionPhone: phone,
+      },
     );
 
     return {
@@ -677,10 +689,24 @@ export class BitrixWebhookService {
     };
   }
 
-  async handleVoxImplantCallStart(fields: any) {
-    this.bitrixBotService.sendTestMessage(
-      `[b]Начало звонка[/b][br]` + JSON.stringify(fields),
+  async handleVoxImplantCallStart(fields: B24EventVoxImplantStartInitDto) {
+    const callData = this.redisService.get<B24WebhookVoxImplantOptions>(
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + fields.data.CALL_ID,
     );
+
+    if (!callData)
+      return {
+        status: false,
+        message: 'Not found call',
+      };
+
+    this.bitrixBotService.sendTestMessage(
+      `[b]Начало звонка[/b][br]` +
+        JSON.stringify(fields) +
+        `[br][br]Информация о звонке: ` +
+        JSON.stringify(callData),
+    );
+
     return true;
   }
 

@@ -17,6 +17,7 @@ export const REDIS_KEYS = {
   BITRIX_DATA_DEPARTMENT_HEAD_USERS: 'bitrix:department:advert:head:users',
   BITRIX_DATA_TASK_ITEM: 'bitrix:task:item:',
   BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE: 'bitrix:lead:duplicate:phone:',
+  BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL: 'bitrix:webhook:voximplant:call:',
 
   // BITRIX WIDGET
   BITRIX_WIDGET_CALL_CARD: 'bitrix:widget:call_card:',
