@@ -660,14 +660,15 @@ export class BitrixWebhookService {
   }
 
   async handleVoxImplantCallFinish(fields: B24EventVoxImplantCallEndDto) {
-    this.bitrixBotService.sendTestMessage(
-      `[b]Calling Инициализация звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
-    );
     try {
       const { PHONE_NUMBER: phone, PORTAL_USER_ID: userId } = fields.data;
       let leadId = '';
 
       if (userId !== '522') return;
+
+      this.bitrixBotService.sendTestMessage(
+        `[b]Завершение звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
+      );
 
       // получаем информацию о клиенте telphin и пользователя с битрикс, кому позвонили
       const telphinUserInfo = await this.telphinService.getUserInfo();
