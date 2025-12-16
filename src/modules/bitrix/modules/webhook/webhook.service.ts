@@ -1,10 +1,6 @@
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
 import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
 import {
@@ -37,9 +33,6 @@ import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webh
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { isAxiosError } from 'axios';
 import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
-import { TelphinService } from '@/modules/telphin/telphin.service';
-import { TelphinCallItem } from '@/modules/telphin/interfaces/telphin-call.interface';
-import { TelphinExtensionItem } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import {
   B24LeadActiveStages,
   B24LeadConvertedStages,
@@ -67,7 +60,6 @@ export class BitrixWebhookService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
-    private readonly telphinService: TelphinService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -662,7 +654,13 @@ export class BitrixWebhookService {
     return true;
   }
 
-  async handleVoxImplantCallFinish(fields: B24EventVoxImplantCallEndDto) {
+  async handleVoxImplantCallInit(fields: any) {
+    return this.bitrixBotService.sendTestMessage(
+      `[b]Инициализация звонка[/b][br]` + JSON.stringify(fields),
+    );
+  }
+
+  async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
     try {
       const { PHONE_NUMBER: phone, PORTAL_USER_ID: userId } = fields.data;
       let leadId = '';
@@ -672,45 +670,6 @@ export class BitrixWebhookService {
       this.bitrixBotService.sendTestMessage(
         `[b]Завершение звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
       );
-
-      // получаем информацию о клиенте telphin и пользователя с битрикс, кому позвонили
-      const telphinUserInfo = await this.telphinService.getUserInfo();
-
-      // если не получили информацию: пробрасываем ошибку
-      if (!telphinUserInfo)
-        throw new InternalServerErrorException('Invalid get info from telphin');
-
-      const { client_id: telphinClientId } = telphinUserInfo;
-
-      // Получаем текущие звонки и внутренний номер менеджера, кому звонят
-      const [targetCalls, extension] = await Promise.all<
-        [Promise<TelphinCallItem[]>, Promise<TelphinExtensionItem | null>]
-      >([
-        this.telphinService.getCurrentCalls(telphinClientId),
-        this.telphinService.getClientExtensionByBitrixUserId(
-          telphinClientId,
-          userId,
-        ),
-      ]);
-
-      if (!extension)
-        throw new BadRequestException('Extension by user bitrix id not found');
-
-      // Ищем внутренний номер в текущем списке звонков(кто на данный момент в звонке)
-      const targetExtension = targetCalls.find(
-        ({ call_flow, caller_extension: { id: extId } }) =>
-          extId === extension.id && call_flow === 'IN',
-      );
-
-      this.logger.info(
-        `Check current extension: ${extension.id} and calls: ${JSON.stringify(targetCalls)}`,
-      );
-
-      // Если не находим перца: выходим
-      if (!targetExtension)
-        throw new BadRequestException(
-          'Extension in current calls was not found',
-        );
 
       // Если не передан leadId, пытаемся найти лид по номеру телефона
       // Ищем дубликаты
