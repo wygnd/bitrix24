@@ -681,6 +681,7 @@ export class BitrixWebhookService {
         callId: callId,
         extensionPhone: phone,
       },
+      600, // 10 minutes
     );
 
     return {
