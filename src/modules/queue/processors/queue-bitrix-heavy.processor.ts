@@ -113,9 +113,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   @OnWorkerEvent('error')
   onError(error: Error) {
-    const message = `[b]Ошибка выполнения задачи:[b][br]${error.message}`;
+    const message = `[b]Ошибка выполнения задачи:[/b][br]${error.toString()}`;
 
     this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error(`Ошибка выполнения задачи: => ${error.message}`);
+    this.logger.error(`Ошибка выполнения задачи: => ${error.toString()}`);
   }
 }

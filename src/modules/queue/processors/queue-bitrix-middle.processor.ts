@@ -106,7 +106,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
     this.bitrixImBotService.sendTestMessage(
-      `Ошибка выполнения задачи: ` + JSON.stringify(job),
+      `[b]Ошибка выполнения задачи:[/b][br]` + JSON.stringify(job),
     );
 
     this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);

@@ -55,7 +55,7 @@ export class WikiService {
     this.redisService.set<string[]>(
       REDIS_KEYS.WIKI_WORKING_SALES,
       sales,
-      900, // 15 minutes
+      300, // 5 minutes
     );
 
     return sales;

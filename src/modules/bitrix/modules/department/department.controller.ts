@@ -13,7 +13,7 @@ import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 @UseGuards(AuthGuard)
 @ApiTags(B24ApiTags.DEAPRTMENTS)
 @Controller('department')
-export class DepartmentController {
+export class BitrixDepartmentController {
   constructor(private readonly departmentService: BitrixDepartmentService) {}
 
   @Get('/list')

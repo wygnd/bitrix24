@@ -46,6 +46,7 @@ export interface BitrixAddyPaymentOptions {
 
 export interface BitrixLEADConstants {
   observeManagerCallingChatId: string;
+  upsellChatId: string;
 }
 
 export interface BitrixWebhookConstants {

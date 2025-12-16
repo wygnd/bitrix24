@@ -11,6 +11,7 @@ export const QUEUE_TASKS = {
       'bitrix:events:wiki:send_request_on_delete_lead',
     QUEUE_BX_SEND_UPDATE_LEAD_NEW_WIKI_FROM_REQUEST_AVITO:
       'bitrix:http:wiki:send_update_lead_new_wiki_from_request_avito',
+    QUEUE_BX_HANDLE_UPSELL_DEAL: 'bitrix:upsell:handle',
   },
   MIDDLE: {
     QUEUE_BX_TASK_UPDATE: 'bxTaskUpdate',

@@ -57,7 +57,7 @@ export class BitrixDealService {
     return deal;
   }
 
-  async getDeal(fields: B24DealListParams) {
+  async getDeals(fields: B24DealListParams) {
     return this.bitrixService.callMethod<B24DealListParams, B24Deal[]>(
       'crm.deal.list',
       fields,

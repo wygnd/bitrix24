@@ -371,6 +371,14 @@ export class BitrixService {
     return this.bitrixConstants.LEAD.observeManagerCallingChatId;
   }
 
+  get WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.finishCallToken;
+  }
+
+  get UPSELL_CHAT_ID() {
+    return this.bitrixConstants.LEAD.upsellChatId;
+  }
+
   /**
    * Remove emoji from string
    *
@@ -447,10 +455,6 @@ export class BitrixService {
     if (label) return `<a href="${url}">${label}</a>`;
 
     return `<a href="${url}">${url}</a>`;
-  }
-
-  get WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN() {
-    return this.bitrixConstants.WEBHOOK.voxImplant.finishCallToken;
   }
 
   public sortItemsByField<T = any>(items: T[], field: keyof T): T[] {
