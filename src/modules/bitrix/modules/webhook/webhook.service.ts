@@ -40,6 +40,8 @@ import {
 } from '@/modules/bitrix/modules/lead/constants/lead.constants';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
+import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -654,10 +656,32 @@ export class BitrixWebhookService {
     return true;
   }
 
-  async handleVoxImplantCallInit(fields: any) {
-    return this.bitrixBotService.sendTestMessage(
+  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
+    const { CALL_TYPE: callType, CALLER_ID: phone } = fields.data;
+
+    if (callType !== B24CallType.INCOMING)
+      return {
+        status: false,
+        message: 'Calling is not incoming',
+      };
+
+    const leads = await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+
+    this.bitrixBotService.sendTestMessage(
       `[b]Инициализация звонка[/b][br]` + JSON.stringify(fields),
     );
+
+    return {
+      status: true,
+      message: 'Successfully handled incoming init call',
+    };
+  }
+
+  async handleVoxImplantCallStart(fields: any) {
+    this.bitrixBotService.sendTestMessage(
+      `[b]Начало звонка[/b][br]` + JSON.stringify(fields),
+    );
+    return true;
   }
 
   async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {

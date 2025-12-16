@@ -28,6 +28,25 @@ export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
 }
 
 @Injectable()
+export class BitrixVoxImplantInitStartEventGuard implements CanActivate {
+  constructor(private readonly bitrixService: BitrixService) {}
+
+  canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest<Request>();
+
+    const body: B24EventBodyVoxImplant = request.body;
+
+    const tokenFromRequest = body?.auth?.application_token;
+    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_INIT_CALL_TOKEN;
+
+    if (!token || !tokenFromRequest || token !== tokenFromRequest)
+      throw new UnauthorizedException('Invalid webhook token');
+
+    return true;
+  }
+}
+
+@Injectable()
 export class BitrixVoxImplantInitCallEventGuard implements CanActivate {
   constructor(private readonly bitrixService: BitrixService) {}
 

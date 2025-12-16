@@ -56,4 +56,5 @@ export interface BitrixWebhookConstants {
 export interface BitrixWebhookConstantsVoxImplantOptions {
   finishCallToken: string;
   initCallToken: string;
+  startCallToken: string;
 }

@@ -379,6 +379,11 @@ export class BitrixService {
     return this.bitrixConstants.WEBHOOK.voxImplant.initCallToken;
   }
 
+
+  get WEBHOOK_VOXIMPLANT_START_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.startCallToken;
+  }
+
   get UPSELL_CHAT_ID() {
     return this.bitrixConstants.LEAD.upsellChatId;
   }

@@ -20,6 +20,7 @@ import {
   BitrixVoxImplantFinishCallEventGuard,
   BitrixVoxImplantInitCallEventGuard,
 } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
+import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
@@ -78,8 +79,16 @@ export class BitrixWebhookController {
 
   @UseGuards(BitrixVoxImplantInitCallEventGuard)
   @Post('/bitrix/voximplant/call/init')
-  async handleWEbhookVoxImplantInitCallingFromBitrix(@Body() body: any) {
+  async handleWebhookVoxImplantInitCallingFromBitrix(
+    @Body() body: B24EventVoxImplantCallInitDto,
+  ) {
     return this.bitrixWebhookService.handleVoxImplantCallInit(body);
+  }
+
+  @UseGuards()
+  @Post('/bitrix/voximplant/call/start')
+  async handleWebhookVoxImplantStartCallingFromBitrix(@Body() body: any) {
+    return this.bitrixWebhookService.handleVoxImplantCallStart(body);
   }
 
   @UseGuards(BitrixVoxImplantFinishCallEventGuard)

@@ -1,5 +1,5 @@
 import { EventOnDto } from '@/modules/bitrix/modules/events/dtos/event.dto';
-import { B24VoxImplantCallEndDataOptions } from '@/modules/bitrix/modules/events/interfaces/evetn-voximplant-call-end.interface';
+import { B24VoxImplantCallEndDataOptions } from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-end.interface';
 import {
   B24CallFailedCode,
   B24CallType,
