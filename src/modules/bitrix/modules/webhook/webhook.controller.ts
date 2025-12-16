@@ -91,7 +91,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantStartCallingFromBitrix(
     @Body() body: B24EventVoxImplantStartInitDto,
   ) {
-    return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
+    return this.bitrixWebhookService.handleVoxImplantCallStart(body);
   }
 
   @UseGuards(BitrixVoxImplantFinishCallEventGuard)
