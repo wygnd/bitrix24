@@ -55,7 +55,10 @@ export class BitrixWebhookService {
     WebhookDepartmentInfo
   >;
   private lastSelectedDepartmentId: string = '';
-  private readonly logger = new WinstonLogger(BitrixWebhookService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixWebhookService.name,
+    'bitrix:telephony'.split(':'),
+  );
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -700,7 +703,7 @@ export class BitrixWebhookService {
       );
 
       this.logger.info(
-        `Check current extension: ${extension.id} and calls: ${JSON.stringify(targetExtension)}`,
+        `Check current extension: ${extension.id} and calls: ${JSON.stringify(targetCalls)}`,
       );
 
       // Если не находим перца: выходим
