@@ -682,7 +682,7 @@ export class BitrixWebhookService {
 
     /**
      * Получаем информацию:
-     * 1. О звонке из редиса
+     * 1. О звонке из кеша
      * 2. О зарегистрированном приложении из телфина
      * 3. Есть ли лид по номеру телефона
      */
@@ -803,11 +803,14 @@ export class BitrixWebhookService {
       .then((response) => {
         this.logger.info(
           `Successfull handle incoming call: ${JSON.stringify(response)}`,
+          true,
         );
       })
       .catch((error) => {
         this.logger.error(
           `Invalid call batch on handle incoming call: ${error.toString()}`,
+          '',
+          true,
         );
       });
 

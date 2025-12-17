@@ -7,12 +7,18 @@ import {
   TelphinExtensionItem,
   TelphinExtensionItemExtraParams,
 } from '@/modules/telphin/interfaces/telphin-extension.interface';
-import {
-  TelphinGetCallListResponse,
-} from '@/modules/telphin/interfaces/telphin-call.interface';
+import { TelphinGetCallListResponse } from '@/modules/telphin/interfaces/telphin-call.interface';
+import { TelphinExternalPhone } from '@/modules/telphin/interfaces/telpin-external-phone.interface';
+import { WinstonLogger } from '@/config/winston.logger';
+import { TelphinInternalPhone } from '@/modules/telphin/interfaces/telphin-internal-phone.interface';
 
 @Injectable()
 export class TelphinService {
+  private readonly logger = new WinstonLogger(
+    TelphinService.name,
+    'telphin'.split(':'),
+  );
+
   constructor(
     private readonly telphinApiService: TelphinApiService,
     private readonly redisService: RedisService,
@@ -170,5 +176,89 @@ export class TelphinService {
     );
 
     return targetExtension;
+  }
+
+  /**
+   * Get external phone list
+   *
+   * ---
+   *
+   * Получить список внешних номеров
+   *
+   * @param clientId
+   * @param action
+   */
+  public async getExternalPhoneList(
+    clientId: number,
+    action: 'force' | 'cache' = 'cache',
+  ): Promise<TelphinExternalPhone[]> {
+    try {
+      if (action === 'cache') {
+        const phoneListFromCache = await this.redisService.get<
+          TelphinExternalPhone[]
+        >(REDIS_KEYS.TELPHIN_EXTERNAL_PHONE_LIST);
+
+        if (phoneListFromCache) return phoneListFromCache;
+      }
+
+      const phoneList = await this.telphinApiService.get<
+        TelphinExternalPhone[]
+      >(`/client/${clientId}/did`);
+
+      if (!phoneList) return [];
+
+      this.redisService.set<TelphinExternalPhone[]>(
+        REDIS_KEYS.TELPHIN_EXTERNAL_PHONE_LIST,
+        phoneList,
+        900, // 15 minutes
+      );
+
+      return phoneList;
+    } catch (error) {
+      this.logger.error(error.toString(), '', true);
+      return [];
+    }
+  }
+
+  /**
+   * Get external phone by specific field
+   *
+   * ---
+   *
+   * Получить внешний номер по определенному полю
+   * @param clientId
+   * @param fieldName
+   * @param fieldValue
+   */
+  public async getExternalPhoneByField(
+    clientId: number,
+    fieldName: keyof TelphinExternalPhone,
+    fieldValue: string,
+  ): Promise<TelphinExternalPhone | null> {
+    const phoneList = await this.getExternalPhoneList(clientId);
+
+    if (phoneList.length === 0) return null;
+
+    const targetPhone = phoneList.find((p) => p[fieldName] == fieldValue);
+
+    return targetPhone ? targetPhone : null;
+  }
+
+  /**
+   * Get extension phone by ID
+   *
+   * ---
+   *
+   * Получить внутренний номер по ID
+   * @param extensionId
+   */
+  public async getInternalPhoneByExtensionId(extensionId: number) {
+    return this.telphinApiService.get<TelphinInternalPhone | null>(
+      `/extension/${extensionId}/ani/`,
+    );
+  }
+
+  public async getInternalPhoneList(clientId: number) {
+    return this.telphinApiService.get(`/client/${clientId}/did`);
   }
 }

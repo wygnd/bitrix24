@@ -83,7 +83,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
-    return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
+    // return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
   }
 
   @UseGuards()
@@ -91,7 +91,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantStartCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallStartDto,
   ) {
-    return this.bitrixWebhookService.handleVoxImplantCallStart(body);
+    // return this.bitrixWebhookService.handleVoxImplantCallStart(body);
   }
 
   @UseGuards(BitrixVoxImplantFinishCallEventGuard)
@@ -99,6 +99,6 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantEndCallingFromBitrix(
     @Body() fields: B24EventVoxImplantCallEndDto,
   ) {
-    return this.bitrixWebhookService.handleVoxImplantCallEnd(fields);
+    // return this.bitrixWebhookService.handleVoxImplantCallEnd(fields);
   }
 }
