@@ -38,9 +38,15 @@ import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixLeadService {
+  private readonly logger = new WinstonLogger(
+    BitrixLeadService.name,
+    'bitrix:services'.split(':'),
+  );
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
@@ -58,12 +64,14 @@ export class BitrixLeadService {
    */
   public async getLeadById(id: string) {
     try {
-      return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
-        'crm.lead.get',
-        {
-          ID: id,
-        },
-      );
+      const { result } = await this.bitrixService.callMethod<
+        Partial<B24Lead>,
+        B24Lead
+      >('crm.lead.get', {
+        ID: id,
+      });
+
+      return result ? result : null;
     } catch (e) {
       return null;
     }
@@ -115,12 +123,17 @@ export class BitrixLeadService {
    * @param fields
    */
   public async createLead(fields: Partial<B24Lead>) {
-    return this.bitrixService.callMethod<Partial<B24Lead>, number>(
-      'crm.lead.add',
-      {
+    try {
+      const { result } = await this.bitrixService.callMethod<
+        Partial<B24Lead>,
+        number
+      >('crm.lead.add', {
         fields: fields,
-      },
-    );
+      });
+      return result ? result : null;
+    } catch (err) {
+      return null;
+    }
   }
 
   /**

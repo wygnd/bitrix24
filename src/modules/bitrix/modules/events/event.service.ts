@@ -14,7 +14,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixEventService {
-  private readonly logger = new WinstonLogger(BitrixEventService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixEventService.name,
+    'bitrix:services'.split(':'),
+  );
 
   constructor(
     private readonly bitrixService: BitrixService,

@@ -45,7 +45,10 @@ import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.inte
 
 @Injectable()
 export class BitrixHeadHunterService {
-  private readonly logger = new WinstonLogger(BitrixHeadHunterService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixHeadHunterService.name,
+    'bitrix:services'.split(':'),
+  );
 
   constructor(
     private readonly bitrixImBotService: BitrixImBotService,

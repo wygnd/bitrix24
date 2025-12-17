@@ -12,7 +12,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class TokensService {
-  private readonly logger = new WinstonLogger(TokensService.name);
+  private readonly logger = new WinstonLogger(TokensService.name, ['tokens']);
 
   constructor(
     @Inject(TOKENS_REPOSITORY)

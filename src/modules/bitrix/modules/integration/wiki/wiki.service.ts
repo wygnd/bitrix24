@@ -16,9 +16,10 @@ import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
 
 @Injectable()
 export class BitrixWikiService {
-  private readonly logger = new WinstonLogger(BitrixWikiService.name, [
-    'bitrix',
-  ]);
+  private readonly logger = new WinstonLogger(
+    BitrixWikiService.name,
+    'bitrix:services'.split(':'),
+  );
 
   constructor(
     private readonly bitrixService: BitrixService,

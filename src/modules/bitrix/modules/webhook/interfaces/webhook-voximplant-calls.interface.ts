@@ -5,5 +5,5 @@ export interface B24WebhookVoxImplantCallStartOptions {
 
 export interface B24WebhookVoxImplantCallInitOptions {
   callId: string;
-  phone: string;
+  clientPhone: string;
 }

@@ -25,7 +25,10 @@ import { B24Categories } from '@/modules/bitrix/bitrix.constants';
 
 @Injectable()
 export class BitrixPlacementService {
-  private readonly logger = new WinstonLogger(BitrixPlacementService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixPlacementService.name,
+    'bitrix:services'.split(':'),
+  );
   constructor(
     private readonly configService: ConfigService,
     private readonly bitrixImbotService: BitrixImBotService,

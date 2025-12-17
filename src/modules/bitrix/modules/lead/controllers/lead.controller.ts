@@ -36,7 +36,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 @UseGuards(AuthGuard)
 @Controller('leads')
 export class BitrixLeadController {
-  private readonly logger = new WinstonLogger(BitrixLeadService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixLeadService.name,
+    'bitrix:controllers'.split(':'),
+  );
 
   constructor(private readonly bitrixLeadService: BitrixLeadService) {}
 

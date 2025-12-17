@@ -41,7 +41,7 @@ import { B24LeadConvertedStages } from '@/modules/bitrix/modules/lead/constants/
 export class BitrixLeadUpsellService {
   private readonly logger = new WinstonLogger(
     BitrixLeadUpsellService.name,
-    'bitrix:upsell'.split(':'),
+    'bitrix:services:upsell'.split(':'),
   );
   private readonly upsellQuestionFields: B24LeadUpsellQuestionsFields = {
     SITE: {

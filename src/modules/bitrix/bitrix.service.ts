@@ -42,8 +42,31 @@ export class BitrixService {
   private readonly bitrixConstants: BitrixConstants;
   private readonly logger = new WinstonLogger(
     BitrixService.name,
-    'bitrix:service'.split(':'),
+    'bitrix:services'.split(':'),
   );
+  private readonly avitoPhones = [
+    '79311215697',
+    '79311215689',
+    '79311215679',
+    '79311215675',
+    '79311093487',
+    '79311093421',
+    '79311092502',
+    '79311082772',
+    '79311082552',
+    '79311082332',
+    '79311082662',
+    '79311082208',
+    '79311082112',
+    '79311079861',
+    '79585707396',
+    '79311782137',
+    '79585789985',
+    '79311782698',
+    '79311215746',
+    '79585789934',
+    '79585789931',
+  ];
 
   constructor(
     private readonly configService: ConfigService,
@@ -379,13 +402,16 @@ export class BitrixService {
     return this.bitrixConstants.WEBHOOK.voxImplant.initCallToken;
   }
 
-
   get WEBHOOK_VOXIMPLANT_START_CALL_TOKEN() {
     return this.bitrixConstants.WEBHOOK.voxImplant.startCallToken;
   }
 
   get UPSELL_CHAT_ID() {
     return this.bitrixConstants.LEAD.upsellChatId;
+  }
+
+  get AVITO_PHONES() {
+    return this.avitoPhones;
   }
 
   /**

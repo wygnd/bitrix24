@@ -9,7 +9,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class TelphinApiService {
-  private readonly logger = new WinstonLogger(TelphinApiService.name);
+  private readonly logger = new WinstonLogger(
+    TelphinApiService.name,
+    'telphin'.split(':'),
+  );
   private readonly telphinClientId: string;
   private readonly telphinClientSecret: string;
 

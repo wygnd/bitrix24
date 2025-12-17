@@ -23,7 +23,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 export class BitrixLeadUpsellController {
   private readonly logger = new WinstonLogger(
     BitrixLeadUpsellController.name,
-    'bitrix:upsell'.split(':'),
+    'bitrix:services:upsell'.split(':'),
   );
 
   constructor(private readonly bitrixUpsellService: BitrixLeadUpsellService) {}
