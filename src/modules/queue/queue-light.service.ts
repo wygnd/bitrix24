@@ -4,9 +4,7 @@ import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { JobsOptions, Queue } from 'bullmq';
 import { WikiUpdateLeadRequest } from '@/modules/wiki/interfaces/wiki-update-lead.interface';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
-import {
-  B24VoxImplantCallStartDataOptions
-} from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
+import { B24WebhookVoxImplantCallInitOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Injectable()
 export class QueueLightService {
@@ -43,7 +41,7 @@ export class QueueLightService {
   }
 
   async addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
-    fields: B24VoxImplantCallStartDataOptions,
+    fields: B24WebhookVoxImplantCallInitOptions,
     options?: JobsOptions,
   ) {
     return this.queueBitrixLight.add(

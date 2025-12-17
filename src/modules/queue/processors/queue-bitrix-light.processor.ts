@@ -11,9 +11,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
 import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
-import {
-  B24VoxImplantCallStartDataOptions
-} from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
+import { B24WebhookVoxImplantCallInitOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -63,7 +61,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
 
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
-        response.data = await this.bitrixWebhookService.handleVoxImplantCallInit(data as B24VoxImplantCallStartDataOptions)
+        response.data =
+          await this.bitrixWebhookService.handleVoxImplantCallInit(
+            data as B24WebhookVoxImplantCallInitOptions,
+          );
         break;
 
       default:
