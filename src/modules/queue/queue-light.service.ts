@@ -42,10 +42,14 @@ export class QueueLightService {
     );
   }
 
-  async addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
+  async addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
     fields: B24VoxImplantCallStartDataOptions,
     options?: JobsOptions,
   ) {
-    return this.queueBitrixLight.add(QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START, fields, options);
+    return this.queueBitrixLight.add(
+      QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT,
+      fields,
+      options,
+    );
   }
 }

@@ -25,4 +25,4 @@ export class B24EventVoxImplantCallStartDataDto implements B24VoxImplantCallStar
   USER_ID: string;
 }
 
-export class B24EventVoxImplantStartInitDto extends EventOnDto<B24EventVoxImplantCallStartDataDto> {}
+export class B24EventVoxImplantCallStartDto extends EventOnDto<B24EventVoxImplantCallStartDataDto> {}

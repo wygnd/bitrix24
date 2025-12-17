@@ -1,6 +1,10 @@
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
 import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
 import {
@@ -43,7 +47,9 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 import { B24WebhookVoxImplantOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
-import { B24EventVoxImplantStartInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
+import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
+import { B24VoxImplantCallStartDataOptions } from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -64,6 +70,7 @@ export class BitrixWebhookService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
+    private readonly queueLightService: QueueLightService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -658,27 +665,15 @@ export class BitrixWebhookService {
     return true;
   }
 
-  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
-    const {
-      CALL_TYPE: callType,
-      CALL_ID: callId,
-    } = fields.data;
-
-    if (callType !== B24CallType.INCOMING)
-      return {
-        status: false,
-        message: 'Calling is not incoming',
-      };
+  async handleVoxImplantCallInit(fields: B24VoxImplantCallStartDataOptions) {
+    const { CALL_ID: callId } = fields;
 
     const callData = await this.redisService.get<B24WebhookVoxImplantOptions>(
       REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + callId,
     );
 
     if (!callData)
-      return {
-        status: false,
-        message: 'Not found calling',
-      };
+      throw new NotFoundException(`Data from redis was not found: ${callId}`);
 
     this.bitrixBotService.sendTestMessage(
       `[b]Инициализация звонка[/b][br]` +
@@ -693,7 +688,56 @@ export class BitrixWebhookService {
     };
   }
 
-  async handleVoxImplantCallStart(fields: B24EventVoxImplantStartInitDto) {
+  /**
+   * Handle inti task from bitrix24 webhook
+   *
+   * ---
+   *
+   * Обработка инициализации звонка
+   * @param callId
+   * @param callType
+   * @param callerId
+   */
+  async handleVoxImplantCallInitTask({
+    data: { CALL_ID: callId, CALL_TYPE: callType, CALLER_ID: callerId },
+  }: B24EventVoxImplantCallInitDto) {
+    // Если тип звонка не входящий: выходим
+    if (callType !== B24CallType.INCOMING)
+      return {
+        status: false,
+        message: `Call type is not ${B24CallType.INCOMING}`,
+      };
+
+    // Добавляем в очередь, чтобы гарантированно получить данные из редиса
+    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
+      {
+        CALL_ID: callId,
+        CALLER_ID: callerId,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 100,
+        },
+      },
+    );
+
+    return {
+      status: true,
+      message: 'Successfully add in queue',
+    };
+  }
+
+  /**
+   * Handle start calling from bitrix24 webhook
+   *
+   * ---
+   *
+   * Обработка начала звонка
+   * @param fields
+   */
+  async handleVoxImplantCallStart(fields: B24EventVoxImplantCallStartDto) {
     const { CALL_ID: callId, USER_ID: userId } = fields.data;
 
     this.redisService.set<B24WebhookVoxImplantOptions>(
@@ -712,6 +756,14 @@ export class BitrixWebhookService {
     return true;
   }
 
+  /**
+   * Handle end call from bitrix24 webhook
+   *
+   * ---
+   *
+   * Обработка завершения звонка
+   * @param fields
+   */
   async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
     try {
       const { PHONE_NUMBER: phone, PORTAL_USER_ID: userId } = fields.data;
