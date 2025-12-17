@@ -189,7 +189,7 @@ export class BitrixLeadUpsellService {
         message: `Deal was added in queue: ${dealId}`,
       };
     } catch (e) {
-      this.logger.error(e, '', true);
+      this.logger.error(e);
       throw e;
     }
   }
@@ -244,7 +244,7 @@ export class BitrixLeadUpsellService {
         missing_deals_count: missingDeals.size,
       };
     } catch (e) {
-      this.logger.error(e, '', true);
+      this.logger.error(e);
       throw e;
     }
   }
@@ -790,8 +790,8 @@ export class BitrixLeadUpsellService {
           JSON.stringify(`Final upsell steps: ${JSON.stringify(result)}`),
         );
       })
-      .catch((err) => {
-        this.logger.error(`Invalid on final upsell steps: ${err.toString()}`);
+      .catch((error) => {
+        this.logger.error({ message: 'Invalid on final upsell steps', error });
       });
 
     return { status: true, message: `Was successfully sending: ${dealId}` };
@@ -817,7 +817,7 @@ export class BitrixLeadUpsellService {
         }),
       );
     } catch (e) {
-      this.logger.error(e.toString(), undefined);
+      this.logger.error(e);
       return null;
     }
   }
@@ -845,7 +845,7 @@ export class BitrixLeadUpsellService {
 
       return countUpdate > 0;
     } catch (e) {
-      this.logger.error(e.toString(), undefined, true);
+      this.logger.error(e);
       return false;
     }
   }
@@ -870,7 +870,7 @@ export class BitrixLeadUpsellService {
         ),
       );
     } catch (e) {
-      this.logger.error(e.toString(), '');
+      this.logger.error(e);
       return [];
     }
   }

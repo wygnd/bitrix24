@@ -18,11 +18,28 @@ export class TelphinService {
     TelphinService.name,
     'telphin'.split(':'),
   );
+  private telphinApplicationInfo: TelphinUserInfo;
 
   constructor(
     private readonly telphinApiService: TelphinApiService,
     private readonly redisService: RedisService,
-  ) {}
+  ) {
+    this.getUserInfo()
+      .then((info) => {
+        if (!info) {
+          this.logger.error('Invalid get user info from telphin');
+          return;
+        }
+
+        this.telphinApplicationInfo = info;
+      })
+      .catch((error) => {
+        this.logger.error({
+          message: 'Invalid get user info from telphin',
+          error,
+        });
+      });
+  }
 
   /**
    * Get current calls from telphin
@@ -215,7 +232,7 @@ export class TelphinService {
 
       return phoneList;
     } catch (error) {
-      this.logger.error(error.toString(), '', true);
+      this.logger.error(error);
       return [];
     }
   }
@@ -258,7 +275,11 @@ export class TelphinService {
     );
   }
 
-  public async getInternalPhoneList(clientId: number) {
-    return this.telphinApiService.get(`/client/${clientId}/did`);
+  public async getExtensionGroupList(clientId: number) {
+    return this.telphinApiService.get(`/client/${clientId}/extension_group/`);
+  }
+
+  get CLIENT_ID() {
+    return this.telphinApplicationInfo.client_id;
   }
 }

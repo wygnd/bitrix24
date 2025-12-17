@@ -49,11 +49,7 @@ export class BitrixLeadUpsellController {
       );
       return response;
     } catch (error) {
-      this.logger.error(
-        `Invalid add upsell in queue: ${error.toString()}`,
-        '',
-        true,
-      );
+      this.logger.error({ message: 'Invalid add upsell in queue', error });
       throw error;
     }
   }
@@ -77,11 +73,7 @@ export class BitrixLeadUpsellController {
       this.logger.info(`Handle upsells: ${JSON.stringify(response)}`, true);
       return response;
     } catch (error) {
-      this.logger.error(
-        `Invalid handle upsells: ${error.toString()}`,
-        '',
-        true,
-      );
+      this.logger.error({ message: 'Invalid handle upsells', error });
       throw error;
     }
   }

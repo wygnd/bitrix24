@@ -108,7 +108,7 @@ export class BitrixPlacementService {
 
       console.log(response);
       if (!response?.result) {
-        this.logger.error(`Error: ${JSON.stringify(response)}`);
+        this.logger.error(response);
         return [];
       }
 

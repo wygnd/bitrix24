@@ -36,21 +36,13 @@ import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { isAxiosError } from 'axios';
-import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 import {
   B24LeadActiveStages,
-  B24LeadConvertedStages,
   B24LeadRejectStages,
 } from '@/modules/bitrix/modules/lead/constants/lead.constants';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
-import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
-import {
-  B24WebhookVoxImplantCallInitOptions,
-  B24WebhookVoxImplantCallStartOptions,
-} from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
-import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { TelphinService } from '@/modules/telphin/telphin.service';
 
@@ -677,8 +669,15 @@ export class BitrixWebhookService {
    * Обработка инициализации звонка
    * @param fields
    */
-  async handleVoxImplantCallInit(fields: B24WebhookVoxImplantCallInitOptions) {
-    const { callId, clientPhone } = fields;
+  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
+    const { CALLER_ID: clientPhone } = fields.data;
+
+    // fixme: remove after tests
+    if (clientPhone !== '+79517354601')
+      return {
+        status: false,
+        message: 'In tested',
+      };
 
     /**
      * Получаем информацию:
@@ -686,50 +685,27 @@ export class BitrixWebhookService {
      * 2. О зарегистрированном приложении из телфина
      * 3. Есть ли лид по номеру телефона
      */
-    const [callData, telphinAppInfo, leadIds] = await Promise.all([
-      this.redisService.get<B24WebhookVoxImplantCallStartOptions>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + callId,
-      ),
+    const [telphinAppInfo, leadIds] = await Promise.all([
       this.telphinService.getUserInfo(),
       this.bitrixLeadService.getDuplicateLeadsByPhone(clientPhone),
     ]);
-
-    if (!callData)
-      throw new NotFoundException(`Data from redis was not found: ${callId}`);
 
     if (!telphinAppInfo)
       throw new BadRequestException('Invalid get telphin application info');
 
     const { client_id: clientId } = telphinAppInfo;
-    const { userId } = callData;
 
-    // fixme: remove after tests
-    if (userId !== '522')
+    // todo: Если лид не найден: выходим
+    if (leadIds.length === 0)
       return {
         status: false,
-        message: 'In tested',
+        message: 'lead not found',
       };
-
-    // Если лид не найден: создаем и выходим
-    if (leadIds.length === 0) {
-      const leadId = await this.bitrixLeadService.createLead({
-        STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-        ASSIGNED_BY_ID: userId,
-      });
-      return leadId
-        ? {
-            status: true,
-            message: 'Successfully create lead',
-          }
-        : {
-            status: false,
-            message: 'Error create lead',
-          };
-    }
 
     // Получаем текущие звонки для последующего поиска текущего звонка
     const currentCalls = await this.telphinService.getCurrentCalls(clientId);
 
+    // Ищем текущий звонок по номеру телефона
     const targetCall = currentCalls.find(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
         call_flow == 'IN' &&
@@ -777,7 +753,7 @@ export class BitrixWebhookService {
             id: leadId,
             fields: {
               STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              ASSIGNED_BY_ID: userId, // Ответственный тот, кто ответил
+              ASSIGNED_BY_ID: '', // Ответственный тот, кто ответил
             },
           },
         };
@@ -793,7 +769,7 @@ export class BitrixWebhookService {
     cmds['notify_manager'] = {
       method: 'im.notify.system.add',
       params: {
-        USER_ID: userId,
+        USER_ID: '',
         MESSAGE: notifyMessage,
       },
     };
@@ -807,169 +783,15 @@ export class BitrixWebhookService {
         );
       })
       .catch((error) => {
-        this.logger.error(
-          `Invalid call batch on handle incoming call: ${error.toString()}`,
-          '',
-          true,
-        );
+        this.logger.error({
+          message: 'Invalid call batch on handle incoming call',
+          error,
+        });
       });
 
     return {
       status: true,
       message: 'Successfully handled incoming call',
     };
-  }
-
-  /**
-   * Handle inti task from bitrix24 webhook
-   *
-   * ---
-   *
-   * Обработка инициализации звонка
-   * @param callId
-   * @param callType
-   * @param callerId
-   */
-  async handleVoxImplantCallInitTask({
-    data: { CALL_ID: callId, CALL_TYPE: callType, CALLER_ID: callerId },
-  }: B24EventVoxImplantCallInitDto) {
-    // Если тип звонка не входящий: выходим
-    if (callType !== B24CallType.INCOMING)
-      return {
-        status: false,
-        message: `Call type is not ${B24CallType.INCOMING}`,
-      };
-
-    // Добавляем в очередь, чтобы гарантированно получить данные из редиса
-    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
-      {
-        callId: callId,
-        clientPhone: callerId,
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 100,
-        },
-      },
-    );
-
-    return {
-      status: true,
-      message: 'Successfully add in queue',
-    };
-  }
-
-  /**
-   * Handle start calling from bitrix24 webhook
-   *
-   * ---
-   *
-   * Обработка начала звонка
-   * @param fields
-   */
-  async handleVoxImplantCallStart(fields: B24EventVoxImplantCallStartDto) {
-    const { CALL_ID: callId, USER_ID: userId } = fields.data;
-
-    if (userId !== '522') return false;
-
-    this.redisService.set<B24WebhookVoxImplantCallStartOptions>(
-      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL + callId,
-      {
-        callId: callId,
-        userId: userId,
-      },
-      300, // 5 minutes
-    );
-
-    this.bitrixBotService.sendTestMessage(
-      `[b]Начало звонка[/b][br]` + JSON.stringify(fields),
-    );
-
-    return true;
-  }
-
-  /**
-   * Handle end call from bitrix24 webhook
-   *
-   * ---
-   *
-   * Обработка завершения звонка
-   * @param fields
-   */
-  async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
-    try {
-      const { PHONE_NUMBER: phone, PORTAL_USER_ID: userId } = fields.data;
-      let leadId = '';
-
-      if (userId !== '522') return;
-
-      this.bitrixBotService.sendTestMessage(
-        `[b]Завершение звонка[/b][br]Body: ${JSON.stringify(fields)}}`,
-      );
-
-      // Если не передан leadId, пытаемся найти лид по номеру телефона
-      // Ищем дубликаты
-      const duplicateLeads =
-        await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
-
-      // Если нет дубликатов: создаем лид
-      if (duplicateLeads.length === 0) {
-        const responseLeadId = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
-
-        if (!responseLeadId)
-          throw new BadRequestException('Ошибка при создании лида');
-
-        leadId = responseLeadId.toString();
-      }
-
-      const lead = await this.bitrixLeadService.getLeadById(leadId);
-
-      if (!lead) throw new BadRequestException('Lead not found.');
-
-      const { STATUS_ID: statusId } = lead;
-
-      switch (true) {
-        // Если лид в активных стадиях
-        case B24LeadActiveStages.includes(statusId):
-        case B24LeadConvertedStages.includes(statusId):
-          break;
-
-        // Если лид в неактивных стадиях
-        case B24LeadRejectStages.includes(statusId):
-          this.bitrixLeadService
-            .updateLead({
-              id: leadId,
-              fields: {
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                ASSIGNED_BY_ID: userId,
-              },
-            })
-            .then((res) => {
-              this.logger.info(`Result update lead: ${JSON.stringify(res)}`);
-            })
-            .catch((err) => {
-              this.logger.error(
-                `Execute error on update lead in rejected stages: ${JSON.stringify(err)}`,
-              );
-            });
-          break;
-      }
-
-      return true;
-    } catch (e) {
-      this.logger.error(e, e?.stack, true);
-      return false;
-    }
   }
 }

@@ -109,6 +109,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
       `[b]Ошибка выполнения задачи:[/b][br]` + JSON.stringify(job),
     );
 
-    this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);
+    this.logger.error({ message: 'Ошибка выполнения задачи', job });
   }
 }

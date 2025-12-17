@@ -343,7 +343,7 @@ export class BitrixWikiService {
 
       return [...resultPhones];
     } catch (e) {
-      this.logger.error(e, undefined, true);
+      this.logger.error(e);
       throw e;
     }
   }

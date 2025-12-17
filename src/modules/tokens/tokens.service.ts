@@ -131,9 +131,10 @@ export class TokensService {
 
       return true;
     } catch (err) {
-      this.logger.error(
-        `Execute function: updateToken was throwing error: ${err}`,
-      );
+      this.logger.error({
+        message: 'Execute function: updateToken was throwing error',
+        error: err,
+      });
       return false;
     }
   }

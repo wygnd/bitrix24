@@ -106,11 +106,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       error.message;
 
     this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error(
-      `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')} => ${error.message}`,
-      '',
-      true,
-    );
+    this.logger.error({
+      message: `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
+      error,
+    });
   }
 
   @OnWorkerEvent('error')
@@ -118,6 +117,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]Ошибка выполнения задачи:[/b][br]${error.toString()}`;
 
     this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error(`Ошибка выполнения задачи: => ${error.toString()}`, '', true);
+    this.logger.error({ message: 'Ошибка выполнения задачи', error });
   }
 }

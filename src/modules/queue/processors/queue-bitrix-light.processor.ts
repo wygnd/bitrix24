@@ -10,8 +10,6 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
-import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
-import { B24WebhookVoxImplantCallInitOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -24,7 +22,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     private readonly wikiService: WikiService,
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly bitrixLeadUpsellService: BitrixLeadUpsellService,
-    private readonly bitrixWebhookService: BitrixWebhookService,
   ) {
     super();
   }
@@ -60,13 +57,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         );
         break;
 
-      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
-        response.data =
-          await this.bitrixWebhookService.handleVoxImplantCallInit(
-            data as B24WebhookVoxImplantCallInitOptions,
-          );
-        break;
-
       default:
         this.logger.warn(`not handled yet: ${name}`);
         response.message = 'Not handled';
@@ -95,6 +85,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       `[b]Ошибка выполнения задачи:[/b][br] ` + JSON.stringify(job),
     );
 
-    this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);
+    this.logger.error({ message: 'Ошибка выполнения задачи', job });
   }
 }

@@ -54,7 +54,7 @@ export class BitrixMessageService {
 
       return result ? result : null;
     } catch (error) {
-      this.logger.error(error.toString());
+      this.logger.error(error);
       return null;
     }
   }

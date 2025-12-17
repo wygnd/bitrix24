@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { WinstonLogger } from '@/config/winston.logger';
+import safeJSONStringify from 'safe-json-stringify';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -37,7 +38,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     this.logger.error(
-      `[${status}]: Exception error: ${JSON.stringify(message)}`,
+      `[${status}]: Exception error: ${safeJSONStringify(message)}`,
     );
 
     response.status(status).json({

@@ -479,7 +479,7 @@ export class BitrixService {
       );
       return result ?? null;
     } catch (e) {
-      this.logger.error(e.toString());
+      this.logger.error(e);
       return null;
     }
   }

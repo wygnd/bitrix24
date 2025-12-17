@@ -570,7 +570,10 @@ export class BitrixHeadHunterService {
           },
         },
       });
-      this.logger.error(`Ошибка обработки отклика => ${JSON.stringify(body)}`);
+      this.logger.error({
+        message: 'Ошибка обработки отклика',
+        data: body,
+      });
 
       return {
         status: false,

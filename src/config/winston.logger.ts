@@ -3,6 +3,7 @@ import winston from 'winston';
 import { join } from 'path';
 import 'winston-daily-rotate-file';
 import dayjs from 'dayjs';
+import safeJsonStringify from 'safe-json-stringify';
 
 @Injectable()
 export class WinstonLogger {
@@ -55,26 +56,28 @@ export class WinstonLogger {
     });
   }
 
-  public error(
-    message: string,
-    trace?: string,
-    disableConsoleLog: boolean = false,
-  ) {
-    const log = trace ? `${message} - ${trace}` : message;
+  public error(message: any, disableConsoleLog: boolean = false) {
+    const msg = this.toSaveJson(message);
+    this.logger.error(msg);
 
-    this.logger.error(log);
-    if (!disableConsoleLog) this.consoleLogger.error(log);
+    if (!disableConsoleLog) this.consoleLogger.error(msg);
   }
 
-  public warn(message: string, disableConsoleLog: boolean = false) {
-    this.logger.warn(message);
+  public warn(message: any, disableConsoleLog: boolean = false) {
+    const msg = this.toSaveJson(message);
+    this.logger.warn(msg);
 
-    if (!disableConsoleLog) this.consoleLogger.warn(message);
+    if (!disableConsoleLog) this.consoleLogger.warn(msg);
   }
 
   public info(message: string, disableConsoleLog: boolean = false) {
-    this.logger.info(message);
+    const msg = this.toSaveJson(message);
+    this.logger.info(msg);
 
-    if (!disableConsoleLog) this.consoleLogger.debug(message);
+    if (!disableConsoleLog) this.consoleLogger.debug(msg);
+  }
+
+  private toSaveJson(data: any) {
+    return safeJsonStringify(data) as string;
   }
 }

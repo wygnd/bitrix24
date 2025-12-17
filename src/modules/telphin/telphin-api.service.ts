@@ -91,8 +91,7 @@ export class TelphinApiService {
         `Bearer ${access_token}`;
       return access_token;
     } catch (e) {
-      console.log(e);
-      this.logger.error(`Invalid update telphin token: ${e}`);
+      this.logger.error({ message: 'Invalid update telphin token', error: e });
       return false;
     }
   }
@@ -146,7 +145,7 @@ export class TelphinApiService {
 
       return data;
     } catch (e) {
-      this.logger.error(e.toString());
+      this.logger.error(e);
       return null;
     }
   }
@@ -175,7 +174,7 @@ export class TelphinApiService {
 
       return data;
     } catch (e) {
-      this.logger.error(e.toString());
+      this.logger.error(e);
       return null;
     }
   }
@@ -202,7 +201,7 @@ export class TelphinApiService {
 
       return data;
     } catch (e) {
-      this.logger.error(e.toString());
+      this.logger.error(e);
       return null;
     }
   }
