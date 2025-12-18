@@ -24,7 +24,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 export class BitrixWebhookController {
   private readonly logger = new WinstonLogger(
     BitrixWebhookController.name,
-    'bitrix:services'.split(':'),
+    'bitrix:telephony'.split(':'),
   );
 
   constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}

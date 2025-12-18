@@ -705,6 +705,12 @@ export class BitrixWebhookService {
       ),
     ]);
 
+    this.logger.info({
+      targetCall,
+      extensionGroup,
+      extension,
+    });
+
     if (!extensionGroup)
       throw new NotFoundException('Extension group was not found');
 
