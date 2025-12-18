@@ -698,10 +698,10 @@ export class BitrixWebhookService {
     // Получаем группу
     const [extensionGroup, extension] = await Promise.all([
       this.telphinService.getExtensionGroupById(
-        targetCall.caller_extension.extension_group_id,
+        targetCall.called_extension.extension_group_id,
       ),
       this.telphinService.getClientExtensionById(
-        targetCall.caller_extension.id,
+        targetCall.called_extension.id,
       ),
     ]);
 

@@ -3,7 +3,13 @@ export interface TelphinCallItem {
   call_api_id: string;
   call_flow: string;
   called_did: number | null;
-  called_extension: number | null;
+  called_extension: {
+    name: string;
+    id: number;
+    client_id: number;
+    type: string;
+    extension_group_id: number;
+  };
   called_number: string;
   caller_extension: {
     name: string;
