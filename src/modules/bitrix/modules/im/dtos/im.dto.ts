@@ -1,10 +1,15 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import type { B24ImSendMessage } from '../interfaces/im.interface';
-import { Type } from 'class-transformer';
 import { ImbotMessageKeyboardOptionsDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-message.dto';
 
-export class SendMessageDto implements B24ImSendMessage {
+export class B24SendMessageDto implements B24ImSendMessage {
   @ApiProperty({
     type: String,
     description: 'Chat id or user id',
@@ -39,9 +44,10 @@ export class SendMessageDto implements B24ImSendMessage {
     type: ImbotMessageKeyboardOptionsDto,
     description: 'Inline Buttons',
     required: false,
+    isArray: true,
   })
   @IsOptional()
   @IsArray()
-  @Type(() => ImbotMessageKeyboardOptionsDto)
+  @ValidateNested()
   KEYBOARD: ImbotMessageKeyboardOptionsDto[] = [];
 }
