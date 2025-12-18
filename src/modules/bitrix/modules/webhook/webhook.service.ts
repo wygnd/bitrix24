@@ -46,8 +46,15 @@ import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.s
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { TelphinService } from '@/modules/telphin/telphin.service';
-import { B24WebhookHandleCallInitForSaleManagersOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import {
+  B24WebhookHandleCallInitForSaleManagersOptions,
+  B24WebhookHandleCallStartForSaleManagersOptions,
+  B24WebhookVoxImplantCallInitOptions,
+} from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
+import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
+import { B24VoxImplantCallStartDataOptions } from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
+import { QueueLightService } from '@/modules/queue/queue-light.service';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -69,6 +76,7 @@ export class BitrixWebhookService {
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly telphinService: TelphinService,
+    private readonly queueLightService: QueueLightService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -672,7 +680,7 @@ export class BitrixWebhookService {
    * @param fields
    */
   async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
-    const { CALLER_ID: clientPhone } = fields.data;
+    const { CALLER_ID: clientPhone, CALL_ID: callId } = fields.data;
 
     // fixme: remove after tests
     if (clientPhone !== '+79517354601')
@@ -723,6 +731,16 @@ export class BitrixWebhookService {
 
     const { name: extensionGroupName } = extensionGroup;
 
+    this.redisService.set<B24WebhookVoxImplantCallInitOptions>(
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT,
+      {
+        callId: callId,
+        clientPhone: clientPhone,
+        extensionGroupName: extensionGroupName,
+      },
+      60, // 1 minute
+    );
+
     // Распределяем логику по отделам
     switch (true) {
       // Отдел продаж
@@ -740,6 +758,16 @@ export class BitrixWebhookService {
     }
   }
 
+  /**
+   * Handle init call for sale department
+   *
+   * ---
+   *
+   * Обработка инициализации звонка для отдела продаж
+   * @param clientPhone
+   * @param extensionExtraParamsDecoded
+   * @param extensionPhone
+   */
   async handleVoxImplantCallInitForSaleManagers({
     phone: clientPhone,
     extension: {
@@ -893,6 +921,118 @@ export class BitrixWebhookService {
     return {
       status: true,
       message: 'call for sale manager was handled successfully',
+    };
+  }
+
+  /**
+   * Handle call start from bitrix24 webhook. Add in tasks queue
+   *
+   * ---
+   *
+   * Обработка начала звонка из битркис24. Добавляет в очередь задач
+   * @param fields
+   */
+  async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
+    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
+      {
+        callId: fields.data.CALL_ID,
+        userId: fields.data.USER_ID,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 25,
+        },
+      },
+    );
+    return true;
+  }
+
+  async handleVoxImplantCallStart(fields: B24VoxImplantCallStartDataOptions) {
+    try {
+      const { CALL_ID: callId, USER_ID: userId } = fields;
+
+      const callData =
+        await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
+          REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
+        );
+
+      if (!callData) throw new NotFoundException('Call data was not found');
+
+      const { clientPhone, extensionGroupName } = callData;
+
+      switch (true) {
+        case /sale/gi.test(extensionGroupName):
+          return this.handleVoxImplantCallStartForSaleManagers({
+            phone: clientPhone,
+            userId: userId,
+          });
+
+        default:
+          return;
+      }
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  async handleVoxImplantCallStartForSaleManagers(
+    fields: B24WebhookHandleCallStartForSaleManagersOptions,
+  ) {
+    const { userId, phone } = fields;
+
+    const leadIds =
+      await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+
+    if (phone in this.bitrixService.AVITO_PHONES) {
+      // Если клиент звонит на авито номер
+
+      if (leadIds.length === 0) {
+        this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: userId,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+        });
+      } else {
+        const leadInfo = await this.bitrixLeadService.getLeadById(
+          leadIds[0].toString(),
+        );
+
+        if (!leadInfo) throw new BadRequestException('Lead was not found');
+
+        const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
+
+        switch (true) {
+          case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
+          case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
+            this.bitrixLeadService.updateLead({
+              id: leadId,
+              fields: {
+                ASSIGNED_BY_ID: userId,
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+              },
+            });
+            break;
+        }
+      }
+    } else {
+      // Если клиент звонит напрямую менеджеру
+
+      if (leadIds.length === 0) {
+        // Если лида по номеру не найдено
+
+        // Создаем лид
+        this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: userId,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+        });
+      }
+    }
+
+    return {
+      status: true,
+      message: 'Successfully handled start call',
     };
   }
 }

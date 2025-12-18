@@ -18,6 +18,7 @@ import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webh
 import { BitrixVoxImplantInitCallEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
@@ -95,5 +96,12 @@ export class BitrixWebhookController {
       this.logger.error(error);
       throw error;
     }
+  }
+
+  @Post('/bitrix/voximplant/call/start')
+  async handleWebhookVoxImplantStartCallingFromBitrix(
+    @Body() body: B24EventVoxImplantCallStartDto,
+  ) {
+    return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
   }
 }

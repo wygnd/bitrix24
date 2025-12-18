@@ -9,10 +9,16 @@ export interface B24WebhookVoxImplantCallStartOptions {
 export interface B24WebhookVoxImplantCallInitOptions {
   callId: string;
   clientPhone: string;
+  extensionGroupName: string;
 }
 
 export interface B24WebhookHandleCallInitForSaleManagersOptions {
   phone: string;
   extension: TelphinExtensionItem;
   group: TelphinExtensionGroup;
+}
+
+export interface B24WebhookHandleCallStartForSaleManagersOptions {
+  userId: string;
+  phone: string;
 }
