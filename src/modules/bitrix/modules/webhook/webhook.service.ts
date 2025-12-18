@@ -684,6 +684,11 @@ export class BitrixWebhookService {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
+    this.logger.info({
+      message: 'check current calls',
+      currentCalls,
+    });
+
     // Ищем текущий звонок по номеру телефона
     const targetCall = currentCalls.find(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
@@ -706,9 +711,9 @@ export class BitrixWebhookService {
     ]);
 
     this.logger.info({
+      message: 'check target call and extension group',
       targetCall,
-      extensionGroup,
-      extension,
+      extensionGroup
     });
 
     if (!extensionGroup)
