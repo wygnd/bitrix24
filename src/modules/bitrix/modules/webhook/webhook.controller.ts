@@ -79,7 +79,9 @@ export class BitrixWebhookController {
     return true;
   }
 
+  @ApiOperation({ summary: 'Обработка инициализации звонка' })
   @UseGuards(BitrixVoxImplantInitCallEventGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('/bitrix/voximplant/call/init')
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,

@@ -713,7 +713,7 @@ export class BitrixWebhookService {
     this.logger.info({
       message: 'check target call and extension group',
       targetCall,
-      extensionGroup
+      extensionGroup,
     });
 
     if (!extensionGroup)
@@ -763,6 +763,13 @@ export class BitrixWebhookService {
 
     if (saleExtensionList.length === 0)
       throw new NotFoundException('Extension list is empty');
+
+    this.logger.info({
+      message: 'check extension phone and saleList from telphin',
+      saleExtensionList,
+      extensionPhone,
+      leadIds,
+    });
 
     if (extensionPhone in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито
@@ -824,6 +831,11 @@ export class BitrixWebhookService {
         };
       });
 
+      this.logger.info({
+        message: 'check batch commands on avito number',
+        callAvitoCommands,
+      });
+
       this.bitrixService.callBatch(callAvitoCommands);
     } else {
       // Если клиент звонит напрямую
@@ -868,6 +880,11 @@ export class BitrixWebhookService {
           MESSAGE: notifyManagerMessage,
         },
       };
+
+      this.logger.info({
+        message: 'check batch commands on target number',
+        callManagerCommands,
+      });
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
