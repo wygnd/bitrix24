@@ -48,7 +48,7 @@ export class BitrixMessageControllerV1 {
       const response = await this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: body.userId,
         MESSAGE: body.message,
-        SYSTEM: body.system,
+        SYSTEM: body.system ? 'Y' : 'N',
       });
       this.logger.info(response);
       return {

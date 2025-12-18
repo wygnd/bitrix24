@@ -1,4 +1,9 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { B24ImSendMessageResponseOptions } from '../interfaces/im.interface';
 
@@ -30,9 +35,8 @@ export class B24SendMessageDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  @IsIn(['N', 'Y'])
-  system: string = 'N';
+  @IsBoolean()
+  system: boolean = false;
 }
 
 export class B24SendMessageResponse implements B24ImSendMessageResponseOptions {
