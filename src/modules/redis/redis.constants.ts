@@ -45,6 +45,7 @@ export const REDIS_KEYS = {
   TELPHIN_EXTENSION_ITEM: 'telphin:extension:item:',
   TELPHIN_EXTENSION_ITEM_BY_BITRIX_ID: 'telphin:extension:item:bitrix_id:',
   TELPHIN_EXTERNAL_PHONE_LIST: 'telphin:external:phone:list',
+  TELPHIN_EXTENSION_GROUP_LIST: 'telphin:extension:group:list',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

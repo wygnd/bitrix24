@@ -11,6 +11,7 @@ import { TelphinGetCallListResponse } from '@/modules/telphin/interfaces/telphin
 import { TelphinExternalPhone } from '@/modules/telphin/interfaces/telpin-external-phone.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { TelphinInternalPhone } from '@/modules/telphin/interfaces/telphin-internal-phone.interface';
+import { TelphinExtensionGroup } from '@/modules/telphin/interfaces/telphin-extension-group.interface';
 
 @Injectable()
 export class TelphinService {
@@ -30,12 +31,11 @@ export class TelphinService {
    * ---
    *
    * Получение текущих звонков с telphin
-   * @param clientId
    */
-  public async getCurrentCalls(clientId: number) {
+  public async getCurrentCalls() {
     const callList =
       await this.telphinApiService.get<TelphinGetCallListResponse>(
-        `/client/${clientId}/current_calls/`,
+        `/client/${this.CLIENT_ID}/current_calls/`,
       );
 
     return callList?.call_list ? callList.call_list : [];
@@ -81,11 +81,8 @@ export class TelphinService {
    * ---
    *
    * Получить список внутренних номеров с telphin
-   * @param clientId
    */
-  public async getClientExtensionList(
-    clientId: number,
-  ): Promise<TelphinExtensionItem[] | null> {
+  public async getClientExtensionList(): Promise<TelphinExtensionItem[]> {
     const extensionsFromCache = await this.redisService.get<
       TelphinExtensionItem[]
     >(REDIS_KEYS.TELPHIN_EXTENSION_LIST);
@@ -93,10 +90,10 @@ export class TelphinService {
     if (extensionsFromCache) return extensionsFromCache;
 
     const extensions = await this.telphinApiService.get<TelphinExtensionItem[]>(
-      `/client/${clientId}/extension/`,
+      `/client/${this.CLIENT_ID}/extension/`,
     );
 
-    if (!extensions) return null;
+    if (!extensions) return [];
 
     this.redisService.set<TelphinExtensionItem[]>(
       REDIS_KEYS.TELPHIN_EXTENSION_LIST,
@@ -107,7 +104,7 @@ export class TelphinService {
     return extensions;
   }
 
-  public async getClientExtensionById(clientId: number, extensionId: number) {
+  public async getClientExtensionById(extensionId: number) {
     const extensionFromCache =
       await this.redisService.get<TelphinExtensionItem>(
         REDIS_KEYS.TELPHIN_EXTENSION_ITEM + extensionId,
@@ -116,7 +113,7 @@ export class TelphinService {
     if (extensionFromCache) return extensionFromCache;
 
     const extension = await this.telphinApiService.get<TelphinExtensionItem>(
-      `/client/${clientId}/extension/${extensionId}`,
+      `/client/${this.CLIENT_ID}/extension/${extensionId}`,
     );
 
     if (!extension) return null;
@@ -151,7 +148,7 @@ export class TelphinService {
 
     if (extensionFromCache) return extensionFromCache;
 
-    const extensions = await this.getClientExtensionList(clientId);
+    const extensions = await this.getClientExtensionList();
 
     if (!extensions) return null;
 
@@ -185,11 +182,9 @@ export class TelphinService {
    *
    * Получить список внешних номеров
    *
-   * @param clientId
    * @param action
    */
   public async getExternalPhoneList(
-    clientId: number,
     action: 'force' | 'cache' = 'cache',
   ): Promise<TelphinExternalPhone[]> {
     try {
@@ -203,7 +198,7 @@ export class TelphinService {
 
       const phoneList = await this.telphinApiService.get<
         TelphinExternalPhone[]
-      >(`/client/${clientId}/did`);
+      >(`/client/${this.CLIENT_ID}/did`);
 
       if (!phoneList) return [];
 
@@ -226,16 +221,14 @@ export class TelphinService {
    * ---
    *
    * Получить внешний номер по определенному полю
-   * @param clientId
    * @param fieldName
    * @param fieldValue
    */
   public async getExternalPhoneByField(
-    clientId: number,
     fieldName: keyof TelphinExternalPhone,
     fieldValue: string,
   ): Promise<TelphinExternalPhone | null> {
-    const phoneList = await this.getExternalPhoneList(clientId);
+    const phoneList = await this.getExternalPhoneList();
 
     if (phoneList.length === 0) return null;
 
@@ -258,8 +251,97 @@ export class TelphinService {
     );
   }
 
-  public async getExtensionGroupList(clientId: number) {
-    return this.telphinApiService.get(`/client/${clientId}/extension_group/`);
+  /**
+   * Get extension group list from telphin
+   *
+   * ---
+   *
+   * Получить список групп внутренних номеров
+   * @param action
+   */
+  public async getExtensionGroupList(action: 'force' | 'cache' = 'cache') {
+    if (action === 'cache') {
+      const groupListFromCache = await this.redisService.get<
+        TelphinExtensionGroup[]
+      >(REDIS_KEYS.TELPHIN_EXTENSION_GROUP_LIST);
+
+      if (groupListFromCache) return groupListFromCache;
+    }
+
+    const groupList = await this.telphinApiService.get<TelphinExtensionGroup[]>(
+      `/client/${this.CLIENT_ID}/extension_group/`,
+    );
+
+    if (!groupList) return [];
+
+    this.redisService.set<TelphinExtensionGroup[]>(
+      REDIS_KEYS.TELPHIN_EXTERNAL_PHONE_LIST,
+      groupList,
+      900, // 15 minutes
+    );
+
+    return groupList;
+  }
+
+  /**
+   * Get extension group by id
+   *
+   * ---
+   *
+   * Получить группу внутренних номеров по ID
+   * @param extensionGroupId
+   */
+  public async getExtensionGroupById(
+    extensionGroupId: number,
+  ): Promise<TelphinExtensionGroup | null> {
+    return (
+      (await this.getExtensionGroupList()).find(
+        (extGrp) => extGrp.id === extensionGroupId,
+      ) ?? null
+    );
+  }
+
+  /**
+   * Get extension group list and filtered this list by specific field and return selected fields on each item.
+   * If [selectFields] is undefined will be returned full object
+   *
+   * ---
+   *
+   * Получает список групп внутренних номеров, фильтрует этот список по заданному значению и возвращает определенный поля,
+   * если они были переданы. Если поля не переданы, будет возвращен весь объект
+   * @param filterFieldName
+   * @param filterFieldValue
+   */
+  public async getFilteredExtensionsByGroupField(
+    filterFieldName: keyof TelphinExtensionGroup,
+    filterFieldValue: string,
+  ) {
+    // todo: add select fields
+    return (await this.getExtensionGroupList()).filter((extensionGroup) =>
+      RegExp(filterFieldValue, 'gi').test(`${extensionGroup[filterFieldName]}`),
+    );
+  }
+
+  public async getExtensionGroupExtensionListByGroupIds(
+    extensionGroupIds: number[],
+  ) {
+    return Promise.all(
+      extensionGroupIds.map((extensionGroupId) =>
+        this.telphinApiService.get<TelphinExtensionItem[]>(
+          `/extension_group/${extensionGroupId}/extension/`,
+        ),
+      ),
+    ).then((responses) => {
+      const responseArray: TelphinExtensionItem[] = [];
+
+      responses.forEach((res) => {
+        if (!res) return;
+
+        responseArray.push(...res);
+      });
+
+      return responseArray;
+    });
   }
 
   get CLIENT_ID() {

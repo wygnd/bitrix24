@@ -38,13 +38,16 @@ import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/
 import { isAxiosError } from 'axios';
 import {
   B24LeadActiveStages,
+  B24LeadConvertedStages,
+  B24LeadNewStages,
   B24LeadRejectStages,
 } from '@/modules/bitrix/modules/lead/constants/lead.constants';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
-import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { TelphinService } from '@/modules/telphin/telphin.service';
+import { B24WebhookHandleCallInitForSaleManagersOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -65,7 +68,6 @@ export class BitrixWebhookService {
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
-    private readonly queueLightService: QueueLightService,
     private readonly telphinService: TelphinService,
   ) {
     this.departmentInfo = {
@@ -662,11 +664,11 @@ export class BitrixWebhookService {
   }
 
   /**
-   * Hnalde init call bitrix24 webhook
+   * Handle init call bitrix24 webhook and distribute by departments
    *
    * ---
    *
-   * Обработка инициализации звонка
+   * Обработка инициализации звонка и распределение обработки по отедлам
    * @param fields
    */
   async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
@@ -679,31 +681,8 @@ export class BitrixWebhookService {
         message: 'In tested',
       };
 
-    /**
-     * Получаем информацию:
-     * 1. О звонке из кеша
-     * 2. О зарегистрированном приложении из телфина
-     * 3. Есть ли лид по номеру телефона
-     */
-    const [telphinAppInfo, leadIds] = await Promise.all([
-      this.telphinService.getUserInfo(),
-      this.bitrixLeadService.getDuplicateLeadsByPhone(clientPhone),
-    ]);
-
-    if (!telphinAppInfo)
-      throw new BadRequestException('Invalid get telphin application info');
-
-    const { client_id: clientId } = telphinAppInfo;
-
-    // todo: Если лид не найден: выходим
-    if (leadIds.length === 0)
-      return {
-        status: false,
-        message: 'lead not found',
-      };
-
-    // Получаем текущие звонки для последующего поиска текущего звонка
-    const currentCalls = await this.telphinService.getCurrentCalls(clientId);
+    // Получаем текущие звонки
+    const currentCalls = await this.telphinService.getCurrentCalls();
 
     // Ищем текущий звонок по номеру телефона
     const targetCall = currentCalls.find(
@@ -712,86 +691,180 @@ export class BitrixWebhookService {
         [called_number, caller_id_name, caller_id_number].includes(clientPhone),
     );
 
+    // Если не нашли текущий звонок по номеру клиента: выходим
     if (!targetCall)
-      throw new NotFoundException('Call in current call list not found');
+      throw new NotFoundException('Call in call list was not found');
 
-    /**
-     * Получаем информацию:
-     * 1. О внутреннем номере текущего звонка
-     * 2. О лиде
-     */
-    const [extension, lead] = await Promise.all([
-      this.telphinService.getClientExtensionById(
-        clientId,
-        targetCall.extension_id,
+    // Получаем группу
+    const [extensionGroup, extension] = await Promise.all([
+      this.telphinService.getExtensionGroupById(
+        targetCall.caller_extension.extension_group_id,
       ),
-      this.bitrixLeadService.getLeadById(leadIds[0].toString()),
+      this.telphinService.getClientExtensionById(
+        targetCall.caller_extension.id,
+      ),
     ]);
 
-    if (!extension)
-      throw new NotFoundException('Invalid get extension number from telphin');
+    if (!extensionGroup)
+      throw new NotFoundException('Extension group was not found');
 
-    if (!lead) throw new NotFoundException(`Invalid get lead: ${leadIds[0]}`);
+    if (!extension) throw new NotFoundException('Extension was not found');
 
-    const { STATUS_ID: leadStatusId, ID: leadId } = lead;
-    const { ani: extensionPhone } = extension;
-    const cmds: B24BatchCommands = {};
-    let notifyMessage = 'Бери скорей, клиент продолжает искать';
+    const { name: extensionGroupName } = extensionGroup;
 
+    // Распределяем логику по отделам
     switch (true) {
-      case B24LeadActiveStages.includes(leadStatusId):
-        if (this.bitrixService.AVITO_PHONES.includes(extensionPhone))
-          notifyMessage =
-            'Ответить нужно сразу, скажи клиенту, что передашь его обращение ответственному менеджеру.';
+      // Отдел продаж
+      case /sale/gi.test(extensionGroupName):
+        const result = await this.handleVoxImplantCallInitForSaleManagers({
+          phone: clientPhone,
+          extension: extension,
+          group: extensionGroup,
+        });
+        this.logger.debug(result);
+        return result;
 
-        break;
+      default:
+        return false;
+    }
+  }
 
-      case B24LeadRejectStages.includes(leadStatusId):
-        cmds['update_lead'] = {
-          method: 'crm.lead.update',
+  async handleVoxImplantCallInitForSaleManagers({
+    phone: clientPhone,
+    extension: {
+      extra_params: extensionExtraParamsDecoded,
+      ani: extensionPhone,
+    },
+  }: B24WebhookHandleCallInitForSaleManagersOptions) {
+    // Ищем лид по номеру телефона
+    // Получаем список внутренних номеров все sale отделов
+    const [leadIds, saleExtensionList] = await Promise.all([
+      this.bitrixLeadService.getDuplicateLeadsByPhone(clientPhone),
+      this.telphinService.getExtensionGroupExtensionListByGroupIds(
+        (
+          await this.telphinService.getFilteredExtensionsByGroupField(
+            'name',
+            'sale',
+          )
+        ).map((group) => group.id),
+      ),
+    ]);
+
+    if (saleExtensionList.length === 0)
+      throw new NotFoundException('Extension list is empty');
+
+    if (extensionPhone in this.bitrixService.AVITO_PHONES) {
+      // Если клиент звонит на авито
+      const avitoName = this.bitrixService.AVITO_PHONES[extensionPhone];
+      const callAvitoCommands: B24BatchCommands = {};
+
+      let notifyMessageAboutAvitoCall = '';
+
+      if (leadIds.length === 0) {
+        // Если лид не найден
+        notifyMessageAboutAvitoCall = `Новый лид с Авито [${avitoName}]. Бери в работу!`;
+      } else {
+        //   Если нашли лид
+
+        // Получаем информацию о лиде
+        const leadInfo = await this.bitrixLeadService.getLeadById(
+          leadIds[0].toString(),
+        );
+
+        if (!leadInfo)
+          throw new NotFoundException(`Lead [${leadIds[0]}] was not found`);
+
+        const { STATUS_ID: leadStatusId } = leadInfo;
+
+        switch (true) {
+          case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
+            notifyMessageAboutAvitoCall = 'Новый лид. Бери в работу!';
+            break;
+
+          case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
+            notifyMessageAboutAvitoCall =
+              'Клиент в неактивной стадии. Бери в работу себе';
+            break;
+
+          case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
+            notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито [${avitoName}]. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
+            break;
+
+          case B24LeadActiveStages.includes(leadStatusId): // Лид в активной стадии
+            notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито [${avitoName}] повторно. Скажи, что передашь его обращение ответственному менеджеру`;
+            break;
+        }
+      }
+
+      // Отправляем всем сотрудникам уведомление
+      saleExtensionList.forEach(({ extra_params }) => {
+        const {
+          comment: saleBitrixUserId = '',
+        }: TelphinExtensionItemExtraParams = JSON.parse(extra_params);
+
+        if (!saleBitrixUserId) return;
+
+        callAvitoCommands[`notify_manager=${saleBitrixUserId}`] = {
+          method: 'im.notify.system.add',
           params: {
-            id: leadId,
+            USER_ID: saleBitrixUserId,
+            MESSAGE: notifyMessageAboutAvitoCall,
+          },
+        };
+      });
+
+      this.bitrixService.callBatch(callAvitoCommands);
+    } else {
+      // Если клиент звонит напрямую
+      const callManagerCommands: B24BatchCommands = {};
+      let notifyManagerMessage: string;
+
+      // Так как клиент звонит напрямую,
+      // то мы без проблем можем вытянуть user bitrix id
+      // из поля [Комментарий] в телфине
+      const { comment: assignedUserId = '' }: TelphinExtensionItemExtraParams =
+        JSON.parse(extensionExtraParamsDecoded);
+
+      if (!assignedUserId)
+        throw new BadRequestException(
+          'Invalid get assigned bitrix id by extension',
+        );
+
+      // Если лид не найден
+      if (leadIds.length === 0) {
+        // создаем лид
+        notifyManagerMessage =
+          'Клиент звонит тебе. Лид не найден (Действующий с другого номера или по рекомендации)';
+        callManagerCommands['create_lead'] = {
+          method: 'crm.lead.add',
+          params: {
             fields: {
+              ASSIGNED_BY_ID: assignedUserId,
               STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              ASSIGNED_BY_ID: '', // Ответственный тот, кто ответил
             },
           },
         };
-        break;
+      } else {
+        // Если лид найден
+        notifyManagerMessage = 'Звонит твой клиент - отвечай';
+      }
 
-      default:
-        return {
-          status: false,
-          message: 'Not handler yet',
-        };
+      // Уведомляем пользователя
+      callManagerCommands['notify_manager'] = {
+        method: 'im.notify.system.add',
+        params: {
+          USER_ID: assignedUserId,
+          MESSAGE: notifyManagerMessage,
+        },
+      };
+
+      // Отправляем запрос
+      this.bitrixService.callBatch(callManagerCommands);
     }
-
-    cmds['notify_manager'] = {
-      method: 'im.notify.system.add',
-      params: {
-        USER_ID: '',
-        MESSAGE: notifyMessage,
-      },
-    };
-
-    this.bitrixService
-      .callBatch(cmds)
-      .then((response) => {
-        this.logger.info(
-          `Successfull handle incoming call: ${JSON.stringify(response)}`,
-          true,
-        );
-      })
-      .catch((error) => {
-        this.logger.error({
-          message: 'Invalid call batch on handle incoming call',
-          error,
-        });
-      });
 
     return {
       status: true,
-      message: 'Successfully handled incoming call',
+      message: 'call for sale manager was handled successfully',
     };
   }
 }

@@ -17,10 +17,16 @@ import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/w
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import { BitrixVoxImplantInitCallEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
 export class BitrixWebhookController {
+  private readonly logger = new WinstonLogger(
+    BitrixWebhookController.name,
+    'bitrix:services'.split(':'),
+  );
+
   constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}
 
   @UseGuards(BitrixWebhookGuard)
@@ -78,6 +84,14 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
-    return this.bitrixWebhookService.handleVoxImplantCallInit(body);
+    try {
+      const response =
+        await this.bitrixWebhookService.handleVoxImplantCallInit(body);
+      this.logger.info(response);
+      return response;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }
