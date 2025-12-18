@@ -1,8 +1,11 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
-import { B24SendMessageDto } from '@/modules/bitrix/modules/im/dtos/im.dto';
+import {
+  B24SendMessageDto,
+  B24SendMessageResponse,
+} from '@/modules/bitrix/modules/im/dtos/im.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags(B24ApiTags.IM)
@@ -25,13 +28,33 @@ export class BitrixMessageControllerV1 {
     example: 'bga {token}',
     required: true,
   })
+  @ApiResponse({
+    type: B24SendMessageResponse,
+    status: HttpStatus.OK,
+    description: 'Успешная отправка сообщения',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Внутренняя ошибка',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Ошибка данных',
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/message/add')
   async sendMessage(@Body() body: B24SendMessageDto) {
     try {
-      const response = await this.bitrixMessageService.sendPrivateMessage(body);
+      const response = await this.bitrixMessageService.sendPrivateMessage({
+        DIALOG_ID: body.userId,
+        MESSAGE: body.message,
+        SYSTEM: body.system,
+      });
       this.logger.info(response);
-      return response.result;
+      return {
+        status: true,
+        messageId: response.result,
+      };
     } catch (error) {
       this.logger.error(error, true);
       throw error;
