@@ -6,6 +6,7 @@ import { TelphinTokenOptions } from '@/modules/telphin/interfaces/telphin-api.in
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { TelphinUserInfo } from '@/modules/tokens/interfaces/telphin-user.interface';
 
 @Injectable()
 export class TelphinApiService {
@@ -15,6 +16,7 @@ export class TelphinApiService {
   );
   private readonly telphinClientId: string;
   private readonly telphinClientSecret: string;
+  private telphinApplicationInfo: TelphinUserInfo;
 
   constructor(
     private readonly configService: ConfigService,
@@ -60,6 +62,21 @@ export class TelphinApiService {
         }
 
         this.telphinAPI.defaults.headers['Authorization'] = `Bearer ${token}`;
+        this.get<TelphinUserInfo>('/user')
+          .then((info) => {
+            if (!info) {
+              this.logger.error('Invalid get user info from telphin');
+              return;
+            }
+
+            this.telphinApplicationInfo = info;
+          })
+          .catch((error) => {
+            this.logger.error({
+              message: 'Invalid get user info from telphin',
+              error,
+            });
+          });
       })
       .catch((err) => this.logger.error(err));
   }
@@ -126,8 +143,8 @@ export class TelphinApiService {
     return data;
   }
 
-  public get CLIENT_ID() {
-    return this.telphinClientId;
+  get TELPHIN_APPLICATION_INFO() {
+    return this.telphinApplicationInfo;
   }
 
   /**

@@ -56,25 +56,31 @@ export class WinstonLogger {
     });
   }
 
-  public error(message: any, disableConsoleLog: boolean = false) {
+  public error<T>(message: T, disableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.error(msg);
 
     if (!disableConsoleLog) this.consoleLogger.error(msg);
   }
 
-  public warn(message: any, disableConsoleLog: boolean = false) {
+  public warn<T>(message: T, disableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.warn(msg);
 
     if (!disableConsoleLog) this.consoleLogger.warn(msg);
   }
 
-  public info(message: string, disableConsoleLog: boolean = false) {
+  public info<T>(message: T, disableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.info(msg);
 
     if (!disableConsoleLog) this.consoleLogger.debug(msg);
+  }
+
+  public debug<T>(message: T) {
+    const msg = this.toSaveJson(message);
+
+    this.consoleLogger.debug(msg);
   }
 
   private toSaveJson(data: any) {

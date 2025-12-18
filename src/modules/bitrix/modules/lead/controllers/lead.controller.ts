@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotAcceptableException,
   ParseDatePipe,
   Post,
   Query,
@@ -37,7 +38,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 @Controller('leads')
 export class BitrixLeadController {
   private readonly logger = new WinstonLogger(
-    BitrixLeadService.name,
+    BitrixLeadController.name,
     'bitrix:controllers'.split(':'),
   );
 
@@ -96,9 +97,10 @@ export class BitrixLeadController {
   @HttpCode(HttpStatus.OK)
   @Post('/observe-manager-calling')
   async observeManagerCalling(@Body() fields: LeadObserveManagerCallingDto) {
-    const result =
-      await this.bitrixLeadService.handleObserveManagerCalling(fields);
-    this.logger.info(`Observe manager calling: ${JSON.stringify(result)}`);
-    return result;
+    throw new NotAcceptableException();
+    // const result =
+    //   await this.bitrixLeadService.handleObserveManagerCalling(fields);
+    // this.logger.info({ message: 'Observe manager calling', data: result });
+    // return result;
   }
 }

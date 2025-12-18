@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { BitrixService } from '../../../bitrix.service';
 import {
   B24DuplicateFindByComm,
@@ -32,13 +32,13 @@ import {
 import {
   LeadObserveManagerCallingCreationalAttributes,
   LeadObserveManagerCallingLeadBitrixItem,
-  LeadObserveManagerCallingResponse,
 } from '@/modules/bitrix/modules/lead/interfaces/lead-observe-manager-calling.interface';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules/lead/services/lead-observe-manager-calling.service';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
 import { WinstonLogger } from '@/config/winston.logger';
+import { isAxiosError } from 'axios';
 
 @Injectable()
 export class BitrixLeadService {
@@ -434,7 +434,7 @@ export class BitrixLeadService {
    */
   public async handleObserveManagerCalling({
     calls,
-  }: LeadObserveManagerCallingDto): Promise<LeadObserveManagerCallingResponse> {
+  }: LeadObserveManagerCallingDto) {
     const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
     const updatedLeads = new Set<string>();
     const missingLeads = new Set<string>();
@@ -509,23 +509,14 @@ export class BitrixLeadService {
         ),
       );
     } catch (err) {
-      return {
-        status: false,
-        message: `Exception error on get leads by phone. ${err.message}`,
-        data: {
-          notifiedLeads: [...notifiedLeads],
-          missingLeads: [...missingLeads],
-          updatedLeads: [...updatedLeads],
-          deletedLeads: [...deletedLeads],
+      this.logger.error(
+        {
+          message: 'Error on find leads by phone',
+          error: isAxiosError(err) ? err.response : err,
         },
-        total: {
-          notifiedLeads: notifiedLeads.size,
-          missingLeads: missingLeads.size,
-          updatedLeads: updatedLeads.size,
-          deletedLeads: deletedLeads.size,
-          uniqueLeads: uniqueCalls.size,
-        },
-      };
+        true,
+      );
+      throw err;
     }
 
     const leadsFromBitrix = new Map<
@@ -579,10 +570,9 @@ export class BitrixLeadService {
 
     // Если есть ошибки выводим их
     if (errors.length !== 0)
-      return {
-        message: `Exception error on batch request: get leads by phone: ${errors.join(', ')}`,
-        status: false,
-      };
+      throw new BadRequestException(
+        `Exception error on batch request: get leads by phone: ${errors.join(', ')}`,
+      );
 
     // Обновляем записи в БД в соответствии с полученной информацией по лидам
     const updateLeadsResponse =

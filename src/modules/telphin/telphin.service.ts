@@ -18,28 +18,11 @@ export class TelphinService {
     TelphinService.name,
     'telphin'.split(':'),
   );
-  private telphinApplicationInfo: TelphinUserInfo;
 
   constructor(
     private readonly telphinApiService: TelphinApiService,
     private readonly redisService: RedisService,
-  ) {
-    this.getUserInfo()
-      .then((info) => {
-        if (!info) {
-          this.logger.error('Invalid get user info from telphin');
-          return;
-        }
-
-        this.telphinApplicationInfo = info;
-      })
-      .catch((error) => {
-        this.logger.error({
-          message: 'Invalid get user info from telphin',
-          error,
-        });
-      });
-  }
+  ) {}
 
   /**
    * Get current calls from telphin
@@ -280,6 +263,6 @@ export class TelphinService {
   }
 
   get CLIENT_ID() {
-    return this.telphinApplicationInfo.client_id;
+    return this.telphinApiService.TELPHIN_APPLICATION_INFO.client_id;
   }
 }
