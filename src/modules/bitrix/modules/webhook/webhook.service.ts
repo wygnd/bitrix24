@@ -1041,6 +1041,8 @@ export class BitrixWebhookService {
         extensionCall: { called_did: calledDid },
       } = callData;
 
+      this.logger.debug(`START CALL :${clientPhone}`);
+
       // fixme: remove after tests
       if (!['+79535113480', '+79517354601'].includes(clientPhone)) {
         return {

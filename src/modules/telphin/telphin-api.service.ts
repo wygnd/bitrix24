@@ -69,7 +69,6 @@ export class TelphinApiService {
       if (tokens && tokens.expires > Date.now()) {
         accessToken = tokens.accessToken;
       } else {
-        this.logger.debug('Update token');
         accessToken = await this.updateToken();
       }
 
