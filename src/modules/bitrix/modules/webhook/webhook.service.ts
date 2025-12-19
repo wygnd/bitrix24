@@ -688,6 +688,8 @@ export class BitrixWebhookService {
         callId: callId,
       };
 
+    this.logger.debug(`INIT CALL: ${phone}`);
+
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
         callId: callId,
@@ -716,8 +718,6 @@ export class BitrixWebhookService {
     fields: B24WebhookVoxImplantCallInitTaskOptions,
   ) {
     const { phone: clientPhone, callId } = fields;
-
-    this.logger.debug(`INIT CALL: ${clientPhone}`);
 
     // for tests
     // if (!['+79535113480', '+79517354601'].includes(clientPhone))
@@ -998,6 +998,7 @@ export class BitrixWebhookService {
    * @param fields
    */
   async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
+    this.logger.debug(`START CALL: ${fields.data.USER_ID}`);
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
       {
         callId: fields.data.CALL_ID,
@@ -1040,8 +1041,6 @@ export class BitrixWebhookService {
         extensionGroup: { name: extensionGroupName },
         extensionCall: { called_did: calledDid },
       } = callData;
-
-      this.logger.debug(`START CALL :${clientPhone}`);
 
       // fixme: remove after tests
       if (!['+79535113480', '+79517354601'].includes(clientPhone)) {
