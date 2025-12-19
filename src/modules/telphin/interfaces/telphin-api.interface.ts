@@ -4,3 +4,8 @@ export interface TelphinTokenOptions {
   token_type: string;
   scope: string;
 }
+
+export interface TelphinTokenData {
+  accessToken: string;
+  expiresIn: number;
+}

@@ -41,12 +41,6 @@ export class TelphinService {
     return callList?.call_list ? callList.call_list : [];
   }
 
-  public async finishCall(extensionId: string, callId: string) {
-    return this.telphinApiService.delete(
-      `/extension/${extensionId}/current_calls/${callId}`,
-    );
-  }
-
   /**
    * Get user info/application from telphin
    *
