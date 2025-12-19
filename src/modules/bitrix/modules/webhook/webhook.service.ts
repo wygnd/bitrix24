@@ -1089,6 +1089,8 @@ export class BitrixWebhookService {
     const leadIds =
       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
+    this.logger.debug({message: 'Check duplicate leads', leads: leadIds});
+
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
