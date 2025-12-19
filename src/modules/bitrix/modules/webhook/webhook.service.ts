@@ -682,11 +682,14 @@ export class BitrixWebhookService {
   async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
     const { CALLER_ID: clientPhone, CALL_ID: callId } = fields.data;
 
+    this.logger.debug(`INIT CALL: ${clientPhone}`);
+
     // fixme: remove after tests
     if (clientPhone !== '+79517354601')
       return {
         status: false,
         message: 'In tested',
+        phone: clientPhone,
       };
 
     // Получаем текущие звонки
