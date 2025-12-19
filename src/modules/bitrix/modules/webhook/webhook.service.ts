@@ -685,7 +685,7 @@ export class BitrixWebhookService {
     this.logger.debug(`INIT CALL: ${clientPhone}`);
 
     // fixme: remove after tests
-    if (['+79535113480', '+79517354601'].includes(clientPhone))
+    if (!['+79535113480', '+79517354601'].includes(clientPhone))
       return {
         status: false,
         message: 'In tested',
