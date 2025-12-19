@@ -2,7 +2,7 @@ export interface TelphinCallItem {
   answer_time_gmt: string;
   call_api_id: string;
   call_flow: string;
-  called_did: number | null;
+  called_did: string | null;
   called_extension: {
     name: string;
     id: number;

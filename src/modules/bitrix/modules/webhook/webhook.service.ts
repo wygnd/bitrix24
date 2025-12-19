@@ -759,6 +759,7 @@ export class BitrixWebhookService {
           extension: extension,
           group: extensionGroup,
           calls: targetCalls,
+          called_did: targetCalls[0].called_did,
         });
         this.logger.debug(result);
         return result;
@@ -777,6 +778,7 @@ export class BitrixWebhookService {
    * @param clientPhone
    * @param extensionExtraParamsEncoded
    * @param extensionPhone
+   * @param calledDid
    * @param calls
    */
   async handleVoxImplantCallInitForSaleManagers({
@@ -785,6 +787,7 @@ export class BitrixWebhookService {
       extra_params: extensionExtraParamsEncoded,
       ani: extensionPhone,
     },
+    called_did: calledDid,
     calls,
   }: B24WebhookHandleCallInitForSaleManagersOptions) {
     // Ищем лид по номеру телефона
@@ -814,9 +817,13 @@ export class BitrixWebhookService {
       true,
     );
 
-    if (calls.length > 1 || extensionPhone in this.bitrixService.AVITO_PHONES) {
+    if (
+      calls.length > 1 &&
+      calledDid &&
+      calledDid in this.bitrixService.AVITO_PHONES
+    ) {
       // Если клиент звонит на авито
-      const avitoName = this.bitrixService.AVITO_PHONES[extensionPhone];
+      const avitoName = this.bitrixService.AVITO_PHONES[calledDid];
       const callAvitoCommands: B24BatchCommands = {};
 
       let notifyMessageAboutAvitoCall = '';

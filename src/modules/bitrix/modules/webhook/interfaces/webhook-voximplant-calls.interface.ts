@@ -18,6 +18,7 @@ export interface B24WebhookHandleCallInitForSaleManagersOptions {
   extension: TelphinExtensionItem;
   group: TelphinExtensionGroup;
   calls: TelphinCallItem[];
+  called_did: string | null;
 }
 
 export interface B24WebhookHandleCallStartForSaleManagersOptions {
