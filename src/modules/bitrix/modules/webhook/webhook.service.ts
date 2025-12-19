@@ -1101,6 +1101,12 @@ export class BitrixWebhookService {
           .createLead({
             ASSIGNED_BY_ID: userId,
             STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            PHONE: [
+              {
+                VALUE: phone,
+                VALUE_TYPE: 'WORK',
+              },
+            ],
           })
           .then((res) => {
             this.logger.debug(`Creating lead: ${res}`);
@@ -1143,7 +1149,13 @@ export class BitrixWebhookService {
         response = await this.bitrixLeadService
           .createLead({
             ASSIGNED_BY_ID: userId,
-            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
+            PHONE: [
+              {
+                VALUE: phone,
+                VALUE_TYPE: 'WORK',
+              },
+            ],
           })
           .then((res) => {
             this.logger.debug(`Creating lead: ${res}`);
