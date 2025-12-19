@@ -110,19 +110,27 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
 
+    switch (job.name) {
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
+        break;
+
+      default:
+        this.logger.debug(
+          {
+            message: logMessage,
+            id: job.id,
+            name: job.name,
+            reason: job.failedReason,
+          },
+          'error',
+        );
+    }
+
     this.bitrixImBotService.sendTestMessage(
       `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
     );
 
     this.logger.error({ message: logMessage, job }, true);
-    this.logger.debug(
-      {
-        message: logMessage,
-        id: job.id,
-        name: job.name,
-        reason: job.failedReason,
-      },
-      'error',
-    );
   }
 }

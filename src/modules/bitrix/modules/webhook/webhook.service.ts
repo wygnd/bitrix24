@@ -745,11 +745,14 @@ export class BitrixWebhookService {
         [called_number, caller_id_name, caller_id_number].includes(clientPhone),
     );
 
-    this.logger.info({
-      message: 'check current calls and finded target call by client phone',
-      currentCalls,
-      targetCalls,
-    });
+    this.logger.info(
+      {
+        message: 'check current calls and finded target call by client phone',
+        currentCalls,
+        targetCalls,
+      },
+      true,
+    );
 
     // Если не нашли текущий звонок по номеру клиента: выходим
     if (targetCalls.length === 0)
@@ -781,7 +784,7 @@ export class BitrixWebhookService {
     const { name: extensionGroupName } = extensionGroup;
 
     this.redisService.set<B24WebhookVoxImplantCallInitOptions>(
-      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT,
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
       {
         callId: callId,
         clientPhone: clientPhone,
@@ -1008,7 +1011,7 @@ export class BitrixWebhookService {
         attempts: 3,
         backoff: {
           type: 'exponential',
-          delay: 25,
+          delay: 50,
         },
       },
     );
