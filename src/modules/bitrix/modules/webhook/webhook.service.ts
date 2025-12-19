@@ -685,7 +685,7 @@ export class BitrixWebhookService {
     this.logger.debug(`INIT CALL: ${clientPhone}`);
 
     // fixme: remove after tests
-    if (clientPhone !== '+79517354601')
+    if (['+79535113480', '+79517354601'].includes(clientPhone))
       return {
         status: false,
         message: 'In tested',
@@ -695,10 +695,13 @@ export class BitrixWebhookService {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
-    this.logger.info({
-      message: 'check current calls',
-      currentCalls,
-    });
+    this.logger.info(
+      {
+        message: 'check current calls',
+        currentCalls,
+      },
+      true,
+    );
 
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
@@ -721,11 +724,14 @@ export class BitrixWebhookService {
       ),
     ]);
 
-    this.logger.info({
-      message: 'check target call and extension group',
-      targetCall: targetCalls,
-      extensionGroup,
-    });
+    this.logger.info(
+      {
+        message: 'check target calls and extension group',
+        targetCalls: targetCalls,
+        extensionGroup,
+      },
+      true,
+    );
 
     if (!extensionGroup)
       throw new NotFoundException('Extension group was not found');
@@ -798,12 +804,15 @@ export class BitrixWebhookService {
     if (saleExtensionList.length === 0)
       throw new NotFoundException('Extension list is empty');
 
-    this.logger.info({
-      message: 'check extension phone and saleList from telphin',
-      saleExtensionList,
-      extensionPhone,
-      leadIds,
-    });
+    this.logger.info(
+      {
+        message: 'check extension phone and saleList from telphin',
+        saleExtensionList,
+        extensionPhone,
+        leadIds,
+      },
+      true,
+    );
 
     if (calls.length > 1 || extensionPhone in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито
