@@ -1011,11 +1011,8 @@ export class BitrixWebhookService {
         userId: fields.data.USER_ID,
       },
       {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 50,
-        },
+        delay: 100,
+        attempts: 1,
       },
     );
     return true;
