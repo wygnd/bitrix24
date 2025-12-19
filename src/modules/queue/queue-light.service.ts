@@ -49,7 +49,7 @@ export class QueueLightService {
     options?: JobsOptions,
   ) {
     return this.queueBitrixLight.add(
-      QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START,
+      QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT,
       fields,
       options,
     );
