@@ -710,6 +710,12 @@ export class BitrixWebhookService {
         [called_number, caller_id_name, caller_id_number].includes(clientPhone),
     );
 
+    this.logger.info({
+      message: 'check current calls and finded target call by client phone',
+      currentCalls,
+      targetCalls,
+    });
+
     // Если не нашли текущий звонок по номеру клиента: выходим
     if (targetCalls.length === 0)
       throw new NotFoundException('Call in call list was not found');
@@ -726,8 +732,7 @@ export class BitrixWebhookService {
 
     this.logger.info(
       {
-        message: 'check target calls and extension group',
-        targetCalls: targetCalls,
+        message: 'check extension group',
         extensionGroup,
       },
       true,
