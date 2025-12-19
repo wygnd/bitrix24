@@ -775,14 +775,14 @@ export class BitrixWebhookService {
    *
    * Обработка инициализации звонка для отдела продаж
    * @param clientPhone
-   * @param extensionExtraParamsDecoded
+   * @param extensionExtraParamsEncoded
    * @param extensionPhone
    * @param calls
    */
   async handleVoxImplantCallInitForSaleManagers({
     phone: clientPhone,
     extension: {
-      extra_params: extensionExtraParamsDecoded,
+      extra_params: extensionExtraParamsEncoded,
       ani: extensionPhone,
     },
     calls,
@@ -859,16 +859,15 @@ export class BitrixWebhookService {
 
       // Отправляем всем сотрудникам уведомление
       saleExtensionList.forEach(({ extra_params }) => {
-        const {
-          comment: saleBitrixUserId = '',
-        }: TelphinExtensionItemExtraParams = JSON.parse(extra_params);
+        const extraParamsDecoded: TelphinExtensionItemExtraParams =
+          JSON.parse(extra_params);
 
-        if (!saleBitrixUserId) return;
+        if (!extraParamsDecoded) return;
 
-        callAvitoCommands[`notify_manager=${saleBitrixUserId}`] = {
+        callAvitoCommands[`notify_manager=${extraParamsDecoded.comment}`] = {
           method: 'im.notify.system.add',
           params: {
-            USER_ID: saleBitrixUserId,
+            USER_ID: extraParamsDecoded.comment,
             MESSAGE: notifyMessageAboutAvitoCall,
           },
         };
@@ -888,10 +887,10 @@ export class BitrixWebhookService {
       // Так как клиент звонит напрямую,
       // то мы без проблем можем вытянуть user bitrix id
       // из поля [Комментарий] в телфине
-      const { comment: assignedUserId = '' }: TelphinExtensionItemExtraParams =
-        JSON.parse(extensionExtraParamsDecoded);
+      const extensionExtraParamsDecoded: TelphinExtensionItemExtraParams =
+        JSON.parse(extensionExtraParamsEncoded);
 
-      if (!assignedUserId)
+      if (!extensionExtraParamsDecoded)
         throw new BadRequestException(
           'Invalid get assigned bitrix id by extension',
         );
@@ -905,7 +904,7 @@ export class BitrixWebhookService {
           method: 'crm.lead.add',
           params: {
             fields: {
-              ASSIGNED_BY_ID: assignedUserId,
+              ASSIGNED_BY_ID: extensionExtraParamsDecoded.comment,
               STATUS_ID: B24LeadActiveStages[0], // Новый в работе
             },
           },
@@ -919,7 +918,7 @@ export class BitrixWebhookService {
       callManagerCommands['notify_manager'] = {
         method: 'im.notify.system.add',
         params: {
-          USER_ID: assignedUserId,
+          USER_ID: extensionExtraParamsDecoded.comment,
           MESSAGE: notifyManagerMessage,
         },
       };
