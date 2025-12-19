@@ -3,7 +3,6 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import {
   BadRequestException,
   Injectable,
-  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
@@ -682,7 +681,12 @@ export class BitrixWebhookService {
     } = fields.data;
 
     if (callType !== B24CallType.INCOMING)
-      throw new NotAcceptableException('Call not accepted');
+      return {
+        status: false,
+        message: `Call is not ${B24CallType.INCOMING}`,
+        phone: phone,
+        callId: callId,
+      };
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
