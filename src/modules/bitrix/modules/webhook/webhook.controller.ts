@@ -90,7 +90,7 @@ export class BitrixWebhookController {
     try {
       const response =
         await this.bitrixWebhookService.handleVoxImplantCallInit(body);
-      this.logger.info(response);
+      this.logger.info(response, true);
       return response;
     } catch (error) {
       this.logger.error(error);

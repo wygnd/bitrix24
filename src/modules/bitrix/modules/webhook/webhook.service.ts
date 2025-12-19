@@ -684,13 +684,13 @@ export class BitrixWebhookService {
 
     this.logger.debug(`INIT CALL: ${clientPhone}`);
 
-    // fixme: remove after tests
-    if (!['+79535113480', '+79517354601'].includes(clientPhone))
-      return {
-        status: false,
-        message: 'In tested',
-        phone: clientPhone,
-      };
+    // for tests
+    // if (!['+79535113480', '+79517354601'].includes(clientPhone))
+    //   return {
+    //     status: false,
+    //     message: 'In tested',
+    //     phone: clientPhone,
+    //   };
 
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
@@ -880,10 +880,13 @@ export class BitrixWebhookService {
         };
       });
 
-      this.logger.info({
-        message: 'check batch commands on avito number',
-        callAvitoCommands,
-      });
+      this.logger.info(
+        {
+          message: 'check batch commands on avito number',
+          callAvitoCommands,
+        },
+        true,
+      );
 
       this.bitrixService.callBatch(callAvitoCommands);
     } else {
