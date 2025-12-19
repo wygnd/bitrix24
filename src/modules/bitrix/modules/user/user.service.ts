@@ -7,9 +7,15 @@ import {
 } from '../../interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24Lead } from '@/modules/bitrix/modules/lead/interfaces/lead.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixUserService {
+  private readonly logger = new WinstonLogger(
+    BitrixUserService.name,
+    'bitrix:services'.split(':'),
+  );
+
   constructor(private readonly bitrixService: BitrixService) {}
 
   async getUserById(userId: string) {
@@ -42,6 +48,8 @@ export class BitrixUserService {
   public async getMinWorkflowUser(users: string[] = []) {
     const minWorkflowUsers = await this.getMinWorkflowUsersSorted(users);
 
+    this.logger.debug(minWorkflowUsers);
+
     return minWorkflowUsers.length === 0 ? null : minWorkflowUsers[0].user_id;
   }
 
@@ -53,7 +61,6 @@ export class BitrixUserService {
           filter: {
             ASSIGNED_BY_ID: userId,
             '>=DATE_CREATE': new Date().toLocaleDateString(),
-            '@STATUS_ID': ['3', 'UC_GEWKFD'], // Новый и Лид сообщение
           },
           select: ['ID'],
           start: 0,
