@@ -1,5 +1,6 @@
 import { TelphinExtensionGroup } from '@/modules/telphin/interfaces/telphin-extension-group.interface';
 import { TelphinExtensionItem } from '@/modules/telphin/interfaces/telphin-extension.interface';
+import { TelphinCallItem } from '@/modules/telphin/interfaces/telphin-call.interface';
 
 export interface B24WebhookVoxImplantCallStartOptions {
   callId: string;
@@ -16,6 +17,7 @@ export interface B24WebhookHandleCallInitForSaleManagersOptions {
   phone: string;
   extension: TelphinExtensionItem;
   group: TelphinExtensionGroup;
+  calls: TelphinCallItem[];
 }
 
 export interface B24WebhookHandleCallStartForSaleManagersOptions {

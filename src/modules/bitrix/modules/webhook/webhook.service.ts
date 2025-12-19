@@ -701,29 +701,29 @@ export class BitrixWebhookService {
     });
 
     // Ищем текущий звонок по номеру телефона
-    const targetCall = currentCalls.find(
+    const targetCalls = currentCalls.filter(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
         call_flow == 'IN' &&
         [called_number, caller_id_name, caller_id_number].includes(clientPhone),
     );
 
     // Если не нашли текущий звонок по номеру клиента: выходим
-    if (!targetCall)
+    if (targetCalls.length === 0)
       throw new NotFoundException('Call in call list was not found');
 
     // Получаем группу
     const [extensionGroup, extension] = await Promise.all([
       this.telphinService.getExtensionGroupById(
-        targetCall.called_extension.extension_group_id,
+        targetCalls[0].called_extension.extension_group_id,
       ),
       this.telphinService.getClientExtensionById(
-        targetCall.called_extension.id,
+        targetCalls[0].called_extension.id,
       ),
     ]);
 
     this.logger.info({
       message: 'check target call and extension group',
-      targetCall,
+      targetCall: targetCalls,
       extensionGroup,
     });
 
@@ -752,6 +752,7 @@ export class BitrixWebhookService {
           phone: clientPhone,
           extension: extension,
           group: extensionGroup,
+          calls: targetCalls,
         });
         this.logger.debug(result);
         return result;
@@ -770,6 +771,7 @@ export class BitrixWebhookService {
    * @param clientPhone
    * @param extensionExtraParamsDecoded
    * @param extensionPhone
+   * @param calls
    */
   async handleVoxImplantCallInitForSaleManagers({
     phone: clientPhone,
@@ -777,6 +779,7 @@ export class BitrixWebhookService {
       extra_params: extensionExtraParamsDecoded,
       ani: extensionPhone,
     },
+    calls,
   }: B24WebhookHandleCallInitForSaleManagersOptions) {
     // Ищем лид по номеру телефона
     // Получаем список внутренних номеров все sale отделов
@@ -802,7 +805,7 @@ export class BitrixWebhookService {
       leadIds,
     });
 
-    if (extensionPhone in this.bitrixService.AVITO_PHONES) {
+    if (calls.length > 1 || extensionPhone in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито
       const avitoName = this.bitrixService.AVITO_PHONES[extensionPhone];
       const callAvitoCommands: B24BatchCommands = {};
