@@ -1,5 +1,5 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Inject, Injectable } from '@nestjs/common';
+import type { AxiosInstance, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { TelphinConfig } from '@/common/interfaces/telphin-config.interface';
 import {
@@ -45,6 +45,20 @@ export class TelphinApiService {
     this.telphinAPI.defaults.baseURL = baseUrl;
     this.telphinAPI.defaults.headers['Content-Type'] = 'application/json';
     this.telphinAPI.defaults.headers['Accept-Encoding'] = 'gzip';
+    this.telphinAPI.interceptors.request.use(
+      async (config) => {
+        config.headers['Authorization'] =
+          `Bearer ${await this.getAccessToken()}`;
+        return config;
+      },
+      (error) => {
+        this.logger.error({
+          message: 'Execute error on request',
+          error,
+        });
+        return Promise.reject(error);
+      },
+    );
 
     this.tokensService
       .getToken(TokensServices.TELPHIN)
@@ -90,19 +104,13 @@ export class TelphinApiService {
 
   private async getAccessToken() {
     try {
-      let tokenData: false | TelphinTokenData;
+      let accessToken = '';
       const tokens = await this.tokensService.getToken(TokensServices.TELPHIN);
 
-      if (tokens && tokens.expires > Date.now()) {
-        tokenData = {
-          accessToken: tokens.accessToken,
-          expiresIn: tokens.expires,
-        };
-      } else {
-        tokenData = await this.updateToken();
-      }
+      if (tokens && tokens.expires > Date.now())
+        accessToken = tokens.accessToken;
 
-      return tokenData ? tokenData.accessToken : null;
+      return accessToken;
     } catch (error) {
       this.logger.error(error);
       return null;
@@ -190,56 +198,7 @@ export class TelphinApiService {
    */
   public async get<T = any>(url: string): Promise<T | null> {
     try {
-      const accessToken = await this.getAccessToken();
-
-      if (!accessToken)
-        throw new UnauthorizedException('Invalid get or update token');
-
-      const { data } = await this.telphinAPI.get<T>(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      return data;
-    } catch (e) {
-      this.logger.error(e);
-      return null;
-    }
-  }
-
-  /**
-   * Base POST method to telphin
-   *
-   * ---
-   *
-   * Реализация базового POST метода для запросов к telphin
-   * @param url
-   * @param body
-   * @param config
-   */
-  public async post<T, U = any>(
-    url: string,
-    body: U,
-    config?: AxiosRequestConfig,
-  ): Promise<U | null> {
-    try {
-      const accessToken = await this.getAccessToken();
-
-      if (!accessToken)
-        throw new UnauthorizedException('Invalid get or update token');
-
-      const { data } = await this.telphinAPI.post<T, AxiosResponse<U>>(
-        url,
-        body,
-        {
-          ...config,
-          headers: {
-            ...config?.headers,
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
+      const { data } = await this.telphinAPI.get<T>(url);
 
       return data;
     } catch (e) {

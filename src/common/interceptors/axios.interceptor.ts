@@ -17,9 +17,15 @@ import { catchError, throwError } from 'rxjs';
 import { AxiosError, isAxiosError } from 'axios';
 import { B24ErrorResponse } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class AxiosGlobalInterceptor implements NestInterceptor {
+  private readonly logger = new WinstonLogger(
+    AxiosGlobalInterceptor.name,
+    'common'.split(':'),
+  );
+
   constructor(private readonly headHunterService: HeadHunterService) {}
 
   intercept(context: ExecutionContext, next: CallHandler) {
@@ -27,12 +33,12 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
       catchError((error: AxiosError<B24ErrorResponse>) => {
         if (!isAxiosError(error)) return throwError(() => error);
 
+        const originalRequest = error.config;
         const status = error.response?.status;
-        if (
-          (status && status === HttpStatus.UNAUTHORIZED) ||
-          status === HttpStatus.FORBIDDEN
-        ) {
-          switch (error?.request && error?.request.host) {
+        if (status && originalRequest && status === HttpStatus.UNAUTHORIZED) {
+          const { host } = error?.request;
+
+          switch (host) {
             case 'api.hh.ru':
               this.headHunterService.notifyAboutInvalidCredentials();
               return throwError(
@@ -42,6 +48,9 @@ export class AxiosGlobalInterceptor implements NestInterceptor {
                     error.status || HttpStatus.UNAUTHORIZED,
                   ),
               );
+
+            case '':
+              break;
           }
         }
 

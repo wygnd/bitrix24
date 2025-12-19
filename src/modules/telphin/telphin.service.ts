@@ -339,6 +339,6 @@ export class TelphinService {
   }
 
   get CLIENT_ID() {
-    return this.telphinApiService.TELPHIN_APPLICATION_INFO.client_id;
+    return this.telphinApiService.TELPHIN_APPLICATION_INFO?.client_id ?? 0;
   }
 }
