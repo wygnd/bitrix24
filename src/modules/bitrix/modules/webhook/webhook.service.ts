@@ -1085,23 +1085,25 @@ export class BitrixWebhookService {
     fields: B24WebhookHandleCallStartForSaleManagersOptions,
   ) {
     const { userId, phone, calledDid } = fields;
+    let response: any;
 
     const leadIds =
       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
-    this.logger.debug({message: 'Check duplicate leads', leads: leadIds});
+    this.logger.debug({ message: 'Check duplicate leads', leads: leadIds });
 
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
       if (leadIds.length === 0) {
-        this.bitrixLeadService
+        response = await this.bitrixLeadService
           .createLead({
             ASSIGNED_BY_ID: userId,
             STATUS_ID: B24LeadActiveStages[0], // Новый в работе
           })
           .then((res) => {
             this.logger.debug(`Creating lead: ${res}`);
+            return res;
           });
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
@@ -1115,7 +1117,7 @@ export class BitrixWebhookService {
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
           case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            this.bitrixLeadService
+            response = this.bitrixLeadService
               .updateLead({
                 id: leadId,
                 fields: {
@@ -1125,6 +1127,7 @@ export class BitrixWebhookService {
               })
               .then((res) => {
                 this.logger.debug(`Updating lead: ${res}`);
+                return res;
               });
             break;
         }
@@ -1136,13 +1139,14 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        this.bitrixLeadService
+        response = await this.bitrixLeadService
           .createLead({
             ASSIGNED_BY_ID: userId,
             STATUS_ID: B24LeadActiveStages[0], // Новый в работе
           })
           .then((res) => {
             this.logger.debug(`Creating lead: ${res}`);
+            return res;
           });
       }
     }
@@ -1150,6 +1154,7 @@ export class BitrixWebhookService {
     return {
       status: true,
       message: 'Successfully handled start call',
+      response: response,
     };
   }
 }
