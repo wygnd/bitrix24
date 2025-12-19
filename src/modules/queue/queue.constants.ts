@@ -12,6 +12,8 @@ export const QUEUE_TASKS = {
     QUEUE_BX_SEND_UPDATE_LEAD_NEW_WIKI_FROM_REQUEST_AVITO:
       'bitrix:http:wiki:send_update_lead_new_wiki_from_request_avito',
     QUEUE_BX_HANDLE_UPSELL_DEAL: 'bitrix:upsell:handle',
+    QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
+      'bitrix:webhook:voximplant:call:start',
     QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
       'bitrix:webhook:voximplant:call:init',
   },

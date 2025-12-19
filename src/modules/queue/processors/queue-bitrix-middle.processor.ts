@@ -112,10 +112,20 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
+    const logMessage = 'Ошибка выполнения задачи';
     this.bitrixImBotService.sendTestMessage(
-      `[b]Ошибка выполнения задачи:[/b][br]` + JSON.stringify(job),
+      `[b]${logMessage}:[/b][br]` + JSON.stringify(job),
     );
 
-    this.logger.error({ message: 'Ошибка выполнения задачи', job });
+    this.logger.error({ message: logMessage, job }, true);
+    this.logger.debug(
+      {
+        message: logMessage,
+        id: job.id,
+        name: job.name,
+        reason: job.failedReason,
+      },
+      'error',
+    );
   }
 }

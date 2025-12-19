@@ -87,15 +87,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
-    try {
-      const response =
-        await this.bitrixWebhookService.handleVoxImplantCallInit(body);
-      this.logger.info(response, true);
-      return response;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
   }
 
   @Post('/bitrix/voximplant/call/start')

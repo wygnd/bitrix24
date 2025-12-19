@@ -2,10 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { TelphinConfig } from '@/common/interfaces/telphin-config.interface';
-import {
-  TelphinTokenData,
-  TelphinTokenOptions,
-} from '@/modules/telphin/interfaces/telphin-api.interface';
+import { TelphinTokenOptions } from '@/modules/telphin/interfaces/telphin-api.interface';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
@@ -45,70 +42,36 @@ export class TelphinApiService {
     this.telphinAPI.defaults.baseURL = baseUrl;
     this.telphinAPI.defaults.headers['Content-Type'] = 'application/json';
     this.telphinAPI.defaults.headers['Accept-Encoding'] = 'gzip';
-    this.telphinAPI.interceptors.request.use(
-      async (config) => {
-        config.headers['Authorization'] =
-          `Bearer ${await this.getAccessToken()}`;
-        return config;
-      },
-      (error) => {
-        this.logger.error({
-          message: 'Execute error on request',
-          error,
-        });
-        return Promise.reject(error);
-      },
-    );
 
-    this.tokensService
-      .getToken(TokensServices.TELPHIN)
-      .then(async (response) => {
-        let token: TelphinTokenData | boolean;
-
-        if (!response) {
-          token = await this.updateToken();
-        } else if (response.expires <= new Date().getTime()) {
-          token = await this.updateToken();
-        } else {
-          token = {
-            accessToken: response.accessToken,
-            expiresIn: response.expires,
-          };
-        }
-
-        if (!token) {
-          this.logger.error('Invalid get telphin token');
+    // Get application info from telphin
+    this.get<TelphinUserInfo>('/user')
+      .then((info) => {
+        if (!info) {
+          this.logger.error('Invalid get user info from telphin');
           return;
         }
 
-        this.telphinAPI.defaults.headers['Authorization'] =
-          `Bearer ${token.accessToken}`;
-        this.get<TelphinUserInfo>('/user')
-          .then((info) => {
-            if (!info) {
-              this.logger.error('Invalid get user info from telphin');
-              return;
-            }
-
-            this.telphinApplicationInfo = info;
-          })
-          .catch((error) => {
-            this.logger.error({
-              message: 'Invalid get user info from telphin',
-              error,
-            });
-          });
+        this.telphinApplicationInfo = info;
       })
-      .catch((err) => this.logger.error(err));
+      .catch((error) => {
+        this.logger.error({
+          message: 'Invalid get user info from telphin',
+          error,
+        });
+      });
   }
 
   private async getAccessToken() {
     try {
-      let accessToken = '';
+      let accessToken: string;
       const tokens = await this.tokensService.getToken(TokensServices.TELPHIN);
 
-      if (tokens && tokens.expires > Date.now())
+      if (tokens && tokens.expires > Date.now()) {
         accessToken = tokens.accessToken;
+      } else {
+        this.logger.debug('Update token');
+        accessToken = await this.updateToken();
+      }
 
       return accessToken;
     } catch (error) {
@@ -124,7 +87,7 @@ export class TelphinApiService {
    *
    * Обновляет токен в БД
    */
-  public async updateToken(): Promise<false | TelphinTokenData> {
+  public async updateToken(): Promise<string> {
     try {
       const { access_token, expires_in } =
         await this.sendRequestOnUpdateTokens();
@@ -141,15 +104,10 @@ export class TelphinApiService {
           this.logger.error(`Invalid update telphin tokens in DB: ${message}`);
         });
 
-      this.telphinAPI.defaults.headers['Authorization'] =
-        `Bearer ${access_token}`;
-      return {
-        accessToken: access_token,
-        expiresIn: expiresIn,
-      };
+      return access_token;
     } catch (e) {
       this.logger.error({ message: 'Invalid update telphin token', error: e });
-      return false;
+      return '';
     }
   }
 
@@ -198,7 +156,11 @@ export class TelphinApiService {
    */
   public async get<T = any>(url: string): Promise<T | null> {
     try {
-      const { data } = await this.telphinAPI.get<T>(url);
+      const { data } = await this.telphinAPI.get<T>(url, {
+        headers: {
+          Authorization: `Bearer ${await this.getAccessToken()}`,
+        },
+      });
 
       return data;
     } catch (e) {

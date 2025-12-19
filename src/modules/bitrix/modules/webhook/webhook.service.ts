@@ -3,6 +3,7 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import {
   BadRequestException,
   Injectable,
+  NotAcceptableException,
   NotFoundException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
@@ -50,11 +51,13 @@ import {
   B24WebhookHandleCallInitForSaleManagersOptions,
   B24WebhookHandleCallStartForSaleManagersOptions,
   B24WebhookVoxImplantCallInitOptions,
+  B24WebhookVoxImplantCallInitTaskOptions,
   B24WebhookVoxImplantCallStartOptions,
 } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
+import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -671,6 +674,32 @@ export class BitrixWebhookService {
     return true;
   }
 
+  async handleVoxImplantCallInitTask(fields: B24EventVoxImplantCallInitDto) {
+    const {
+      CALL_ID: callId,
+      CALL_TYPE: callType,
+      CALLER_ID: phone,
+    } = fields.data;
+
+    if (callType !== B24CallType.INCOMING)
+      throw new NotAcceptableException('Call not accepted');
+
+    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
+      {
+        callId: callId,
+        phone: phone,
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 50,
+        },
+      },
+    );
+    return true;
+  }
+
   /**
    * Handle init call bitrix24 webhook and distribute by departments
    *
@@ -679,8 +708,10 @@ export class BitrixWebhookService {
    * Обработка инициализации звонка и распределение обработки по отедлам
    * @param fields
    */
-  async handleVoxImplantCallInit(fields: B24EventVoxImplantCallInitDto) {
-    const { CALLER_ID: clientPhone, CALL_ID: callId } = fields.data;
+  async handleVoxImplantCallInit(
+    fields: B24WebhookVoxImplantCallInitTaskOptions,
+  ) {
+    const { phone: clientPhone, callId } = fields;
 
     this.logger.debug(`INIT CALL: ${clientPhone}`);
 

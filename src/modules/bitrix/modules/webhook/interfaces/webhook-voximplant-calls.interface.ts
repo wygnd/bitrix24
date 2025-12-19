@@ -7,6 +7,11 @@ export interface B24WebhookVoxImplantCallStartOptions {
   userId: string;
 }
 
+export interface B24WebhookVoxImplantCallInitTaskOptions {
+  callId: string;
+  phone: string;
+}
+
 export interface B24WebhookVoxImplantCallInitOptions {
   callId: string;
   clientPhone: string;

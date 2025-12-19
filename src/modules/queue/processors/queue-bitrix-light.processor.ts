@@ -11,7 +11,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
 import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
-import { B24WebhookVoxImplantCallStartOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import {
+  B24WebhookVoxImplantCallInitTaskOptions,
+  B24WebhookVoxImplantCallStartOptions,
+} from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -61,10 +64,17 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         );
         break;
 
-      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
         response.data =
           await this.bitrixWebhookService.handleVoxImplantCallStart(
             data as B24WebhookVoxImplantCallStartOptions,
+          );
+        break;
+
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
+        response.data =
+          await this.bitrixWebhookService.handleVoxImplantCallInit(
+            data as B24WebhookVoxImplantCallInitTaskOptions,
           );
         break;
 
@@ -98,10 +108,21 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
+    const logMessage = 'Ошибка выполнения задачи';
+
     this.bitrixImBotService.sendTestMessage(
-      `[b]Ошибка выполнения задачи:[/b][br] ` + JSON.stringify(job),
+      `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
     );
 
-    this.logger.error({ message: 'Ошибка выполнения задачи', job });
+    this.logger.error({ message: logMessage, job }, true);
+    this.logger.debug(
+      {
+        message: logMessage,
+        id: job.id,
+        name: job.name,
+        reason: job.failedReason,
+      },
+      'error',
+    );
   }
 }

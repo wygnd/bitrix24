@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, LogLevel } from '@nestjs/common';
 import winston from 'winston';
 import { join } from 'path';
 import 'winston-daily-rotate-file';
@@ -77,10 +77,10 @@ export class WinstonLogger {
     if (!disableConsoleLog) this.consoleLogger.debug(msg);
   }
 
-  public debug<T>(message: T) {
+  public debug<T>(message: T, level: LogLevel = 'debug') {
     const msg = this.toSaveJson(message);
 
-    this.consoleLogger.debug(msg);
+    this.consoleLogger[level](msg);
   }
 
   private toSaveJson(data: any) {
