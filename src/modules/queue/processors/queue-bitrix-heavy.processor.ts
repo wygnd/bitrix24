@@ -66,6 +66,11 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
           break;
       }
 
+      this.logger.info({
+        message: 'check result run task',
+        response,
+      });
+
       return response;
     } catch (e) {
       this.logger.error(e);
@@ -77,14 +82,15 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue, id }: Job) {
+  onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(returnvalue),
+        JSON.stringify(response),
     );
-    this.logger.info(
-      `Задача [${name}][${id}] выполнена: ${JSON.stringify(returnvalue)}`,
-    );
+    this.logger.info({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('closed')

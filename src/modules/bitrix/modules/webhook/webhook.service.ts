@@ -50,10 +50,10 @@ import {
   B24WebhookHandleCallInitForSaleManagersOptions,
   B24WebhookHandleCallStartForSaleManagersOptions,
   B24WebhookVoxImplantCallInitOptions,
+  B24WebhookVoxImplantCallStartOptions,
 } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
-import { B24VoxImplantCallStartDataOptions } from '@/modules/bitrix/modules/events/interfaces/event-voximplant-call-start.interface';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 
 @Injectable()
@@ -745,7 +745,8 @@ export class BitrixWebhookService {
       {
         callId: callId,
         clientPhone: clientPhone,
-        extensionGroupName: extensionGroupName,
+        extensionGroup: extensionGroup,
+        extensionCall: targetCalls[0],
       },
       60, // 1 minute
     );
@@ -973,9 +974,19 @@ export class BitrixWebhookService {
     return true;
   }
 
-  async handleVoxImplantCallStart(fields: B24VoxImplantCallStartDataOptions) {
+  /**
+   * Handle call start tasks from queue and distribute handle on departments
+   *
+   * ---
+   *
+   * Обрабатывает начало звонка из очереди задач и распределяет по отделам
+   * @param fields
+   */
+  async handleVoxImplantCallStart(
+    fields: B24WebhookVoxImplantCallStartOptions,
+  ) {
     try {
-      const { CALL_ID: callId, USER_ID: userId } = fields;
+      const { callId, userId } = fields;
 
       const callData =
         await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
@@ -984,40 +995,68 @@ export class BitrixWebhookService {
 
       if (!callData) throw new NotFoundException('Call data was not found');
 
-      const { clientPhone, extensionGroupName } = callData;
+      const {
+        clientPhone,
+        extensionGroup: { name: extensionGroupName },
+        extensionCall: { called_did: calledDid },
+      } = callData;
+
+      // fixme: remove after tests
+      if (!['+79535113480', '+79517354601'].includes(clientPhone)) {
+        return {
+          status: false,
+          message: 'In tested',
+        };
+      }
 
       switch (true) {
         case /sale/gi.test(extensionGroupName):
           return this.handleVoxImplantCallStartForSaleManagers({
             phone: clientPhone,
             userId: userId,
+            calledDid: calledDid,
           });
 
         default:
           return;
       }
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        message: 'call start',
+        error,
+      });
       throw error;
     }
   }
 
+  /**
+   * Handle start call for sale managers
+   *
+   * ---
+   *
+   * Обрабатывает начало звонка для отедла продаж
+   * @param fields
+   */
   async handleVoxImplantCallStartForSaleManagers(
     fields: B24WebhookHandleCallStartForSaleManagersOptions,
   ) {
-    const { userId, phone } = fields;
+    const { userId, phone, calledDid } = fields;
 
     const leadIds =
       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
-    if (phone in this.bitrixService.AVITO_PHONES) {
+    if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
       if (leadIds.length === 0) {
-        this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-        });
+        this.bitrixLeadService
+          .createLead({
+            ASSIGNED_BY_ID: userId,
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          })
+          .then((res) => {
+            this.logger.debug(`Creating lead: ${res}`);
+          });
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
           leadIds[0].toString(),
@@ -1030,13 +1069,17 @@ export class BitrixWebhookService {
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
           case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: userId,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              },
-            });
+            this.bitrixLeadService
+              .updateLead({
+                id: leadId,
+                fields: {
+                  ASSIGNED_BY_ID: userId,
+                  STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+                },
+              })
+              .then((res) => {
+                this.logger.debug(`Updating lead: ${res}`);
+              });
             break;
         }
       }
@@ -1047,10 +1090,14 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-        });
+        this.bitrixLeadService
+          .createLead({
+            ASSIGNED_BY_ID: userId,
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          })
+          .then((res) => {
+            this.logger.debug(`Creating lead: ${res}`);
+          });
       }
     }
 

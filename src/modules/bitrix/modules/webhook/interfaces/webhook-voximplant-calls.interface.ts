@@ -10,7 +10,8 @@ export interface B24WebhookVoxImplantCallStartOptions {
 export interface B24WebhookVoxImplantCallInitOptions {
   callId: string;
   clientPhone: string;
-  extensionGroupName: string;
+  extensionGroup: TelphinExtensionGroup;
+  extensionCall: TelphinCallItem;
 }
 
 export interface B24WebhookHandleCallInitForSaleManagersOptions {
@@ -24,4 +25,5 @@ export interface B24WebhookHandleCallInitForSaleManagersOptions {
 export interface B24WebhookHandleCallStartForSaleManagersOptions {
   userId: string;
   phone: string;
+  calledDid: string | null;
 }

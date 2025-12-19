@@ -10,6 +10,8 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
+import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
+import { B24WebhookVoxImplantCallStartOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -22,6 +24,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     private readonly wikiService: WikiService,
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly bitrixLeadUpsellService: BitrixLeadUpsellService,
+    private readonly bitrixWebhookService: BitrixWebhookService,
   ) {
     super();
   }
@@ -35,9 +38,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
           JSON.stringify(data),
       )
       .catch(() => {});
-    this.logger.info(
-      `Добавлена задача [${name}][${id}] в очередь => ${JSON.stringify(data)}`,
-    );
+    this.logger.info({
+      message: `Добавлена задача [${name}][${id}] в очередь`,
+      data,
+    });
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -57,6 +61,13 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         );
         break;
 
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
+        response.data =
+          await this.bitrixWebhookService.handleVoxImplantCallStart(
+            data as B24WebhookVoxImplantCallStartOptions,
+          );
+        break;
+
       default:
         this.logger.warn(`not handled yet: ${name}`);
         response.message = 'Not handled';
@@ -64,19 +75,25 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
     }
 
+    this.logger.info({
+      message: 'check result run task',
+      response,
+    });
+
     return response;
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue, id }: Job) {
+  onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(returnvalue),
+        JSON.stringify(response),
     );
-    this.logger.info(
-      `Задача [${name}][${id}] выполнена => ${JSON.stringify(returnvalue)}`,
-    );
+    this.logger.info({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('failed')

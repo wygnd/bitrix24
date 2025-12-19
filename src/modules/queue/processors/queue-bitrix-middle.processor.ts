@@ -37,9 +37,10 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
-    this.logger.info(
-      `Добавлена задача [${name}][${id}] в очередь => ${JSON.stringify(data)}`,
-    );
+    this.logger.info({
+      message: `Добавлена задача [${name}][${id}] в очередь`,
+      data,
+    });
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -67,6 +68,11 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         response.status = QueueProcessorStatus.NOT_HANDLED;
     }
 
+    this.logger.info({
+      message: 'check result run task',
+      response,
+    });
+
     return response;
   }
 
@@ -78,21 +84,22 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue, id }: Job) {
+  onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(returnvalue),
+        JSON.stringify(response),
     );
 
-    this.logger.info(
-      `Задача [${name}][${id}] выполнена => ${JSON.stringify(returnvalue)}`,
-    );
+    this.logger.info({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
 
     switch (name) {
       case QUEUE_TASKS.MIDDLE
         .QUEUE_BX_INTEGRATION_AVITO_HANDLE_CLIENT_REQUEST_FROM_AVITO:
         const { data } =
-          returnvalue as QueueProcessorResponse<IntegrationAvitoDistributeLeadFromAvito>;
+          response as QueueProcessorResponse<IntegrationAvitoDistributeLeadFromAvito>;
 
         this.wikiService.sendResultReceiveClientRequestFromAvitoToWiki({
           wiki_lead_id: data.wiki_lead_id,
