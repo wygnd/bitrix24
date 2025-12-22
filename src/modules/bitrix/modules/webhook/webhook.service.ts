@@ -57,6 +57,7 @@ import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/te
 import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
+import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -79,6 +80,7 @@ export class BitrixWebhookService {
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly telphinService: TelphinService,
     private readonly queueLightService: QueueLightService,
+    private readonly bitrixMessageService: BitrixMessageService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -1008,7 +1010,6 @@ export class BitrixWebhookService {
       },
       {
         delay: 500,
-        attempts: 1,
       },
     );
     return true;
@@ -1043,11 +1044,6 @@ export class BitrixWebhookService {
         extensionCall: { called_did: calledDid },
       } = callData;
 
-      this.logger.debug(
-        `Check client phone on handle call start: ${clientPhone}`,
-        'warn',
-      );
-
       if (!clientPhone)
         throw new BadRequestException('Client phone is not defined');
 
@@ -1058,6 +1054,16 @@ export class BitrixWebhookService {
           message: 'In tested',
         };
       }
+
+      this.logger.debug(
+        `Check client phone on handle call start: ${clientPhone}`,
+        'warn',
+      );
+
+      this.bitrixMessageService.sendPrivateMessage({
+        DIALOG_ID: '376',
+        MESSAGE: `Проверка номера телефона: ${clientPhone}`,
+      });
 
       switch (true) {
         case /sale/gi.test(extensionGroupName):
@@ -1103,6 +1109,11 @@ export class BitrixWebhookService {
       `Handle call start for sale manager: ${userId} => ${phone} => ${calledDid}`,
       'warn',
     );
+
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Обработка лида: ${userId} => ${phone} => ${calledDid}`,
+    });
 
     if (!phone) throw new BadRequestException('Invalid phone');
 
@@ -1183,6 +1194,11 @@ export class BitrixWebhookService {
     }
 
     this.logger.debug(`Check response: ${JSON.stringify(response)}`, 'warn');
+
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Результат: ${JSON.stringify(response)}`,
+    });
 
     return {
       status: true,
