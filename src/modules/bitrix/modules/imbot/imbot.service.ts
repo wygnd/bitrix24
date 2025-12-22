@@ -745,7 +745,12 @@ export class BitrixImBotService {
     });
 
     if (!approved) {
-      this.avitoService.rejectDistributeLeadByAi(phone).catch((err) => {
+      this.avitoService.rejectDistributeLeadByAi(phone).then(response => {
+        this.logger.info({
+          message: 'Check respose from avito on reject distributed ai lead',
+          data: response
+        });
+      }).catch((err) => {
         this.logger.error({
           message:
             'Error on send reject distribute lead by AI to avito service',
