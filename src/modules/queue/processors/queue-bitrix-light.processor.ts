@@ -125,11 +125,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
           },
           'error',
         );
+        this.bitrixImBotService.sendTestMessage(
+          `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
+        );
     }
-
-    this.bitrixImBotService.sendTestMessage(
-      `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
-    );
 
     this.logger.error({ message: logMessage, job }, true);
   }
