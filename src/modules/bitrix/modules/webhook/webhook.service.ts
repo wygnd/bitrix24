@@ -729,16 +729,11 @@ export class BitrixWebhookService {
       true,
     );
 
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `Проверка звонка: [b]${clientPhone}[/b][br]Calls: ${JSON.stringify(currentCalls)}`,
-    });
-
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
         call_flow === 'IN' &&
-        [called_number, caller_id_name, caller_id_number].includes(clientPhone),
+        [caller_id_name, caller_id_number].includes(clientPhone),
     );
 
     this.logger.info(
