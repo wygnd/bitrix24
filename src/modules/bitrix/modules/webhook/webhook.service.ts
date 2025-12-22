@@ -1122,21 +1122,19 @@ export class BitrixWebhookService {
       // Если клиент звонит на авито номер
 
       if (leadIds.length === 0) {
-        response = await this.bitrixLeadService
-          .createLead({
-            ASSIGNED_BY_ID: userId,
-            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-            PHONE: [
-              {
-                VALUE: phone,
-                VALUE_TYPE: 'WORK',
-              },
-            ],
-          })
-          .then((res) => {
-            this.logger.debug(`Creating lead: ${res}`);
-            return res;
-          });
+        // response = await this.bitrixLeadService.createLead({
+        //   ASSIGNED_BY_ID: userId,
+        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+        //   PHONE: [
+        //     {
+        //       VALUE: phone,
+        //       VALUE_TYPE: 'WORK',
+        //     },
+        //   ],
+        // });
+        response = await this.bitrixBotService.sendTestMessage(
+          'Mock create lead in avito number',
+        );
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
           leadIds[0].toString(),
@@ -1149,18 +1147,17 @@ export class BitrixWebhookService {
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
           case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            response = this.bitrixLeadService
-              .updateLead({
-                id: leadId,
-                fields: {
-                  ASSIGNED_BY_ID: userId,
-                  STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                },
-              })
-              .then((res) => {
-                this.logger.debug(`Updating lead: ${res}`);
-                return res;
-              });
+            // response = this.bitrixLeadService
+            //   .updateLead({
+            //     id: leadId,
+            //     fields: {
+            //       ASSIGNED_BY_ID: userId,
+            //       STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            //     },
+            //   });
+            response = await this.bitrixBotService.sendTestMessage(
+              'Mock update lead in avito number',
+            );
             break;
         }
       }
@@ -1171,16 +1168,18 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
+        // response = await this.bitrixLeadService.createLead({
+        //   ASSIGNED_BY_ID: userId,
+        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
+        //   PHONE: [
+        //     {
+        //       VALUE: phone,
+        //       VALUE_TYPE: 'WORK',
+        //     },
+        //   ],
+        // });
+        response =
+          await this.bitrixBotService.sendTestMessage('Mock create lead');
       }
     }
 
