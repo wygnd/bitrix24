@@ -111,7 +111,7 @@ export class BitrixTaskService {
     if (status !== '4') {
       this.logger.warn(
         {
-          message: 'task was not handled status',
+          message: `task was not handled status: ${status}`,
           task,
         },
         true,
