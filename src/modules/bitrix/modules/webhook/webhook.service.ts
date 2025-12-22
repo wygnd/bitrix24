@@ -696,11 +696,8 @@ export class BitrixWebhookService {
         phone: phone,
       },
       {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 50,
-        },
+        delay: 200,
+        attempts: 1,
       },
     );
     return true;
@@ -1011,7 +1008,7 @@ export class BitrixWebhookService {
         userId: fields.data.USER_ID,
       },
       {
-        delay: 1000,
+        delay: 500,
         attempts: 1,
       },
     );
@@ -1032,6 +1029,8 @@ export class BitrixWebhookService {
     try {
       const { callId, userId } = fields;
 
+      this.logger.debug(`Start function handle call start: ${userId}`, 'warn');
+
       const callData =
         await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
           REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
@@ -1039,19 +1038,16 @@ export class BitrixWebhookService {
 
       if (!callData) throw new NotFoundException('Call data was not found');
 
-      this.logger.info(
-        {
-          message: 'Check data from cache',
-          data: callData,
-        },
-        true,
-      );
-
       const {
         clientPhone,
         extensionGroup: { name: extensionGroupName },
         extensionCall: { called_did: calledDid },
       } = callData;
+
+      this.logger.debug(
+        `Check client phone on handle call start: ${clientPhone}`,
+        'warn',
+      );
 
       if (!clientPhone)
         throw new BadRequestException('Client phone is not defined');
@@ -1073,12 +1069,15 @@ export class BitrixWebhookService {
           });
 
         default:
-          return;
+          return {
+            status: false,
+            message: 'Not handled yet on call start',
+          };
       }
     } catch (error) {
       this.logger.error(
         {
-          message: 'call start',
+          message: 'error on handle call start',
           error,
         },
         true,
@@ -1101,16 +1100,17 @@ export class BitrixWebhookService {
     const { userId, phone, calledDid } = fields;
     let response: any;
 
+    this.logger.debug(
+      `Handle call start for sale manager: ${userId} => ${phone} => ${calledDid}`,
+      'warn',
+    );
+
+    if (!phone) throw new BadRequestException('Invalid phone');
+
     const leadIds =
       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
-    this.logger.info(
-      {
-        message: 'check duplicates leads',
-        data: leadIds,
-      },
-      true,
-    );
+    this.logger.debug(`Check duplicate leads ${leadIds}`, 'warn');
 
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
@@ -1182,6 +1182,8 @@ export class BitrixWebhookService {
           });
       }
     }
+
+    this.logger.debug(`Check response: ${JSON.stringify(response)}`, 'warn');
 
     return {
       status: true,
