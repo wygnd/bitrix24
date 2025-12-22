@@ -18,6 +18,11 @@ export class HttpLoggerMiddleware implements NestMiddleware {
     const userAgent = req.get('user-agent') || '';
     const requestTime = Date.now();
 
+    if (/Prometheus/gi.test(userAgent)) {
+      next();
+      return;
+    }
+
     res.on('close', () => {
       const { statusCode } = res;
 
