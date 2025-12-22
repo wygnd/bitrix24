@@ -43,9 +43,15 @@ import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
+import { AvitoService } from '@/modules/avito/avito.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixImBotService {
+  private readonly logger = new WinstonLogger(
+    BitrixImBotService.name,
+    'bitrix:services'.split(':'),
+  );
   private readonly botId: string;
   private readonly distributeDealMessages: string[];
 
@@ -58,6 +64,7 @@ export class BitrixImBotService {
     private readonly departmentService: BitrixDepartmentService,
     @Inject(forwardRef(() => BitrixIntegrationAvitoService))
     private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
+    private readonly avitoService: AvitoService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -738,7 +745,13 @@ export class BitrixImBotService {
     });
 
     if (!approved) {
-      // this.avitoService.rejectDistributeLeadByAi(phone);
+      this.avitoService.rejectDistributeLeadByAi(phone).catch((err) => {
+        this.logger.error({
+          message:
+            'Error on send reject distribute lead by AI to avito service',
+          error: err,
+        });
+      });
       return false;
     }
 
