@@ -1103,11 +1103,6 @@ export class BitrixWebhookService {
       'warn',
     );
 
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `Обработка лида: ${userId} => ${phone} => ${calledDid}`,
-    });
-
     if (!phone) throw new BadRequestException('Invalid phone');
 
     const leadIds =
@@ -1115,6 +1110,10 @@ export class BitrixWebhookService {
 
     this.logger.debug(`Check duplicate leads ${leadIds}`, 'warn');
 
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Обработка лида: ${userId} => ${phone} => ${calledDid}[br]Лиды: ${leadIds}`,
+    });
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
