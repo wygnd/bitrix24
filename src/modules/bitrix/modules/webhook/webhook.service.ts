@@ -698,7 +698,7 @@ export class BitrixWebhookService {
         phone: phone,
       },
       {
-        delay: 100,
+        delay: 200,
       },
     );
     return true;
@@ -735,6 +735,11 @@ export class BitrixWebhookService {
       },
       true,
     );
+
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Проверка звонка: [b]${clientPhone}[/b][br]Calls: ${JSON.stringify(currentCalls)}`,
+    });
 
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
