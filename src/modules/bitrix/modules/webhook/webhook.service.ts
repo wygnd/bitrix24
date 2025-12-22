@@ -1029,8 +1029,6 @@ export class BitrixWebhookService {
     try {
       const { callId, userId } = fields;
 
-      this.logger.debug(`Start function handle call start: ${userId}`, 'warn');
-
       const callData =
         await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
           REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
@@ -1048,17 +1046,12 @@ export class BitrixWebhookService {
         throw new BadRequestException('Client phone is not defined');
 
       // fixme: remove after tests
-      if (!['+79535113480', '+79517354601'].includes(clientPhone)) {
+      if (!['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)) {
         return {
           status: false,
           message: 'In tested',
         };
       }
-
-      this.logger.debug(
-        `Check client phone on handle call start: ${clientPhone}`,
-        'warn',
-      );
 
       this.bitrixMessageService.sendPrivateMessage({
         DIALOG_ID: '376',
@@ -1175,21 +1168,16 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        response = await this.bitrixLeadService
-          .createLead({
-            ASSIGNED_BY_ID: userId,
-            STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-            PHONE: [
-              {
-                VALUE: phone,
-                VALUE_TYPE: 'WORK',
-              },
-            ],
-          })
-          .then((res) => {
-            this.logger.debug(`Creating lead: ${res}`);
-            return res;
-          });
+        response = await this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: userId,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
+          PHONE: [
+            {
+              VALUE: phone,
+              VALUE_TYPE: 'WORK',
+            },
+          ],
+        });
       }
     }
 
