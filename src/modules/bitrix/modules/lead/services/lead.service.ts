@@ -107,7 +107,7 @@ export class BitrixLeadService {
       this.redisService.set<number[]>(
         REDIS_KEYS.BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE + phone,
         result,
-        600, // 10 минут
+        300, // 5 минут
       );
     }
 

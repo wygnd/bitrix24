@@ -1046,7 +1046,9 @@ export class BitrixWebhookService {
         throw new BadRequestException('Client phone is not defined');
 
       // fixme: remove after tests
-      if (!['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)) {
+      if (
+        !['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)
+      ) {
         return {
           status: false,
           message: 'In tested',
@@ -1105,8 +1107,10 @@ export class BitrixWebhookService {
 
     if (!phone) throw new BadRequestException('Invalid phone');
 
-    const leadIds =
-      await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
+    const leadIds = await this.bitrixLeadService.getDuplicateLeadsByPhone(
+      phone,
+      true,
+    );
 
     this.logger.debug(`Check duplicate leads ${leadIds}`, 'warn');
 
