@@ -696,8 +696,7 @@ export class BitrixWebhookService {
         phone: phone,
       },
       {
-        delay: 200,
-        attempts: 1,
+        delay: 100,
       },
     );
     return true;
