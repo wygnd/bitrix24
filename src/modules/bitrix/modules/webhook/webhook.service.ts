@@ -1012,7 +1012,7 @@ export class BitrixWebhookService {
       },
       {
         delay: 1000,
-        attempts: 3,
+        attempts: 1,
       },
     );
     return true;
@@ -1039,10 +1039,13 @@ export class BitrixWebhookService {
 
       if (!callData) throw new NotFoundException('Call data was not found');
 
-      this.logger.info({
-        message: 'Check data from cache',
-        data: callData,
-      });
+      this.logger.info(
+        {
+          message: 'Check data from cache',
+          data: callData,
+        },
+        true,
+      );
 
       const {
         clientPhone,
