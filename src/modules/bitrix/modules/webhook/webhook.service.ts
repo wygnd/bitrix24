@@ -682,6 +682,11 @@ export class BitrixWebhookService {
       CALLER_ID: phone,
     } = fields.data;
 
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Новая задача: добавить в очередь обработку инициализации звонка: ${phone}`,
+    });
+
     if (callType !== B24CallType.INCOMING)
       return {
         status: false,
@@ -1003,6 +1008,10 @@ export class BitrixWebhookService {
    */
   async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
     this.logger.debug(`START CALL: ${fields.data.USER_ID}`);
+    this.bitrixMessageService.sendPrivateMessage({
+      DIALOG_ID: '376',
+      MESSAGE: `Новая задача: добавить в очередь обработку начала звонка: ${fields.data.USER_ID}`,
+    });
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
       {
         callId: fields.data.CALL_ID,

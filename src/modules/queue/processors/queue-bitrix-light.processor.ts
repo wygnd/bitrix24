@@ -113,6 +113,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     switch (job.name) {
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
+        this.logger.debug(
+          `Ошибка выполнения задачи: ${job.name}: ${job.id}`,
+          'fatal',
+        );
         break;
 
       default:
