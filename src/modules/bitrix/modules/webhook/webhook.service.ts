@@ -1047,7 +1047,8 @@ export class BitrixWebhookService {
 
       // fixme: remove after tests
       if (
-        !['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)
+        // !['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)
+        clientPhone !== '+79211268209'
       ) {
         return {
           status: false,
@@ -1133,7 +1134,7 @@ export class BitrixWebhookService {
         //   ],
         // });
         response = await this.bitrixBotService.sendTestMessage(
-          'Mock create lead in avito number',
+          `Mock create lead in avito number: ${phone}`,
         );
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
@@ -1156,7 +1157,7 @@ export class BitrixWebhookService {
             //     },
             //   });
             response = await this.bitrixBotService.sendTestMessage(
-              'Mock update lead in avito number',
+              `Mock update lead in avito number: ${phone}`,
             );
             break;
         }
@@ -1178,8 +1179,9 @@ export class BitrixWebhookService {
         //     },
         //   ],
         // });
-        response =
-          await this.bitrixBotService.sendTestMessage('Mock create lead');
+        response = await this.bitrixBotService.sendTestMessage(
+          `Mock create lead: ${phone}`,
+        );
       }
     }
 
