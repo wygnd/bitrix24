@@ -1104,6 +1104,14 @@ export class BitrixWebhookService {
     const leadIds =
       await this.bitrixLeadService.getDuplicateLeadsByPhone(phone);
 
+    this.logger.info(
+      {
+        message: 'check duplicates leads',
+        data: leadIds,
+      },
+      true,
+    );
+
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
