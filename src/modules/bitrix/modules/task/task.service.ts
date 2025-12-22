@@ -118,7 +118,7 @@ export class BitrixTaskService {
       );
       return {
         status: false,
-        message: 'Task was in not handled status',
+        message: `Task was in not handled status: ${status}`,
         taskId: taskId,
       };
     }
