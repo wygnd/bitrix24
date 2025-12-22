@@ -1039,6 +1039,11 @@ export class BitrixWebhookService {
 
       if (!callData) throw new NotFoundException('Call data was not found');
 
+      this.logger.info({
+        message: 'Check data from cache',
+        data: callData,
+      });
+
       const {
         clientPhone,
         extensionGroup: { name: extensionGroupName },
