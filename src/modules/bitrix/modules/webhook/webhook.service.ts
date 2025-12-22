@@ -1011,8 +1011,12 @@ export class BitrixWebhookService {
         userId: fields.data.USER_ID,
       },
       {
-        delay: 100,
-        attempts: 1,
+        delay: 200,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 100,
+        },
       },
     );
     return true;
@@ -1049,6 +1053,9 @@ export class BitrixWebhookService {
         extensionGroup: { name: extensionGroupName },
         extensionCall: { called_did: calledDid },
       } = callData;
+
+      if (!clientPhone)
+        throw new BadRequestException('Client phone is not defined');
 
       // fixme: remove after tests
       if (!['+79535113480', '+79517354601'].includes(clientPhone)) {
