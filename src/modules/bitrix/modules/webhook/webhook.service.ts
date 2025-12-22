@@ -682,11 +682,6 @@ export class BitrixWebhookService {
       CALLER_ID: phone,
     } = fields.data;
 
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `Новая задача: добавить в очередь обработку инициализации звонка: ${phone}`,
-    });
-
     if (callType !== B24CallType.INCOMING)
       return {
         status: false,
