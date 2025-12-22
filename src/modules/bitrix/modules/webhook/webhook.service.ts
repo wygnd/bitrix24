@@ -715,15 +715,8 @@ export class BitrixWebhookService {
   async handleVoxImplantCallInit(
     fields: B24WebhookVoxImplantCallInitTaskOptions,
   ) {
-    const { phone: clientPhone, callId } = fields;
-
-    // for tests
-    // if (!['+79535113480', '+79517354601'].includes(clientPhone))
-    //   return {
-    //     status: false,
-    //     message: 'In tested',
-    //     phone: clientPhone,
-    //   };
+    const { phone, callId } = fields;
+    const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
 
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
@@ -744,7 +737,7 @@ export class BitrixWebhookService {
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
-        call_flow == 'IN' &&
+        call_flow === 'IN' &&
         [called_number, caller_id_name, caller_id_number].includes(clientPhone),
     );
 
