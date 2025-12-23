@@ -1,41 +1,13 @@
-import {
-  B24WikiPaymentsNoticeWaitingOptions,
-  B24WikiPaymentsNoticeWaitingRequestOptions,
-} from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
+import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
 import { Transform } from 'class-transformer';
-
-class B24PaymentsNoticeWaitingRequestDto implements B24WikiPaymentsNoticeWaitingRequestOptions {
-  @ApiProperty({
-    type: String,
-    description: 'роль пользователя: определяет, куда направить сообщение',
-    required: false,
-    example: 'ad_specialist',
-  })
-  @IsNotEmpty()
-  @IsString()
-  @IsIn(Object.keys(B24_WIKI_PAYMENTS_ROLES_CHAT_IDS))
-  @Transform(({ value }) => B24_WIKI_PAYMENTS_ROLES_CHAT_IDS[value])
-  user_role: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'ID лида',
-    required: false,
-    example: '234897',
-  })
-  @IsOptional()
-  @IsString()
-  lead_id?: string;
-}
 
 export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWaitingOptions {
   @ApiProperty({
@@ -79,12 +51,16 @@ export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWai
   lead_id?: string;
 
   @ApiProperty({
-    type: B24PaymentsNoticeWaitingRequestDto,
-    required: true,
+    type: String,
+    description: 'роль пользователя: определяет, куда направить сообщение',
+    required: false,
+    example: 'ad_specialist',
   })
   @IsNotEmpty()
-  @ValidateNested()
-  request: B24PaymentsNoticeWaitingRequestDto;
+  @IsString()
+  @IsIn(Object.keys(B24_WIKI_PAYMENTS_ROLES_CHAT_IDS))
+  @Transform(({ value }) => B24_WIKI_PAYMENTS_ROLES_CHAT_IDS[value])
+  user_role: string;
 
   @ApiProperty({
     type: String,

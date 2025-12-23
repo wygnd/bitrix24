@@ -2,8 +2,6 @@ import {
   BadRequestException,
   ForbiddenException,
   forwardRef,
-  HttpException,
-  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -18,7 +16,6 @@ import {
   B24ImbotUpdateMessageOptions,
 } from './imbot.interface';
 import { OnImCommandKeyboardDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
-import { NotifyConvertedDeal } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events-handle.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { ConfigService } from '@nestjs/config';
@@ -219,6 +216,14 @@ export class BitrixImBotService {
     return this.botId;
   }
 
+  /**
+   * Global handle bot command and distribute by functions
+   *
+   * ---
+   *
+   * Глобальная обработка команд бота и распределение логики по функциям
+   * @param body
+   */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
     this.logger.info(`New command handler: ${JSON.stringify(body)}`);
     const { event, data } = body;

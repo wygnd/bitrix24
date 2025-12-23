@@ -10,9 +10,15 @@ import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixWikiService {
+  private readonly logger = new WinstonLogger(
+    BitrixWikiService.name,
+    'bitrix:services:integration:wiki'.split(':'),
+  );
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly wikiService: WikiService,
@@ -199,21 +205,36 @@ export class BitrixWikiService {
     return [...resultPhones];
   }
 
+  /**
+   * Handle receive notice waiting and send message in chat
+   *
+   * ---
+   * Обрабатывает ожидание платежа и отправляет сообщение в чат
+   *
+   * @param userId
+   * @param organizationName
+   * @param message
+   * @param deal_id
+   * @param lead_id
+   * @param user_role
+   */
   public async sendNoticeWaitingPayment({
     user_bitrix_id: userId,
     name_of_org: organizationName,
     message,
     deal_id,
     lead_id,
-    request,
+    user_role,
   }: B24WikiPaymentsNoticeWaitingOptions) {
-    let leadId = lead_id ? lead_id : request?.lead_id;
+    let leadId = lead_id;
     let dealId = deal_id;
     let deal: B24Deal | undefined;
-    const isBudget = /Бюджет/gi.test(message);
+    const isBudget = /бюджет/gi.test(message);
 
-    if (!leadId) throw new BadRequestException('Invalid lead_id or deal_id');
+    if (!deal_id && !leadId)
+      throw new BadRequestException('Invalid lead_id or deal_id');
 
+    // Получаем информацию о сделке
     if (!dealId) {
       deal =
         (
@@ -226,30 +247,48 @@ export class BitrixWikiService {
           })
         )[0] ?? undefined;
 
-      dealId = deal?.ID;
+      if (!deal)
+        throw new BadRequestException(`Invalid get deal by id: ${dealId}`);
+
+      dealId = deal.ID;
     }
 
     const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
       message: this.bitrixImbotService.encodeText(message),
-      dialogId: request.user_role,
+      dialogId: user_role,
       organizationName: organizationName,
       dealId: dealId,
       isBudget: isBudget,
       userId: userId,
     };
 
-    return this.bitrixImbotService.sendMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-      MESSAGE: message,
-      KEYBOARD: [
-        {
-          TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
-          COMMAND: 'paymentWasReceived',
-          COMMAND_PARAMS: JSON.stringify(keyboardParams),
-          BLOCK: 'Y',
-          BG_COLOR_TOKEN: isBudget ? 'secondary' : 'primary',
-        },
-      ],
-    });
+    return this.bitrixImbotService
+      .sendMessage({
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+        MESSAGE: message,
+        KEYBOARD: [
+          {
+            TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
+            COMMAND: 'paymentWasReceived',
+            COMMAND_PARAMS: JSON.stringify(keyboardParams),
+            BLOCK: 'Y',
+            BG_COLOR_TOKEN: isBudget ? 'secondary' : 'primary',
+          },
+        ],
+      })
+      .then((response) => {
+        this.logger.info(
+          JSON.stringify({
+            message: '',
+            data: response,
+          }),
+          true,
+        );
+
+        return response.result;
+      })
+      .catch((error) => {
+        this.logger.error(error, '', true);
+      });
   }
 }

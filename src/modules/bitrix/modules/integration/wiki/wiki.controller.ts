@@ -43,7 +43,7 @@ export class BitrixWikiController {
 
   @ApiOperation({ summary: 'Отправить сообщение о поступлении платежа' })
   @HttpCode(HttpStatus.OK)
-  @Post('/payments/notice-waiting')
+  @Post('/payments/notices/waiting')
   async sendNoticePaymentWaiting(
     @Body() fields: B24WikiPaymentsNoticeWaitingDto,
   ) {
