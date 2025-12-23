@@ -6,6 +6,11 @@ import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
+import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
+import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 import { B24Lead } from '@/modules/bitrix/modules/lead/interfaces/lead.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import {
@@ -18,12 +23,14 @@ import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
 export class BitrixWikiService {
   private readonly logger = new WinstonLogger(
     BitrixWikiService.name,
-    'bitrix:services'.split(':'),
+    'bitrix:services:integration:wiki'.split(':'),
   );
 
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly wikiService: WikiService,
+    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixImbotService: BitrixImBotService,
     private readonly userService: BitrixUserService,
   ) {}
 
@@ -41,40 +48,36 @@ export class BitrixWikiService {
     fields,
     needCreate = 0,
   }: UnloadLostCallingDto) {
-    try {
-      const uniquePhones = new Map<string, string>();
+    const uniquePhones = new Map<string, string>();
 
-      // Оставляем уникальные номера
-      fields.forEach(({ phone, datetime }) => {
-        if (uniquePhones.has(phone)) uniquePhones.delete(phone);
+    // Оставляем уникальные номера
+    fields.forEach(({ phone, datetime }) => {
+      if (uniquePhones.has(phone)) uniquePhones.delete(phone);
 
-        uniquePhones.set(phone, datetime);
-      });
+      uniquePhones.set(phone, datetime);
+    });
 
-      // Получаем менеджеров, которые работают
-      const users = await this.wikiService.getWorkingSalesFromWiki();
-      let usersSortedByMinWorkflow =
-        await this.userService.getMinWorkflowUsersSorted(users);
-      const batchCommandsBatches: B24BatchCommands[] = [];
-      let batchIndex = 0;
+    // Получаем менеджеров, которые работают
+    const users = await this.wikiService.getWorkingSalesFromWiki();
+    const batchCommandsBatches: B24BatchCommands[] = [];
+    let batchIndex = 0;
 
-      // Проходим по номерам и добавляем запросы для поиска дубликатов
-      uniquePhones.forEach((datetime, phone) => {
-        if (
-          batchIndex in batchCommandsBatches &&
-          Object.keys(batchCommandsBatches[batchIndex]).length === 50
-        )
-          batchIndex++;
+    // Проходим по номерам и добавляем запросы для поиска дубликатов
+    uniquePhones.forEach((datetime, phone) => {
+      if (
+        batchIndex in batchCommandsBatches &&
+        Object.keys(batchCommandsBatches[batchIndex]).length === 50
+      )
+        batchIndex++;
 
-        if (
-          !(batchIndex in batchCommandsBatches) ||
-          Object.keys(batchCommandsBatches[batchIndex]).length == 0
-        )
-          batchCommandsBatches[batchIndex] = {};
+      if (
+        !(batchIndex in batchCommandsBatches) ||
+        Object.keys(batchCommandsBatches[batchIndex]).length == 0
+      )
+        batchCommandsBatches[batchIndex] = {};
 
-        batchCommandsBatches[batchIndex][
-          `find_duplicates=${phone}=${datetime}`
-        ] = {
+      batchCommandsBatches[batchIndex][`find_duplicates=${phone}=${datetime}`] =
+        {
           method: 'crm.duplicate.findbycomm',
           params: {
             type: 'PHONE',
@@ -82,20 +85,29 @@ export class BitrixWikiService {
             entity_type: 'LEAD',
           },
         };
-      });
+    });
 
-      // Выполняем запрос
-      const batchResponse = await Promise.all(
-        batchCommandsBatches.map((batchCommands) =>
-          this.bitrixService
-            .callBatch<B24BatchResponseMap>(batchCommands)
-            .then((res) => res.result.result),
-        ),
-      );
+    // Выполняем запрос
+    const batchResponse = await Promise.all(
+      batchCommandsBatches.map((batchCommands) =>
+        this.bitrixService
+          .callBatch<B24BatchResponseMap>(batchCommands)
+          .then((res) => res.result.result),
+      ),
+    );
 
-      const phonesNeedCreateLead = new Map<string, string>();
-      const existsPhones = new Set<UnloadLostCallingResponse>();
-      const resultPhones = new Set<UnloadLostCallingResponse>();
+    const phonesNeedCreateLead: Map<string, string> = new Map();
+    const resultPhones: Set<UnloadLostCallingResponse> = new Set();
+
+    // Проходимся по результату запроса от битркис
+    batchResponse.forEach((batchResponseList) => {
+      Object.entries(batchResponseList).forEach(([command, bResponse]) => {
+        const [_, phone, datetime] = command.split('=');
+
+        if (Array.isArray(bResponse)) {
+          phonesNeedCreateLead.set(phone, datetime);
+          return;
+        }
 
       // Проходимся по результату запроса от битркис
       batchResponse.forEach((batchResponseList) => {
@@ -115,8 +127,9 @@ export class BitrixWikiService {
         });
       });
 
-      // Проходим по существующим лидам и получаем их информацию
-      const batchCommandsGetLeadsInfo = new Map<number, B24BatchCommands>();
+    // Если был указан флаг needCreate: создаем лиды
+    if (needCreate === 1) {
+      const batchCommandsCreateLeadsBatches: B24BatchCommands[] = [];
       batchIndex = 0;
       existsPhones.forEach(({ leadId, phone }) => {
         let cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
@@ -348,16 +361,90 @@ export class BitrixWikiService {
     }
   }
 
+  /**
+   * Handle receive notice waiting and send message in chat
+   *
+   * ---
+   * Обрабатывает ожидание платежа и отправляет сообщение в чат
+   *
+   * @param userId
+   * @param organizationName
+   * @param message
+   * @param deal_id
+   * @param lead_id
+   * @param user_role
+   */
   public async sendNoticeWaitingPayment({
-    user_bitrix_id: userBitrixId,
-    name_of_org: nameOfOrganization,
-    deal_id: dealId,
+    user_bitrix_id: userId,
+    name_of_org: organizationName,
+    message,
+    deal_id,
     lead_id,
-    request,
+    user_role,
   }: B24WikiPaymentsNoticeWaitingOptions) {
-    let leadId = lead_id ? lead_id : request?.lead_id;
+    let leadId = lead_id;
+    let dealId = deal_id;
+    let deal: B24Deal | undefined;
+    const isBudget = /бюджет/gi.test(message);
 
-    if (!leadId && !dealId)
+    if (!deal_id && !leadId)
       throw new BadRequestException('Invalid lead_id or deal_id');
+
+    // Получаем информацию о сделке
+    if (!dealId) {
+      deal =
+        (
+          await this.bitrixDealService.getDeals({
+            filter: {
+              UF_CRM_1731418991: leadId,
+            },
+            select: ['ID'],
+            start: 1,
+          })
+        )[0] ?? undefined;
+
+      if (!deal)
+        throw new BadRequestException(`Invalid get deal by id: ${dealId}`);
+
+      dealId = deal.ID;
+    }
+
+    const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
+      message: this.bitrixImbotService.encodeText(message),
+      dialogId: user_role,
+      organizationName: organizationName,
+      dealId: dealId,
+      isBudget: isBudget,
+      userId: userId,
+    };
+
+    return this.bitrixImbotService
+      .sendMessage({
+        DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+        MESSAGE: '[b]TEST[/b][br][br]' + message,
+        KEYBOARD: [
+          {
+            TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
+            COMMAND: 'paymentWasReceived',
+            COMMAND_PARAMS: JSON.stringify(keyboardParams),
+            BLOCK: 'Y',
+            BG_COLOR_TOKEN: isBudget ? 'secondary' : 'primary',
+          },
+        ],
+      })
+      .then((response) => {
+        this.logger.info(
+          JSON.stringify({
+            message: '',
+            data: response,
+          }),
+          true,
+        );
+
+        return response.result;
+      })
+      .catch((error) => {
+        this.logger.error(error, '', true);
+      });
   }
 }
