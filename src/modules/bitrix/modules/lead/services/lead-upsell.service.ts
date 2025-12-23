@@ -18,7 +18,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { plainToInstance } from 'class-transformer';
 import { B24LeadUpsellDto } from '@/modules/bitrix/modules/lead/dtos/lead-upsell.dto';
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
-import { FindOptions, Op } from 'sequelize';
+import { FindOptions } from 'sequelize';
 import {
   B24BatchCommands,
   B24DealCategories,
@@ -760,7 +760,7 @@ export class BitrixLeadUpsellService {
           MESSAGE:
             notifyMessage +
             '[i]Менеджеру отправлено сообщение по допродаже[/i][br][br]>>' +
-            notifyManagerMessage,
+            notifyManagerMessage.replaceAll('[br]', '[br]>>'),
         },
       };
     }
