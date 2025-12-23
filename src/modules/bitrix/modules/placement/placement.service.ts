@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   PlacementBindOptions,
   PlacementUnbindOptions,
@@ -49,16 +46,13 @@ export class BitrixPlacementService {
     query: PlacementQueryRequestDto,
   ) {
     try {
-      this.logger.info(`New open widget: ${JSON.stringify({ query, body })}`);
-      this.bitrixImbotService
-        .sendMessage({
-          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-          MESSAGE:
-            '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
-            `Query: ${JSON.stringify(query)}[br]` +
-            `Body: ${JSON.stringify(body)}`,
-        })
-        .then();
+      this.logger.info(
+        {
+          message: 'New open widget',
+          data: { query, body },
+        },
+        true,
+      );
 
       const { ID }: B24PlacementOptionsPlacementOptionsParsed = JSON.parse(
         body.PLACEMENT_OPTIONS,
