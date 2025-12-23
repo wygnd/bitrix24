@@ -57,7 +57,6 @@ import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/te
 import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
-import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -80,7 +79,6 @@ export class BitrixWebhookService {
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly telphinService: TelphinService,
     private readonly queueLightService: QueueLightService,
-    private readonly bitrixMessageService: BitrixMessageService,
   ) {
     this.departmentInfo = {
       [B24DepartmentTypeId.SITE]: {
@@ -923,8 +921,6 @@ export class BitrixWebhookService {
         true,
       );
 
-      this.logger.debug(callAvitoCommands, 'verbose');
-
       this.bitrixService.callBatch(callAvitoCommands);
     } else {
       // Если клиент звонит напрямую
@@ -968,8 +964,6 @@ export class BitrixWebhookService {
         },
         true,
       );
-
-      this.logger.debug(callManagerCommands, 'verbose');
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
@@ -1034,20 +1028,20 @@ export class BitrixWebhookService {
         throw new BadRequestException('Client phone is not defined');
 
       // fixme: remove after tests
-      if (
-        // !['+79535113480', '+79517354601', '+79211268209'].includes(clientPhone)
-        clientPhone !== '+79211268209'
-      ) {
+      if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
         return {
           status: false,
           message: 'In tested',
         };
       }
 
-      this.bitrixMessageService.sendPrivateMessage({
-        DIALOG_ID: '376',
-        MESSAGE: `Проверка номера телефона: ${clientPhone}`,
-      });
+      this.logger.info(
+        {
+          message: 'Check handle start call',
+          fields,
+        },
+        true,
+      );
 
       switch (true) {
         case /sale/gi.test(extensionGroupName):
@@ -1089,11 +1083,6 @@ export class BitrixWebhookService {
     const { userId, phone, calledDid } = fields;
     let response: any;
 
-    this.logger.debug(
-      `Handle call start for sale manager: ${userId} => ${phone} => ${calledDid}`,
-      'warn',
-    );
-
     if (!phone) throw new BadRequestException('Invalid phone');
 
     const leadIds = await this.bitrixLeadService.getDuplicateLeadsByPhone(
@@ -1101,29 +1090,20 @@ export class BitrixWebhookService {
       true,
     );
 
-    this.logger.debug(`Check duplicate leads ${leadIds}`, 'warn');
-
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `Обработка лида: ${userId} => ${phone} => ${calledDid}[br]Лиды: ${leadIds}`,
-    });
     if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
       // Если клиент звонит на авито номер
 
       if (leadIds.length === 0) {
-        // response = await this.bitrixLeadService.createLead({
-        //   ASSIGNED_BY_ID: userId,
-        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-        //   PHONE: [
-        //     {
-        //       VALUE: phone,
-        //       VALUE_TYPE: 'WORK',
-        //     },
-        //   ],
-        // });
-        response = await this.bitrixBotService.sendTestMessage(
-          `Mock create lead in avito number: ${phone}`,
-        );
+        response = await this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: userId,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          PHONE: [
+            {
+              VALUE: phone,
+              VALUE_TYPE: 'WORK',
+            },
+          ],
+        });
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
           leadIds[0].toString(),
@@ -1136,17 +1116,13 @@ export class BitrixWebhookService {
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
           case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            // response = this.bitrixLeadService
-            //   .updateLead({
-            //     id: leadId,
-            //     fields: {
-            //       ASSIGNED_BY_ID: userId,
-            //       STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-            //     },
-            //   });
-            response = await this.bitrixBotService.sendTestMessage(
-              `Mock update lead in avito number: ${phone}`,
-            );
+            response = this.bitrixLeadService.updateLead({
+              id: leadId,
+              fields: {
+                ASSIGNED_BY_ID: userId,
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+              },
+            });
             break;
         }
       }
@@ -1157,28 +1133,26 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        // response = await this.bitrixLeadService.createLead({
-        //   ASSIGNED_BY_ID: userId,
-        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-        //   PHONE: [
-        //     {
-        //       VALUE: phone,
-        //       VALUE_TYPE: 'WORK',
-        //     },
-        //   ],
-        // });
-        response = await this.bitrixBotService.sendTestMessage(
-          `Mock create lead: ${phone}`,
-        );
+        response = await this.bitrixLeadService.createLead({
+          ASSIGNED_BY_ID: userId,
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
+          PHONE: [
+            {
+              VALUE: phone,
+              VALUE_TYPE: 'WORK',
+            },
+          ],
+        });
       }
     }
 
-    this.logger.debug(`Check response: ${JSON.stringify(response)}`, 'warn');
-
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `Результат: ${JSON.stringify(response)}`,
-    });
+    this.logger.debug(
+      {
+        message: 'Check response',
+        response,
+      },
+      'warn',
+    );
 
     return {
       status: true,
