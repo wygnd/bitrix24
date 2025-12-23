@@ -315,20 +315,29 @@ export class BitrixLeadUpsellService {
 
       case dealServiceAdvert == '1':
         body.messages.working =
-          'Менеджер уволен. Необходимо распределить сделку на допродажу SEO[br]';
+          'Завершена разработка сайта. Необходимо допродать Клиенту SEO[br]';
         body.messages.notWorking =
           'Менеджер отсутствует. Необходимо распределить сделку на допродажу SEO[br]';
         body.messages.fired =
-          'Завершена разработка сайта. Необходимо допродать Клиенту SEO[br]';
+          'Менеджер уволен. Необходимо распределить сделку на допродажу SEO[br]';
         break;
 
       case dealServiceSeo == '1':
         body.messages.working =
-          'Менеджер уволен. Необходимо распределить сделку на допродажу РК[br]';
+          'Завершена разработка сайта. Необходимо допродать Клиенту РК[br]';
         body.messages.notWorking =
           'Менеджер отсутствует. Необходимо распределить сделку на допродажу РК[br]';
         body.messages.fired =
-          'Завершена разработка сайта. Необходимо допродать Клиенту РК[br]';
+          'Менеджер уволен. Необходимо распределить сделку на допродажу РК[br]';
+        break;
+
+      case dealServiceAdvert == '0' && dealServiceSeo == '0':
+        body.messages.working =
+          'Завершена разработка сайта. Необходимо допродать Клиенту РК/SEO[br]';
+        body.messages.notWorking =
+          'Менеджер отсутствует. Необходимо распределить сделку на допродажу РК/SEO[br]';
+        body.messages.fired =
+          'Менеджер уволен. Необходимо распределить сделку на допродажу РК/SEO[br]';
         break;
 
       default:
@@ -721,6 +730,7 @@ export class BitrixLeadUpsellService {
       },
     };
     const salesList = await this.wikiService.getWorkingSalesFromWiki(true);
+    let notifyManagerMessage: string | undefined;
 
     if (!manager.ACTIVE) {
       // Если менеджер уволен
@@ -729,7 +739,7 @@ export class BitrixLeadUpsellService {
       // Если менеджер не начал рабочий день
       notifyMessage += messages.notWorking;
     } else {
-      const notifyManagerMessage =
+      notifyManagerMessage =
         '[b]Допродажа[/b][br][br]' +
         messages.working +
         this.bitrixService.generateLeadUrl(leadId) +
@@ -751,7 +761,7 @@ export class BitrixLeadUpsellService {
           DIALOG_ID: this.bitrixService.UPSELL_CHAT_ID,
           MESSAGE:
             notifyMessage +
-            '[i]Менеджеру отправлено сообщение по допродаже[/i][br][br]>>>' +
+            '[i]Менеджеру отправлено сообщение по допродаже[/i][br][br]>>' +
             notifyManagerMessage,
         },
       };
@@ -762,14 +772,16 @@ export class BitrixLeadUpsellService {
       '[br]' +
       this.bitrixService.generateDealUrl(dealId);
 
-    batchCommandsNotify['upsell_notify_chat'] = {
-      method: 'imbot.message.add',
-      params: {
-        BOT_ID: this.bitrixService.BOT_ID,
-        DIALOG_ID: this.bitrixService.UPSELL_CHAT_ID,
-        MESSAGE: notifyMessage,
-      },
-    };
+    if (!notifyManagerMessage) {
+      batchCommandsNotify['upsell_notify_chat'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixService.BOT_ID,
+          DIALOG_ID: this.bitrixService.UPSELL_CHAT_ID,
+          MESSAGE: notifyMessage,
+        },
+      };
+    }
 
     if (messages.additionalMessage) {
       batchCommandsNotify['upsell_notify_additional_manager'] = {
@@ -789,11 +801,18 @@ export class BitrixLeadUpsellService {
     ])
       .then((result) => {
         this.logger.info(
-          JSON.stringify(`Final upsell steps: ${JSON.stringify(result)}`),
+          {
+            message: 'Final upsell steps',
+            data: result,
+          },
+          true,
         );
       })
       .catch((error) => {
-        this.logger.error({ message: 'Invalid on final upsell steps', error });
+        this.logger.error(
+          { message: 'Invalid on final upsell steps', error },
+          true,
+        );
       });
 
     return { status: true, message: `Was successfully sending: ${dealId}` };
