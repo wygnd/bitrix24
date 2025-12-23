@@ -15,7 +15,10 @@ import { BitrixWebhookGuard } from '@/modules/bitrix/guards/bitrix-webhook.guard
 import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook.dto';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
-import { BitrixVoxImplantInitCallEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
+import {
+  BitrixVoxImplantInitCallEventGuard,
+  BitrixVoxImplantStartCallEventGuard,
+} from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
@@ -90,6 +93,9 @@ export class BitrixWebhookController {
     return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
   }
 
+  @ApiOperation({ summary: 'Обработка начала звонка' })
+  @UseGuards(BitrixVoxImplantStartCallEventGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('/bitrix/voximplant/call/start')
   async handleWebhookVoxImplantStartCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallStartDto,

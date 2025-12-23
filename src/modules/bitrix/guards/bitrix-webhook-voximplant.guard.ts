@@ -28,7 +28,7 @@ export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
 }
 
 @Injectable()
-export class BitrixVoxImplantInitStartEventGuard implements CanActivate {
+export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
   constructor(private readonly bitrixService: BitrixService) {}
 
   canActivate(context: ExecutionContext) {

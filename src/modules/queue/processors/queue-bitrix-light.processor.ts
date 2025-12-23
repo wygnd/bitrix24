@@ -85,10 +85,13 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.info({
-      message: 'check result run task',
-      response,
-    });
+    this.logger.info(
+      {
+        message: 'check result run task',
+        response,
+      },
+      true,
+    );
 
     return response;
   }
@@ -100,40 +103,31 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
-    this.logger.info({
-      message: `Задача [${name}][${id}] выполнена`,
-      response,
-    });
+    this.logger.info(
+      {
+        message: `Задача [${name}][${id}] выполнена`,
+        response,
+      },
+      true,
+    );
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
 
-    switch (job.name) {
-      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
-      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
-        this.logger.debug(
-          `Ошибка выполнения задачи: ${job.name}: ${job.id}`,
-          'error',
-        );
-        break;
-
-      default:
-        this.logger.debug(
-          {
-            message: logMessage,
-            id: job.id,
-            name: job.name,
-            reason: job.failedReason,
-          },
-          'error',
-        );
-    }
-
     this.bitrixImBotService.sendTestMessage(
       `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
     );
     this.logger.error({ message: logMessage, job }, true);
+    this.logger.debug(
+      {
+        message: logMessage,
+        id: job.id,
+        name: job.name,
+        reason: job.failedReason,
+      },
+      'error',
+    );
   }
 }

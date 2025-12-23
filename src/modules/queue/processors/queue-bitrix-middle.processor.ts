@@ -68,10 +68,13 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         response.status = QueueProcessorStatus.NOT_HANDLED;
     }
 
-    this.logger.info({
-      message: 'check result run task',
-      response,
-    });
+    this.logger.info(
+      {
+        message: 'check result run task',
+        response,
+      },
+      true,
+    );
 
     return response;
   }
@@ -90,10 +93,13 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         JSON.stringify(response),
     );
 
-    this.logger.info({
-      message: `Задача [${name}][${id}] выполнена`,
-      response,
-    });
+    this.logger.info(
+      {
+        message: `Задача [${name}][${id}] выполнена`,
+        response,
+      },
+      true,
+    );
 
     switch (name) {
       case QUEUE_TASKS.MIDDLE

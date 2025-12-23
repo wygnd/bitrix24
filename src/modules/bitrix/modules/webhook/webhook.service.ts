@@ -688,7 +688,7 @@ export class BitrixWebhookService {
         callId: callId,
       };
 
-    this.logger.debug(`INIT CALL: ${phone}`);
+    this.logger.debug(`INIT CALL: ${phone}`, 'verbose');
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
@@ -1000,7 +1000,7 @@ export class BitrixWebhookService {
    * @param fields
    */
   async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
-    this.logger.debug(`START CALL: ${fields.data.USER_ID}`);
+    this.logger.debug(`START CALL: ${fields.data.USER_ID}`, 'verbose');
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
       {
         callId: fields.data.CALL_ID,
