@@ -37,7 +37,7 @@ export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
     const body: B24EventBodyVoxImplant = request.body;
 
     const tokenFromRequest = body?.auth?.application_token;
-    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_INIT_CALL_TOKEN;
+    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_START_CALL_TOKEN;
 
     if (!token || !tokenFromRequest || token !== tokenFromRequest)
       throw new UnauthorizedException('Invalid webhook token');
