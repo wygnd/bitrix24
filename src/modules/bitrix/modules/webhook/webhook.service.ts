@@ -945,7 +945,23 @@ export class BitrixWebhookService {
           'Клиент звонит тебе. Лид не найден (Действующий с другого номера или по рекомендации)';
       } else {
         // Если лид найден
-        notifyManagerMessage = 'Звонит твой клиент - отвечай';
+        const leadId = leadIds[0].toString();
+        const lead = await this.bitrixLeadService.getLeadById(leadId);
+
+        if (!lead) throw new BadRequestException('Lead was not found');
+
+        const { STATUS_ID: leadStatusId } = lead;
+
+        switch (true) {
+          case B24LeadRejectStages.includes(leadStatusId):
+            notifyManagerMessage =
+              'Клиент в неактивной стадии Бери в работу себе';
+            break;
+
+          default:
+            notifyManagerMessage = 'Звонит твой клиент - отвечай';
+            break;
+        }
       }
 
       // Уведомляем пользователя
@@ -1143,6 +1159,25 @@ export class BitrixWebhookService {
             },
           ],
         });
+      } else {
+        const leadId = leadIds[0].toString();
+        const lead = await this.bitrixLeadService.getLeadById(leadId);
+
+        if (!lead) throw new BadRequestException('Lead was not found');
+
+        const { STATUS_ID: leadStatusId } = lead;
+
+        switch (true) {
+          case B24LeadRejectStages.includes(leadStatusId):
+            response = await this.bitrixLeadService.updateLead({
+              id: leadId,
+              fields: {
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+                ASSIGNED_BY_ID: userId,
+              },
+            });
+            break;
+        }
       }
     }
 
