@@ -44,7 +44,10 @@ export class BitrixLeadUpsellController {
         ...query,
       });
       this.logger.info(
-        `Add upsell in queue: ${JSON.stringify(response)}`,
+        {
+          message: 'Add upsell in queue',
+          response,
+        },
         true,
       );
       return response;
@@ -70,7 +73,13 @@ export class BitrixLeadUpsellController {
   ) {
     try {
       const response = await this.bitrixUpsellService.handleUpsellDeals(date);
-      this.logger.info(`Handle upsells: ${JSON.stringify(response)}`, true);
+      this.logger.info(
+        {
+          message: 'Check handle upsells response',
+          response,
+        },
+        true,
+      );
       return response;
     } catch (error) {
       this.logger.error({ message: 'Invalid handle upsells', error });

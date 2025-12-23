@@ -18,7 +18,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { plainToInstance } from 'class-transformer';
 import { B24LeadUpsellDto } from '@/modules/bitrix/modules/lead/dtos/lead-upsell.dto';
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
-import { FindOptions } from 'sequelize';
+import { FindOptions, Op } from 'sequelize';
 import {
   B24BatchCommands,
   B24DealCategories,
@@ -207,7 +207,9 @@ export class BitrixLeadUpsellService {
       const upsells = await this.getUpsells({
         where: {
           status: B24LeadUpsellStatuses.PENDING,
-          dateNotify: date,
+          dateNotify: {
+            [Op.lte]: date,
+          },
         },
       });
 
