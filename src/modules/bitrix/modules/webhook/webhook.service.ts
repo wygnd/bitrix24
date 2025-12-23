@@ -780,7 +780,7 @@ export class BitrixWebhookService {
         extensionGroup: extensionGroup,
         extensionCall: targetCalls[0],
       },
-      60, // 1 minute
+      300, // 5 minutes
     );
 
     // Распределяем логику по отделам
@@ -1057,6 +1057,11 @@ export class BitrixWebhookService {
           fields,
         },
         true,
+      );
+
+      // Удаляем из кеша информацию
+      await this.redisService.del(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
       );
 
       switch (true) {
