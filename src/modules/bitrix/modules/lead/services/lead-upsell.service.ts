@@ -686,7 +686,7 @@ export class BitrixLeadUpsellService {
       (field) => {
         if (!(field in deal)) return;
 
-        leadComment = `${dealFields[field].listLabel ?? ''}: [b]${deal[field]}[/b]\n`;
+        leadComment += `${dealFields[field].listLabel ?? ''}: [b]${deal[field]}[/b]\n`;
       },
     );
 
