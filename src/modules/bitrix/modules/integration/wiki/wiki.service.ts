@@ -11,13 +11,6 @@ import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24Lead } from '@/modules/bitrix/modules/lead/interfaces/lead.interface';
-import { WinstonLogger } from '@/config/winston.logger';
-import {
-  B24LeadActiveStages,
-  B24LeadRejectStages,
-} from '@/modules/bitrix/modules/lead/constants/lead.constants';
-import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
 
 @Injectable()
 export class BitrixWikiService {
@@ -31,7 +24,6 @@ export class BitrixWikiService {
     private readonly wikiService: WikiService,
     private readonly bitrixDealService: BitrixDealService,
     private readonly bitrixImbotService: BitrixImBotService,
-    private readonly userService: BitrixUserService,
   ) {}
 
   /**
@@ -45,9 +37,9 @@ export class BitrixWikiService {
    * @param needCreate
    */
   public async unloadLostCalling({
-    fields,
-    needCreate = 0,
-  }: UnloadLostCallingDto) {
+                                   fields,
+                                   needCreate = 0,
+                                 }: UnloadLostCallingDto) {
     const uniquePhones = new Map<string, string>();
 
     // Оставляем уникальные номера
@@ -109,256 +101,108 @@ export class BitrixWikiService {
           return;
         }
 
-      // Проходимся по результату запроса от битркис
-      batchResponse.forEach((batchResponseList) => {
-        Object.entries(batchResponseList).forEach(([command, bResponse]) => {
-          const [_, phone, datetime] = command.split('=');
-
-          if (Array.isArray(bResponse)) {
-            phonesNeedCreateLead.set(phone, datetime);
-            return;
-          }
-
-          existsPhones.add({
-            leadId: bResponse.LEAD[0],
-            phone: phone,
-            status: 'exists',
-          });
+        resultPhones.add({
+          leadId: bResponse.LEAD[0],
+          phone: phone,
+          status: 'exists',
         });
       });
+    });
+
+    if (phonesNeedCreateLead.size === 0) return [...resultPhones];
 
     // Если был указан флаг needCreate: создаем лиды
     if (needCreate === 1) {
       const batchCommandsCreateLeadsBatches: B24BatchCommands[] = [];
       batchIndex = 0;
-      existsPhones.forEach(({ leadId, phone }) => {
-        let cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
+      let userIndex = 0;
 
-        if (Object.keys(cmds).length === 50) {
-          batchCommandsGetLeadsInfo.set(batchIndex, cmds);
+      phonesNeedCreateLead.forEach((datetime, phone) => {
+        if (
+          batchIndex in batchCommandsCreateLeadsBatches &&
+          Object.keys(batchCommandsCreateLeadsBatches[batchIndex]).length === 50
+        )
           batchIndex++;
-          cmds = batchCommandsGetLeadsInfo.get(batchIndex) ?? {};
-        }
 
-        cmds[`get_lead_info=${leadId}=${phone}`] = {
-          method: 'crm.lead.list',
+        if (
+          !(batchIndex in batchCommandsCreateLeadsBatches) ||
+          Object.keys(batchCommandsCreateLeadsBatches[batchIndex]).length == 0
+        )
+          batchCommandsCreateLeadsBatches[batchIndex] = {};
+
+        if (userIndex + 1 >= users.length) userIndex = 0;
+
+        batchCommandsCreateLeadsBatches[batchIndex][`create_lead=${phone}`] = {
+          method: 'crm.lead.add',
           params: {
-            filter: {
-              ID: leadId,
+            fields: {
+              UF_CRM_1651577716: '7420',
+              STATUS_ID: '3',
+              PHONE: [
+                {
+                  VALUE: phone,
+                  VALUE_TYPE: 'WORK',
+                },
+              ],
+              ASSIGNED_BY_ID: users[userIndex],
             },
-            select: ['ID', 'STATUS_ID'],
-            start: 0,
+          },
+        };
+        batchCommandsCreateLeadsBatches[batchIndex][`add_comment=${phone}`] = {
+          method: 'crm.timeline.comment.add',
+          params: {
+            fields: {
+              ENTITY_ID: `$result[create_lead=${phone}]`,
+              ENTITY_TYPE: 'lead',
+              COMMENT: `Лид был создан ${datetime} и не был добавлен из-за сбоя в системе. Учитывайте в работе`,
+              AUTHOR_ID: '460',
+            },
+          },
+        };
+        batchCommandsCreateLeadsBatches[batchIndex][`pin_comment=${phone}`] = {
+          method: 'crm.timeline.item.pin',
+          params: {
+            id: `$result[add_comment=${phone}]`,
+            ownerTypeId: '1',
+            ownerId: `$result[create_lead=${phone}]`,
           },
         };
 
-        batchCommandsGetLeadsInfo.set(batchIndex, cmds);
+        userIndex++;
       });
 
-      const batchResponsesGetLeadInfo = await Promise.all(
-        Array.from(batchCommandsGetLeadsInfo.values()).map((cmds) =>
-          this.bitrixService.callBatch<
-            B24BatchResponseMap<Record<string, B24Lead[]>>
-          >(cmds),
+      const batchResponseCreateLead = await Promise.all(
+        batchCommandsCreateLeadsBatches.map((batchCommands) =>
+          this.bitrixService.callBatch<B24BatchResponseMap>(batchCommands),
         ),
       );
 
-      // Проходимся по результату получения информации по лидам и выбираем неактивные
-      const nonActivePhones = new Set<string>();
-      batchResponsesGetLeadInfo.forEach(({ result: { result: res } }) => {
-        if (Object.keys(res).length === 0) return;
+      batchResponseCreateLead.forEach((batchResponseCreateLeadList) => {
+        Object.entries(batchResponseCreateLeadList.result.result).forEach(
+          ([command, result]) => {
+            const [commandName, phone] = command.split('=');
 
-        Object.entries(res).forEach(([command, response]) => {
-          if (response.length === 0) return;
+            if (commandName !== 'create_lead') return;
 
-          const [, leadId, phone] = command.split('=');
-          const { STATUS_ID } = response[0];
-
-          if (!B24LeadRejectStages.includes(STATUS_ID)) {
             resultPhones.add({
-              leadId: leadId,
+              leadId: result,
               phone: phone,
-              status: 'exists',
+              status: 'new',
             });
-            return;
-          }
-
-          nonActivePhones.add(leadId);
-          resultPhones.add({
-            leadId: leadId,
-            phone: phone,
-            status: 'updated',
-          });
+          },
+        );
+      });
+    } else {
+      phonesNeedCreateLead.forEach((_, phone) => {
+        resultPhones.add({
+          leadId: '',
+          phone: phone,
+          status: 'not-created',
         });
       });
-
-      // Если есть неактивные, обновляем их
-      if (nonActivePhones.size > 0) {
-        let userIndex = 0;
-        let userId: string | null;
-        batchIndex = 0;
-        const batchCommandsUpdateNonActiveLeads = new Map<
-          number,
-          B24BatchCommands
-        >();
-        nonActivePhones.forEach((leadId) => {
-          let cmds = batchCommandsUpdateNonActiveLeads.get(batchIndex) ?? {};
-
-          if (Object.keys(cmds).length === 50) {
-            batchCommandsUpdateNonActiveLeads.set(batchIndex, cmds);
-            batchIndex++;
-            cmds = batchCommandsUpdateNonActiveLeads.get(batchIndex) ?? {};
-          }
-
-          if (userIndex + 1 > usersSortedByMinWorkflow.length) userIndex = 0;
-
-          userId = usersSortedByMinWorkflow[userIndex].user_id ?? null;
-
-          cmds[`update_nonactive_lead=${leadId}`] = {
-            method: 'crm.lead.update',
-            params: {
-              id: leadId,
-              fields: {
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-                ASSIGNED_BY_ID:
-                  userId ?? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
-              },
-            },
-          };
-
-          if (userId) {
-            usersSortedByMinWorkflow[userIndex].count_leads += 1;
-            usersSortedByMinWorkflow = this.bitrixService.sortItemsByField(
-              usersSortedByMinWorkflow,
-              'count_leads',
-            );
-          }
-          userIndex++;
-
-          batchCommandsUpdateNonActiveLeads.set(batchIndex, cmds);
-        });
-
-        // Отправляем запрос на обновление лидов
-        Promise.all(
-          Array.from(batchCommandsUpdateNonActiveLeads.values()).map((cmds) =>
-            this.bitrixService.callBatch(cmds),
-          ),
-        );
-      }
-
-      if (phonesNeedCreateLead.size === 0) return [...resultPhones];
-
-      // Если был указан флаг needCreate: создаем лиды
-      if (needCreate === 1) {
-        const batchCommandsCreateLeadsBatches: B24BatchCommands[] = [];
-        batchIndex = 0;
-        let userIndex = 0;
-        let userId: string | null;
-
-        phonesNeedCreateLead.forEach((datetime, phone) => {
-          if (
-            batchIndex in batchCommandsCreateLeadsBatches &&
-            Object.keys(batchCommandsCreateLeadsBatches[batchIndex]).length ===
-              50
-          )
-            batchIndex++;
-
-          if (
-            !(batchIndex in batchCommandsCreateLeadsBatches) ||
-            Object.keys(batchCommandsCreateLeadsBatches[batchIndex]).length == 0
-          )
-            batchCommandsCreateLeadsBatches[batchIndex] = {};
-
-          if (userIndex + 1 >= usersSortedByMinWorkflow.length) userIndex = 0;
-
-          userId = usersSortedByMinWorkflow[userIndex].user_id ?? null;
-
-          batchCommandsCreateLeadsBatches[batchIndex][`create_lead=${phone}`] =
-            {
-              method: 'crm.lead.add',
-              params: {
-                fields: {
-                  UF_CRM_1651577716: '7420',
-                  STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                  PHONE: [
-                    {
-                      VALUE: phone,
-                      VALUE_TYPE: 'WORK',
-                    },
-                  ],
-                  ASSIGNED_BY_ID:
-                    userId ?? this.bitrixService.ZLATA_ZIMINA_BITRIX_ID,
-                },
-              },
-            };
-          batchCommandsCreateLeadsBatches[batchIndex][`add_comment=${phone}`] =
-            {
-              method: 'crm.timeline.comment.add',
-              params: {
-                fields: {
-                  ENTITY_ID: `$result[create_lead=${phone}]`,
-                  ENTITY_TYPE: 'lead',
-                  COMMENT: `Лид был создан ${datetime} и не был добавлен из-за сбоя в системе. Учитывайте в работе`,
-                  AUTHOR_ID: '460',
-                },
-              },
-            };
-          batchCommandsCreateLeadsBatches[batchIndex][`pin_comment=${phone}`] =
-            {
-              method: 'crm.timeline.item.pin',
-              params: {
-                id: `$result[add_comment=${phone}]`,
-                ownerTypeId: '1',
-                ownerId: `$result[create_lead=${phone}]`,
-              },
-            };
-
-          if (userId) {
-            usersSortedByMinWorkflow[userIndex].count_leads += 1;
-            usersSortedByMinWorkflow = this.bitrixService.sortItemsByField(
-              usersSortedByMinWorkflow,
-              'count_leads',
-            );
-          }
-
-          userIndex++;
-        });
-
-        const batchResponseCreateLead = await Promise.all(
-          batchCommandsCreateLeadsBatches.map((batchCommands) =>
-            this.bitrixService.callBatch<B24BatchResponseMap>(batchCommands),
-          ),
-        );
-
-        batchResponseCreateLead.forEach((batchResponseCreateLeadList) => {
-          Object.entries(batchResponseCreateLeadList.result.result).forEach(
-            ([command, result]) => {
-              const [commandName, phone] = command.split('=');
-
-              if (commandName !== 'create_lead') return;
-
-              resultPhones.add({
-                leadId: `${result}`,
-                phone: phone,
-                status: 'new',
-              });
-            },
-          );
-        });
-      } else {
-        phonesNeedCreateLead.forEach((_, phone) => {
-          resultPhones.add({
-            leadId: '',
-            phone: phone,
-            status: 'not-created',
-          });
-        });
-      }
-
-      return [...resultPhones];
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
     }
+
+    return [...resultPhones];
   }
 
   /**
@@ -375,13 +219,13 @@ export class BitrixWikiService {
    * @param user_role
    */
   public async sendNoticeWaitingPayment({
-    user_bitrix_id: userId,
-    name_of_org: organizationName,
-    message,
-    deal_id,
-    lead_id,
-    user_role,
-  }: B24WikiPaymentsNoticeWaitingOptions) {
+                                          user_bitrix_id: userId,
+                                          name_of_org: organizationName,
+                                          message,
+                                          deal_id,
+                                          lead_id,
+                                          user_role,
+                                        }: B24WikiPaymentsNoticeWaitingOptions) {
     let leadId = lead_id;
     let dealId = deal_id;
     let deal: B24Deal | undefined;
@@ -444,7 +288,7 @@ export class BitrixWikiService {
         return response.result;
       })
       .catch((error) => {
-        this.logger.error(error, '', true);
+        this.logger.error(error, true);
       });
   }
 }
