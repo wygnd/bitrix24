@@ -923,6 +923,8 @@ export class BitrixWebhookService {
         true,
       );
 
+      this.logger.debug(callAvitoCommands, 'verbose');
+
       this.bitrixService.callBatch(callAvitoCommands);
     } else {
       // Если клиент звонит напрямую
@@ -945,15 +947,6 @@ export class BitrixWebhookService {
         // создаем лид
         notifyManagerMessage =
           'Клиент звонит тебе. Лид не найден (Действующий с другого номера или по рекомендации)';
-        callManagerCommands['create_lead'] = {
-          method: 'crm.lead.add',
-          params: {
-            fields: {
-              ASSIGNED_BY_ID: extensionExtraParamsDecoded.comment,
-              STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-            },
-          },
-        };
       } else {
         // Если лид найден
         notifyManagerMessage = 'Звонит твой клиент - отвечай';
@@ -975,6 +968,8 @@ export class BitrixWebhookService {
         },
         true,
       );
+
+      this.logger.debug(callManagerCommands, 'verbose');
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
