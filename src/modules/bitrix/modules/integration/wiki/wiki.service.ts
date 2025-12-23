@@ -265,7 +265,7 @@ export class BitrixWikiService {
     return this.bitrixImbotService
       .sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-        MESSAGE: message,
+        MESSAGE: '[b]TEST[/b][br][br]' + message,
         KEYBOARD: [
           {
             TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
