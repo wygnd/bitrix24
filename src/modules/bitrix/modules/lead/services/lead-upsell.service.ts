@@ -207,9 +207,7 @@ export class BitrixLeadUpsellService {
       const upsells = await this.getUpsells({
         where: {
           status: B24LeadUpsellStatuses.PENDING,
-          dateNotify: {
-            [Op.lte]: date,
-          },
+          dateNotify: date,
         },
       });
 
