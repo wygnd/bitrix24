@@ -17,6 +17,10 @@ export const REDIS_KEYS = {
   BITRIX_DATA_DEPARTMENT_HEAD_USERS: 'bitrix:department:advert:head:users',
   BITRIX_DATA_TASK_ITEM: 'bitrix:task:item:',
   BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE: 'bitrix:lead:duplicate:phone:',
+  BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT: 'bitrix:webhook:voximplant:init:',
+
+  // BITRIX WIDGET
+  BITRIX_WIDGET_CALL_CARD: 'bitrix:widget:call_card:',
 
   // HEAD HUNTER API
   HEADHUNTER_ACCESS_TOKEN: 'hh:access_token',
@@ -34,6 +38,14 @@ export const REDIS_KEYS = {
 
   // APPLICATION
   APPLICATION_TOKEN_BY_SERVICE: 'application:token:',
+
+  // TELPHIN
+  TELPHIN_USER_INFO: 'telphin:user:info',
+  TELPHIN_EXTENSION_LIST: 'telphin:extension:list',
+  TELPHIN_EXTENSION_ITEM: 'telphin:extension:item:',
+  TELPHIN_EXTENSION_ITEM_BY_BITRIX_ID: 'telphin:extension:item:bitrix_id:',
+  TELPHIN_EXTERNAL_PHONE_LIST: 'telphin:external:phone:list',
+  TELPHIN_EXTENSION_GROUP_LIST: 'telphin:extension:group:list',
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

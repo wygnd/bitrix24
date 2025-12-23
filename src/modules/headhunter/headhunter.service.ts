@@ -62,9 +62,13 @@ export class HeadHunterService {
       this.http.defaults.headers.common['Authorization'] =
         `Bearer ${tokens.accessToken}`;
 
-      this.get<object, HHMeInterface>('/me').then((me) => {
-        this.employer_id = me.employer.id;
-      });
+      this.get<object, HHMeInterface>('/me')
+        .then((me) => {
+          this.employer_id = me.employer.id;
+        })
+        .catch(() => {
+          this.notifyAboutInvalidCredentials();
+        });
     });
 
     this.client_id = clientId;

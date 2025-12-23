@@ -31,6 +31,17 @@ export default (): BitrixOptions => ({
     LEAD: {
       observeManagerCallingChatId:
         process.env.BITRIX_DATA_LEAD_OBSERVE_MANAGER_CALLING_CHAT_ID ?? '',
+      upsellChatId: process.env.BITRIX_DATA_LEAD_UPSELL_CHAT_ID ?? '',
+    },
+    WEBHOOK: {
+      voxImplant: {
+        finishCallToken:
+          process.env.BITRIX_DATA_WEBHOOK_VOXIMPLANT_FIHISH_CALL_TOKEN ?? '',
+        initCallToken:
+          process.env.BITRIX_DATA_WEBHOOK_VOXIMPLANT_INIT_CALL_TOKEN ?? '',
+        startCallToken:
+          process.env.BITRIX_DATA_WEBHOOK_VOXIMPLANT_START_CALL_TOKEN ?? '',
+      },
     },
   },
 });

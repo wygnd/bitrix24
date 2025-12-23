@@ -30,7 +30,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 @ApiTags('Deals')
 @Controller('deals')
 export class BitrixDealController {
-  private readonly logger = new WinstonLogger(BitrixDealController.name);
+  private readonly logger = new WinstonLogger(
+    BitrixDealController.name,
+    'bitrix:controllers'.split(':'),
+  );
 
   constructor(
     private readonly bitrixService: BitrixService,

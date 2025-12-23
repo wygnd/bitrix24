@@ -40,10 +40,15 @@ import { HeadhunterWebhookCallResponse } from '@/modules/bitrix/modules/integrat
 import { B24DealHRRejectedStages } from '@/modules/bitrix/modules/deal/constants/deal-hr.constants';
 import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { WinstonLogger } from '@/config/winston.logger';
+import { TokensService } from '@/modules/tokens/tokens.service';
+import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 
 @Injectable()
 export class BitrixHeadHunterService {
-  private readonly logger = new WinstonLogger(BitrixHeadHunterService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixHeadHunterService.name,
+    'bitrix:services'.split(':'),
+  );
 
   constructor(
     private readonly bitrixImBotService: BitrixImBotService,
@@ -54,6 +59,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixDealService: BitrixDealService,
     private readonly headHunterRestService: HeadhunterRestService,
     private readonly queueHeavyService: QueueHeavyService,
+    private readonly tokensService: TokensService,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -76,19 +82,28 @@ export class BitrixHeadHunterService {
 
       const now = new Date();
       // Save tokens in redis
-      await this.redisService.set<HeadHunterAuthTokens>(
-        REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-        {
-          ...res,
-          expires: now.setDate(now.getDate() + 14),
-        },
-        1209600,
-      );
+      const resUpdateTokens = await Promise.all([
+        this.redisService.set<HeadHunterAuthTokens>(
+          REDIS_KEYS.HEADHUNTER_AUTH_DATA,
+          {
+            ...res,
+            expires: now.setDate(now.getDate() + 14),
+          },
+          res.expires_in,
+        ),
+        this.tokensService.updateToken(TokensServices.HH, {
+          accessToken: res.access_token,
+          refreshToken: res.refresh_token,
+          expires: new Date().getTime() + res.expires_in * 1000,
+        }),
+      ]);
+
+      console.log(resUpdateTokens);
 
       // update token on url
-      await this.headHunterApi.updateToken();
+      this.headHunterApi.updateToken().then((res) => console.log(res));
 
-      await this.bitrixImBotService.sendMessage({
+      this.bitrixImBotService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE:
           '[user=376]Денис Некрасов[/user][br]' +
@@ -555,7 +570,10 @@ export class BitrixHeadHunterService {
           },
         },
       });
-      this.logger.error(`Ошибка обработки отклика => ${JSON.stringify(body)}`);
+      this.logger.error({
+        message: 'Ошибка обработки отклика',
+        data: body,
+      });
 
       return {
         status: false,

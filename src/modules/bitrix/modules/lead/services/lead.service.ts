@@ -32,17 +32,20 @@ import {
 import {
   LeadObserveManagerCallingCreationalAttributes,
   LeadObserveManagerCallingLeadBitrixItem,
-  LeadObserveManagerCallingResponse,
 } from '@/modules/bitrix/modules/lead/interfaces/lead-observe-manager-calling.interface';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules/lead/services/lead-observe-manager-calling.service';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
 import { WinstonLogger } from '@/config/winston.logger';
+import { isAxiosError } from 'axios';
 
 @Injectable()
 export class BitrixLeadService {
-  private readonly logger = new WinstonLogger(BitrixLeadService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixLeadService.name,
+    'bitrix:services'.split(':'),
+  );
 
   constructor(
     private readonly bitrixService: BitrixService,
@@ -60,12 +63,18 @@ export class BitrixLeadService {
    * @param id
    */
   public async getLeadById(id: string) {
-    return await this.bitrixService.callMethod<Partial<B24Lead>, B24Lead>(
-      'crm.lead.get',
-      {
+    try {
+      const { result } = await this.bitrixService.callMethod<
+        Partial<B24Lead>,
+        B24Lead
+      >('crm.lead.get', {
         ID: id,
-      },
-    );
+      });
+
+      return result ? result : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   public async getDuplicateLeadsByPhone(phone: string, force: boolean = false) {
@@ -98,7 +107,7 @@ export class BitrixLeadService {
       this.redisService.set<number[]>(
         REDIS_KEYS.BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE + phone,
         result,
-        600, // 10 минут
+        300, // 5 минут
       );
     }
 
@@ -114,10 +123,17 @@ export class BitrixLeadService {
    * @param fields
    */
   public async createLead(fields: Partial<B24Lead>) {
-    return this.bitrixService.callMethod<Partial<B24Lead>, number>(
-      'crm.lead.add',
-      fields,
-    );
+    try {
+      const { result } = await this.bitrixService.callMethod<
+        Partial<B24Lead>,
+        number
+      >('crm.lead.add', {
+        fields: fields,
+      });
+      return result ? result : null;
+    } catch (err) {
+      return null;
+    }
   }
 
   /**
@@ -418,7 +434,7 @@ export class BitrixLeadService {
    */
   public async handleObserveManagerCalling({
     calls,
-  }: LeadObserveManagerCallingDto): Promise<LeadObserveManagerCallingResponse> {
+  }: LeadObserveManagerCallingDto) {
     const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
     const updatedLeads = new Set<string>();
     const missingLeads = new Set<string>();
@@ -428,6 +444,7 @@ export class BitrixLeadService {
     const errors: string[] = [];
     const uniqueCalls = new Map<string, LeadObserveManagerCallingItemDto>();
 
+    // Делаем номера уникальными
     calls.forEach((call) =>
       uniqueCalls.set(call.phone, { ...call, date: new Date(call.date) }),
     );
@@ -478,6 +495,7 @@ export class BitrixLeadService {
       Record<string, { LEAD: number[] } | []> & Record<string, B24Lead[]>
     >[];
 
+    // Обработка ошибок
     try {
       batchResponseDictionary = await Promise.all<
         Promise<
@@ -491,23 +509,14 @@ export class BitrixLeadService {
         ),
       );
     } catch (err) {
-      return {
-        status: false,
-        message: `Exception error on get leads by phone. ${err.message}`,
-        data: {
-          notifiedLeads: [...notifiedLeads],
-          missingLeads: [...missingLeads],
-          updatedLeads: [...updatedLeads],
-          deletedLeads: [...deletedLeads],
+      this.logger.error(
+        {
+          message: 'Error on find leads by phone',
+          error: isAxiosError(err) ? err.response : err,
         },
-        total: {
-          notifiedLeads: notifiedLeads.size,
-          missingLeads: missingLeads.size,
-          updatedLeads: updatedLeads.size,
-          deletedLeads: deletedLeads.size,
-          uniqueLeads: uniqueCalls.size,
-        },
-      };
+        true,
+      );
+      throw err;
     }
 
     const leadsFromBitrix = new Map<
@@ -515,7 +524,7 @@ export class BitrixLeadService {
       LeadObserveManagerCallingLeadBitrixItem
     >();
 
-    // Проходимся по результату получения информации и лидах и заполняем мапу
+    // Проходимся по результату получения информации и лидах и заполняем leadsFromBitrix
     batchResponseDictionary.forEach((b24Response) => {
       const batchErrors = Object.values(b24Response.result.result_error);
       if (batchErrors.length !== 0) {
@@ -560,9 +569,20 @@ export class BitrixLeadService {
     });
 
     // Если есть ошибки выводим их
-    if (errors.length !== 0) throw new BadRequestException(errors);
+    if (errors.length !== 0)
+      throw new BadRequestException(
+        `Exception error on batch request: get leads by phone: ${errors.join(', ')}`,
+      );
 
-    // Получаем лиды из базы, у которых дата звонка -7 дней
+    // Обновляем записи в БД в соответствии с полученной информацией по лидам
+    const updateLeadsResponse =
+      await this.updateOrAddOnDBLeadsObserveManagerCalling(
+        Array.from(leadsFromBitrix.values()),
+      );
+
+    updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
+
+    // Получаем лиды из базы, у которых дата звонка больше 7 дней
     const leadsFromDBWhichManagerDoesntCalling: Pick<
       LeadObserveManagerCallingModel,
       'id' | 'leadId' | 'dateCalling'
@@ -575,16 +595,8 @@ export class BitrixLeadService {
       attributes: ['id', 'leadId', 'dateCalling'],
     });
 
-    // Если не нашли в базе лидов, проходимся по тем, которые получили из битрикса
-    // записываем в базу и выходим
-    if (leadsFromDBWhichManagerDoesntCalling.length === 0) {
-      const updateLeadsResponse =
-        await this.updateOrAddOnDBLeadsObserveManagerCalling(
-          Array.from(leadsFromBitrix.values()),
-        );
-
-      updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
-
+    // Если не нашли в базе лидов: выходим
+    if (leadsFromDBWhichManagerDoesntCalling.length === 0)
       return {
         message: 'Not found leads',
         status: true,
@@ -602,7 +614,6 @@ export class BitrixLeadService {
           uniqueLeads: uniqueCalls.size,
         },
       };
-    }
 
     // Проходимся по списку найденных лидов и собираем пакет запросов для проверки активных лидов
     const batchCommandsGetActiveLeads = new Map<number, B24BatchCommands>();
@@ -630,9 +641,11 @@ export class BitrixLeadService {
       batchCommandsGetActiveLeads.set(batchIndex, cmds);
     });
 
-    // Делаем запрос для получения активных лидов с базы
+    // Делаем запрос в битрикс для фильтрации активных лидов с базы
     let batchResponseGetActiveLeads: B24BatchResponseMap<B24Lead[]>[];
 
+    // Обработка ошибок
+    // Делаем запрос
     try {
       batchResponseGetActiveLeads = await Promise.all<
         Promise<B24BatchResponseMap<B24Lead[]>>[]
@@ -681,7 +694,32 @@ export class BitrixLeadService {
       });
     });
 
-    if (errors.length !== 0) throw new BadRequestException(errors);
+    // Если есть ошибки выводим их
+    if (errors.length !== 0)
+      return {
+        message: `Exception error on get active leads by phone from DB: ${errors.join(', ')}`,
+        status: false,
+      };
+
+    // Если нет лидов выходим
+    if (leadsNeedNotify.size === 0)
+      return {
+        message: 'Leads updated successfully',
+        status: true,
+        data: {
+          notifiedLeads: [...notifiedLeads],
+          missingLeads: [...missingLeads],
+          updatedLeads: [...updatedLeads],
+          deletedLeads: [...deletedLeads],
+        },
+        total: {
+          notifiedLeads: notifiedLeads.size,
+          missingLeads: missingLeads.size,
+          updatedLeads: updatedLeads.size,
+          deletedLeads: deletedLeads.size,
+          uniqueLeads: uniqueCalls.size,
+        },
+      };
 
     // Проходимся по списку найденных лидов и собираем пакет запросов для уведомления
     const batchCommandsNotifyAboutUnCallingManager = new Map<
@@ -714,6 +752,7 @@ export class BitrixLeadService {
       notifiedLeads.add(leadId); // Добавляем в массив для результата
     });
 
+    // Обработка ошибок
     // Выполняем запрос
     try {
       Promise.all([
@@ -746,37 +785,9 @@ export class BitrixLeadService {
       };
     }
 
-    // Если больше лидов не осталось выходим
-    if (leadsFromBitrix.size === 0)
-      return {
-        status: true,
-        message: 'Leads notified successfully.',
-        data: {
-          notifiedLeads: [...notifiedLeads],
-          missingLeads: [...missingLeads],
-          updatedLeads: [...updatedLeads],
-          deletedLeads: [...deletedLeads],
-        },
-        total: {
-          notifiedLeads: notifiedLeads.size,
-          missingLeads: missingLeads.size,
-          updatedLeads: updatedLeads.size,
-          deletedLeads: deletedLeads.size,
-          uniqueLeads: uniqueCalls.size,
-        },
-      };
-
-    //   Если остались лиды, нужно занести в базу и обновить существующие
-    const updateLeadsResponse =
-      await this.updateOrAddOnDBLeadsObserveManagerCalling(
-        Array.from(leadsFromBitrix.values()),
-      );
-
-    updateLeadsResponse.forEach(({ leadId }) => updatedLeads.add(leadId));
-
     return {
       status: true,
-      message: 'Leads notified and update successfully',
+      message: 'Leads notified successfully.',
       data: {
         notifiedLeads: [...notifiedLeads],
         missingLeads: [...missingLeads],
@@ -794,15 +805,11 @@ export class BitrixLeadService {
   }
 
   /**
-   * Function calling function from lead observe manager calling service and return value.
-   *
-   * Update or create new calling in database
+   * Update or create new leads in DB
    *
    * ---
    *
-   * Функция вызывает другую ф-и из сервиса для работы с БД и возвращает результат
-   *
-   * Обновление или создание новой записи лида в БД
+   * Обновляет или создает новые записи лидов в БД
    *
    * @param leads
    * @private

@@ -4,6 +4,7 @@ import { DEVELOPMENT, PRODUCTION } from '@/constants';
 import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
 import { TokensModel } from '@/modules/tokens/tokens.entity';
+import { LeadUpsellModel } from '@/modules/bitrix/modules/lead/entities/lead-upsell.entity';
 
 export const databaseProviders = [
   {
@@ -34,7 +35,11 @@ export const databaseProviders = [
         throw new Error('DATABASE MODULE: Invalid database config');
 
       const sequelize = new Sequelize(config);
-      sequelize.addModels([LeadObserveManagerCallingModel, TokensModel]);
+      sequelize.addModels([
+        LeadObserveManagerCallingModel,
+        TokensModel,
+        LeadUpsellModel,
+      ]);
       await sequelize.sync({
         force: false,
         alter: false,

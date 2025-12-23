@@ -1,0 +1,22 @@
+export enum B24CallFailedCode {
+  SUCCESS = '200',
+  MISS = '304',
+  REJECT = '603',
+  CANCEL = '603-S',
+  FORBIDDEN = '403',
+  INVALID = '404',
+  BUSY = '486',
+  DIRECTION_IS_NOT_AVAILABLE = '484',
+  DIRECTION_IS_NOT_AVAILABLE_2 = '484',
+  TEMPORARY_IS_NOT_AVAILABLE = '480',
+  INSUFFICIENT = '402',
+  BLOCKED = '423',
+  NOT_DEFINED = 'OTHER',
+}
+
+export enum B24CallType {
+  OUTGOING = '1',
+  INCOMING = '2',
+  INCOMING_REDIRECTION = '3',
+  CALLBACK = '4',
+}

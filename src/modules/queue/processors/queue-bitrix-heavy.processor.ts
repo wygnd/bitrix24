@@ -66,6 +66,11 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
           break;
       }
 
+      this.logger.info({
+        message: 'check result run task',
+        response,
+      });
+
       return response;
     } catch (e) {
       this.logger.error(e);
@@ -77,14 +82,15 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue, id }: Job) {
+  onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(returnvalue),
+        JSON.stringify(response),
     );
-    this.logger.info(
-      `Задача [${name}][${id}] выполнена: ${JSON.stringify(returnvalue)}`,
-    );
+    this.logger.info({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('closed')
@@ -107,15 +113,21 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
     this.bitrixImBotService.sendTestMessage(message);
     this.logger.error(
-      `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')} => ${error.message}`,
+      {
+        message: `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
+        error,
+      },
+      true,
     );
   }
 
   @OnWorkerEvent('error')
   onError(error: Error) {
-    const message = `[b]Ошибка выполнения задачи:[b][br]${error.message}`;
+    const logMessage = 'Ошибка выполнения задачи';
+    const message = `[b]${logMessage}:[/b][br]${error.toString()}`;
 
     this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error(`Ошибка выполнения задачи: => ${error.message}`);
+    this.logger.error({ message: logMessage, error }, true);
+    this.logger.debug(message, 'error');
   }
 }

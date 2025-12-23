@@ -24,20 +24,24 @@ import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.s
 import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
 import { BitrixEventsController } from '@/modules/bitrix/modules/events/events.controller';
 import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
-import { DepartmentController } from '@/modules/bitrix/modules/department/department.controller';
+import { BitrixDepartmentController } from '@/modules/bitrix/modules/department/department.controller';
 import { BitrixTaskController } from '@/modules/bitrix/modules/task/task.controller';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { BitrixWikiController } from '@/modules/bitrix/modules/integration/wiki/wiki.controller';
 import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
-import { BitrixLeadController } from '@/modules/bitrix/modules/lead/lead.controller';
+import { BitrixLeadController } from '@/modules/bitrix/modules/lead/controllers/lead.controller';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules/lead/services/lead-observe-manager-calling.service';
 import { TokensModule } from '@/modules/tokens/tokens.module';
 import { BitrixAddySupportService } from '@/modules/bitrix/modules/integration/addy/services/addy-support.service';
 import { BitrixAddySupportControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-support.controller';
 import { BitrixAddyPaymentsControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-payments.controller';
 import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/addy/services/addy-payments.service';
+import { TelphinModule } from '@/modules/telphin/telphin.module';
+import { BitrixLeadUpsellController } from '@/modules/bitrix/modules/lead/controllers/lead-upsells.controller';
+import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
+import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.controller';
 
 @Module({
   imports: [
@@ -47,6 +51,7 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
     WikiModule,
     AvitoModule,
     TokensModule,
+    forwardRef(() => TelphinModule),
   ],
   controllers: [
     BitrixController,
@@ -57,13 +62,15 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
     BitrixImbotEventsController,
     BitrixWebhookController,
     BitrixPlacementController,
-    DepartmentController,
+    BitrixDepartmentController,
     BitrixEventsController,
     BitrixTaskController,
     BitrixWikiController,
     BitrixLeadController,
+    BitrixLeadUpsellController,
     BitrixAddySupportControllerV1,
     BitrixAddyPaymentsControllerV1,
+    BitrixMessageControllerV1,
   ],
   providers: [
     // providers
@@ -78,6 +85,7 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
     // LEADS
     BitrixLeadService,
     BitrixLeadObserveManagerCallingService,
+    BitrixLeadUpsellService,
 
     // MESSAGES AND CHATS
     BitrixMessageService,
@@ -110,6 +118,7 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
     BitrixWebhookService,
     BitrixIntegrationAvitoService,
     BitrixHeadHunterService,
+    BitrixLeadUpsellService,
   ],
 })
 export class BitrixModule {}

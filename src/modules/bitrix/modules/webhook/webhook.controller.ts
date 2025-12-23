@@ -15,10 +15,22 @@ import { BitrixWebhookGuard } from '@/modules/bitrix/guards/bitrix-webhook.guard
 import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook.dto';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
+import {
+  BitrixVoxImplantInitCallEventGuard,
+  BitrixVoxImplantStartCallEventGuard,
+} from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
+import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
+import { WinstonLogger } from '@/config/winston.logger';
+import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
 export class BitrixWebhookController {
+  private readonly logger = new WinstonLogger(
+    BitrixWebhookController.name,
+    'bitrix:telephony'.split(':'),
+  );
+
   constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}
 
   @UseGuards(BitrixWebhookGuard)
@@ -69,5 +81,25 @@ export class BitrixWebhookController {
       body.document_id[2],
     );
     return true;
+  }
+
+  @ApiOperation({ summary: 'Обработка инициализации звонка' })
+  @UseGuards(BitrixVoxImplantInitCallEventGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('/bitrix/voximplant/call/init')
+  async handleWebhookVoxImplantInitCallingFromBitrix(
+    @Body() body: B24EventVoxImplantCallInitDto,
+  ) {
+    return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
+  }
+
+  @ApiOperation({ summary: 'Обработка начала звонка' })
+  @UseGuards(BitrixVoxImplantStartCallEventGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('/bitrix/voximplant/call/start')
+  async handleWebhookVoxImplantStartCallingFromBitrix(
+    @Body() body: B24EventVoxImplantCallStartDto,
+  ) {
+    return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
   }
 }

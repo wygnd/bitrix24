@@ -1,10 +1,8 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import type { B24ImSendMessage } from '../interfaces/im.interface';
-import { Type } from 'class-transformer';
-import { ImbotMessageKeyboardOptionsDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-message.dto';
+import { B24ImSendMessageResponseOptions } from '../interfaces/im.interface';
 
-export class SendMessageDto implements B24ImSendMessage {
+export class B24SendMessageDto {
   @ApiProperty({
     type: String,
     description: 'Chat id or user id',
@@ -13,7 +11,7 @@ export class SendMessageDto implements B24ImSendMessage {
   })
   @IsNotEmpty()
   @IsString()
-  DIALOG_ID: string;
+  userId: string;
 
   @ApiProperty({
     type: String,
@@ -23,7 +21,7 @@ export class SendMessageDto implements B24ImSendMessage {
   })
   @IsNotEmpty()
   @IsString()
-  MESSAGE: string;
+  message: string;
 
   @ApiProperty({
     type: Boolean,
@@ -32,16 +30,22 @@ export class SendMessageDto implements B24ImSendMessage {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  SYSTEM: string = 'N';
+  @IsBoolean()
+  system: boolean = false;
+}
+
+export class B24SendMessageResponse implements B24ImSendMessageResponseOptions {
+  @ApiProperty({
+    type: Boolean,
+    description: 'Статус отправки сообщения',
+    example: true,
+  })
+  status: boolean;
 
   @ApiProperty({
-    type: ImbotMessageKeyboardOptionsDto,
-    description: 'Inline Buttons',
-    required: false,
+    type: Number,
+    description: 'ID отправленного сообщения',
+    example: 1234587676,
   })
-  @IsOptional()
-  @IsArray()
-  @Type(() => ImbotMessageKeyboardOptionsDto)
-  KEYBOARD: ImbotMessageKeyboardOptionsDto[] = [];
+  messageId: number;
 }

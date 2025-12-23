@@ -12,9 +12,15 @@ import { B24TaskResult } from '@/modules/bitrix/modules/task/interfaces/task-res
 import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitrix/modules/imbot/interfaces/imbot-handle.interface';
 import { B24ImKeyboardOptions } from '@/modules/bitrix/modules/im/interfaces/im.interface';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixTaskService {
+  private readonly logger = new WinstonLogger(
+    BitrixTaskService.name,
+    'bitrix:services'.split(':'),
+  );
+
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
@@ -94,7 +100,28 @@ export class BitrixTaskService {
       createdBy,
     } = task;
 
-    if (status !== '4') return;
+    this.logger.info(
+      {
+        message: 'check task',
+        task,
+      },
+      true,
+    );
+
+    if (status !== '4') {
+      this.logger.warn(
+        {
+          message: `task was not handled status: ${status}`,
+          task,
+        },
+        true,
+      );
+      return {
+        status: false,
+        message: `Task was in not handled status: ${status}`,
+        taskId: taskId,
+      };
+    }
 
     let message =
       'Задача: ' +
@@ -138,10 +165,27 @@ export class BitrixTaskService {
       },
     ];
 
-    return this.botService.sendMessage({
-      MESSAGE: message,
-      DIALOG_ID: createdBy,
-      KEYBOARD: keyboardItems,
-    });
+    const responseSendMessage = await this.botService
+      .sendMessage({
+        MESSAGE: message,
+        DIALOG_ID: createdBy,
+        KEYBOARD: keyboardItems,
+      })
+      .then((res) => res)
+      .catch((err) => err);
+
+    this.logger.debug(
+      `check response handled task: ${JSON.stringify(responseSendMessage)}`,
+    );
+
+    this.logger.info(
+      {
+        message: 'check response handled task',
+        response: responseSendMessage,
+      },
+      true,
+    );
+
+    return responseSendMessage;
   }
 }

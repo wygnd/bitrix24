@@ -22,7 +22,10 @@ import { B24Categories } from '@/modules/bitrix/bitrix.constants';
 
 @Injectable()
 export class BitrixPlacementService {
-  private readonly logger = new WinstonLogger(BitrixPlacementService.name);
+  private readonly logger = new WinstonLogger(
+    BitrixPlacementService.name,
+    'bitrix:services'.split(':'),
+  );
   constructor(
     private readonly configService: ConfigService,
     private readonly bitrixImbotService: BitrixImBotService,
@@ -30,22 +33,26 @@ export class BitrixPlacementService {
     private readonly bitrixDealService: BitrixDealService,
   ) {}
 
+  public async testReceiveRedirectUrl(query: any, params: any, body: any) {
+    this.bitrixImbotService.sendTestMessage(
+      `[b]Telphin handle redirect uri[/b][br]query: ${JSON.stringify(query)}[br]params: ${JSON.stringify(params)}[br]body: ${JSON.stringify(body)}`,
+    );
+    return '<h1>Успех</h1>';
+  }
+
   public async receiveOpenWidgetCRMDetailTab(
     response: Response,
     body: PlacementBodyRequestDto,
     query: PlacementQueryRequestDto,
   ) {
     try {
-      this.logger.info(`New open widget: ${JSON.stringify({ query, body })}`);
-      this.bitrixImbotService
-        .sendMessage({
-          DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
-          MESSAGE:
-            '[b]HR виджет[/b][br]Новое открытие виджета[br][br]' +
-            `Query: ${JSON.stringify(query)}[br]` +
-            `Body: ${JSON.stringify(body)}`,
-        })
-        .then();
+      this.logger.info(
+        {
+          message: 'New open widget',
+          data: { query, body },
+        },
+        true,
+      );
 
       const { ID }: B24PlacementOptionsPlacementOptionsParsed = JSON.parse(
         body.PLACEMENT_OPTIONS,
@@ -95,7 +102,7 @@ export class BitrixPlacementService {
 
       console.log(response);
       if (!response?.result) {
-        this.logger.error(`Error: ${JSON.stringify(response)}`);
+        this.logger.error(response);
         return [];
       }
 

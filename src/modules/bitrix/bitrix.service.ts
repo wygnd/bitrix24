@@ -28,6 +28,8 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import emojiStrip from 'emoji-strip';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+import { WinstonLogger } from '@/config/winston.logger';
+import { B24UserCurrent } from '@/modules/bitrix/modules/user/interfaces/user-current.interface';
 
 @Injectable()
 export class BitrixService {
@@ -38,6 +40,35 @@ export class BitrixService {
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
   private readonly bitrixConstants: BitrixConstants;
+  private readonly logger = new WinstonLogger(
+    BitrixService.name,
+    'bitrix:services'.split(':'),
+  );
+  private readonly avitoPhones = {
+    '79585789931': 'Евгений Потехин',
+    '79585789934': 'Иван Ильин',
+    '79311215746': 'Лия Чешкова',
+    '79311782698': 'Анна Резнова',
+    '79585789985': 'Злата Зимина',
+    '7931178213': 'Татьяна Галасимова',
+    '79585707396': 'Кирилл Николаев',
+    '79311079861': 'Светлана Соловьева',
+    '79311082112': 'Дмитрий Андреев',
+    '79311082208': 'Грампус',
+    '79311082662': 'Илья Камнев',
+    '79311082332': 'Анастасия Загоскина',
+    '79311082552': 'Игорь Лебедев',
+    '79311082772': 'Екатерина Кубарева',
+    '79311092502': 'Ксения Лысманова',
+    '79311093421': 'Ирина Наволоцкая',
+    '79311093487': 'Анна Павликова',
+    '79311215675': 'Полина Пешкова',
+    '79311215679': 'Анна Теленкова',
+    '79311215689': 'Иван Шевелёв',
+    '79311215697': 'Дмитрий Шихирин',
+    '79585707397': 'Дарья Романова',
+    '79311782564': 'Анастасия Заварина',
+  };
 
   constructor(
     private readonly configService: ConfigService,
@@ -365,6 +396,30 @@ export class BitrixService {
     return this.bitrixConstants.LEAD.observeManagerCallingChatId;
   }
 
+  get WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.finishCallToken;
+  }
+
+  get WEBHOOK_VOXIMPLANT_INIT_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.initCallToken;
+  }
+
+  get WEBHOOK_VOXIMPLANT_START_CALL_TOKEN() {
+    return this.bitrixConstants.WEBHOOK.voxImplant.startCallToken;
+  }
+
+  get UPSELL_CHAT_ID() {
+    return this.bitrixConstants.LEAD.upsellChatId;
+  }
+
+  get AVITO_PHONES() {
+    return this.avitoPhones;
+  }
+
+  public getAvitoName(phone: string): string | null {
+    return phone in this.avitoPhones ? this.avitoPhones[phone] : null;
+  }
+
   /**
    * Remove emoji from string
    *
@@ -412,5 +467,40 @@ export class BitrixService {
 
   public getRandomElement<T = any>(items: T[]) {
     return items[Math.floor(Math.random() * items.length)];
+  }
+
+  public async getUserIdByAuth(authId: string) {
+    try {
+      const { result } = await this.post<
+        object,
+        B24SuccessResponse<B24UserCurrent>
+      >(
+        '/rest/user.current',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${authId}`,
+          },
+        },
+      );
+      return result ?? null;
+    } catch (e) {
+      this.logger.error(e);
+      return null;
+    }
+  }
+
+  public generateLeadUrlHtml(leadId: string, label?: string) {
+    const url = `${this.bitrixDomain}/crm/lead/details/${leadId}/`;
+
+    if (label) return `<a href="${url}">${label}</a>`;
+
+    return `<a href="${url}">${url}</a>`;
+  }
+
+  public sortItemsByField<T = any>(items: T[], field: keyof T): T[] {
+    return items.sort((prev, next) => {
+      return prev[field] > next[field] ? 1 : next[field] > prev[field] ? -1 : 0;
+    });
   }
 }

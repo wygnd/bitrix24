@@ -40,18 +40,20 @@ export type B24AvailableMethods =
   | 'crm.timeline.comment.add'
   | 'crm.timeline.item.pin'
   | 'crm.activity.add'
-  | 'event.get';
+  | 'event.get'
+  | 'im.notify.personal.add'
+  | 'im.notify.system.add';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
 export interface B24ListParams<
   TFilter extends Record<string, any> = Record<string, any>,
   TOrder extends Record<string, B24ListOrder> = Record<string, B24ListOrder>,
-  TSelect extends Array<string> = Array<string>,
+  TSelect = keyof TFilter,
 > {
   filter?: TFilter;
   order?: TOrder;
-  select?: TSelect;
+  select?: TSelect[];
   start?: number;
 }
 
@@ -97,3 +99,10 @@ export interface B24AuthOptions {
 }
 
 export type B24ActionType = 'force' | 'cache';
+
+export enum B24DealCategories {
+  SITE = 'site',
+  ADVERT = 'advert',
+  SEO = 'seo',
+  UNKNOWN = 'unknown',
+}

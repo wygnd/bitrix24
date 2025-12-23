@@ -8,6 +8,13 @@ import {
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
+import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
+import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
+import {
+  B24WebhookVoxImplantCallInitTaskOptions,
+  B24WebhookVoxImplantCallStartOptions,
+} from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -19,6 +26,8 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   constructor(
     private readonly wikiService: WikiService,
     private readonly bitrixImBotService: BitrixImBotService,
+    private readonly bitrixLeadUpsellService: BitrixLeadUpsellService,
+    private readonly bitrixWebhookService: BitrixWebhookService,
   ) {
     super();
   }
@@ -32,9 +41,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
           JSON.stringify(data),
       )
       .catch(() => {});
-    this.logger.info(
-      `Добавлена задача [${name}][${id}] в очередь => ${JSON.stringify(data)}`,
-    );
+    this.logger.info({
+      message: `Добавлена задача [${name}][${id}] в очередь`,
+      data,
+    });
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,
@@ -48,6 +58,26 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         );
         break;
 
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_UPSELL_DEAL:
+        response.data = await this.bitrixLeadUpsellService.handleTaskUpsellDeal(
+          data as QueueLightAddTaskHandleUpsellDeal,
+        );
+        break;
+
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START:
+        response.data =
+          await this.bitrixWebhookService.handleVoxImplantCallStart(
+            data as B24WebhookVoxImplantCallStartOptions,
+          );
+        break;
+
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
+        response.data =
+          await this.bitrixWebhookService.handleVoxImplantCallInit(
+            data as B24WebhookVoxImplantCallInitTaskOptions,
+          );
+        break;
+
       default:
         this.logger.warn(`not handled yet: ${name}`);
         response.message = 'Not handled';
@@ -55,27 +85,49 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
     }
 
+    this.logger.info(
+      {
+        message: 'check result run task',
+        response,
+      },
+      true,
+    );
+
     return response;
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
-  onCompleted({ name, returnvalue, id }: Job) {
+  onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixImBotService.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(returnvalue),
+        JSON.stringify(response),
     );
     this.logger.info(
-      `Задача [${name}][${id}] выполнена => ${JSON.stringify(returnvalue)}`,
+      {
+        message: `Задача [${name}][${id}] выполнена`,
+        response,
+      },
+      true,
     );
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
-    this.bitrixImBotService.sendTestMessage(
-      `Ошибка выполнения задачи: ` + JSON.stringify(job),
-    );
+    const logMessage = 'Ошибка выполнения задачи';
 
-    this.logger.error(`Ошибка выполнения задачи => ${JSON.stringify(job)}`);
+    this.bitrixImBotService.sendTestMessage(
+      `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
+    );
+    this.logger.error({ message: logMessage, job }, true);
+    this.logger.debug(
+      {
+        message: logMessage,
+        id: job.id,
+        name: job.name,
+        reason: job.failedReason,
+      },
+      'error',
+    );
   }
 }

@@ -1,7 +1,6 @@
 import { B24AuthOptions } from '../../../interfaces/bitrix.interface';
 import { B24EventList } from '@/modules/bitrix/modules/events/interfaces/events.interface';
 
-
 export interface B24EventCommand {
   [key: number]: B24EventCommandOptions;
 }
@@ -53,6 +52,21 @@ export interface B24BotEventBody<T = any> {
   auth: B24AuthOptions;
 }
 
+export interface B24VoxImplantAuthOptions {
+  domain: string;
+  client_endpoint: string;
+  server_endpoint: string;
+  member_id: string;
+  application_token: string;
+}
+
+export interface B24EventBodyVoxImplant<T = any> extends Omit<
+  B24BotEventBody,
+  'auth'
+> {
+  auth: B24VoxImplantAuthOptions;
+}
+
 export interface B24EventBodyDataOnInstallApp {
   VERSION: number;
   ACTIVE: string;
@@ -60,7 +74,9 @@ export interface B24EventBodyDataOnInstallApp {
   LANGUAGE_ID: string;
 }
 
-export interface B24EventBodyOnInstallApp
-  extends Omit<B24BotEventBody<B24EventBodyDataOnInstallApp>, 'event'> {
+export interface B24EventBodyOnInstallApp extends Omit<
+  B24BotEventBody<B24EventBodyDataOnInstallApp>,
+  'event'
+> {
   event: 'ONAPPINSTALL';
 }

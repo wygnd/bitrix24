@@ -14,7 +14,7 @@ import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 import { AvitoFindDuplicateLeadsDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito.dto';
 import { AvitoChatInfo } from '@/modules/bitrix/modules/integration/avito/interfaces/avito.interface';
 import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
-import { B24User } from '@/modules/bitrix/modules/user/user.interface';
+import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
 import { B24Department } from '@/modules/bitrix/modules/department/department.interface';
 import {
   B24LeadActiveStages,
@@ -154,7 +154,8 @@ export class BitrixIntegrationAvitoService {
     } = fields;
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
-        ? await this.bitrixUserService.getMinWorkflowUser(users)
+        ? ((await this.bitrixUserService.getMinWorkflowUser(users)) ??
+          this.bitrixService.ZLATA_ZIMINA_BITRIX_ID)
         : this.bitrixService.ZLATA_ZIMINA_BITRIX_ID;
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));

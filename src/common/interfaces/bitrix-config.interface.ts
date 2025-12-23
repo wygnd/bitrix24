@@ -14,6 +14,7 @@ export interface BitrixConstants {
   HR: BitrixHRConstants;
   avito: BitrixAvitoConstants;
   LEAD: BitrixLEADConstants;
+  WEBHOOK: BitrixWebhookConstants;
 }
 
 export interface BitrixOptions {
@@ -45,4 +46,15 @@ export interface BitrixAddyPaymentOptions {
 
 export interface BitrixLEADConstants {
   observeManagerCallingChatId: string;
+  upsellChatId: string;
+}
+
+export interface BitrixWebhookConstants {
+  voxImplant: BitrixWebhookConstantsVoxImplantOptions;
+}
+
+export interface BitrixWebhookConstantsVoxImplantOptions {
+  finishCallToken: string;
+  initCallToken: string;
+  startCallToken: string;
 }

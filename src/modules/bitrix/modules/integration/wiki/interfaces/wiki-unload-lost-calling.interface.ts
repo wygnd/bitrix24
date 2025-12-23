@@ -6,5 +6,5 @@ export interface UnloadLostCallingItem {
 export interface UnloadLostCallingResponse {
   leadId: string;
   phone: string;
-  status: 'new' | 'exists' | 'not-created';
+  status: 'new' | 'exists' | 'not-created' | 'updated';
 }

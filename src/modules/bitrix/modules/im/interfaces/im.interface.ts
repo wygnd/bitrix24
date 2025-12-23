@@ -38,3 +38,8 @@ export interface B24ImUpdateMessage {
   URL_PREVIEW?: BoolString;
   KEYBOARD?: B24ImKeyboardOptions[];
 }
+
+export interface B24ImSendMessageResponseOptions {
+  status: boolean;
+  messageId: number;
+}

@@ -25,6 +25,7 @@ export class EventOnDto<T> {
   event_handler_id: number;
 
   @ApiProperty({
+    type: Object,
     required: true,
     description: 'Event data',
   })
