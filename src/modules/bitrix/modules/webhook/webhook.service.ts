@@ -688,12 +688,14 @@ export class BitrixWebhookService {
         callId: callId,
       };
 
-    this.logger.debug(`INIT CALL: ${phone}`, 'verbose');
+    const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
+
+    this.logger.debug(`INIT CALL: ${clientPhone}`, 'verbose');
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
         callId: callId,
-        phone: phone,
+        phone: clientPhone,
       },
       {
         delay: 200,
@@ -713,8 +715,7 @@ export class BitrixWebhookService {
   async handleVoxImplantCallInit(
     fields: B24WebhookVoxImplantCallInitTaskOptions,
   ) {
-    const { phone, callId } = fields;
-    const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
+    const { phone: clientPhone, callId } = fields;
 
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
