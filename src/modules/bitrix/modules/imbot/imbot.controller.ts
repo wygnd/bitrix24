@@ -23,10 +23,16 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { ImbotMessageAddDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-message-add.dto';
 import { BitrixBotCommandGuard } from '@/modules/bitrix/guards/bitrix-bot-command.guard';
 import { OnImCommandKeyboardDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags(B24ApiTags.IMBOT)
 @Controller('bot')
 export class BitrixBotController {
+  private readonly logger = new WinstonLogger(
+    BitrixBotController.name,
+    'bitrix:services:bot'.split(':'),
+  );
+
   constructor(private readonly bitrixBotService: BitrixImBotService) {}
 
   @ApiHeader({
@@ -121,6 +127,7 @@ export class BitrixBotController {
   @HttpCode(HttpStatus.OK)
   @Post('onimcommandadd')
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
+    this.logger.info(body);
     return this.bitrixBotService.handleOnImCommandAdd(body);
   }
 }

@@ -807,8 +807,6 @@ export class BitrixImBotService {
       },
     });
 
-    this.logger.debug(toChatId, 'debug');
-
     switch (toChatId) {
       // Чат: Отдел контекстной рекламы
       case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
@@ -906,7 +904,14 @@ export class BitrixImBotService {
       date: date ?? '',
     };
 
-    this.logger.debug({ batchCommands, data }, 'log');
+    this.logger.debug(
+      {
+        message: 'Check result',
+        batchCommands,
+        data,
+      },
+      'log',
+    );
 
     Promise.all([
       // this.bitrixService.callBatch(batchCommands),
