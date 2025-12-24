@@ -236,8 +236,12 @@ export class BitrixImBotService {
     if (event !== 'ONIMCOMMANDADD')
       throw new ForbiddenException('Invalid event');
 
-    const { MESSAGE, MESSAGE_ID, DIALOG_ID } = data.PARAMS;
-    const { ID: pushButtonUserId } = data.USER;
+    const {
+      MESSAGE,
+      MESSAGE_ID,
+      DIALOG_ID,
+      FROM_USER_ID: pushButtonUserId,
+    } = data.PARAMS;
     const [command, _] = MESSAGE.split(' ', 2);
     const commandParamsDecoded: unknown = JSON.parse(
       MESSAGE.replace(command, ''),
@@ -290,7 +294,9 @@ export class BitrixImBotService {
         // Иван Ильин, Анастасия Самыловская, Grampus
         // Выходим
         if (![27, 442, 460].includes(pushButtonUserId)) {
-          response = Promise.resolve(null);
+          response = Promise.resolve(
+            `Forbidden push button ${pushButtonUserId}`,
+          );
           status = false;
           break;
         }
@@ -305,7 +311,7 @@ export class BitrixImBotService {
 
       default:
         status = false;
-        response = Promise.resolve(null);
+        response = Promise.resolve('Not handled yet');
         break;
     }
 
