@@ -691,8 +691,6 @@ export class BitrixWebhookService {
 
     const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
 
-    this.logger.debug(`INIT CALL: ${clientPhone}`, 'log');
-
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
         callId: callId,
@@ -789,15 +787,13 @@ export class BitrixWebhookService {
     switch (true) {
       // Отдел продаж
       case /sale/gi.test(extensionGroupName):
-        const result = await this.handleVoxImplantCallInitForSaleManagers({
+        return this.handleVoxImplantCallInitForSaleManagers({
           phone: clientPhone,
           extension: extension,
           group: extensionGroup,
           calls: targetCalls,
           called_did: targetCalls[0].called_did,
         });
-        this.logger.debug(result);
-        return result;
 
       default:
         return false;
@@ -1009,8 +1005,6 @@ export class BitrixWebhookService {
    * @param fields
    */
   async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
-    this.logger.debug(`START CALL: ${fields.data.USER_ID}`, 'log');
-
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
       {
         callId: fields.data.CALL_ID,
@@ -1036,8 +1030,6 @@ export class BitrixWebhookService {
   ) {
     try {
       const { callId, userId } = fields;
-
-      this.logger.debug(`Check data in cache: ${callId}`, 'log');
 
       const callWasWritten = await this.redisService.get<string>(
         REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + callId,
@@ -1202,14 +1194,6 @@ export class BitrixWebhookService {
         }
       }
     }
-
-    this.logger.debug(
-      {
-        message: 'Check response',
-        response,
-      },
-      'warn',
-    );
 
     return {
       status: true,
