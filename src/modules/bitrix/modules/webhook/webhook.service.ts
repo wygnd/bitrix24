@@ -1058,7 +1058,7 @@ export class BitrixWebhookService {
       );
 
       if (!managerExtension) {
-        this.logger.debug(`Invalid get manager extension: ${userId}`, 'fatal');
+        // this.logger.debug(`Invalid get manager extension: ${userId}`, 'fatal');
         throw new BadRequestException(
           `Invalid find extension number by bitrix id`,
         );
@@ -1071,10 +1071,10 @@ export class BitrixWebhookService {
       );
 
       if (!managerExtensionInCallList) {
-        this.logger.debug(
-          `Invalid get manager extension in call list: ${managerExtension.name}`,
-          'fatal',
-        );
+        // this.logger.debug(
+        //   `Invalid get manager extension in call list: ${managerExtension.name}`,
+        //   'fatal',
+        // );
         throw new NotFoundException('Invalid find manager in current calls');
       }
 
@@ -1116,7 +1116,7 @@ export class BitrixWebhookService {
         );
 
       if (!callData) {
-        this.logger.debug('Invalid get call data', 'fatal');
+        // this.logger.debug('Invalid get call data', 'fatal');
         throw new BadRequestException(`Invalid get call data: ${calledDid}`);
       }
 
@@ -1125,19 +1125,19 @@ export class BitrixWebhookService {
         extensionGroup: { name: extensionGroupName },
       } = callData;
 
-      // fixme: Для теста
-      if (!/(79517354601|79211268209)/gi.test(clientPhone)) {
-        this.logger.debug(`is not tested: ${calledDid}`, 'warn');
-        return {
-          status: true,
-          message: 'In tested',
-        };
-      }
+      // // fixme: Для теста
+      // if (!/(79517354601|79211268209)/gi.test(clientPhone)) {
+      //   this.logger.debug(`is not tested: ${calledDid}`, 'warn');
+      //   return {
+      //     status: true,
+      //     message: 'In tested',
+      //   };
+      // }
 
-      this.logger.debug(
-        `check client phone: ${clientPhone} => ${userId}`,
-        'log',
-      );
+      // this.logger.debug(
+      //   `check client phone: ${clientPhone} => ${userId}`,
+      //   'log',
+      // );
 
       // Распределяем в зависимости от группы
       switch (true) {
