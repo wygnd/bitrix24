@@ -293,7 +293,7 @@ export class BitrixImBotService {
         // Если нажал на кнопку кто-то, кроме:
         // Иван Ильин, Анастасия Самыловская, Grampus
         // Выходим
-        if (![27, 442, 460].includes(pushButtonUserId)) {
+        if (!['27', '442', '460'].includes(pushButtonUserId)) {
           response = Promise.resolve(
             `Forbidden push button ${pushButtonUserId}`,
           );

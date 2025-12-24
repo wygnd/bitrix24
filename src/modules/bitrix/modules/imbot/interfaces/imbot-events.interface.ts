@@ -18,7 +18,7 @@ interface B24EventCommandOptions extends B24AuthOptions {
 }
 
 export interface B24EventParams {
-  FROM_USER_ID: number;
+  FROM_USER_ID: string;
   TO_CHAT_ID: number;
   MESSAGE: string;
   MESSAGE_TYPE: string;
@@ -30,7 +30,7 @@ export interface B24EventParams {
 }
 
 export interface B24EventUser {
-  ID: number;
+  ID: string;
   NAME: string;
   FIRST_NAME: string;
   LAST_NAME: string;
