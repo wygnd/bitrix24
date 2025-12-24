@@ -120,6 +120,8 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
 
+    this.logger.error({ message: logMessage, job }, true);
+
     if (
       ![
         QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_START,
@@ -135,11 +137,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         },
         'error',
       );
-    }
 
-    this.bitrixImBotService.sendTestMessage(
-      `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
-    );
-    this.logger.error({ message: logMessage, job }, true);
+      this.bitrixImBotService.sendTestMessage(
+        `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
+      );
+    }
   }
 }
