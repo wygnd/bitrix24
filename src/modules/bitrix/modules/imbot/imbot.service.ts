@@ -43,6 +43,8 @@ import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integrat
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 import { AvitoService } from '@/modules/avito/avito.service';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
+import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 
 @Injectable()
 export class BitrixImBotService {
@@ -779,12 +781,12 @@ export class BitrixImBotService {
     messageId: number,
     dialogId: string,
   ) {
-    const { message } = fields;
+    const { message, dialogId: toChatId } = fields;
     const messageDecoded = this.decodeText(message);
 
     this.logger.debug({ ...fields, messageId, dialogId }, 'log');
 
-    // Обновляем сообещние и отправляем новое о том, что платеж поступил
+    // Обновляем сообщение и отправляем новое о том, что платеж поступил
     this.bitrixService.callBatch({
       update_message: {
         method: 'imbot.message.update',
@@ -804,6 +806,114 @@ export class BitrixImBotService {
         },
       },
     });
+
+    this.logger.debug(toChatId, 'debug');
+
+    switch (toChatId) {
+      // Чат: Отдел контекстной рекламы
+      case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
+        return this.handleApprovePaymentAdvert();
+
+      // Остальные чаты
+      default:
+        return this.handleApprovePaymentDefault(fields);
+    }
+  }
+
+  /**
+   * Handle approve payment for advert department
+   *
+   * ---
+   *
+   * Обработка платежа для рекламы
+   * @private
+   */
+  private async handleApprovePaymentAdvert() {}
+
+  /**
+   * Default handle approve payment
+   *
+   * ---
+   *
+   * Стандартный обработчик команды платежа
+   * @private
+   */
+  private async handleApprovePaymentDefault(
+    fields: ImbotKeyboardPaymentsNoticeWaiting,
+  ) {
+    const messageDecoded = this.decodeText(fields.message);
+    const batchCommands: B24BatchCommands = {
+      get_user: {
+        method: 'user.get',
+        params: {
+          filter: {
+            ID: fields.userId,
+          },
+        },
+      },
+      get_user_department: {
+        method: 'department.get',
+        params: {
+          ID: `$result[get_user][0][UF_DEPARTMENT][0]`,
+        },
+      },
+    };
+
+    /**
+     * Виталий Баймурзаев - userName
+     * Ожидание; Продление хостинга; Продление домена - action
+     * Общая сумма: 6400 - price
+     * 6462 - contract
+     * АО "АГРОСКОН-ЖБИ" - organization
+     * Продление доменного имени на 1 год и Размещение сайта на хостинге на 1 год #id:11779# - direction
+     * 3525418065 - inn
+     * unknown
+     * date
+     */
+    const [
+      userName,
+      action,
+      price,
+      contract,
+      organization,
+      direction,
+      inn,
+      ,
+      date,
+    ] = messageDecoded.split(' | ');
+
+    this.logger.debug(messageDecoded.split(' | '), 'log');
+
+    batchCommands['send_message_head'] = {
+      method: 'imbot.message.add',
+      params: {
+        BOT_ID: this.botId,
+        DIALOG_ID: '$result[get_user_department][UF_HEAD]',
+        MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+      },
+    };
+
+    const data: WikiNotifyReceivePaymentOptions = {
+      action: 'gft_log_user_money',
+      money: price.replaceAll(/([\[\]\/b])/, ''),
+      deal_number: this.bitrixService.clearBBCode(contract),
+      bitrix_user_id: fields.userId,
+      user_name: this.bitrixService.clearBBCode(userName),
+      direction: direction ?? '',
+      INN: inn,
+      budget: fields.isBudget,
+      payment_type: organization,
+      date: date ?? '',
+    };
+
+    this.logger.debug({ batchCommands, data }, 'log');
+
+    Promise.all([
+      // this.bitrixService.callBatch(batchCommands),
+      // this.wikiService.notifyWikiAboutReceivePayment()
+    ]);
+
+    return true;
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {

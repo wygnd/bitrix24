@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   HttpCode,
@@ -26,7 +27,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 export class BitrixWikiController {
   private readonly logger = new WinstonLogger(
     BitrixWikiController.name,
-    'bitrix:integration:'.split(':'),
+    'bitrix:services:integration:wiki:'.split(':'),
   );
 
   constructor(private readonly bitrixWikiService: BitrixWikiService) {}
@@ -46,11 +47,19 @@ export class BitrixWikiController {
   async sendNoticePaymentWaiting(
     @Body() fields: B24WikiPaymentsNoticeWaitingDto,
   ) {
-    return this.bitrixWikiService.sendNoticeWaitingPayment(fields);
-    // this.logger.info(`New request: ${JSON.stringify(fields)}`);
-    // this.bitrixWikiService.sendNoticeWaitingPayment(fields).then((result) => {
-    //   this.logger.info(`Request response: ${JSON.stringify(result)}`);
-    // });
-    // return true;
+    const response =
+      await this.bitrixWikiService.sendNoticeWaitingPayment(fields);
+
+    if (!response) throw new BadRequestException('Invalid send message');
+
+    this.logger.info(
+      {
+        body: fields,
+        response,
+      },
+      true,
+    );
+
+    return response;
   }
 }

@@ -503,4 +503,8 @@ export class BitrixService {
       return prev[field] > next[field] ? 1 : next[field] > prev[field] ? -1 : 0;
     });
   }
+
+  public clearBBCode(str: string) {
+    return str.replaceAll(/\[.*?]/g, '');
+  }
 }

@@ -11,9 +11,17 @@ import {
   WikIUpdateLeadResponse,
 } from '@/modules/wiki/interfaces/wiki-update-lead.interface';
 import { WikiDeleteLead } from '@/modules/wiki/interfaces/wiki-delete-lead.interface';
+import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
+import { WinstonLogger } from '@/config/winston.logger';
+import qs from 'qs';
 
 @Injectable()
 export class WikiService {
+  private readonly logger = new WinstonLogger(
+    WikiService.name,
+    'wiki'.split(':'),
+  );
+
   constructor(
     private readonly wikiApiServiceNew: WikiApiServiceNew, // new-wiki
     private readonly wikiApiServiceOld: WikiApiServiceOld, // wiki.grampus-server
@@ -92,6 +100,22 @@ export class WikiService {
         deleted: 0,
         lead_id: 0,
       };
+    }
+  }
+
+  public async notifyWikiAboutReceivePayment(
+    data: WikiNotifyReceivePaymentOptions,
+  ) {
+    try {
+      const response = await this.wikiApiServiceOld.post(
+        '',
+        qs.stringify(data),
+      );
+      this.logger.info(response, true);
+      return true;
+    } catch (error) {
+      this.logger.error(error, true);
+      return false;
     }
   }
 }

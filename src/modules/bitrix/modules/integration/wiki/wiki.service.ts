@@ -6,7 +6,6 @@ import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
-import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
 import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
@@ -226,69 +225,60 @@ export class BitrixWikiService {
     lead_id,
     user_role,
   }: B24WikiPaymentsNoticeWaitingOptions) {
-    let leadId = lead_id;
-    let dealId = deal_id;
-    let deal: B24Deal | undefined;
-    const isBudget = /бюджет/gi.test(message);
+    try {
+      let leadId = lead_id;
+      let dealId = deal_id;
+      const isBudget = /бюджет/gi.test(message);
 
-    if (!deal_id && !leadId)
-      throw new BadRequestException('Invalid lead_id or deal_id');
+      if (!deal_id && !leadId)
+        throw new BadRequestException('Invalid lead and deal ids');
 
-    // Получаем информацию о сделке
-    if (!dealId) {
-      deal =
-        (
-          await this.bitrixDealService.getDeals({
-            filter: {
-              UF_CRM_1731418991: leadId,
-            },
-            select: ['ID'],
-            start: 1,
-          })
-        )[0] ?? undefined;
+      // Получаем информацию о сделке
+      if (!dealId) {
+        const { result: deals } = await this.bitrixDealService.getDeals({
+          filter: {
+            UF_CRM_1731418991: leadId, // Лид айди
+          },
+          select: ['ID'],
+          start: 0,
+        });
 
-      if (!deal)
-        throw new BadRequestException(`Invalid get deal by id: ${dealId}`);
+        if (!deals || deals.length == 0)
+          throw new BadRequestException(
+            `Invalid get deal by lead id: ${leadId}`,
+          );
 
-      dealId = deal.ID;
-    }
+        dealId = deals[0].ID;
+      }
 
-    const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
-      message: this.bitrixImbotService.encodeText(message),
-      dialogId: user_role,
-      organizationName: organizationName,
-      dealId: dealId,
-      isBudget: isBudget,
-      userId: userId,
-    };
+      const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
+        message: this.bitrixImbotService.encodeText(message),
+        // dialogId: user_role, // todo: uncomment after tests
+        dialogId: this.bitrixService.TEST_CHAT_ID,
+        organizationName: organizationName,
+        dealId: dealId,
+        isBudget: isBudget,
+        userId: userId,
+      };
 
-    return this.bitrixImbotService
-      .sendMessage({
+      const { result: messageId } = await this.bitrixImbotService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
         MESSAGE: '[b]TEST[/b][br][br]' + message,
         KEYBOARD: [
           {
             TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
-            COMMAND: 'paymentWasReceived',
+            COMMAND: 'approveReceivedPayment',
             COMMAND_PARAMS: JSON.stringify(keyboardParams),
             BLOCK: 'Y',
             BG_COLOR_TOKEN: isBudget ? 'secondary' : 'primary',
           },
         ],
-      })
-      .then((response) => {
-        this.logger.info(
-          {
-            message: '',
-            data: response,
-          },
-          true,
-        );
-
-        return response.result;
-      })
-      .catch((error) => {
-        this.logger.error(error, true);
       });
+
+      return { messageId: messageId ?? null };
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }
