@@ -705,15 +705,10 @@ export class BitrixWebhookService {
 
     this.logger.debug('init call handle', 'log');
 
-    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
-      {
-        callId: callId,
-        phone: clientPhone,
-      },
-      {
-        delay: 200,
-      },
-    );
+    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit({
+      callId: callId,
+      phone: clientPhone,
+    });
     return true;
   }
 
@@ -794,7 +789,7 @@ export class BitrixWebhookService {
         extensionGroup: extensionGroup,
         extensionCall: targetCalls[0],
       },
-      60, // 1 minute
+      180, // 3 minutes
     );
 
     // Распределяем логику по отделам
