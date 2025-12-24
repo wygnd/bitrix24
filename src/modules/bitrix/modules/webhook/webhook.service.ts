@@ -1057,7 +1057,7 @@ export class BitrixWebhookService {
       this.redisService.set<string>(
         REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
         callId,
-        60, // 1 minute
+        300, // 5 minutes
       );
 
       this.logger.info(
@@ -1069,7 +1069,7 @@ export class BitrixWebhookService {
       );
 
       // Удаляем из кеша информацию
-      await this.redisService.del(
+      this.redisService.del(
         REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
       );
 
@@ -1124,16 +1124,17 @@ export class BitrixWebhookService {
       // Если клиент звонит на авито номер
 
       if (leadIds.length === 0) {
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
+        // response = await this.bitrixLeadService.createLead({
+        //   ASSIGNED_BY_ID: userId,
+        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+        //   PHONE: [
+        //     {
+        //       VALUE: phone,
+        //       VALUE_TYPE: 'WORK',
+        //     },
+        //   ],
+        // });
+        response = 'mock create lead';
       } else {
         const leadInfo = await this.bitrixLeadService.getLeadById(
           leadIds[0].toString(),
@@ -1146,13 +1147,14 @@ export class BitrixWebhookService {
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
           case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            response = this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: userId,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              },
-            });
+            // response = this.bitrixLeadService.updateLead({
+            //   id: leadId,
+            //   fields: {
+            //     ASSIGNED_BY_ID: userId,
+            //     STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            //   },
+            // });
+            response = 'mock update lead';
             break;
         }
       }
@@ -1163,16 +1165,17 @@ export class BitrixWebhookService {
         // Если лида по номеру не найдено
 
         // Создаем лид
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
+        // response = await this.bitrixLeadService.createLead({
+        //   ASSIGNED_BY_ID: userId,
+        //   STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
+        //   PHONE: [
+        //     {
+        //       VALUE: phone,
+        //       VALUE_TYPE: 'WORK',
+        //     },
+        //   ],
+        // });
+        response = 'mock create lead';
       } else {
         const leadId = leadIds[0].toString();
         const lead = await this.bitrixLeadService.getLeadById(leadId);
@@ -1183,13 +1186,14 @@ export class BitrixWebhookService {
 
         switch (true) {
           case B24LeadRejectStages.includes(leadStatusId):
-            response = await this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                ASSIGNED_BY_ID: userId,
-              },
-            });
+            // response = await this.bitrixLeadService.updateLead({
+            //   id: leadId,
+            //   fields: {
+            //     STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            //     ASSIGNED_BY_ID: userId,
+            //   },
+            // });
+            response = 'mock update lead';
             break;
         }
       }
