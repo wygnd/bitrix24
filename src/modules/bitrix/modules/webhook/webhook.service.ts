@@ -822,6 +822,7 @@ export class BitrixWebhookService {
    * @param extensionPhone
    * @param calledDid
    * @param calls
+   * @param extensionGroupId
    */
   async handleVoxImplantCallInitForSaleManagers({
     phone: clientPhone,
@@ -831,19 +832,15 @@ export class BitrixWebhookService {
     },
     called_did: calledDid,
     calls,
+    group: { id: extensionGroupId },
   }: B24WebhookHandleCallInitForSaleManagersOptions) {
     // Ищем лид по номеру телефона
     // Получаем список внутренних номеров все sale отделов
     const [leadIds, saleExtensionList] = await Promise.all([
       this.bitrixLeadService.getDuplicateLeadsByPhone(clientPhone),
-      this.telphinService.getExtensionGroupExtensionListByGroupIds(
-        (
-          await this.telphinService.getFilteredExtensionsByGroupField(
-            'name',
-            'sale',
-          )
-        ).map((group) => group.id),
-      ),
+      this.telphinService.getExtensionGroupExtensionListByGroupIds([
+        extensionGroupId,
+      ]),
     ]);
 
     if (saleExtensionList.length === 0)
