@@ -157,7 +157,7 @@ export class BitrixImBotService {
    * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-unregister.html
    * @param fields
    */
-  async removeCommand(fields: ImbotUnregisterCommandDto) {
+  private async removeCommand(fields: ImbotUnregisterCommandDto) {
     return await this.bitrixService.callMethod<
       ImbotUnregisterCommandDto,
       boolean
@@ -194,7 +194,7 @@ export class BitrixImBotService {
    * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-register.html
    * @param fields
    */
-  async registerBot(fields: B24ImbotRegisterOptions) {
+  private async registerBot(fields: B24ImbotRegisterOptions) {
     return this.bitrixService.callMethod<B24ImbotRegisterOptions, number>(
       'imbot.register',
       fields,
@@ -206,7 +206,7 @@ export class BitrixImBotService {
    * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-unregister.html
    * @param fields
    */
-  async unregisterBot(fields: B24ImbotUnRegisterOptions) {
+  private async unregisterBot(fields: B24ImbotUnRegisterOptions) {
     return this.bitrixService.callMethod<B24ImbotUnRegisterOptions, boolean>(
       'imbot.unregister',
       fields,
@@ -747,26 +747,31 @@ export class BitrixImBotService {
   }
 
   /**
+   * Handle command **approveReceivedPayment**:
+   * update and send new message in G-pay chat
    *
-   * @param message
+   * @param fields
    * @param messageId
    * @param dialogId
    */
   public async handleApprovePayment(
-    { message }: ImbotKeyboardPaymentsNoticeWaiting,
+    fields: ImbotKeyboardPaymentsNoticeWaiting,
     messageId: number,
     dialogId: string,
   ) {
+    const { message } = fields;
     const messageDecoded = this.decodeText(message);
 
-    // Обновляем сообение и
+    this.logger.debug({ ...fields, messageId, dialogId }, 'log');
+
+    // Обновляем сообещние и отправляем новое о том, что платеж поступил
     this.bitrixService.callBatch({
       update_message: {
         method: 'imbot.message.update',
         params: {
           BOT_ID: this.botId,
           MESSAGE_ID: messageId,
-          MESSAGE: '',
+          MESSAGE: messageDecoded,
           KEYBOARD: '',
         },
       },
@@ -775,7 +780,7 @@ export class BitrixImBotService {
         params: {
           BOT_ID: this.botId,
           DIALOG_ID: dialogId,
-          MESSAGE: messageDecoded,
+          MESSAGE: messageDecoded + '[br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
         },
       },
     });
