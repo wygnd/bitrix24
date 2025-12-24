@@ -41,10 +41,14 @@ export class QueueBitrixLightProcessor extends WorkerHost {
           JSON.stringify(data),
       )
       .catch(() => {});
-    this.logger.info({
-      message: `Добавлена задача [${name}][${id}] в очередь`,
-      data,
-    });
+    this.logger.info(
+      {
+        message: `Добавлена задача [${name}][${id}] в очередь`,
+        data,
+      },
+      true,
+    );
+
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,

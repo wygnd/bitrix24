@@ -37,10 +37,14 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
-    this.logger.info({
-      message: `Добавлена задача [${name}][${id}] в очередь`,
-      data,
-    });
+    this.logger.info(
+      {
+        message: `Добавлена задача [${name}][${id}] в очередь`,
+        data,
+      },
+      true,
+    );
+
     const response: QueueProcessorResponse = {
       message: '',
       status: QueueProcessorStatus.OK,

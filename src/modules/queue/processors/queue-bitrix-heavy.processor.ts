@@ -35,49 +35,42 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       data: null,
     };
 
-    try {
-      const { name, data, id } = job;
-      this.bitrixImBotService.sendTestMessage(
-        `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
-      );
-      this.logger.info(`Добавлена задача [${name}][${id}] в очередь`);
+    const { name, data, id } = job;
+    this.bitrixImBotService.sendTestMessage(
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
+    );
+    this.logger.info(`Добавлена задача [${name}][${id}] в очередь`, true);
 
-      switch (name) {
-        case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
-          response.message = 'handle new webhook from hh.ru';
-          response.data =
-            await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
-              data as HeadhunterWebhookCallDto,
-            );
-          break;
+    switch (name) {
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
+        response.message = 'handle new webhook from hh.ru';
+        response.data =
+          await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
+            data as HeadhunterWebhookCallDto,
+          );
+        break;
 
-        case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
-          response.message = 'handle observe manager calling task';
-          response.data =
-            await this.bitrixLeadService.handleObserveManagerCalling(
-              data as LeadObserveManagerCallingDto,
-            );
-          break;
+      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
+        response.message = 'handle observe manager calling task';
+        response.data =
+          await this.bitrixLeadService.handleObserveManagerCalling(
+            data as LeadObserveManagerCallingDto,
+          );
+        break;
 
-        default:
-          this.logger.warn(`not handled yet: ${name}`);
-          response.message = 'Not handled';
-          response.status = QueueProcessorStatus.NOT_HANDLED;
-          break;
-      }
-
-      this.logger.info({
-        message: 'check result run task',
-        response,
-      });
-
-      return response;
-    } catch (e) {
-      this.logger.error(e);
-      response.message = e;
-      response.status = QueueProcessorStatus.INVALID;
-      return response;
+      default:
+        this.logger.warn(`not handled yet: ${name}`);
+        response.message = 'Not handled';
+        response.status = QueueProcessorStatus.NOT_HANDLED;
+        break;
     }
+
+    this.logger.info({
+      message: 'check result run task',
+      response,
+    });
+
+    return response;
   }
 
   /* ==================== EVENTS LISTENERS ==================== */
