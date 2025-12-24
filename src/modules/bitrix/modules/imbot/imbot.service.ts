@@ -50,7 +50,7 @@ import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-
 export class BitrixImBotService {
   private readonly logger = new WinstonLogger(
     BitrixImBotService.name,
-    'bitrix:services'.split(':'),
+    'bitrix:services:bot'.split(':'),
   );
   private readonly botId: string;
   private readonly distributeDealMessages: string[];
@@ -839,86 +839,91 @@ export class BitrixImBotService {
   private async handleApprovePaymentDefault(
     fields: ImbotKeyboardPaymentsNoticeWaiting,
   ) {
-    const messageDecoded = this.decodeText(fields.message);
-    const batchCommands: B24BatchCommands = {
-      get_user: {
-        method: 'user.get',
-        params: {
-          filter: {
-            ID: fields.userId,
+    try {
+      const messageDecoded = this.decodeText(fields.message);
+      const batchCommands: B24BatchCommands = {
+        get_user: {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: fields.userId,
+            },
           },
         },
-      },
-      get_user_department: {
-        method: 'department.get',
-        params: {
-          ID: `$result[get_user][0][UF_DEPARTMENT][0]`,
+        get_user_department: {
+          method: 'department.get',
+          params: {
+            ID: `$result[get_user][0][UF_DEPARTMENT][0]`,
+          },
         },
-      },
-    };
+      };
 
-    /**
-     * Виталий Баймурзаев - userName
-     * Ожидание; Продление хостинга; Продление домена - action
-     * Общая сумма: 6400 - price
-     * 6462 - contract
-     * АО "АГРОСКОН-ЖБИ" - organization
-     * Продление доменного имени на 1 год и Размещение сайта на хостинге на 1 год #id:11779# - direction
-     * 3525418065 - inn
-     * unknown
-     * date
-     */
-    const [
-      userName,
-      action,
-      price,
-      contract,
-      organization,
-      direction,
-      inn,
-      ,
-      date,
-    ] = messageDecoded.split(' | ');
+      /**
+       * Виталий Баймурзаев - userName
+       * Ожидание; Продление хостинга; Продление домена - action
+       * Общая сумма: 6400 - price
+       * 6462 - contract
+       * АО "АГРОСКОН-ЖБИ" - organization
+       * Продление доменного имени на 1 год и Размещение сайта на хостинге на 1 год #id:11779# - direction
+       * 3525418065 - inn
+       * unknown
+       * date
+       */
+      const [
+        userName,
+        action,
+        price,
+        contract,
+        organization,
+        direction,
+        inn,
+        ,
+        date,
+      ] = messageDecoded.split(' | ');
 
-    this.logger.debug(messageDecoded.split(' | '), 'log');
+      this.logger.debug(messageDecoded.split(' | '), 'log');
 
-    batchCommands['send_message_head'] = {
-      method: 'imbot.message.add',
-      params: {
-        BOT_ID: this.botId,
-        DIALOG_ID: '$result[get_user_department][UF_HEAD]',
-        MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
-      },
-    };
+      batchCommands['send_message_head'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.botId,
+          DIALOG_ID: '$result[get_user_department][UF_HEAD]',
+          MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+        },
+      };
 
-    const data: WikiNotifyReceivePaymentOptions = {
-      action: 'gft_log_user_money',
-      money: price.replaceAll(/([\[\]\/b])/, ''),
-      deal_number: this.bitrixService.clearBBCode(contract),
-      bitrix_user_id: fields.userId,
-      user_name: this.bitrixService.clearBBCode(userName),
-      direction: direction ?? '',
-      INN: inn,
-      budget: fields.isBudget,
-      payment_type: organization,
-      date: date ?? '',
-    };
+      const data: WikiNotifyReceivePaymentOptions = {
+        action: 'gft_log_user_money',
+        money: price.replaceAll(/([\[\]\/b])/, ''),
+        deal_number: this.bitrixService.clearBBCode(contract),
+        bitrix_user_id: fields.userId,
+        user_name: this.bitrixService.clearBBCode(userName),
+        direction: direction ?? '',
+        INN: inn,
+        budget: fields.isBudget,
+        payment_type: organization,
+        date: date ?? '',
+      };
 
-    this.logger.debug(
-      {
-        message: 'Check result',
-        batchCommands,
-        data,
-      },
-      'log',
-    );
+      this.logger.debug(
+        {
+          message: 'Check result',
+          batchCommands,
+          data,
+        },
+        'log',
+      );
 
-    Promise.all([
-      // this.bitrixService.callBatch(batchCommands),
-      // this.wikiService.notifyWikiAboutReceivePayment()
-    ]);
+      Promise.all([
+        // this.bitrixService.callBatch(batchCommands),
+        // this.wikiService.notifyWikiAboutReceivePayment()
+      ]);
 
-    return true;
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {
