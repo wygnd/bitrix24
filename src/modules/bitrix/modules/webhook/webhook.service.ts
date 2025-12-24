@@ -1081,7 +1081,9 @@ export class BitrixWebhookService {
         60, // 1 minute
       );
 
-      this.logger.debug('start call handle', 'log');
+      this.logger.debug(`start call handle: ${userId}`, 'log');
+
+      this.bitrixBotService.sendTestMessage(`start call handle: ${userId}`);
 
       this.logger.info(
         {
