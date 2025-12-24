@@ -65,10 +65,13 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.info({
-      message: 'check result run task',
-      response,
-    });
+    this.logger.info(
+      {
+        message: 'check result run task',
+        response,
+      },
+      true,
+    );
 
     return response;
   }
