@@ -1063,7 +1063,7 @@ export class BitrixWebhookService {
       if (!managerExtension) {
         this.logger.debug('Invalid get manager extension', 'fatal');
         throw new BadRequestException(
-          'Invalid find extension number by bitrix id',
+          `Invalid find extension number by bitrix id: ${userId}`,
         );
       }
 
@@ -1074,7 +1074,7 @@ export class BitrixWebhookService {
 
       if (!managerExtensionInCallList) {
         this.logger.debug(
-          'Invalid get manager extension in call list',
+          `Invalid get manager extension in call list: ${managerExtension.name}`,
           'fatal',
         );
         throw new NotFoundException('Invalid find manager in current calls');
