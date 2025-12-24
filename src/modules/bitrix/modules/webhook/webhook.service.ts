@@ -703,7 +703,7 @@ export class BitrixWebhookService {
       60, // 1 minute
     );
 
-    this.logger.debug(`init call handle: ${phone}`, 'log');
+    // this.logger.debug(`init call handle: ${phone}`, 'log');
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit({
       callId: callId,
@@ -1082,7 +1082,7 @@ export class BitrixWebhookService {
       const { called_did: calledDid } = managerExtensionInCallList;
 
       if (!calledDid) {
-        this.logger.debug(`Invalid get called_did: ${userId}`, 'fatal');
+        // this.logger.debug(`Invalid get called_did: ${userId}`, 'fatal');
         throw new BadRequestException('Invalid get called_did field');
       }
 
@@ -1091,7 +1091,7 @@ export class BitrixWebhookService {
       );
 
       if (callWasWritten) {
-        this.logger.debug(`Call was accepted: ${calledDid}`, 'error');
+        // this.logger.debug(`Call was accepted: ${calledDid}`, 'error');
         throw new ConflictException('Call was accepted');
       }
 
@@ -1262,7 +1262,7 @@ export class BitrixWebhookService {
       }
     }
 
-    this.logger.debug(response, 'log');
+    // this.logger.debug(response, 'log');
 
     return {
       status: true,
