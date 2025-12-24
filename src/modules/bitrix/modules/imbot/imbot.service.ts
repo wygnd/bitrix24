@@ -237,6 +237,7 @@ export class BitrixImBotService {
       throw new ForbiddenException('Invalid event');
 
     const { MESSAGE, MESSAGE_ID, DIALOG_ID } = data.PARAMS;
+    const { ID: pushButtonUserId } = data.USER;
     const [command, _] = MESSAGE.split(' ', 2);
     const commandParamsDecoded: unknown = JSON.parse(
       MESSAGE.replace(command, ''),
@@ -285,6 +286,15 @@ export class BitrixImBotService {
         break;
 
       case '/approveReceivedPayment':
+        // Если нажал на кнопку кто-то, кроме:
+        // Иван Ильин, Анастасия Самыловская, Grampus
+        // Выходим
+        if (![27, 442, 460].includes(pushButtonUserId)) {
+          response = Promise.resolve(null);
+          status = false;
+          break;
+        }
+
         response = this.handleApprovePayment(
           commandParamsDecoded as ImbotKeyboardPaymentsNoticeWaiting,
           MESSAGE_ID,
@@ -295,13 +305,17 @@ export class BitrixImBotService {
 
       default:
         status = false;
-        response = Promise.resolve('');
+        response = Promise.resolve(null);
         break;
     }
 
-    response.then((result) => {
-      this.logger.info({ message: 'Result handled button', result }, true);
-    });
+    response
+      .then((result) => {
+        this.logger.info({ message: 'Result handled button', result }, true);
+      })
+      .catch((error) => {
+        this.logger.error(error, true);
+      });
 
     return status;
   }
@@ -780,7 +794,7 @@ export class BitrixImBotService {
         params: {
           BOT_ID: this.botId,
           DIALOG_ID: dialogId,
-          MESSAGE: messageDecoded + '[br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
+          MESSAGE: messageDecoded + '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
         },
       },
     });
