@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   HttpException,
   HttpStatus,
   Post,
@@ -25,13 +24,5 @@ export class BitrixController {
     } catch (error) {
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
-  }
-
-  @Get('/bitrix/test')
-  async testHook() {
-    return this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: '376',
-      MESSAGE: `test ${new Date()}`,
-    });
   }
 }

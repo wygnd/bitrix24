@@ -723,7 +723,7 @@ export class BitrixWebhookService {
   async handleVoxImplantCallInit(
     fields: B24WebhookVoxImplantCallInitTaskOptions,
   ) {
-    const { phone: clientPhone, callId } = fields;
+    const { phone: clientPhone } = fields;
 
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
@@ -756,6 +756,8 @@ export class BitrixWebhookService {
     if (targetCalls.length === 0)
       throw new NotFoundException('Call in call list was not found');
 
+    const { called_did: calledDid } = targetCalls[0];
+
     // Получаем группу
     const [extensionGroup, extension] = await Promise.all([
       this.telphinService.getExtensionGroupById(
@@ -779,15 +781,15 @@ export class BitrixWebhookService {
 
     if (!extension) throw new NotFoundException('Extension was not found');
 
+    // Вытаскиваем имя группы
     const { name: extensionGroupName } = extensionGroup;
 
+    // Заносим в кеш информацию о номере клиента и группе внутреннего номера менеджера
     this.redisService.set<B24WebhookVoxImplantCallInitOptions>(
-      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + calledDid,
       {
-        callId: callId,
         clientPhone: clientPhone,
         extensionGroup: extensionGroup,
-        extensionCall: targetCalls[0],
       },
       180, // 3 minutes
     );
@@ -1040,40 +1042,75 @@ export class BitrixWebhookService {
     try {
       const { callId, userId } = fields;
 
-      this.logger.debug({ callId, userId }, 'log');
+      /**
+       * Получаем внутренний номер менеджера по bitrix_id
+       * Получаем список текущих звонков
+       */
+      const [managerExtension, currentCalls] = await Promise.all([
+        this.telphinService.getClientExtensionByBitrixUserId(userId),
+        this.telphinService.getCurrentCalls(),
+      ]);
 
-      const callData =
-        await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
-          REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
-        );
-
-      if (!callData)
-        throw new NotFoundException(`Call data was not found: ${userId}`);
-
-      const {
-        clientPhone,
-        extensionGroup: { name: extensionGroupName },
-        extensionCall: { called_did: calledDid },
-      } = callData;
-
-      if (!clientPhone)
-        throw new BadRequestException('Client phone is not defined');
-
-      const callWasWritten = await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
+      this.logger.info(
+        {
+          message: 'check manager extension by user_id and current call list',
+          manager: managerExtension,
+          calls: currentCalls,
+        },
+        true,
       );
 
-      if (callWasWritten) throw new ConflictException('Call was accepted');
+      if (!managerExtension) {
+        this.logger.debug('Invalid get manager extension', 'fatal');
+        throw new BadRequestException(
+          'Invalid find extension number by bitrix id',
+        );
+      }
+
+      // Ищем менеджера в текущих звонках
+      const managerExtensionInCallList = currentCalls.find(
+        ({ extension_id: extensionId }) => managerExtension.id === extensionId,
+      );
+
+      if (!managerExtensionInCallList) {
+        this.logger.debug(
+          'Invalid get manager extension in call list',
+          'fatal',
+        );
+        throw new NotFoundException('Invalid find manager in current calls');
+      }
+
+      // Забираем номер с которого звонит клиент
+      const { called_did: calledDid } = managerExtensionInCallList;
+
+      if (!calledDid) {
+        this.logger.debug('Invalid get called_did', 'fatal');
+        throw new BadRequestException('Invalid get called_did field');
+      }
+
+      // fixme: Для теста
+      if (!/792/gi.test(calledDid)) {
+        this.logger.debug(`is not tested: ${calledDid}`, 'warn');
+        return {
+          status: true,
+          message: 'In tested',
+        };
+      }
+
+      const callWasWritten = await this.redisService.get<string>(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + calledDid,
+      );
+
+      if (callWasWritten) {
+        this.logger.debug('Call was accepted', 'error');
+        throw new ConflictException('Call was accepted');
+      }
 
       this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + calledDid,
         callId,
         60, // 1 minute
       );
-
-      this.logger.debug(`start call handle: ${userId}`, 'log');
-
-      this.bitrixBotService.sendTestMessage(`start call handle: ${userId}`);
 
       this.logger.info(
         {
@@ -1083,6 +1120,28 @@ export class BitrixWebhookService {
         true,
       );
 
+      // Пытаемся получить из кеша информацию о номере клиента и группе внутреннего номера менеджера
+      const callData =
+        await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
+          REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + calledDid,
+        );
+
+      if (!callData) {
+        this.logger.debug('Invalid get call data', 'fatal');
+        throw new BadRequestException(`Invalid get call data: ${calledDid}`);
+      }
+
+      const {
+        clientPhone,
+        extensionGroup: { name: extensionGroupName },
+      } = callData;
+
+      this.logger.debug(
+        `check client phone: ${clientPhone} => ${userId}`,
+        'log',
+      );
+
+      // Распределяем в зависимости от группы
       switch (true) {
         case /sale/gi.test(extensionGroupName):
           return this.handleVoxImplantCallStartForSaleManagers({

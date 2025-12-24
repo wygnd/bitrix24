@@ -98,6 +98,14 @@ export class TelphinService {
     return extensions;
   }
 
+  /**
+   * Get extension by ID
+   *
+   * ---
+   *
+   * Получить информацию о внутреннем номере по ID
+   * @param extensionId
+   */
   public async getClientExtensionById(extensionId: number) {
     const extensionFromCache =
       await this.redisService.get<TelphinExtensionItem>(
@@ -128,11 +136,9 @@ export class TelphinService {
    *
    * Получить внутренний номер по ID пользователя из битрикс24
    *
-   * @param clientId
    * @param bitrixUserId
    */
   public async getClientExtensionByBitrixUserId(
-    clientId: number,
     bitrixUserId: string,
   ): Promise<TelphinExtensionItem | null> {
     const extensionFromCache =
