@@ -1071,7 +1071,7 @@ export class BitrixWebhookService {
       this.redisService.set<string>(
         REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
         callId,
-        300, // 5 minutes
+        60, // 1 minute
       );
 
       this.logger.debug('start call handle', 'log');
