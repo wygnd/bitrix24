@@ -1069,7 +1069,8 @@ export class BitrixWebhookService {
 
       // Ищем менеджера в текущих звонках
       const managerExtensionInCallList = currentCalls.find(
-        ({ extension_id: extensionId }) => managerExtension.id === extensionId,
+        ({ call_flow, extension_id: extensionId }) =>
+          managerExtension.id === extensionId && call_flow == 'IN',
       );
 
       if (!managerExtensionInCallList) {
@@ -1088,21 +1089,12 @@ export class BitrixWebhookService {
         throw new BadRequestException('Invalid get called_did field');
       }
 
-      // fixme: Для теста
-      if (!/79517354601/gi.test(calledDid)) {
-        this.logger.debug(`is not tested: ${calledDid}`, 'warn');
-        return {
-          status: true,
-          message: 'In tested',
-        };
-      }
-
       const callWasWritten = await this.redisService.get<string>(
         REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + calledDid,
       );
 
       if (callWasWritten) {
-        this.logger.debug('Call was accepted', 'error');
+        this.logger.debug(`Call was accepted: ${calledDid}`, 'error');
         throw new ConflictException('Call was accepted');
       }
 
@@ -1135,6 +1127,15 @@ export class BitrixWebhookService {
         clientPhone,
         extensionGroup: { name: extensionGroupName },
       } = callData;
+
+      // fixme: Для теста
+      if (!/79517354601/gi.test(clientPhone)) {
+        this.logger.debug(`is not tested: ${calledDid}`, 'warn');
+        return {
+          status: true,
+          message: 'In tested',
+        };
+      }
 
       this.logger.debug(
         `check client phone: ${clientPhone} => ${userId}`,
