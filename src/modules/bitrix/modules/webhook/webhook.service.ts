@@ -933,6 +933,8 @@ export class BitrixWebhookService {
         true,
       );
 
+      this.logger.debug(callAvitoCommands, 'log');
+
       this.bitrixService.callBatch(callAvitoCommands);
     } else {
       // Если клиент звонит напрямую
@@ -999,6 +1001,8 @@ export class BitrixWebhookService {
         },
         true,
       );
+
+      this.logger.debug(callManagerCommands, 'log');
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
@@ -1214,6 +1218,8 @@ export class BitrixWebhookService {
         }
       }
     }
+
+    this.logger.debug(response, 'log');
 
     return {
       status: true,
