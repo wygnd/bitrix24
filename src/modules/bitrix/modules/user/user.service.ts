@@ -19,14 +19,21 @@ export class BitrixUserService {
   constructor(private readonly bitrixService: BitrixService) {}
 
   async getUserById(userId: string) {
-    return await this.bitrixService.callMethod<
-      B24ListParams<Partial<B24User>>,
-      B24User
-    >('user.get', {
-      filter: {
-        ID: userId,
-      },
-    });
+    try {
+      const { result } = await this.bitrixService.callMethod<
+        B24ListParams<Partial<B24User>>,
+        B24User
+      >('user.get', {
+        filter: {
+          ID: userId,
+        },
+      });
+
+      return result ?? null;
+    } catch (error) {
+      this.logger.error(error, true);
+      return null;
+    }
   }
 
   async getUsers(params: B24UserListParams) {
@@ -47,8 +54,6 @@ export class BitrixUserService {
    */
   public async getMinWorkflowUser(users: string[] = []) {
     const minWorkflowUsers = await this.getMinWorkflowUsersSorted(users);
-
-    this.logger.debug(minWorkflowUsers);
 
     return minWorkflowUsers.length === 0 ? null : minWorkflowUsers[0].user_id;
   }
