@@ -703,7 +703,7 @@ export class BitrixWebhookService {
       60, // 1 minute
     );
 
-    this.logger.debug('init call handle', 'log');
+    this.logger.debug(`init call handle: ${phone}`, 'log');
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit({
       callId: callId,
