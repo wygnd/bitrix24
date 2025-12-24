@@ -230,7 +230,7 @@ export class BitrixImBotService {
    * @param body
    */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
-    this.logger.info(`New command handler: ${JSON.stringify(body)}`);
+    this.logger.info({ message: `New command handler`, body }, true);
     const { event, data } = body;
 
     if (event !== 'ONIMCOMMANDADD')
@@ -300,7 +300,7 @@ export class BitrixImBotService {
     }
 
     response.then((result) => {
-      this.logger.info(`Result handled button: ${JSON.stringify(result)}`);
+      this.logger.info({ message: 'Result handled button', result }, true);
     });
 
     return status;
@@ -718,18 +718,27 @@ export class BitrixImBotService {
     });
 
     if (!approved) {
-      this.avitoService.rejectDistributeLeadByAi(phone).then(response => {
-        this.logger.info({
-          message: 'Check respose from avito on reject distributed ai lead',
-          data: response
+      this.avitoService
+        .rejectDistributeLeadByAi(phone)
+        .then((response) => {
+          this.logger.info(
+            {
+              message: 'Check respose from avito on reject distributed ai lead',
+              data: response,
+            },
+            true,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            {
+              message:
+                'Error on send reject distribute lead by AI to avito service',
+              error: err,
+            },
+            true,
+          );
         });
-      }).catch((err) => {
-        this.logger.error({
-          message:
-            'Error on send reject distribute lead by AI to avito service',
-          error: err,
-        });
-      });
       return false;
     }
 

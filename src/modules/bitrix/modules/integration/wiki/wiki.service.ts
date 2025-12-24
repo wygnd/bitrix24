@@ -37,9 +37,9 @@ export class BitrixWikiService {
    * @param needCreate
    */
   public async unloadLostCalling({
-                                   fields,
-                                   needCreate = 0,
-                                 }: UnloadLostCallingDto) {
+    fields,
+    needCreate = 0,
+  }: UnloadLostCallingDto) {
     const uniquePhones = new Map<string, string>();
 
     // Оставляем уникальные номера
@@ -219,13 +219,13 @@ export class BitrixWikiService {
    * @param user_role
    */
   public async sendNoticeWaitingPayment({
-                                          user_bitrix_id: userId,
-                                          name_of_org: organizationName,
-                                          message,
-                                          deal_id,
-                                          lead_id,
-                                          user_role,
-                                        }: B24WikiPaymentsNoticeWaitingOptions) {
+    user_bitrix_id: userId,
+    name_of_org: organizationName,
+    message,
+    deal_id,
+    lead_id,
+    user_role,
+  }: B24WikiPaymentsNoticeWaitingOptions) {
     let leadId = lead_id;
     let dealId = deal_id;
     let deal: B24Deal | undefined;
@@ -278,10 +278,10 @@ export class BitrixWikiService {
       })
       .then((response) => {
         this.logger.info(
-          JSON.stringify({
+          {
             message: '',
             data: response,
-          }),
+          },
           true,
         );
 
