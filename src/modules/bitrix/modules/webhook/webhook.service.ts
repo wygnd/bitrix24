@@ -691,6 +691,20 @@ export class BitrixWebhookService {
 
     const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
 
+    const wasHandled = await this.redisService.get<string>(
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + phone,
+    );
+
+    if (wasHandled) throw new ConflictException('call was handled');
+
+    this.redisService.set<string>(
+      REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + phone,
+      phone,
+      60, // 1 minute
+    );
+
+    this.logger.debug('init call handle', 'log');
+
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
         callId: callId,
@@ -780,7 +794,7 @@ export class BitrixWebhookService {
         extensionGroup: extensionGroup,
         extensionCall: targetCalls[0],
       },
-      180, // 3 minutes
+      60, // 1 minute
     );
 
     // Распределяем логику по отделам
@@ -1059,6 +1073,8 @@ export class BitrixWebhookService {
         callId,
         300, // 5 minutes
       );
+
+      this.logger.debug('start call handle', 'log');
 
       this.logger.info(
         {
