@@ -1089,7 +1089,7 @@ export class BitrixWebhookService {
       }
 
       // fixme: Для теста
-      if (!/792/gi.test(calledDid)) {
+      if (!/79517354601/gi.test(calledDid)) {
         this.logger.debug(`is not tested: ${calledDid}`, 'warn');
         return {
           status: true,
