@@ -74,7 +74,7 @@ export class BitrixPlacementService {
       response.redirect(301, redirectUrl);
       return true;
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e, true);
       return false;
     }
   }
@@ -100,15 +100,14 @@ export class BitrixPlacementService {
         B24PlacementOptions[]
       >('placement.get');
 
-      console.log(response);
       if (!response?.result) {
-        this.logger.error(response);
+        this.logger.error(response, true);
         return [];
       }
 
       return response.result;
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error(e, true);
       return [];
     }
   }

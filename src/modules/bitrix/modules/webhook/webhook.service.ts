@@ -958,6 +958,13 @@ export class BitrixWebhookService {
           case B24LeadRejectStages.includes(leadStatusId):
             notifyManagerMessage =
               'Клиент в неактивной стадии Бери в работу себе';
+            this.bitrixLeadService.updateLead({
+              id: leadId,
+              fields: {
+                ASSIGNED_BY_ID: extensionExtraParamsDecoded.comment,
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+              },
+            });
             break;
 
           default:
