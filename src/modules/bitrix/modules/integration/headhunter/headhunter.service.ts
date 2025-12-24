@@ -245,7 +245,7 @@ export class BitrixHeadHunterService {
           message: 'Event was received when state change',
         };
 
-      let responseType = `${B24Emoji.HR.HEADHUNTER.RESPONSE}[b]Отклик[/b]`; // Начало сообщения
+      let responseType = `[b]Отклик[/b]`; // Начало сообщения
       let bitrixSearchTypeField = '6600'; // Тип поиска: Отклик на HH
 
       if (negotiation) {
