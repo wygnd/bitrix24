@@ -1068,14 +1068,6 @@ export class BitrixWebhookService {
       if (!clientPhone)
         throw new BadRequestException('Client phone is not defined');
 
-      // fixme: remove after tests
-      if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
-        return {
-          status: false,
-          message: 'In tested',
-        };
-      }
-
       this.logger.info(
         {
           message: 'Check handle start call',
