@@ -857,6 +857,14 @@ export class BitrixWebhookService {
       true,
     );
 
+    this.logger.debug(
+      {
+        calledDid,
+        clientPhone,
+      },
+      'log',
+    );
+
     if (
       calls.length > 1 &&
       calledDid &&
@@ -898,7 +906,7 @@ export class BitrixWebhookService {
             notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито [${avitoName}]. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
             break;
 
-          case B24LeadActiveStages.includes(leadStatusId): // Лид в активной стадии
+          default:
             notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито [${avitoName}] повторно. Скажи, что передашь его обращение ответственному менеджеру`;
             break;
         }
@@ -1005,7 +1013,7 @@ export class BitrixWebhookService {
 
     return {
       status: true,
-      message: 'call for sale manager was handled successfully',
+      message: 'successfully handle call init for sale managers',
     };
   }
 
@@ -1081,11 +1089,6 @@ export class BitrixWebhookService {
           fields,
         },
         true,
-      );
-
-      // Удаляем из кеша информацию
-      this.redisService.del(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
       );
 
       switch (true) {
