@@ -1031,18 +1031,6 @@ export class BitrixWebhookService {
     try {
       const { callId, userId } = fields;
 
-      const callWasWritten = await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + callId,
-      );
-
-      if (callWasWritten) throw new ConflictException('Call was accepted');
-
-      this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + callId,
-        callId,
-        60, // 1 minute
-      );
-
       const callData =
         await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
           REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
@@ -1059,6 +1047,18 @@ export class BitrixWebhookService {
 
       if (!clientPhone)
         throw new BadRequestException('Client phone is not defined');
+
+      const callWasWritten = await this.redisService.get<string>(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
+      );
+
+      if (callWasWritten) throw new ConflictException('Call was accepted');
+
+      this.redisService.set<string>(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + clientPhone,
+        callId,
+        60, // 1 minute
+      );
 
       this.logger.info(
         {
