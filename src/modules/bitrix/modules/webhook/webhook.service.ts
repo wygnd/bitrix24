@@ -2,6 +2,7 @@ import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -690,7 +691,7 @@ export class BitrixWebhookService {
 
     const clientPhone = /\+/gi.test(phone) ? phone : `+${phone}`;
 
-    this.logger.debug(`INIT CALL: ${clientPhone}`, 'verbose');
+    this.logger.debug(`INIT CALL: ${clientPhone}`, 'log');
 
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit(
       {
@@ -781,7 +782,7 @@ export class BitrixWebhookService {
         extensionGroup: extensionGroup,
         extensionCall: targetCalls[0],
       },
-      300, // 5 minutes
+      180, // 3 minutes
     );
 
     // Распределяем логику по отделам
@@ -1001,7 +1002,8 @@ export class BitrixWebhookService {
    * @param fields
    */
   async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
-    this.logger.debug(`START CALL: ${fields.data.USER_ID}`, 'verbose');
+    this.logger.debug(`START CALL: ${fields.data.USER_ID}`, 'log');
+
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
       {
         callId: fields.data.CALL_ID,
@@ -1028,12 +1030,27 @@ export class BitrixWebhookService {
     try {
       const { callId, userId } = fields;
 
+      this.logger.debug(`Check data in cache: ${callId}`, 'log');
+
+      const callWasWritten = await this.redisService.get<string>(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + callId,
+      );
+
+      if (callWasWritten) throw new ConflictException('Call was accepted');
+
+      this.redisService.set<string>(
+        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + callId,
+        callId,
+        60, // 1 minute
+      );
+
       const callData =
         await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
           REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + callId,
         );
 
-      if (!callData) throw new NotFoundException('Call data was not found');
+      if (!callData)
+        throw new NotFoundException(`Call data was not found: ${userId}`);
 
       const {
         clientPhone,
