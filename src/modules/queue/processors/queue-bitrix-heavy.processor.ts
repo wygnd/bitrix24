@@ -83,10 +83,13 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
-    this.logger.info({
-      message: `Задача [${name}][${id}] выполнена`,
-      response,
-    });
+    this.logger.info(
+      {
+        message: `Задача [${name}][${id}] выполнена`,
+        response,
+      },
+      true,
+    );
   }
 
   @OnWorkerEvent('closed')
@@ -96,7 +99,11 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
     this.bitrixImBotService.sendTestMessage(message);
     this.logger.info(
-      `Закрытие задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
+      {
+        message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
+        job,
+      },
+      true,
     );
   }
 
