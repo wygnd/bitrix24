@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
@@ -10,10 +10,11 @@ import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.interface';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class HeadHunterService {
-  private readonly logger = new Logger(HeadHunterService.name);
+  private readonly logger = new WinstonLogger(HeadHunterService.name);
   private readonly client_id: string;
   private readonly client_secret: string;
   private readonly redirect_uri: string;
@@ -71,6 +72,7 @@ export class HeadHunterService {
         });
     });
 
+    this.logger.debug(`CHeck client id: ${clientId}`, 'verbose');
     this.client_id = clientId;
     this.client_secret = clientSecret;
     this.redirect_uri = redirectUri;
@@ -121,8 +123,8 @@ export class HeadHunterService {
         'Необходимо обновить авторизацию на hh.ru: [br]' +
         'https://hh.ru/oauth/authorize?' +
         'response_type=code&' +
-        `client_id=${this.client_id}` +
-        `&redirect_uri=${this.redirect_uri}[br][br]Строго от аккаунта hh.ru Екатерины Туркатовой`,
+        `client_id=${this.client_id}&` +
+        `redirect_uri=${this.redirect_uri}[br][br]Строго от аккаунта hh.ru Екатерины Туркатовой`,
       SYSTEM: 'Y',
     });
 
