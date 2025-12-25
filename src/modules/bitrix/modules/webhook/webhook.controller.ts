@@ -18,7 +18,6 @@ import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webh
 import {
   BitrixVoxImplantFinishCallEventGuard,
   BitrixVoxImplantInitCallEventGuard,
-  BitrixVoxImplantStartCallEventGuard,
 } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
@@ -136,7 +135,7 @@ export class BitrixWebhookController {
       true,
     );
     this.logger.debug(
-      `call finish: ${body.data.PHONE_NUMBER} => ${body.data.PORTAL_NUMBER} : ${body.data.PORTAL_USER_ID} =  = ${body.data.CALL_ID}`,
+      `${body.data.CALL_TYPE} call finish: ${body.data.PHONE_NUMBER} => ${body.data.PORTAL_NUMBER} : ${body.data.PORTAL_USER_ID} =  = ${body.data.CALL_ID}`,
       'log',
     );
     return this.bitrixWebhookService.handleVoxImplantCallEnd(body);
