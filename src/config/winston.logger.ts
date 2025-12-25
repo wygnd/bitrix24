@@ -2,7 +2,6 @@ import { Injectable, Logger, LogLevel } from '@nestjs/common';
 import winston from 'winston';
 import { join } from 'path';
 import 'winston-daily-rotate-file';
-import dayjs from 'dayjs';
 import safeJsonStringify from 'safe-json-stringify';
 
 @Injectable()
@@ -19,9 +18,7 @@ export class WinstonLogger {
         filename: `${name}-%DATE%.log`,
         dirname: join(loggerDir, ...filePath, name),
         format: winston.format.combine(
-          winston.format.timestamp({
-            format: dayjs().locale('ru').format('YYYY-MM-DD HH:mm:ss'),
-          }),
+          winston.format.timestamp(),
           winston.format.errors({ stack: true }),
           winston.format.printf(
             ({ timestamp, level, message }) =>

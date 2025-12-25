@@ -28,7 +28,7 @@ import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/
 export class BitrixWebhookController {
   private readonly logger = new WinstonLogger(
     BitrixWebhookController.name,
-    'bitrix:telephony'.split(':'),
+    'bitrix:services:webhook'.split(':'),
   );
 
   constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}
@@ -56,6 +56,14 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForDealDto,
   ) {
+    this.logger.info(
+      {
+        message: 'approve site for advert',
+        body,
+        query,
+      },
+      true,
+    );
     this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForAdvert(
       query,
       body.document_id[2],
@@ -76,6 +84,14 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForCase,
   ) {
+    this.logger.info(
+      {
+        message: 'approve site for case',
+        body,
+        query,
+      },
+      true,
+    );
     this.bitrixWebhookService.handleIncomingWebhookToApproveSiteForCase(
       query,
       body.document_id[2],
@@ -90,6 +106,13 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
+    this.logger.info(
+      {
+        message: 'init call',
+        body,
+      },
+      true,
+    );
     return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
   }
 
@@ -100,6 +123,13 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantStartCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallStartDto,
   ) {
+    this.logger.info(
+      {
+        message: 'start call',
+        body,
+      },
+      true,
+    );
     return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
   }
 }

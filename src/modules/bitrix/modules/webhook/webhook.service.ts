@@ -68,7 +68,7 @@ export class BitrixWebhookService {
   private lastSelectedDepartmentId: string = '';
   private readonly logger = new WinstonLogger(
     BitrixWebhookService.name,
-    'bitrix:telephony'.split(':'),
+    'bitrix:services:webhook'.split(':'),
   );
 
   constructor(
@@ -731,6 +731,7 @@ export class BitrixWebhookService {
     this.logger.info(
       {
         message: 'check current calls',
+        phone: clientPhone,
         currentCalls,
       },
       true,
@@ -1051,6 +1052,7 @@ export class BitrixWebhookService {
       this.logger.info(
         {
           message: 'check manager extension by user_id and current call list',
+          userId: userId,
           manager: managerExtension,
           calls: currentCalls,
         },
@@ -1071,10 +1073,10 @@ export class BitrixWebhookService {
       );
 
       if (!managerExtensionInCallList) {
-        // this.logger.debug(
-        //   `Invalid get manager extension in call list: ${managerExtension.name}`,
-        //   'fatal',
-        // );
+        this.logger.error(
+          `Invalid get manager extension in call list: ${managerExtension.name}`,
+          true,
+        );
         throw new NotFoundException('Invalid find manager in current calls');
       }
 
@@ -1082,7 +1084,7 @@ export class BitrixWebhookService {
       const { called_did: calledDid } = managerExtensionInCallList;
 
       if (!calledDid) {
-        // this.logger.debug(`Invalid get called_did: ${userId}`, 'fatal');
+        this.logger.error(`Invalid get called_did: ${userId}`, true);
         throw new BadRequestException('Invalid get called_did field');
       }
 
@@ -1091,7 +1093,7 @@ export class BitrixWebhookService {
       );
 
       if (callWasWritten) {
-        // this.logger.debug(`Call was accepted: ${calledDid}`, 'error');
+        this.logger.error(`Call was accepted: ${calledDid}`, true);
         throw new ConflictException('Call was accepted');
       }
 
@@ -1134,10 +1136,11 @@ export class BitrixWebhookService {
       //   };
       // }
 
-      // this.logger.debug(
-      //   `check client phone: ${clientPhone} => ${userId}`,
-      //   'log',
-      // );
+      this.logger.info({
+        message: `check client phone`,
+        userId: userId,
+        phone: clientPhone,
+      });
 
       // Распределяем в зависимости от группы
       switch (true) {
