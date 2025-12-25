@@ -52,12 +52,11 @@ import {
   B24WebhookHandleCallStartForSaleManagersOptions,
   B24WebhookVoxImplantCallInitOptions,
   B24WebhookVoxImplantCallInitTaskOptions,
-  B24WebhookVoxImplantCallStartOptions,
 } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
-import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -886,12 +885,11 @@ export class BitrixWebhookService {
 
         switch (true) {
           case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-            notifyMessageAboutAvitoCall = 'Новый лид. Бери в работу!';
+            notifyMessageAboutAvitoCall = `Новый лид с Авито [${avitoName}]. Бери в работу!`;
             break;
 
           case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
-            notifyMessageAboutAvitoCall =
-              'Клиент в неактивной стадии. Бери в работу себе';
+            notifyMessageAboutAvitoCall = `Клиент с авито [${avitoName}] в неактивной стадии. Бери в работу себе`;
             break;
 
           case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
@@ -1006,27 +1004,6 @@ export class BitrixWebhookService {
   }
 
   /**
-   * Handle call start from bitrix24 webhook. Add in tasks queue
-   *
-   * ---
-   *
-   * Обработка начала звонка из битркис24. Добавляет в очередь задач
-   * @param fields
-   */
-  async handleVoxImplantCallStartTask(fields: B24EventVoxImplantCallStartDto) {
-    this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallStart(
-      {
-        callId: fields.data.CALL_ID,
-        userId: fields.data.USER_ID,
-      },
-      {
-        delay: 500,
-      },
-    );
-    return true;
-  }
-
-  /**
    * Handle call start tasks from queue and distribute handle on departments
    *
    * ---
@@ -1034,98 +1011,53 @@ export class BitrixWebhookService {
    * Обрабатывает начало звонка из очереди задач и распределяет по отделам
    * @param fields
    */
-  async handleVoxImplantCallStart(
-    fields: B24WebhookVoxImplantCallStartOptions,
-  ) {
+  async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
     try {
-      const { callId, userId } = fields;
+      const {
+        PHONE_NUMBER: clientPhone,
+        PORTAL_USER_ID: userId,
+        PORTAL_NUMBER: calledDid,
+      } = fields.data;
 
       /**
        * Получаем внутренний номер менеджера по bitrix_id
-       * Получаем список текущих звонков
        */
-      const [managerExtension, currentCalls] = await Promise.all([
-        this.telphinService.getClientExtensionByBitrixUserId(userId),
-        this.telphinService.getCurrentCalls(),
-      ]);
+      const managerExtension =
+        await this.telphinService.getClientExtensionByBitrixUserId(userId);
 
       this.logger.info(
         {
           message: 'check manager extension by user_id and current call list',
           userId: userId,
           manager: managerExtension,
-          calls: currentCalls,
         },
         true,
       );
 
       if (!managerExtension) {
-        // this.logger.debug(`Invalid get manager extension: ${userId}`, 'fatal');
+        this.logger.error({
+          message: 'Invalid get manager extension',
+          data: fields.data,
+        });
         throw new BadRequestException(
           `Invalid find extension number by bitrix id`,
         );
       }
 
-      // Ищем менеджера в текущих звонках
-      const managerExtensionInCallList = currentCalls.find(
-        ({ call_flow, extension_id: extensionId }) =>
-          managerExtension.id === extensionId && call_flow == 'IN',
+      const extensionGroup = await this.telphinService.getExtensionGroupById(
+        managerExtension.extension_group_id,
       );
 
-      if (!managerExtensionInCallList) {
+      if (!extensionGroup) {
         this.logger.error(
-          `Invalid get manager extension in call list: ${managerExtension.name}`,
+          {
+            message: 'Invalid get extension group',
+            data: fields.data,
+          },
           true,
         );
-        throw new NotFoundException('Invalid find manager in current calls');
+        throw new BadRequestException('Invalid get extension group');
       }
-
-      // Забираем номер с которого звонит клиент
-      const { called_did: calledDid } = managerExtensionInCallList;
-
-      if (!calledDid) {
-        this.logger.error(`Invalid get called_did: ${userId}`, true);
-        throw new BadRequestException('Invalid get called_did field');
-      }
-
-      const callWasWritten = await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + calledDid,
-      );
-
-      if (callWasWritten) {
-        this.logger.error(`Call was accepted: ${calledDid}`, true);
-        throw new ConflictException('Call was accepted');
-      }
-
-      this.redisService.set<string>(
-        REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START + calledDid,
-        callId,
-        60, // 1 minute
-      );
-
-      this.logger.info(
-        {
-          message: 'Check handle start call',
-          fields,
-        },
-        true,
-      );
-
-      // Пытаемся получить из кеша информацию о номере клиента и группе внутреннего номера менеджера
-      const callData =
-        await this.redisService.get<B24WebhookVoxImplantCallInitOptions>(
-          REDIS_KEYS.BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT + calledDid,
-        );
-
-      if (!callData) {
-        // this.logger.debug('Invalid get call data', 'fatal');
-        throw new BadRequestException(`Invalid get call data: ${calledDid}`);
-      }
-
-      const {
-        clientPhone,
-        extensionGroup: { name: extensionGroupName },
-      } = callData;
 
       // // fixme: Для теста
       // if (!/(79517354601|79211268209)/gi.test(clientPhone)) {
@@ -1136,27 +1068,31 @@ export class BitrixWebhookService {
       //   };
       // }
 
-      this.logger.info({
-        message: `check client phone`,
-        userId: userId,
-        phone: clientPhone,
-      });
+      this.logger.debug(
+        {
+          data: fields.data,
+          managerExtension,
+          extensionGroup,
+        },
+        'log',
+      );
 
+      return true;
       // Распределяем в зависимости от группы
-      switch (true) {
-        case /sale/gi.test(extensionGroupName):
-          return this.handleVoxImplantCallStartForSaleManagers({
-            phone: clientPhone,
-            userId: userId,
-            calledDid: calledDid,
-          });
-
-        default:
-          return {
-            status: false,
-            message: 'Not handled yet on call start',
-          };
-      }
+      // switch (true) {
+      //   case /sale/gi.test(extensionGroup.name):
+      //     return this.handleVoxImplantCallEndForSaleManagers({
+      //       phone: clientPhone,
+      //       userId: userId,
+      //       calledDid: calledDid,
+      //     });
+      //
+      //   default:
+      //     return {
+      //       status: false,
+      //       message: 'Not handled yet on call start',
+      //     };
+      // }
     } catch (error) {
       this.logger.error(
         {
@@ -1170,14 +1106,14 @@ export class BitrixWebhookService {
   }
 
   /**
-   * Handle start call for sale managers
+   * Handle start end for sale managers
    *
    * ---
    *
-   * Обрабатывает начало звонка для отедла продаж
+   * Обрабатывает окончание звонка для отедла продаж
    * @param fields
    */
-  async handleVoxImplantCallStartForSaleManagers(
+  async handleVoxImplantCallEndForSaleManagers(
     fields: B24WebhookHandleCallStartForSaleManagersOptions,
   ) {
     const { userId, phone, calledDid } = fields;

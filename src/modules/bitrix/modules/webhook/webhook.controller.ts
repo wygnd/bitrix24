@@ -21,7 +21,7 @@ import {
 } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24EventVoxImplantCallStartDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-start.dto';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @Controller('webhook')
@@ -123,9 +123,9 @@ export class BitrixWebhookController {
   @ApiOperation({ summary: 'Обработка начала звонка' })
   @UseGuards(BitrixVoxImplantStartCallEventGuard)
   @HttpCode(HttpStatus.OK)
-  @Post('/bitrix/voximplant/call/start')
-  async handleWebhookVoxImplantStartCallingFromBitrix(
-    @Body() body: B24EventVoxImplantCallStartDto,
+  @Post('/bitrix/voximplant/call/end')
+  async handleWebhookVoxImplantEndCallingFromBitrix(
+    @Body() body: B24EventVoxImplantCallEndDto,
   ) {
     this.logger.info(
       {
@@ -135,9 +135,9 @@ export class BitrixWebhookController {
       true,
     );
     this.logger.debug(
-      `call receive: ${body.data.USER_ID} = ${body.data.CALL_ID}`,
+      `call finish: ${body.data.PHONE_NUMBER} => ${body.data.PORTAL_NUMBER} : ${body.data.PORTAL_USER_ID} =  = ${body.data.CALL_ID}`,
       'log',
     );
-    return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
+    return this.bitrixWebhookService.handleVoxImplantCallEnd(body);
   }
 }
