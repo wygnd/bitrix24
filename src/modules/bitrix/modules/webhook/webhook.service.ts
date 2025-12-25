@@ -4,6 +4,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  MethodNotAllowedException,
   NotFoundException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
@@ -1014,10 +1015,14 @@ export class BitrixWebhookService {
   async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
     try {
       const {
+        CALL_TYPE: callType,
         PHONE_NUMBER: clientPhone,
         PORTAL_USER_ID: userId,
         PORTAL_NUMBER: calledDid,
       } = fields.data;
+
+      if (callType !== B24CallType.INCOMING)
+        throw new MethodNotAllowedException();
 
       /**
        * Получаем внутренний номер менеджера по bitrix_id
