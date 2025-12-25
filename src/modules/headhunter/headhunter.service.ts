@@ -72,7 +72,6 @@ export class HeadHunterService {
         });
     });
 
-    this.logger.debug(`CHeck client id: ${clientId}`, 'verbose');
     this.client_id = clientId;
     this.client_secret = clientSecret;
     this.redirect_uri = redirectUri;
