@@ -1021,8 +1021,16 @@ export class BitrixWebhookService {
         PORTAL_NUMBER: calledDid,
       } = fields.data;
 
-      if (callType !== B24CallType.INCOMING)
+      if (callType !== B24CallType.INCOMING) {
+        this.logger.error(
+          {
+            message: 'Not allowed handle call type',
+            data: fields.data,
+          },
+          true,
+        );
         throw new MethodNotAllowedException();
+      }
 
       /**
        * Получаем внутренний номер менеджера по bitrix_id
@@ -1101,7 +1109,7 @@ export class BitrixWebhookService {
     } catch (error) {
       this.logger.error(
         {
-          message: 'error on handle call start',
+          message: 'error on handle call end',
           error,
         },
         true,

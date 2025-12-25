@@ -42,6 +42,7 @@ import { TelphinModule } from '@/modules/telphin/telphin.module';
 import { BitrixLeadUpsellController } from '@/modules/bitrix/modules/lead/controllers/lead-upsells.controller';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.controller';
+import { BitrixTelphinEventsControllerV1 } from '@/modules/bitrix/modules/integration/telphin/controllers/telphin-events.controller';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.contro
     BitrixAddySupportControllerV1,
     BitrixAddyPaymentsControllerV1,
     BitrixMessageControllerV1,
+    BitrixTelphinEventsControllerV1,
   ],
   providers: [
     // providers

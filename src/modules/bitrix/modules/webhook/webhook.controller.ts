@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  NotAcceptableException,
   Post,
   Query,
   UseGuards,
@@ -134,10 +135,8 @@ export class BitrixWebhookController {
       },
       true,
     );
-    this.logger.debug(
-      `${body.data.CALL_TYPE} call finish: ${body.data.PHONE_NUMBER} => ${body.data.PORTAL_NUMBER} : ${body.data.PORTAL_USER_ID} =  = ${body.data.CALL_ID}`,
-      'log',
-    );
-    return this.bitrixWebhookService.handleVoxImplantCallEnd(body);
+
+    throw new NotAcceptableException();
+    // return this.bitrixWebhookService.handleVoxImplantCallEnd(body);
   }
 }
