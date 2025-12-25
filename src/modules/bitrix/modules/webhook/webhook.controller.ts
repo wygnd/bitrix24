@@ -113,6 +113,10 @@ export class BitrixWebhookController {
       },
       true,
     );
+    this.logger.debug(
+      `call init: ${body.data.CALLER_ID} = ${body.data.CALL_ID}`,
+      'log',
+    );
     return this.bitrixWebhookService.handleVoxImplantCallInitTask(body);
   }
 
@@ -129,6 +133,10 @@ export class BitrixWebhookController {
         body,
       },
       true,
+    );
+    this.logger.debug(
+      `call receive: ${body.data.USER_ID} = ${body.data.CALL_ID}`,
+      'log',
     );
     return this.bitrixWebhookService.handleVoxImplantCallStartTask(body);
   }
