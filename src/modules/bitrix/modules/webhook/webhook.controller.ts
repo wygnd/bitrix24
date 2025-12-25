@@ -16,6 +16,7 @@ import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incomi
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
 import {
+  BitrixVoxImplantFinishCallEventGuard,
   BitrixVoxImplantInitCallEventGuard,
   BitrixVoxImplantStartCallEventGuard,
 } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
@@ -121,7 +122,7 @@ export class BitrixWebhookController {
   }
 
   @ApiOperation({ summary: 'Обработка начала звонка' })
-  @UseGuards(BitrixVoxImplantStartCallEventGuard)
+  @UseGuards(BitrixVoxImplantFinishCallEventGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/bitrix/voximplant/call/end')
   async handleWebhookVoxImplantEndCallingFromBitrix(
