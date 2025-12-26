@@ -1,12 +1,11 @@
 import { BitrixEventsAnswerOptions } from '@/modules/bitrix/modules/integration/telphin/interfaces/telphin-events.interface';
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { TelphinEventType } from '@/modules/telphin/interfaces/telphin-events.interface';
 import type {
   TelphinEventCallStatus,
   TelphinEventCallFlow,
 } from '@/modules/telphin/interfaces/telphin-events.interface';
-import { Type } from 'class-transformer';
 
 export class BitrixTelphinEventsAnswerDto implements BitrixEventsAnswerOptions {
   @ApiProperty({
@@ -27,9 +26,7 @@ export class BitrixTelphinEventsAnswerDto implements BitrixEventsAnswerOptions {
   })
   @IsOptional()
   @IsString()
-  @Type(() => Number)
-  @IsInt()
-  CalledExtensionID?: number;
+  CalledExtensionID?: string;
 
   @ApiProperty({
     type: String,
@@ -51,9 +48,7 @@ export class BitrixTelphinEventsAnswerDto implements BitrixEventsAnswerOptions {
   })
   @IsNotEmpty()
   @IsString()
-  @Type(() => Number)
-  @IsInt()
-  CallerExtensionID: number;
+  CallerExtensionID: string;
 
   @ApiProperty({
     type: String,

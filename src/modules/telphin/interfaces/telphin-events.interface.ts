@@ -17,4 +17,4 @@ export type TelphinEventCallStatus =
   | 'CONGESTION'
   | 'CHANUNAVAIL';
 
-export type TelphinEventCallFlow = 'IN' | 'OUT';
+export type TelphinEventCallFlow = 'in' | 'out';

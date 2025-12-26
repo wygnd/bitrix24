@@ -6,9 +6,9 @@ import {
 
 export interface BitrixEventsAnswerOptions {
   CalledExtension?: string;
-  CalledExtensionID?: number;
+  CalledExtensionID?: string;
   CallerExtension: string;
-  CallerExtensionID: number;
+  CallerExtensionID: string;
   EventType: TelphinEventType;
   CallID: string;
   CallerIDNum: string;

@@ -31,11 +31,15 @@ export class BitrixTelphinEventsService {
 
   async handleAnswerCall(fields: BitrixEventsAnswerOptions) {
     const {
-      CallerExtensionID: extensionId,
+      CallerExtensionID,
+      CalledExtensionID,
       CallerIDNum: clientPhone,
       CallStatus: callStatus,
       CalledDID: calledDid,
+      CallFlow: callFlow,
     } = fields;
+
+    if (callFlow !== 'in') throw new BadRequestException(`Call hasn't flow in`);
 
     if (callStatus !== 'ANSWER')
       throw new BadRequestException(
@@ -44,6 +48,10 @@ export class BitrixTelphinEventsService {
 
     if (!calledDid)
       throw new BadRequestException(`Invalid calledDid: ${calledDid}`);
+
+    const extensionId = CalledExtensionID
+      ? Number(CalledExtensionID)
+      : Number(CallerExtensionID);
 
     // Получаем информацию о внутреннем номере
     const extensionData =
@@ -63,8 +71,10 @@ export class BitrixTelphinEventsService {
       extensionExtraParams,
     ) as TelphinExtensionItemExtraParams;
 
+    this.logger.debug({ extensionData, extensionExtraParams }, 'verbose');
+
     // В поле comment заложен id пользователя битрикс, если его нет кидаем ошибку
-    if (!extensionExtraParamsParsed.comment)
+    if (!extensionExtraParamsParsed?.comment)
       throw new BadRequestException('Extension has not userId');
 
     // Получаем группу внутреннего номера
@@ -80,7 +90,7 @@ export class BitrixTelphinEventsService {
       {
         message: 'CHECK ANSWER CALL DATA',
         phone: clientPhone,
-        userId: extensionExtraParamsParsed.comment,
+        userId: extensionExtraParamsParsed?.comment,
         calledDid: calledDid,
       },
       'log',
