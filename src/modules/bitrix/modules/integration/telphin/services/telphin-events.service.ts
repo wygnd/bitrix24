@@ -172,6 +172,8 @@ export class BitrixTelphinEventsService {
 
       const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
 
+      this.logger.debug(`Check lead status: ${leadStatusId}`, 'log');
+
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
         case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
@@ -188,6 +190,8 @@ export class BitrixTelphinEventsService {
           break;
       }
     }
+
+    this.logger.debug(batchCommands, 'log');
 
     return {
       status: true,
