@@ -1,6 +1,13 @@
-import { Body, Controller, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { WinstonLogger } from '@/config/winston.logger';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Telphin')
 @Controller({
@@ -15,8 +22,10 @@ export class BitrixTelphinEventsControllerV1 {
 
   constructor() {}
 
-  @Post('/calls/incoming')
-  async handleIncomingCallEventFromTelphin(
+  @ApiOperation({ summary: 'Обработка входящих звонков с telphin' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/calls/answer')
+  async handleAnswerCallEventFromTelphin(
     @Body() body: any,
     @Query() query: any,
   ) {
