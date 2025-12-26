@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Headers,
   HttpCode,
   HttpStatus,
   Post,
@@ -28,12 +29,14 @@ export class BitrixTelphinEventsControllerV1 {
   async handleAnswerCallEventFromTelphin(
     @Body() body: any,
     @Query() query: any,
+    @Headers() headers: Record<string, string>,
   ) {
     this.logger.info(
       {
         message: 'check request',
         body,
         query,
+        headers,
       },
       true,
     );
