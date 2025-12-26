@@ -40,6 +40,8 @@ export class BitrixTelphinEventsService {
       CallFlow: callFlow,
     } = fields;
 
+    this.logger.debug(`Answer call: ${clientPhone}`, 'warn');
+
     if (callFlow !== 'in')
       throw new BadRequestException(`Call hasn't flow in: ${callFlow}`);
 
