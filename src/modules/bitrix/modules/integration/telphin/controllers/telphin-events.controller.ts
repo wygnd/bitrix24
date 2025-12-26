@@ -1,14 +1,8 @@
-import {
-  Body,
-  Controller,
-  Headers,
-  HttpCode,
-  HttpStatus,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { WinstonLogger } from '@/config/winston.logger';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BitrixTelphinEventsAnswerDto } from '@/modules/bitrix/modules/integration/telphin/dtos/telphin-events.dto';
+import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration/telphin/services/telphin-events.service';
 
 @ApiTags('Telphin')
 @Controller({
@@ -21,25 +15,25 @@ export class BitrixTelphinEventsControllerV1 {
     'bitrix:services:integration:telphin:events'.split(':'),
   );
 
-  constructor() {}
+  constructor(
+    private readonly bitrixTelphinEventsService: BitrixTelphinEventsService,
+  ) {}
 
   @ApiOperation({ summary: 'Обработка входящих звонков с telphin' })
   @HttpCode(HttpStatus.OK)
   @Post('/calls/answer')
   async handleAnswerCallEventFromTelphin(
-    @Body() body: any,
-    @Query() query: any,
-    @Headers() headers: Record<string, string>,
+    @Body() body: BitrixTelphinEventsAnswerDto,
   ) {
-    this.logger.info(
-      {
-        message: 'check request',
-        body,
-        query,
-        headers,
-      },
-      true,
-    );
-    return true;
+    try {
+      const response =
+        await this.bitrixTelphinEventsService.handleAnswerCall(body);
+      this.logger.info({ body, response }, true);
+
+      return response;
+    } catch (error) {
+      this.logger.error({ body, error }, true);
+      throw error;
+    }
   }
 }

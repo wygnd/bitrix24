@@ -4,7 +4,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  MethodNotAllowedException,
   NotFoundException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
@@ -50,14 +49,12 @@ import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/d
 import { TelphinService } from '@/modules/telphin/telphin.service';
 import {
   B24WebhookHandleCallInitForSaleManagersOptions,
-  B24WebhookHandleCallStartForSaleManagersOptions,
   B24WebhookVoxImplantCallInitOptions,
   B24WebhookVoxImplantCallInitTaskOptions,
 } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
-import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -1001,225 +998,6 @@ export class BitrixWebhookService {
     return {
       status: true,
       message: 'successfully handle call init for sale managers',
-    };
-  }
-
-  /**
-   * Handle call start tasks from queue and distribute handle on departments
-   *
-   * ---
-   *
-   * Обрабатывает начало звонка из очереди задач и распределяет по отделам
-   * @param fields
-   */
-  async handleVoxImplantCallEnd(fields: B24EventVoxImplantCallEndDto) {
-    try {
-      const {
-        CALL_TYPE: callType,
-        PHONE_NUMBER: clientPhone,
-        PORTAL_USER_ID: userId,
-        PORTAL_NUMBER: calledDid,
-      } = fields.data;
-
-      if (callType !== B24CallType.INCOMING) {
-        this.logger.error(
-          {
-            message: 'Not allowed handle call type',
-            data: fields.data,
-          },
-          true,
-        );
-        throw new MethodNotAllowedException();
-      }
-
-      /**
-       * Получаем внутренний номер менеджера по bitrix_id
-       */
-      const managerExtension =
-        await this.telphinService.getClientExtensionByBitrixUserId(userId);
-
-      this.logger.info(
-        {
-          message: 'check manager extension by user_id and current call list',
-          userId: userId,
-          manager: managerExtension,
-        },
-        true,
-      );
-
-      if (!managerExtension) {
-        this.logger.error({
-          message: 'Invalid get manager extension',
-          data: fields.data,
-        });
-        throw new BadRequestException(
-          `Invalid find extension number by bitrix id`,
-        );
-      }
-
-      const extensionGroup = await this.telphinService.getExtensionGroupById(
-        managerExtension.extension_group_id,
-      );
-
-      if (!extensionGroup) {
-        this.logger.error(
-          {
-            message: 'Invalid get extension group',
-            data: fields.data,
-          },
-          true,
-        );
-        throw new BadRequestException('Invalid get extension group');
-      }
-
-      // // fixme: Для теста
-      // if (!/(79517354601|79211268209)/gi.test(clientPhone)) {
-      //   this.logger.debug(`is not tested: ${calledDid}`, 'warn');
-      //   return {
-      //     status: true,
-      //     message: 'In tested',
-      //   };
-      // }
-
-      this.logger.debug(
-        {
-          data: fields.data,
-          managerExtension,
-          extensionGroup,
-        },
-        'log',
-      );
-
-      return true;
-      // Распределяем в зависимости от группы
-      // switch (true) {
-      //   case /sale/gi.test(extensionGroup.name):
-      //     return this.handleVoxImplantCallEndForSaleManagers({
-      //       phone: clientPhone,
-      //       userId: userId,
-      //       calledDid: calledDid,
-      //     });
-      //
-      //   default:
-      //     return {
-      //       status: false,
-      //       message: 'Not handled yet on call start',
-      //     };
-      // }
-    } catch (error) {
-      this.logger.error(
-        {
-          message: 'error on handle call end',
-          error,
-        },
-        true,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Handle start end for sale managers
-   *
-   * ---
-   *
-   * Обрабатывает окончание звонка для отедла продаж
-   * @param fields
-   */
-  async handleVoxImplantCallEndForSaleManagers(
-    fields: B24WebhookHandleCallStartForSaleManagersOptions,
-  ) {
-    const { userId, phone, calledDid } = fields;
-    let response: any;
-
-    if (!phone) throw new BadRequestException('Invalid phone');
-
-    const leadIds = await this.bitrixLeadService.getDuplicateLeadsByPhone(
-      phone,
-      true,
-    );
-
-    if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
-      // Если клиент звонит на авито номер
-
-      if (leadIds.length === 0) {
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
-      } else {
-        const leadInfo = await this.bitrixLeadService.getLeadById(
-          leadIds[0].toString(),
-        );
-
-        if (!leadInfo) throw new BadRequestException('Lead was not found');
-
-        const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
-
-        switch (true) {
-          case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-          case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            response = this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: userId,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              },
-            });
-            break;
-        }
-      }
-    } else {
-      // Если клиент звонит напрямую менеджеру
-
-      if (leadIds.length === 0) {
-        // Если лида по номеру не найдено
-
-        // Создаем лид
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
-      } else {
-        const leadId = leadIds[0].toString();
-        const lead = await this.bitrixLeadService.getLeadById(leadId);
-
-        if (!lead) throw new BadRequestException('Lead was not found');
-
-        const { STATUS_ID: leadStatusId } = lead;
-
-        switch (true) {
-          case B24LeadRejectStages.includes(leadStatusId):
-            response = await this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                ASSIGNED_BY_ID: userId,
-              },
-            });
-            break;
-        }
-      }
-    }
-
-    // this.logger.debug(response, 'log');
-
-    return {
-      status: true,
-      message: 'Successfully handled start call',
-      response: response,
     };
   }
 }
