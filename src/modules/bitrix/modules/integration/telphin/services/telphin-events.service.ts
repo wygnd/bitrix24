@@ -31,7 +31,7 @@ export class BitrixTelphinEventsService {
 
   async handleAnswerCall(fields: BitrixEventsAnswerOptions) {
     const {
-      CalledExtensionID: extensionId,
+      CallerExtensionID: extensionId,
       CallerIDNum: clientPhone,
       CallStatus: callStatus,
       CalledDID: calledDid,
@@ -41,6 +41,9 @@ export class BitrixTelphinEventsService {
       throw new BadRequestException(
         `Call has not status answer: [${callStatus}]`,
       );
+
+    if (!calledDid)
+      throw new BadRequestException(`Invalid calledDid: ${calledDid}`);
 
     // Получаем информацию о внутреннем номере
     const extensionData =
