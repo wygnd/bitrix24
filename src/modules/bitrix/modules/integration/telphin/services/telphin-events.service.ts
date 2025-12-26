@@ -32,7 +32,6 @@ export class BitrixTelphinEventsService {
 
   async handleAnswerCall(fields: BitrixEventsAnswerOptions) {
     const {
-      CallerExtensionID,
       CalledExtensionID,
       CallerIDNum: clientPhone,
       CallStatus: callStatus,
@@ -58,11 +57,12 @@ export class BitrixTelphinEventsService {
         `Call has not status answer: [${callStatus}]`,
       );
 
-    const extensionId = CalledExtensionID
-      ? calledDid && calledDid in this.bitrixService.AVITO_PHONES
-        ? Number(CallerExtensionID)
-        : Number(CalledExtensionID)
-      : Number(CallerExtensionID);
+    if (!CalledExtensionID)
+      throw new BadRequestException(
+        `Invalid extension id: ${CalledExtensionID}`,
+      );
+
+    const extensionId = Number(CalledExtensionID);
 
     this.logger.debug(`Check extensionId: ${extensionId}`, 'log');
 
