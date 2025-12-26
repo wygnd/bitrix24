@@ -15,7 +15,7 @@ export class BitrixTelphinEventsControllerV1 {
 
   constructor() {}
 
-  @Post('/extension')
+  @Post('/calls')
   async handleDialInEventFromTelphin(@Body() body: any, @Query() query: any) {
     this.logger.info(
       {
