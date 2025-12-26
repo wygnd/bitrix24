@@ -59,7 +59,9 @@ export class BitrixTelphinEventsService {
       );
 
     const extensionId = CalledExtensionID
-      ? Number(CalledExtensionID)
+      ? calledDid && calledDid in this.bitrixService.AVITO_PHONES
+        ? Number(CallerExtensionID)
+        : Number(CalledExtensionID)
       : Number(CallerExtensionID);
 
     this.logger.debug(`Check extensionId: ${extensionId}`, 'log');
@@ -88,7 +90,10 @@ export class BitrixTelphinEventsService {
     if (!extensionExtraParamsParsed?.comment)
       throw new BadRequestException(`Extension hasn't userId: ${extensionId}`);
 
-    this.logger.debug(`Check extension bitrix id: ${extensionExtraParamsParsed.comment}`, 'log');
+    this.logger.debug(
+      `Check extension bitrix id: ${extensionExtraParamsParsed.comment}`,
+      'log',
+    );
 
     // Получаем группу внутреннего номера
     const extensionGroupData =
