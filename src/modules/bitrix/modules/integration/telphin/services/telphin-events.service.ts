@@ -40,6 +40,14 @@ export class BitrixTelphinEventsService {
       CallFlow: callFlow,
     } = fields;
 
+    if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
+      this.logger.debug(`Real call: ${clientPhone}`, 'warn');
+      return {
+        message: 'Tested',
+        status: true,
+      };
+    }
+
     this.logger.debug(`Answer call: ${clientPhone}`, 'warn');
 
     if (callFlow !== 'in')
@@ -54,6 +62,8 @@ export class BitrixTelphinEventsService {
       ? Number(CalledExtensionID)
       : Number(CallerExtensionID);
 
+    this.logger.debug(`Check extensionId: ${extensionId}`, 'log');
+
     // Получаем информацию о внутреннем номере
     const extensionData =
       await this.telphinService.getClientExtensionById(extensionId);
@@ -67,6 +77,8 @@ export class BitrixTelphinEventsService {
       extra_params: extensionExtraParams,
     } = extensionData;
 
+    this.logger.debug(`Check extension group id: ${extensionGroupId}`, 'log');
+
     // Парсим поле
     const extensionExtraParamsParsed = JSON.parse(
       extensionExtraParams,
@@ -75,6 +87,8 @@ export class BitrixTelphinEventsService {
     // В поле comment заложен id пользователя битрикс, если его нет кидаем ошибку
     if (!extensionExtraParamsParsed?.comment)
       throw new BadRequestException(`Extension hasn't userId: ${extensionId}`);
+
+    this.logger.debug(`Check extension bitrix id: ${extensionExtraParamsParsed.comment}`, 'log');
 
     // Получаем группу внутреннего номера
     const extensionGroupData =
@@ -85,17 +99,11 @@ export class BitrixTelphinEventsService {
         `Extension group was not found: ${extensionGroupId}`,
       );
 
-    if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
-      this.logger.debug(`Real call: ${clientPhone}`, 'warn');
-      return {
-        message: 'Tested',
-        status: true,
-      };
-    }
+    this.logger.debug(`Check extensionId: ${extensionGroupData}`, 'log');
 
     // Распределяем в зависимости от группы
     switch (true) {
-      case /sale/gi.test(extensionData.name):
+      case /sale/gi.test(extensionGroupData.name):
         return this.handleAnswerCallForSaleDepartment({
           phone: clientPhone,
           userId: extensionExtraParamsParsed.comment,
