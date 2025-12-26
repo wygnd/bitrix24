@@ -15,6 +15,7 @@ import {
   B24LeadNewStages,
   B24LeadRejectStages,
 } from '@/modules/bitrix/modules/lead/constants/lead.constants';
+import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 
 @Injectable()
 export class BitrixTelphinEventsService {
@@ -39,15 +40,13 @@ export class BitrixTelphinEventsService {
       CallFlow: callFlow,
     } = fields;
 
-    if (callFlow !== 'in') throw new BadRequestException(`Call hasn't flow in`);
+    if (callFlow !== 'in')
+      throw new BadRequestException(`Call hasn't flow in: ${callFlow}`);
 
     if (callStatus !== 'ANSWER')
       throw new BadRequestException(
         `Call has not status answer: [${callStatus}]`,
       );
-
-    if (!calledDid)
-      throw new BadRequestException(`Invalid calledDid: ${calledDid}`);
 
     const extensionId = CalledExtensionID
       ? Number(CalledExtensionID)
@@ -58,7 +57,7 @@ export class BitrixTelphinEventsService {
       await this.telphinService.getClientExtensionById(extensionId);
 
     if (!extensionData)
-      throw new NotFoundException(`Extension was not found: ${extensionId}`);
+      throw new NotFoundException(`Extension wasn't found: ${extensionId}`);
 
     // Деструктуризируем объект
     const {
@@ -71,11 +70,9 @@ export class BitrixTelphinEventsService {
       extensionExtraParams,
     ) as TelphinExtensionItemExtraParams;
 
-    this.logger.debug({ extensionData, extensionExtraParams }, 'verbose');
-
     // В поле comment заложен id пользователя битрикс, если его нет кидаем ошибку
     if (!extensionExtraParamsParsed?.comment)
-      throw new BadRequestException('Extension has not userId');
+      throw new BadRequestException(`Extension hasn't userId: ${extensionId}`);
 
     // Получаем группу внутреннего номера
     const extensionGroupData =
@@ -86,36 +83,29 @@ export class BitrixTelphinEventsService {
         `Extension group was not found: ${extensionGroupId}`,
       );
 
-    this.logger.debug(
-      {
-        message: 'CHECK ANSWER CALL DATA',
-        phone: clientPhone,
-        userId: extensionExtraParamsParsed?.comment,
-        calledDid: calledDid,
-      },
-      'log',
-    );
-
-    return {
-      message: 'Tested',
-      status: true,
-    };
+    if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
+      this.logger.debug(`Real call: ${clientPhone}`, 'warn');
+      return {
+        message: 'Tested',
+        status: true,
+      };
+    }
 
     // Распределяем в зависимости от группы
-    // switch (true) {
-    //   case /sale/gi.test(extensionData.name):
-    //     return this.handleAnswerCallForSaleDepartment({
-    //       phone: clientPhone,
-    //       userId: extensionExtraParamsParsed.comment,
-    //       calledDid: calledDid,
-    //     });
-    //
-    //   default:
-    //     return {
-    //       status: false,
-    //       message: 'Not handled yet on call start',
-    //     };
-    // }
+    switch (true) {
+      case /sale/gi.test(extensionData.name):
+        return this.handleAnswerCallForSaleDepartment({
+          phone: clientPhone,
+          userId: extensionExtraParamsParsed.comment,
+          calledDid: calledDid,
+        });
+
+      default:
+        return {
+          status: false,
+          message: 'Not handled yet on call start',
+        };
+    }
   }
 
   /**
@@ -130,97 +120,63 @@ export class BitrixTelphinEventsService {
   private async handleAnswerCallForSaleDepartment(
     fields: BitrixTelphinEventsHandleAnswerCallForSaleDepartment,
   ) {
-    const { userId, phone, calledDid } = fields;
-    let response: any;
+    const { userId, phone } = fields;
+    const batchCommands: B24BatchCommands = {};
 
-    if (!phone) throw new BadRequestException('Invalid phone');
-
+    // Ищем лиды по номеру клиента
     const leadIds = await this.bitrixLeadService.getDuplicateLeadsByPhone(
       phone,
       true,
     );
 
-    if (calledDid && calledDid in this.bitrixService.AVITO_PHONES) {
-      // Если клиент звонит на авито номер
-
-      if (leadIds.length === 0) {
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
-      } else {
-        const leadInfo = await this.bitrixLeadService.getLeadById(
-          leadIds[0].toString(),
-        );
-
-        if (!leadInfo) throw new BadRequestException('Lead was not found');
-
-        const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
-
-        switch (true) {
-          case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-          case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
-            response = this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: userId,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+    if (leadIds.length === 0) {
+      // Если нет лида: создаем
+      batchCommands['create_lead'] = {
+        method: 'crm.lead.add',
+        params: {
+          fields: {
+            ASSIGNED_BY_ID: userId,
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            PHONE: [
+              {
+                VALUE: phone,
+                VALUE_TYPE: 'WORK',
               },
-            });
-            break;
-        }
-      }
+            ],
+          },
+        },
+      };
     } else {
-      // Если клиент звонит напрямую менеджеру
+      // Если нашли лид, обновляем
+      const leadInfo = await this.bitrixLeadService.getLeadById(
+        leadIds[0].toString(),
+      );
 
-      if (leadIds.length === 0) {
-        // Если лида по номеру не найдено
+      if (!leadInfo) throw new BadRequestException('Lead was not found');
 
-        // Создаем лид
-        response = await this.bitrixLeadService.createLead({
-          ASSIGNED_BY_ID: userId,
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе,
-          PHONE: [
-            {
-              VALUE: phone,
-              VALUE_TYPE: 'WORK',
-            },
-          ],
-        });
-      } else {
-        const leadId = leadIds[0].toString();
-        const lead = await this.bitrixLeadService.getLeadById(leadId);
+      const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
 
-        if (!lead) throw new BadRequestException('Lead was not found');
-
-        const { STATUS_ID: leadStatusId } = lead;
-
-        switch (true) {
-          case B24LeadRejectStages.includes(leadStatusId):
-            response = await this.bitrixLeadService.updateLead({
+      switch (true) {
+        case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
+        case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
+          batchCommands['update_lead'] = {
+            method: 'crm.lead.update',
+            params: {
               id: leadId,
               fields: {
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
                 ASSIGNED_BY_ID: userId,
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
               },
-            });
-            break;
-        }
+            },
+          };
+          break;
       }
     }
-
-    // this.logger.debug(response, 'log');
 
     return {
       status: true,
       message: 'Successfully handled start call',
-      response: response,
+      response: await this.bitrixService.callBatch(batchCommands),
     };
   }
 }
