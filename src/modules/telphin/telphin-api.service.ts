@@ -155,11 +155,9 @@ export class TelphinApiService {
    */
   public async get<T = any>(url: string): Promise<T | null> {
     try {
-      const token = await this.getAccessToken();
-      this.logger.debug(token, 'log');
       const { data } = await this.telphinAPI.get<T>(url, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${await this.getAccessToken()}`,
         },
       });
 
