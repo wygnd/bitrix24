@@ -120,6 +120,7 @@ export class BitrixTelphinEventsService {
   private async handleAnswerCallForSaleDepartment(
     fields: BitrixTelphinEventsHandleAnswerCallForSaleDepartment,
   ) {
+    this.logger.debug(fields, 'log');
     const { userId, phone } = fields;
     const batchCommands: B24BatchCommands = {};
 
