@@ -38,7 +38,6 @@ import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webh
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { isAxiosError } from 'axios';
 import {
-  B24LeadActiveStages,
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
@@ -959,13 +958,6 @@ export class BitrixWebhookService {
           case B24LeadRejectStages.includes(leadStatusId):
             notifyManagerMessage =
               'Клиент в неактивной стадии Бери в работу себе';
-            this.bitrixLeadService.updateLead({
-              id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: extensionExtraParamsDecoded.comment,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-              },
-            });
             break;
 
           default:
