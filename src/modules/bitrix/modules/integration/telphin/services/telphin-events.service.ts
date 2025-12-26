@@ -39,15 +39,15 @@ export class BitrixTelphinEventsService {
       CallFlow: callFlow,
     } = fields;
 
-    if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
-      this.logger.debug(`Real call: ${clientPhone}`, 'warn');
-      return {
-        message: 'Tested',
-        status: true,
-      };
-    }
+    // if (!['+79517354601', '+79211268209'].includes(clientPhone)) {
+    //   this.logger.debug(`Real call: ${clientPhone}`, 'warn');
+    //   return {
+    //     message: 'Tested',
+    //     status: true,
+    //   };
+    // }
 
-    this.logger.debug(`Answer call: ${clientPhone}`, 'warn');
+    // this.logger.debug(`Answer call: ${clientPhone}`, 'warn');
 
     if (callFlow !== 'in')
       throw new BadRequestException(`Call hasn't flow in: ${callFlow}`);
@@ -64,7 +64,7 @@ export class BitrixTelphinEventsService {
 
     const extensionId = Number(CalledExtensionID);
 
-    this.logger.debug(`Check extensionId: ${extensionId}`, 'log');
+    // this.logger.debug(`Check extensionId: ${extensionId}`, 'log');
 
     // Получаем информацию о внутреннем номере
     const extensionData =
@@ -79,7 +79,7 @@ export class BitrixTelphinEventsService {
       extra_params: extensionExtraParams,
     } = extensionData;
 
-    this.logger.debug(`Check extension group id: ${extensionGroupId}`, 'log');
+    // this.logger.debug(`Check extension group id: ${extensionGroupId}`, 'log');
 
     // Парсим поле
     const extensionExtraParamsParsed = JSON.parse(
@@ -90,10 +90,10 @@ export class BitrixTelphinEventsService {
     if (!extensionExtraParamsParsed?.comment)
       throw new BadRequestException(`Extension hasn't userId: ${extensionId}`);
 
-    this.logger.debug(
-      `Check extension bitrix id: ${extensionExtraParamsParsed.comment}`,
-      'log',
-    );
+    // this.logger.debug(
+    //   `Check extension bitrix id: ${extensionExtraParamsParsed.comment}`,
+    //   'log',
+    // );
 
     // Получаем группу внутреннего номера
     const extensionGroupData =
@@ -104,7 +104,7 @@ export class BitrixTelphinEventsService {
         `Extension group was not found: ${extensionGroupId}`,
       );
 
-    this.logger.debug(`Check extensionId: ${extensionGroupData}`, 'log');
+    // this.logger.debug(`Check extensionId: ${extensionGroupData}`, 'log');
 
     // Распределяем в зависимости от группы
     switch (true) {
@@ -135,7 +135,7 @@ export class BitrixTelphinEventsService {
   private async handleAnswerCallForSaleDepartment(
     fields: BitrixTelphinEventsHandleAnswerCallForSaleDepartment,
   ) {
-    this.logger.debug(fields, 'log');
+    // this.logger.debug(fields, 'log');
     const { userId, phone } = fields;
     const batchCommands: B24BatchCommands = {};
 
@@ -172,7 +172,7 @@ export class BitrixTelphinEventsService {
 
       const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
 
-      this.logger.debug(`Check lead status: ${leadStatusId}`, 'log');
+      // this.logger.debug(`Check lead status: ${leadStatusId}`, 'log');
 
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
@@ -191,7 +191,7 @@ export class BitrixTelphinEventsService {
       }
     }
 
-    this.logger.debug(batchCommands, 'log');
+    // this.logger.debug(batchCommands, 'log');
 
     return {
       status: true,
