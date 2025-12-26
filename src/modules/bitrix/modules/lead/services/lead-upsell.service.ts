@@ -759,8 +759,8 @@ export class BitrixLeadUpsellService {
           DIALOG_ID: this.bitrixService.UPSELL_CHAT_ID,
           MESSAGE:
             notifyMessage +
-            '[i]Менеджеру отправлено сообщение по допродаже[/i][br][br]>>' +
-            notifyManagerMessage.replaceAll('[br]', '[br]>>'),
+            '[i]Менеджеру отправлено сообщение по допродаже:[/i][br][br]' +
+            notifyManagerMessage,
         },
       };
     }

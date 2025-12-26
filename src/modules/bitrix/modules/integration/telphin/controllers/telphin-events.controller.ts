@@ -16,7 +16,10 @@ export class BitrixTelphinEventsControllerV1 {
   constructor() {}
 
   @Post('/calls/incoming')
-  async handleIncomingCallEventFromTelphin(@Body() body: any, @Query() query: any) {
+  async handleIncomingCallEventFromTelphin(
+    @Body() body: any,
+    @Query() query: any,
+  ) {
     this.logger.info(
       {
         message: 'check request',
