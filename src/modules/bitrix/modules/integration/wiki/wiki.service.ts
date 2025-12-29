@@ -254,7 +254,8 @@ export class BitrixWikiService {
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
         message: this.bitrixImbotService.encodeText(message),
-        dialogId: user_role,
+        // dialogId: user_role,
+        dialogId: this.bitrixService.TEST_CHAT_ID,
         organizationName: organizationName,
         dealId: dealId,
         isBudget: isBudget,
@@ -296,7 +297,8 @@ export class BitrixWikiService {
     const { message, group: chatId } = fields;
 
     const { result: messageId } = await this.bitrixImbotService.sendMessage({
-      DIALOG_ID: chatId,
+      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      // DIALOG_ID: chatId,
       MESSAGE: message,
     });
 

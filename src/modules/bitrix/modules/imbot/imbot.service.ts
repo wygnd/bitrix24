@@ -287,7 +287,7 @@ export class BitrixImBotService {
           ])
         ) {
           response = Promise.resolve(
-            `Forbidden push button ${pushButtonUserId}`,
+            `[${command}]: Forbidden push button ${pushButtonUserId}`,
           );
           status = false;
           break;
