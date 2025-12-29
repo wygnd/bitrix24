@@ -7,7 +7,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { BitrixService } from '../../bitrix.service';
-import { ImbotUnregisterCommandDto } from './dtos/imbot-unregister-command.dto';
 import {
   B24ImbotRegisterCommand,
   B24ImbotSendMessageOptions,

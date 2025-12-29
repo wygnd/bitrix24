@@ -224,7 +224,7 @@ export class BitrixWikiService {
     message,
     deal_id,
     lead_id,
-    user_role,
+    user_role: chatId,
   }: B24WikiPaymentsNoticeWaitingOptions) {
     try {
       let leadId = lead_id;
@@ -254,8 +254,7 @@ export class BitrixWikiService {
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
         message: this.bitrixImbotService.encodeText(message),
-        // dialogId: user_role,
-        dialogId: this.bitrixService.TEST_CHAT_ID,
+        dialogId: chatId,
         organizationName: organizationName,
         dealId: dealId,
         isBudget: isBudget,
