@@ -10,9 +10,7 @@ import { BitrixService } from '../../bitrix.service';
 import { ImbotUnregisterCommandDto } from './dtos/imbot-unregister-command.dto';
 import {
   B24ImbotRegisterCommand,
-  B24ImbotRegisterOptions,
   B24ImbotSendMessageOptions,
-  B24ImbotUnRegisterOptions,
   B24ImbotUpdateMessageOptions,
 } from './imbot.interface';
 import { OnImCommandKeyboardDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
@@ -188,30 +186,6 @@ export class BitrixImBotService {
         ...fields,
         BOT_ID: this.botId,
       },
-    );
-  }
-
-  /**
-   * Register new bot
-   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-register.html
-   * @param fields
-   */
-  private async registerBot(fields: B24ImbotRegisterOptions) {
-    return this.bitrixService.callMethod<B24ImbotRegisterOptions, number>(
-      'imbot.register',
-      fields,
-    );
-  }
-
-  /**
-   * Unregister bot.
-   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/imbot-unregister.html
-   * @param fields
-   */
-  private async unregisterBot(fields: B24ImbotUnRegisterOptions) {
-    return this.bitrixService.callMethod<B24ImbotUnRegisterOptions, boolean>(
-      'imbot.unregister',
-      fields,
     );
   }
 
@@ -772,6 +746,10 @@ export class BitrixImBotService {
    * Handle command **approveReceivedPayment**:
    * update and send new message in G-pay chat
    *
+   * ---
+   *
+   * Обработка команды **approveReceivedPayment**:
+   * обновляет сообщение и отправляет новое в G-pay chat
    * @param fields
    * @param messageId
    * @param dialogId
@@ -783,8 +761,6 @@ export class BitrixImBotService {
   ) {
     const { message, dialogId: toChatId } = fields;
     const messageDecoded = this.decodeText(message);
-
-    this.logger.debug({ ...fields, messageId, dialogId }, 'log');
 
     // Обновляем сообщение и отправляем новое о том, что платеж поступил
     this.bitrixService.callBatch({
@@ -840,6 +816,8 @@ export class BitrixImBotService {
     fields: ImbotKeyboardPaymentsNoticeWaiting,
   ) {
     try {
+      // Декодируем сообщение
+      // Получаем руководителя менеджера
       const messageDecoded = this.decodeText(fields.message);
       const batchCommands: B24BatchCommands = {
         get_user: {
@@ -881,47 +859,40 @@ export class BitrixImBotService {
         date,
       ] = messageDecoded.split(' | ');
 
-      this.logger.debug(messageDecoded.split(' | '), 'log');
-
+      // Собираем запрос для отправки сообщения руководителю
       batchCommands['send_message_head'] = {
-        method: 'imbot.message.add',
+        method: 'im.message.add',
         params: {
-          BOT_ID: this.botId,
-          DIALOG_ID: '$result[get_user_department][UF_HEAD]',
-          MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+          DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
+          MESSAGE: `[b]TEST[/b][br][br]Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
         },
       };
 
+      // Собираем объект для отправки в old wiki
       const data: WikiNotifyReceivePaymentOptions = {
         action: 'gft_log_user_money',
-        money: price.replaceAll(/([\[\]\/b])/, ''),
+        money: price.replaceAll(/[^0-9]/gi, ''),
         deal_number: this.bitrixService.clearBBCode(contract),
         bitrix_user_id: fields.userId,
         user_name: this.bitrixService.clearBBCode(userName),
-        direction: direction ?? '',
-        INN: inn,
+        direction: direction ? direction.replaceAll(/\|/gi, '').trim() : '',
+        INN: inn.replaceAll(/\|/gi, ''),
         budget: fields.isBudget,
-        payment_type: organization,
-        date: date ?? '',
+        payment_type: /сбп/gi.test(organization) ? 'СБП' : 'РС',
+        date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
       };
 
-      this.logger.debug(
-        {
-          message: 'Check result',
-          batchCommands,
-          data,
-        },
-        'log',
-      );
-
-      Promise.all([
+      // Отправляем данные
+      return Promise.all([
         // this.bitrixService.callBatch(batchCommands),
         // this.wikiService.notifyWikiAboutReceivePayment()
+        // fixme: remove after tests
+        this.sendTestMessage(
+          `[b]Обработка кнопки принятия платежа[/b][br]${JSON.stringify({ batchCommands, data })}`,
+        ),
       ]);
-
-      return true;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error, true);
       return false;
     }
   }

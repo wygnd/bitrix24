@@ -18,11 +18,6 @@ import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 
 @Injectable()
 export class BitrixTelphinEventsService {
-  // private readonly logger = new WinstonLogger(
-  //   BitrixTelphinEventsService.name,
-  //   'bitrix:services:integration:telphin:events'.split(':'),
-  // );
-
   constructor(
     private readonly telphinService: TelphinService,
     private readonly bitrixService: BitrixService,
