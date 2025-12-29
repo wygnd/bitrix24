@@ -34,12 +34,16 @@ export class BitrixTelphinEventsService {
     } = fields;
 
     if (callFlow !== 'in')
-      throw new BadRequestException(`Call hasn't flow in: ${callFlow}`);
+      return {
+        status: false,
+        message: `Call hasn't flow in: ${callFlow}`,
+      };
 
     if (callStatus !== 'ANSWER')
-      throw new BadRequestException(
-        `Call has not status answer: [${callStatus}]`,
-      );
+      return {
+        status: false,
+        message: `Call has not status answer: [${callStatus}]`,
+      };
 
     if (!CalledExtensionID)
       throw new BadRequestException(
