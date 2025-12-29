@@ -50,7 +50,7 @@ export class BitrixMessageControllerV1 {
         MESSAGE: body.message,
         SYSTEM: body.system ? 'Y' : 'N',
       });
-      this.logger.info(response);
+      this.logger.debug(response, true);
       return {
         status: true,
         messageId: response.result,

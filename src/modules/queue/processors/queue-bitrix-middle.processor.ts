@@ -37,7 +37,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Добавлена задача [${name}][${id}] в очередь`,
         data,
@@ -72,7 +72,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         response.status = QueueProcessorStatus.NOT_HANDLED;
     }
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check result run task',
         response,
@@ -97,7 +97,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         JSON.stringify(response),
     );
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Задача [${name}][${id}] выполнена`,
         response,
@@ -128,7 +128,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     );
 
     this.logger.error({ message: logMessage, job }, true);
-    this.logger.debug(
+    this.logger.log(
       {
         message: logMessage,
         id: job.id,

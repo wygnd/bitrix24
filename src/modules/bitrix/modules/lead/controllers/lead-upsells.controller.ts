@@ -43,7 +43,7 @@ export class BitrixLeadUpsellController {
         dealId: body.document_id[2],
         ...query,
       });
-      this.logger.info(
+      this.logger.debug(
         {
           message: 'Add upsell in queue',
           response,
@@ -73,7 +73,7 @@ export class BitrixLeadUpsellController {
   ) {
     try {
       const response = await this.bitrixUpsellService.handleUpsellDeals(date);
-      this.logger.info(
+      this.logger.debug(
         {
           message: 'Check handle upsells response',
           response,

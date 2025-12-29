@@ -29,7 +29,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
       let message = `[${statusCode}] ${method} ${url} - ${userAgent} => ${Date.now() - requestTime}ms`;
 
       this.logger.debug(message);
-      this.fileLogger.info(
+      this.fileLogger.debug(
         `${message} | params: ${JSON.stringify(params)} | query: ${JSON.stringify(query)} | body: ${JSON.stringify(body)}`,
         true,
       );

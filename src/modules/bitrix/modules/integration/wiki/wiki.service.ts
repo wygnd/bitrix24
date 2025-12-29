@@ -10,6 +10,7 @@ import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-receive.inteface';
 
 @Injectable()
 export class BitrixWikiService {
@@ -253,8 +254,7 @@ export class BitrixWikiService {
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
         message: this.bitrixImbotService.encodeText(message),
-        // dialogId: user_role, // todo: uncomment after tests
-        dialogId: this.bitrixService.TEST_CHAT_ID,
+        dialogId: user_role,
         organizationName: organizationName,
         dealId: dealId,
         isBudget: isBudget,
@@ -280,5 +280,26 @@ export class BitrixWikiService {
       this.logger.error(error, true);
       throw error;
     }
+  }
+
+  /**
+   * Handle receive payment: send message in chat
+   *
+   * ---
+   *
+   * Обрабатывает принятие платежа: отправляет сообщение в чат
+   * @param fields
+   */
+  public async sendNoticeReceivePayment(
+    fields: B24WikiPaymentsNoticeReceiveOptions,
+  ) {
+    const { message, group: chatId } = fields;
+
+    const { result: messageId } = await this.bitrixImbotService.sendMessage({
+      DIALOG_ID: chatId,
+      MESSAGE: message,
+    });
+
+    return { messageId };
   }
 }

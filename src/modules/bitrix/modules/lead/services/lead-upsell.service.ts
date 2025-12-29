@@ -798,7 +798,7 @@ export class BitrixLeadUpsellService {
       }),
     ])
       .then((result) => {
-        this.logger.info(
+        this.logger.debug(
           {
             message: 'Final upsell steps',
             data: result,

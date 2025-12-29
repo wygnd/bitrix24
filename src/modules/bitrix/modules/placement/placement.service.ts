@@ -46,7 +46,7 @@ export class BitrixPlacementService {
     query: PlacementQueryRequestDto,
   ) {
     try {
-      this.logger.info(
+      this.logger.debug(
         {
           message: 'New open widget',
           data: { query, body },

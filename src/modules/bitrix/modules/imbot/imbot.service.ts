@@ -43,7 +43,6 @@ import { AvitoService } from '@/modules/avito/avito.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
-import { B24Task } from '@/modules/bitrix/modules/task/interfaces/task.interface';
 import dayjs from 'dayjs';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 
@@ -202,6 +201,10 @@ export class BitrixImBotService {
     return this.botId;
   }
 
+  private limitAccessByPushButton(userId: string, userIds: string[]): boolean {
+    return userIds.includes(userId);
+  }
+
   /**
    * Global handle bot command and distribute by functions
    *
@@ -211,7 +214,7 @@ export class BitrixImBotService {
    * @param body
    */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
-    this.logger.info({ message: `New command handler`, body }, true);
+    this.logger.debug({ message: `New command handler`, body }, true);
     const { event, data } = body;
 
     if (event !== 'ONIMCOMMANDADD')
@@ -274,7 +277,14 @@ export class BitrixImBotService {
         // Если нажал на кнопку кто-то, кроме:
         // Иван Ильин, Анастасия Самыловская, Grampus
         // Выходим
-        if (!['27', '442', '460', '376'].includes(pushButtonUserId)) {
+        if (
+          this.limitAccessByPushButton(pushButtonUserId, [
+            '27',
+            '442',
+            '460',
+            '376',
+          ])
+        ) {
           response = Promise.resolve(
             `Forbidden push button ${pushButtonUserId}`,
           );
@@ -298,7 +308,7 @@ export class BitrixImBotService {
 
     response
       .then((result) => {
-        this.logger.info({ message: 'Result handled button', result }, true);
+        this.logger.debug({ message: 'Result handled button', result }, true);
       })
       .catch((error) => {
         this.logger.error(error, true);
@@ -722,7 +732,7 @@ export class BitrixImBotService {
       this.avitoService
         .rejectDistributeLeadByAi(phone)
         .then((response) => {
-          this.logger.info(
+          this.logger.debug(
             {
               message: 'Check respose from avito on reject distributed ai lead',
               data: response,
@@ -788,16 +798,15 @@ export class BitrixImBotService {
       },
     });
 
-    return this.handleApprovePaymentAdvert(fields, messageDecoded);
-    // switch (toChatId) {
-    //   // Чат: Отдел контекстной рекламы
-    //   case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
-    //     return this.handleApprovePaymentAdvert(fields, messageDecoded);
-    //
-    //   // Остальные чаты
-    //   default:
-    //     return this.handleApprovePaymentDefault(fields, messageDecoded);
-    // }
+    switch (toChatId) {
+      // Чат: Отдел контекстной рекламы
+      case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
+        return this.handleApprovePaymentAdvert(fields, messageDecoded);
+
+      // Остальные чаты
+      default:
+        return this.handleApprovePaymentDefault(fields, messageDecoded);
+    }
   }
 
   /**
@@ -822,17 +831,8 @@ export class BitrixImBotService {
      * UF_CRM_1638351463: Поле "Кто ведет"
      */
     const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
-    const [
-      userName,
-      action,
-      price,
-      contract,
-      organization,
-      direction,
-      inn,
-      ,
-      date,
-    ] = message.split(' | ');
+    const [userName, action, price, contract, organization] =
+      message.split(' | ');
     const clearContract = this.bitrixService.clearBBCode(contract);
     const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
     const createTaskFields = {
@@ -867,7 +867,7 @@ export class BitrixImBotService {
 
     const { id: taskId, responsibleId: taskResponsibleId } = task;
 
-    this.logger.debug(`New task id: ${taskId}`, 'warn');
+    this.logger.log(`New task id: ${taskId}`, 'warn');
 
     const batchCommands: B24BatchCommands = {
       notify_about_new_task: {
@@ -900,7 +900,7 @@ export class BitrixImBotService {
       },
     };
 
-    return batchCommands;
+    return this.bitrixService.callBatch(batchCommands);
   }
 
   /**
@@ -981,11 +981,12 @@ export class BitrixImBotService {
         date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
       };
 
+      this.logger.debug({ data, batchCommands }, true);
+
       // Отправляем данные
       return Promise.all([
-        // this.bitrixService.callBatch(batchCommands),
-        // this.wikiService.notifyWikiAboutReceivePayment()
-        // fixme: remove after tests
+        this.bitrixService.callBatch(batchCommands),
+        this.wikiService.notifyWikiAboutReceivePayment(data),
         this.sendTestMessage(
           `[b]Обработка кнопки принятия платежа[/b][br]${JSON.stringify({ batchCommands, data })}`,
         ),

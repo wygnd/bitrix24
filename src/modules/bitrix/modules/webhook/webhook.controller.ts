@@ -57,7 +57,7 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForDealDto,
   ) {
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'approve site for advert',
         body,
@@ -85,7 +85,7 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForCase,
   ) {
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'approve site for case',
         body,
@@ -107,7 +107,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'init call',
         body,
@@ -124,7 +124,7 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantEndCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallEndDto,
   ) {
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'start call',
         body,

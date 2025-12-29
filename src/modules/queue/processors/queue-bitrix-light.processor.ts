@@ -38,7 +38,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
           JSON.stringify(data),
       )
       .catch(() => {});
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Добавлена задача [${name}][${id}] в очередь`,
         data,
@@ -79,7 +79,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check result run task',
         response,
@@ -97,7 +97,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Задача [${name}][${id}] выполнена`,
         response,

@@ -39,7 +39,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     this.bitrixImBotService.sendTestMessage(
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
     );
-    this.logger.info(`Добавлена задача [${name}][${id}] в очередь`, true);
+    this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`, true);
 
     switch (name) {
       case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
@@ -65,7 +65,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check result run task',
         response,
@@ -83,7 +83,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Задача [${name}][${id}] выполнена`,
         response,
@@ -98,7 +98,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
 
     this.bitrixImBotService.sendTestMessage(message);
-    this.logger.info(
+    this.logger.debug(
       {
         message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
         job,
@@ -131,6 +131,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
     this.bitrixImBotService.sendTestMessage(message);
     this.logger.error({ message: logMessage, error }, true);
-    this.logger.debug(message, 'error');
+    this.logger.log(message, 'error');
   }
 }

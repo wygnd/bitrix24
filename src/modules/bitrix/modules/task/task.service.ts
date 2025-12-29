@@ -116,7 +116,7 @@ export class BitrixTaskService {
       createdBy,
     } = task;
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check task',
         task,
@@ -190,11 +190,11 @@ export class BitrixTaskService {
       .then((res) => res)
       .catch((err) => err);
 
-    this.logger.debug(
+    this.logger.log(
       `check response handled task: ${JSON.stringify(responseSendMessage)}`,
     );
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check response handled task',
         response: responseSendMessage,

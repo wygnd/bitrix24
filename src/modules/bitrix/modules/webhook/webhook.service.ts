@@ -724,7 +724,7 @@ export class BitrixWebhookService {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check current calls',
         phone: clientPhone,
@@ -740,7 +740,7 @@ export class BitrixWebhookService {
         [caller_id_name, caller_id_number].includes(clientPhone),
     );
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check current calls and finded target call by client phone',
         currentCalls,
@@ -765,7 +765,7 @@ export class BitrixWebhookService {
       ),
     ]);
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check extension group',
         extensionGroup,
@@ -843,7 +843,7 @@ export class BitrixWebhookService {
     if (saleExtensionList.length === 0)
       throw new NotFoundException('Extension list is empty');
 
-    this.logger.info(
+    this.logger.debug(
       {
         message: 'check extension phone and saleList from telphin',
         saleExtensionList,
@@ -915,7 +915,7 @@ export class BitrixWebhookService {
         };
       });
 
-      this.logger.info(
+      this.logger.debug(
         {
           message: 'check batch commands on avito number',
           callAvitoCommands,
@@ -975,7 +975,7 @@ export class BitrixWebhookService {
         },
       };
 
-      this.logger.info(
+      this.logger.debug(
         {
           message: 'check batch commands on target number',
           callManagerCommands,

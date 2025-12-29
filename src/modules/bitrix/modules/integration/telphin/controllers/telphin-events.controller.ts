@@ -28,7 +28,7 @@ export class BitrixTelphinEventsControllerV1 {
     try {
       const response =
         await this.bitrixTelphinEventsService.handleAnswerCall(body);
-      this.logger.info({ body, response }, true);
+      this.logger.debug({ body, response }, true);
 
       return response;
     } catch (error) {

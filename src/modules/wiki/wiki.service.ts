@@ -111,7 +111,7 @@ export class WikiService {
         '',
         qs.stringify(data),
       );
-      this.logger.info(response, true);
+      this.logger.debug(response, true);
       return true;
     } catch (error) {
       this.logger.error(error, true);

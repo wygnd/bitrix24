@@ -14,6 +14,7 @@ import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24WikiPaymentsNoticeWaitingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-payments-notice-waiting.dto';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24WikiPaymentsNoticeReceiveDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-payments-notice-receive.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiHeader({
@@ -23,7 +24,10 @@ import { WinstonLogger } from '@/config/winston.logger';
   required: true,
 })
 @UseGuards(AuthGuard)
-@Controller('integration/wiki')
+@Controller({
+  version: '1',
+  path: 'integration/wiki',
+})
 export class BitrixWikiController {
   private readonly logger = new WinstonLogger(
     BitrixWikiController.name,
@@ -52,7 +56,29 @@ export class BitrixWikiController {
 
     if (!response) throw new BadRequestException('Invalid send message');
 
-    this.logger.info(
+    this.logger.debug(
+      {
+        body: fields,
+        response,
+      },
+      true,
+    );
+
+    return response;
+  }
+
+  @ApiOperation({ summary: 'Отправить сообщение о принятии платежа' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/payments/notices/receive')
+  async sendNoticePaymentReceived(
+    @Body() fields: B24WikiPaymentsNoticeReceiveDto,
+  ) {
+    const response =
+      await this.bitrixWikiService.sendNoticeReceivePayment(fields);
+
+    if (!response) throw new BadRequestException('Invalid send message');
+
+    this.logger.debug(
       {
         body: fields,
         response,
