@@ -48,12 +48,12 @@ export interface B24TaskAction {
 
 export interface B24TaskCheckListTree {
   nodeId: number;
-  fields: B24TaskFields;
+  fields: B24TaskCheckListTreeFields;
   action: any[];
   descendants: any[];
 }
 
-export interface B24TaskFields {
+export interface B24TaskCheckListTreeFields {
   id: any;
   copiedId: any;
   entityId: any;
@@ -71,7 +71,7 @@ export interface B24TaskFields {
   nodeId: any;
 }
 
-export interface B24Task {
+export interface B24TaskFields {
   id: string;
   parentId: string;
   title: string;
@@ -144,7 +144,9 @@ export interface B24Task {
   checkListCanAdd: boolean;
 }
 
-export type B24TaskSelect = Array<keyof B24Task> ;
+export type B24Task = B24TaskFields & Record<string, any>;
+
+export type B24TaskSelect = Array<keyof B24Task>;
 
 export interface TaskGetOptions {
   taskId: string;
@@ -152,3 +154,13 @@ export interface TaskGetOptions {
 }
 
 export type B24TaskExtended = B24Task & { taskResult: B24TaskResult[] };
+
+export interface B24TaskCreationalAttributes {
+  ID: string;
+  TITLE: string;
+  CREATED_BY: string;
+  DEADLING: string;
+  UF_CRM_TASK: string[];
+  RESPONSIBLE_ID: string;
+  ACCOMPLICES: string[];
+}

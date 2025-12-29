@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
@@ -24,9 +29,20 @@ export class BitrixTaskService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly redisService: RedisService,
+    @Inject(forwardRef(() => BitrixImBotService))
     private readonly botService: BitrixImBotService,
   ) {}
 
+  /**
+   * Get task by bitrix task ID
+   *
+   * ---
+   *
+   * Получить информацию о задаче по ID
+   * @param taskId
+   * @param select
+   * @param force
+   */
   async getTaskById(
     taskId: string,
     select: B24TaskSelect = [],
@@ -187,5 +203,29 @@ export class BitrixTaskService {
     );
 
     return responseSendMessage;
+  }
+
+  /**
+   * Create new task in bitrix24
+   *
+   * ---
+   *
+   * Создает новую задачу в битрикс24
+   * @param fields
+   */
+  async createTask(fields: Partial<B24Task>): Promise<B24Task | null> {
+    try {
+      const { result } = await this.bitrixService.callMethod<
+        { fields: Partial<B24Task> },
+        { task: B24Task }
+      >('tasks.task.add', {
+        fields: fields,
+      });
+
+      return result ? result.task : null;
+    } catch (error) {
+      this.logger.error(error, true);
+      return null;
+    }
   }
 }

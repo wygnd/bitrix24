@@ -507,4 +507,8 @@ export class BitrixService {
   public clearBBCode(str: string) {
     return str.replaceAll(/\[.*?]/g, '');
   }
+
+  public clearNumber(str: string) {
+    return str.replaceAll(/[^0-9]/gi, '');
+  }
 }

@@ -43,6 +43,9 @@ import { AvitoService } from '@/modules/avito/avito.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
+import { B24Task } from '@/modules/bitrix/modules/task/interfaces/task.interface';
+import dayjs from 'dayjs';
+import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -63,6 +66,8 @@ export class BitrixImBotService {
     @Inject(forwardRef(() => BitrixIntegrationAvitoService))
     private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
     private readonly avitoService: AvitoService,
+    @Inject(forwardRef(() => BitrixTaskService))
+    private readonly taskService: BitrixTaskService,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -783,15 +788,16 @@ export class BitrixImBotService {
       },
     });
 
-    switch (toChatId) {
-      // Чат: Отдел контекстной рекламы
-      case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
-        return this.handleApprovePaymentAdvert();
-
-      // Остальные чаты
-      default:
-        return this.handleApprovePaymentDefault(fields);
-    }
+    return this.handleApprovePaymentAdvert(fields, messageDecoded);
+    // switch (toChatId) {
+    //   // Чат: Отдел контекстной рекламы
+    //   case B24_WIKI_PAYMENTS_ROLES_CHAT_IDS.ad_specialist:
+    //     return this.handleApprovePaymentAdvert(fields, messageDecoded);
+    //
+    //   // Остальные чаты
+    //   default:
+    //     return this.handleApprovePaymentDefault(fields, messageDecoded);
+    // }
   }
 
   /**
@@ -802,7 +808,107 @@ export class BitrixImBotService {
    * Обработка платежа для рекламы
    * @private
    */
-  private async handleApprovePaymentAdvert() {}
+  private async handleApprovePaymentAdvert(
+    fields: ImbotKeyboardPaymentsNoticeWaiting,
+    message: string,
+  ) {
+    const { isBudget, dealId, userId } = fields;
+    const dealFields = await this.dealService.getDealById(dealId);
+
+    if (!dealFields)
+      throw new NotFoundException(`Deal was not found: ${dealId}`);
+
+    /**
+     * UF_CRM_1638351463: Поле "Кто ведет"
+     */
+    const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
+    const [
+      userName,
+      action,
+      price,
+      contract,
+      organization,
+      direction,
+      inn,
+      ,
+      date,
+    ] = message.split(' | ');
+    const clearContract = this.bitrixService.clearBBCode(contract);
+    const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
+    const createTaskFields = {
+      TITLE: `TEST ${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
+      CREATED_BY: dealAdvertResponsibleId,
+      DESCRIPTION:
+        `${isBudget ? '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]' : ''}\n` +
+        '<ol>' +
+        `<li>${clearContract}</li>\n` +
+        `<li>${price}</li>\n` +
+        `<li>${paymentType}</li>\n` +
+        '</ol>' +
+        'перейдите по ссылке и заполните поля:\n' +
+        '<ul>' +
+        '<li>Счет из Яндекса</li>\n' +
+        '<li>Загрузить документ сам счет</li>' +
+        '</ul>\n\n' +
+        `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
+      RESPONSIBLE_ID: '444', // Екатерина Огрохина
+      DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
+      ACCOMPLICES: ['216'], // Анна Теленкова
+      UF_CRM_TASK: ['D_' + dealId],
+    };
+
+    if (/ндсип1/gi.test(message)) {
+      createTaskFields.TITLE =
+        'TEST ' + (isBudget ? 'Пополнить бюджет НДСИП1' : 'Оплата');
+      createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
+      createTaskFields.DESCRIPTION = '';
+    }
+
+    const task = await this.taskService.createTask(createTaskFields);
+
+    if (!task)
+      return {
+        status: false,
+        message: 'Invalid handle command: execute error on creating task',
+      };
+
+    const { id: taskId, responsibleId: taskResponsibleId } = task;
+
+    this.logger.debug(`New task id: ${taskId}`, 'warn');
+
+    const batchCommands: B24BatchCommands = {
+      notify_about_new_task: {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: dealAdvertResponsibleId,
+          MESSAGE:
+            'TEST[br]' +
+            `${
+              isBudget
+                ? 'Поступила оплата за рекламный бюджет.[br]'
+                : 'Поступила оплата за ведение/допродажу.[br]'
+            } Нужно выставить счет из Яндекс.Директ и прикрепить к этой задаче.[br]` +
+            this.bitrixService.generateTaskUrl(
+              createTaskFields.RESPONSIBLE_ID,
+              taskId,
+            ),
+        },
+      },
+      send_message_to_head: {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: taskResponsibleId,
+          MESSAGE:
+            'TEST[br]' + isBudget
+              ? 'Необходимо занести рекламный бюджет.[br]' +
+                this.bitrixService.generateTaskUrl(userId, taskId)
+              : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
+        },
+      },
+    };
+
+    return batchCommands;
+  }
 
   /**
    * Default handle approve payment
@@ -814,11 +920,11 @@ export class BitrixImBotService {
    */
   private async handleApprovePaymentDefault(
     fields: ImbotKeyboardPaymentsNoticeWaiting,
+    message: string,
   ) {
     try {
       // Декодируем сообщение
       // Получаем руководителя менеджера
-      const messageDecoded = this.decodeText(fields.message);
       const batchCommands: B24BatchCommands = {
         get_user: {
           method: 'user.get',
@@ -857,7 +963,7 @@ export class BitrixImBotService {
         inn,
         ,
         date,
-      ] = messageDecoded.split(' | ');
+      ] = message.split(' | ');
 
       // Собираем запрос для отправки сообщения руководителю
       batchCommands['send_message_head'] = {
@@ -871,7 +977,7 @@ export class BitrixImBotService {
       // Собираем объект для отправки в old wiki
       const data: WikiNotifyReceivePaymentOptions = {
         action: 'gft_log_user_money',
-        money: price.replaceAll(/[^0-9]/gi, ''),
+        money: this.bitrixService.clearNumber(price),
         deal_number: this.bitrixService.clearBBCode(contract),
         bitrix_user_id: fields.userId,
         user_name: this.bitrixService.clearBBCode(userName),
