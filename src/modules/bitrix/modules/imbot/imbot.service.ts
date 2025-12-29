@@ -45,6 +45,7 @@ import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integ
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 import dayjs from 'dayjs';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
+import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
 
 @Injectable()
 export class BitrixImBotService {
@@ -296,6 +297,24 @@ export class BitrixImBotService {
           commandParamsDecoded as ImbotKeyboardPaymentsNoticeWaiting,
           MESSAGE_ID,
           DIALOG_ID,
+        );
+        status = true;
+        break;
+
+      case '/approveAddyPaymentOnPay':
+        if (
+          this.limitAccessByPushButton(pushButtonUserId, ['27', '460', '376'])
+        ) {
+          response = Promise.resolve(
+            `[${command}]: Forbidden push button ${pushButtonUserId}`,
+          );
+          status = false;
+          break;
+        }
+
+        response = this.handleApproveAddyPaymentOnPay(
+          commandParamsDecoded as B24ImboKeyboardAddyPaymentsApprove,
+          MESSAGE_ID,
         );
         status = true;
         break;
@@ -995,6 +1014,18 @@ export class BitrixImBotService {
       this.logger.error(error, true);
       return false;
     }
+  }
+
+  private async handleApproveAddyPaymentOnPay(
+    fields: B24ImboKeyboardAddyPaymentsApprove,
+    messageId: number,
+  ) {
+    const { message } = fields;
+    this.updateMessage({
+      MESSAGE_ID: messageId,
+      MESSAGE: this.decodeText(message),
+      KEYBOARD: '',
+    });
   }
 
   public encodeText(message: string): Buffer<ArrayBuffer> {
