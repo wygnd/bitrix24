@@ -203,7 +203,7 @@ export class BitrixImBotService {
   }
 
   private limitAccessByPushButton(userId: string, userIds: string[]): boolean {
-    return userIds.includes(userId);
+    return !userIds.includes(userId);
   }
 
   /**
