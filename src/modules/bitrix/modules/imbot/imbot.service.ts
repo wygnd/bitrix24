@@ -840,16 +840,9 @@ export class BitrixImBotService {
       CREATED_BY: dealAdvertResponsibleId,
       DESCRIPTION:
         `${isBudget ? '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]' : ''}\n` +
-        '<ol>' +
-        `<li>${clearContract}</li>\n` +
-        `<li>${price}</li>\n` +
-        `<li>${paymentType}</li>\n` +
-        '</ol>' +
-        'перейдите по ссылке и заполните поля:\n' +
-        '<ul>' +
-        '<li>Счет из Яндекса</li>\n' +
-        '<li>Загрузить документ сам счет</li>' +
-        '</ul>\n\n' +
+        `[list=1]\n[*]${clearContract}[*]${price}[*]${paymentType}\n[/list]\n\n` +
+        'Перейдите по ссылке и заполните поля:\n' +
+        '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
         `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
       RESPONSIBLE_ID: '444', // Екатерина Огрохина
       DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',

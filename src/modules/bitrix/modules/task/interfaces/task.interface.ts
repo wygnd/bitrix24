@@ -163,4 +163,5 @@ export interface B24TaskCreationalAttributes {
   UF_CRM_TASK: string[];
   RESPONSIBLE_ID: string;
   ACCOMPLICES: string[];
+  DESCRIPTION: string;
 }
