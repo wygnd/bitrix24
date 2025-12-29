@@ -8,6 +8,7 @@ import {
 import { BitrixAddyPaymentOptions } from '@/common/interfaces/bitrix-config.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
 
 @Injectable()
 export class BitrixAddyPaymentsService {
@@ -45,11 +46,13 @@ export class BitrixAddyPaymentsService {
         message: 'Not handling',
       };
       const { user_id, contract, price, client, link } = fields;
+      const message =
+        `Счет на оплату[br]${link}[br]${user_id} ${contract}[br]` +
+        `${this.bitrixService.formatPrice(price / 100)}[br]${client}`;
+
       const { result } = await this.bitrixBotService.sendMessage({
         DIALOG_ID: this.paymentOptions.bitrixChatId,
-        MESSAGE:
-          `Счет на оплату[br]${link}[br]${user_id} ${contract}[br]` +
-          `${this.bitrixService.formatPrice(price / 100)}[br]${client}`,
+        MESSAGE: message,
         KEYBOARD: [
           {
             TEXT: 'Копировать ссылку',
@@ -57,6 +60,19 @@ export class BitrixAddyPaymentsService {
             DISPLAY: 'LINE',
             ACTION: 'COPY',
             ACTION_VALUE: link,
+          },
+          {
+            TEXT: 'Подтвердить платеж',
+            COMMAND: 'approveAddyPaymentOnPay',
+            COMMAND_PARAMS: JSON.stringify({
+              message: this.bitrixBotService.encodeText(
+                message
+                  .replace(`${link}[br]`, '')
+                  .replace('Счет на оплату', '[b]Счет оплачен[/b]'),
+              ),
+            } as B24ImboKeyboardAddyPaymentsApprove),
+            BG_COLOR_TOKEN: 'primary',
+            DISPLAY: 'LINE',
           },
         ],
       });
