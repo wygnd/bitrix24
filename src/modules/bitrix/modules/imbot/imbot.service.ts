@@ -158,18 +158,6 @@ export class BitrixImBotService {
   }
 
   /**
-   * Remove bot command
-   * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-unregister.html
-   * @param fields
-   */
-  private async removeCommand(fields: ImbotUnregisterCommandDto) {
-    return await this.bitrixService.callMethod<
-      ImbotUnregisterCommandDto,
-      boolean
-    >('imbot.command.unregister', fields);
-  }
-
-  /**
    * Send message in chat via bot
    * @param fields
    */
@@ -1005,7 +993,7 @@ export class BitrixImBotService {
       // Отправляем данные
       return Promise.all([
         this.bitrixService.callBatch(batchCommands),
-        this.wikiService.notifyWikiAboutReceivePayment(data),
+        // this.wikiService.notifyWikiAboutReceivePayment(data),
         this.sendTestMessage(
           `[b]Обработка кнопки принятия платежа[/b][br]${JSON.stringify({ batchCommands, data })}`,
         ),
