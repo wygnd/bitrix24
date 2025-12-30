@@ -11,6 +11,9 @@ import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-receive.inteface';
+import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integration/wiki/services/wiki-client-payments.service';
+import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
+import { B24Department } from '@/modules/bitrix/modules/department/department.interface';
 
 @Injectable()
 export class BitrixWikiService {
@@ -24,6 +27,7 @@ export class BitrixWikiService {
     private readonly wikiService: WikiService,
     private readonly bitrixDealService: BitrixDealService,
     private readonly bitrixImbotService: BitrixImBotService,
+    private readonly bitrixWikiClientPayments: B24WikiClientPaymentsService,
   ) {}
 
   /**
@@ -230,6 +234,7 @@ export class BitrixWikiService {
       let leadId = lead_id;
       let dealId = deal_id;
       const isBudget = /бюджет/gi.test(message);
+      const [, , , , , , inn = ''] = message.split(' | ');
 
       if (!deal_id && !leadId)
         throw new BadRequestException('Invalid lead and deal ids');
@@ -260,6 +265,42 @@ export class BitrixWikiService {
         isBudget: isBudget,
         userId: userId,
       };
+
+      if (inn.length > 0) {
+        const {
+          result: {
+            result: { get_user_department: departmentInfo },
+          },
+        } = await this.bitrixService.callBatch<
+          B24BatchResponseMap<{
+            get_user: B24User[];
+            get_user_department: B24Department[];
+          }>
+        >({
+          get_user: {
+            method: 'user.get',
+            params: {
+              filter: {
+                ID: userId,
+              },
+            },
+          },
+          get_user_department: {
+            method: 'department.get',
+            params: {
+              ID: '$result[get_user][0][UF_DEPARTMENT][0][ID]',
+            },
+          },
+        });
+
+        if (departmentInfo.length > 0) {
+          this.bitrixWikiClientPayments.addPayment({
+            inn: inn,
+            departmentId: Number(departmentInfo[0].ID),
+            departmentName: departmentInfo[0].NAME,
+          });
+        }
+      }
 
       const { result: messageId } = await this.bitrixImbotService.sendMessage({
         DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
@@ -294,11 +335,38 @@ export class BitrixWikiService {
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ) {
     const { message, group: chatId } = fields;
+    const [, , , , inn] = message.split(' | ');
+    let clientDepartmentHistory = '';
+
+    // Если есть ИНН
+    // нужно в сообщение добавлять названия отделов, с которыми работал клиент
+    if (/инн/gi.test(inn)) {
+      const paymentsSet = new Set<number>();
+      const payments = await this.bitrixWikiClientPayments.getPaymentList({
+        where: {
+          inn: this.bitrixService.clearNumber(inn),
+        },
+        attributes: ['id', 'departmentName', 'departmentId'],
+      });
+
+      if (payments.length > 0) {
+        clientDepartmentHistory +=
+          `[br][br]` +
+          payments
+            .map(({ departmentName, departmentId }) => {
+              if (paymentsSet.has(departmentId)) return null;
+              paymentsSet.add(departmentId);
+              return departmentName;
+            })
+            .filter((p) => p)
+            .join(', ');
+      }
+    }
 
     const { result: messageId } = await this.bitrixImbotService.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       // DIALOG_ID: chatId,
-      MESSAGE: message,
+      MESSAGE: message + clientDepartmentHistory,
     });
 
     return { messageId };

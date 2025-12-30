@@ -7,7 +7,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/wiki.service';
+import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/services/wiki.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';

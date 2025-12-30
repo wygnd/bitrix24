@@ -5,6 +5,7 @@ import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
 import { TokensModel } from '@/modules/tokens/tokens.entity';
 import { LeadUpsellModel } from '@/modules/bitrix/modules/lead/entities/lead-upsell.entity';
+import { B24WikiClientPaymentsModel } from '@/modules/bitrix/modules/integration/wiki/etities/wiki-client-payments.entity';
 
 export const databaseProviders = [
   {
@@ -39,6 +40,7 @@ export const databaseProviders = [
         LeadObserveManagerCallingModel,
         TokensModel,
         LeadUpsellModel,
+        B24WikiClientPaymentsModel,
       ]);
       await sequelize.sync({
         force: false,

@@ -28,8 +28,8 @@ import { BitrixDepartmentController } from '@/modules/bitrix/modules/department/
 import { BitrixTaskController } from '@/modules/bitrix/modules/task/task.controller';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';
-import { BitrixWikiController } from '@/modules/bitrix/modules/integration/wiki/wiki.controller';
-import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/wiki.service';
+import { BitrixWikiController } from '@/modules/bitrix/modules/integration/wiki/controllers/wiki.controller';
+import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/services/wiki.service';
 import { AvitoModule } from '@/modules/avito/avito.module';
 import { BitrixLeadController } from '@/modules/bitrix/modules/lead/controllers/lead.controller';
 import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules/lead/services/lead-observe-manager-calling.service';
@@ -44,6 +44,7 @@ import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/
 import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.controller';
 import { BitrixTelphinEventsControllerV1 } from '@/modules/bitrix/modules/integration/telphin/controllers/telphin-events.controller';
 import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration/telphin/services/telphin-events.service';
+import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integration/wiki/services/wiki-client-payments.service';
 
 @Module({
   imports: [
@@ -108,6 +109,7 @@ import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration
     BitrixDepartmentService,
     BitrixEventService,
     BitrixWikiService,
+    B24WikiClientPaymentsService,
     BitrixAddySupportService,
     BitrixAddyPaymentsService,
     BitrixTelphinEventsService,
@@ -123,6 +125,7 @@ import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration
     BitrixIntegrationAvitoService,
     BitrixHeadHunterService,
     BitrixLeadUpsellService,
+    B24WikiClientPaymentsService,
   ],
 })
 export class BitrixModule {}
