@@ -10,20 +10,18 @@ import {
 import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/wiki.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
-import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24WikiPaymentsNoticeWaitingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-payments-notice-waiting.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24WikiPaymentsNoticeReceiveDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-payments-notice-receive.dto';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags(B24ApiTags.WIKI)
-@ApiHeader({
-  name: 'Authorization',
-  description: 'api key',
-  example: 'bga token',
-  required: true,
-})
+@ApiAuthHeader()
 @UseGuards(AuthGuard)
+@ApiExceptions()
 @Controller({
   version: '1',
   path: 'integration/wiki',

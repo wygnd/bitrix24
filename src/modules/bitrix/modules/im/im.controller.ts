@@ -1,5 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 import {
@@ -7,8 +7,11 @@ import {
   B24SendMessageResponse,
 } from '@/modules/bitrix/modules/im/dtos/im.dto';
 import { WinstonLogger } from '@/config/winston.logger';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags(B24ApiTags.IM)
+@ApiExceptions()
 @Controller({
   path: 'messages',
   version: '1',
@@ -22,12 +25,7 @@ export class BitrixMessageControllerV1 {
   constructor(private readonly bitrixMessageService: BitrixMessageService) {}
 
   @ApiOperation({ summary: 'Отправить сообщение' })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Токен доступа',
-    example: 'bga {token}',
-    required: true,
-  })
+  @ApiAuthHeader()
   @ApiResponse({
     type: B24SendMessageResponse,
     status: HttpStatus.OK,

@@ -8,15 +8,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import {
-  BitrixAddySupportSendMessageDto,
-  BitrixAddySupportSendMessageResponseDto,
-} from '@/modules/bitrix/modules/integration/addy/dtos/addy-support-send-message.dto';
+import { BitrixAddySupportSendMessageDto } from '@/modules/bitrix/modules/integration/addy/dtos/addy-support-send-message.dto';
 import { BitrixAddySupportService } from '@/modules/bitrix/modules/integration/addy/services/addy-support.service';
-import { ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
+import { B24AddySupportSendMessageResponseDto } from '@/modules/bitrix/modules/integration/addy/dtos/addy-support-send-message-response.dto';
 
 @ApiTags(B24ApiTags.ADDY)
+@ApiExceptions()
 @Controller({
   path: '/integration/addy/support',
   version: '1',
@@ -29,23 +30,11 @@ export class BitrixAddySupportControllerV1 {
   @ApiOperation({
     summary: 'Отправить сообщение в чат ADDY сообщения тех. поддержки',
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Токен авторизации',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @ApiResponse({
-    type: BitrixAddySupportSendMessageResponseDto,
+    description: 'Ответ об успешной отправки сообщения',
     status: HttpStatus.OK,
-    description: 'Успешная отправка сообщения',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Ошибка валдиации полей',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Ошибка авторизации',
+    type: B24AddySupportSendMessageResponseDto,
   })
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)

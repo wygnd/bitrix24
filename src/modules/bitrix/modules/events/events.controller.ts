@@ -17,8 +17,10 @@ import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
 import { EventHandleUpdateTaskDto } from '@/modules/bitrix/modules/events/dtos/event-task-update.dto';
 import { EventLeadDeleteDto } from '@/modules/bitrix/modules/events/dtos/event-lead-delete.dto';
 import { B24EventRemoveDto } from '@/modules/bitrix/modules/events/dtos/event-remove.dto';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.EVENTS)
+@ApiExceptions()
 @Controller('events')
 export class BitrixEventsController {
   constructor(private readonly eventsService: BitrixEventService) {}

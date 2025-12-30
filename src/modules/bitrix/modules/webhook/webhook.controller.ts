@@ -23,8 +23,10 @@ import {
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.WEBHOOK)
+@ApiExceptions()
 @Controller('webhook')
 export class BitrixWebhookController {
   private readonly logger = new WinstonLogger(

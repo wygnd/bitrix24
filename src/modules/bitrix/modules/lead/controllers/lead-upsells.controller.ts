@@ -17,8 +17,10 @@ import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { B24LeadUpsellStatuses } from '@/modules/bitrix/modules/lead/interfaces/lead-upsell.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.LEADS)
+@ApiExceptions()
 @Controller('leads/upsells')
 export class BitrixLeadUpsellController {
   private readonly logger = new WinstonLogger(

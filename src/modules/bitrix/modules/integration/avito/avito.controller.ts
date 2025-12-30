@@ -9,12 +9,13 @@ import {
 import { B24ApiTags } from '../../../interfaces/bitrix-api.interface';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AvitoFindDuplicateLeadsDto } from './dtos/avito.dto';
-import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
 import { AvitoCreateLeadDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito-create-lead.dto';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.AVITO)
+@ApiExceptions()
 @UseGuards(AuthGuard)
 @Controller('integration/avito')
 export class BitrixAvitoController {
@@ -26,7 +27,6 @@ export class BitrixAvitoController {
     summary: 'Find duplicate leads by phone',
   })
   @ApiBody({ type: AvitoFindDuplicateLeadsDto, isArray: true })
-  @ApiExceptions()
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Success',
@@ -46,7 +46,6 @@ export class BitrixAvitoController {
     description: 'Success: Returned message id',
     example: 125678392,
   })
-  @ApiExceptions()
   @ApiBody({ type: String, isArray: true })
   @Post('/notify-about-unread-chats')
   async notifyAboutUnreadChats(@Body() accountNames: string[]) {

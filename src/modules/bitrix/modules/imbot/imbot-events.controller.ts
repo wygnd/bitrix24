@@ -17,8 +17,10 @@ import type { B24EventBodyOnInstallApp } from '@/modules/bitrix/modules/imbot/in
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.EVENTS)
+@ApiExceptions()
 @Controller('events')
 export class BitrixImbotEventsController {
   constructor(

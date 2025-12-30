@@ -8,7 +8,7 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import {
   PlacementBodyRequestDto,
@@ -20,8 +20,11 @@ import { PlacementBindDto } from '@/modules/bitrix/modules/placement/dtos/placem
 import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/placement-unbind.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { BitrixPlacementGuard } from '@/modules/bitrix/guards/bitrix-widget.guard';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags(B24ApiTags.PLACEMENT)
+@ApiExceptions()
 @Controller('placement')
 export class BitrixPlacementController {
   constructor(
@@ -42,12 +45,7 @@ export class BitrixPlacementController {
     );
   }
 
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization header',
-    required: true,
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Post('/bind')
   async bindWidget(@Body() fields: PlacementBindDto) {
@@ -55,24 +53,14 @@ export class BitrixPlacementController {
     // return this.bitrixPlacementService.bind(fields);
   }
 
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization header',
-    required: true,
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Delete('/unbind')
   async unbindWidget(@Body() fields: PlacementUnbindDto) {
     return this.bitrixPlacementService.unbind(fields);
   }
 
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization header',
-    required: true,
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @ApiOperation({
     summary: 'Получить список зарегистрированных виджетов',
   })

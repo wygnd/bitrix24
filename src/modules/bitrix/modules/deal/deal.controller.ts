@@ -11,13 +11,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiHeader,
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { BitrixService } from '../../bitrix.service';
 import { BitrixDealService } from './deal.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -25,16 +19,13 @@ import type { B24ListParams } from '@/modules/bitrix/interfaces/bitrix.interface
 import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
 import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitrix/modules/deal/dtos/deal-event.dto';
 import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
-import { WinstonLogger } from '@/config/winston.logger';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags('Deals')
+@ApiExceptions()
 @Controller('deals')
 export class BitrixDealController {
-  private readonly logger = new WinstonLogger(
-    BitrixDealController.name,
-    'bitrix:controllers'.split(':'),
-  );
-
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly bitrixDealService: BitrixDealService,
@@ -47,12 +38,7 @@ export class BitrixDealController {
     example: 49146,
     required: true,
   })
-  @ApiHeader({
-    name: 'authorization',
-    description: 'api key',
-    example: 'bga token',
-    required: true,
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Get('/deal/:deal_id')
   async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
@@ -133,12 +119,7 @@ export class BitrixDealController {
       },
     },
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'api key',
-    example: 'bga token',
-    required: true,
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Get('/fields')
   async getDealFields() {
@@ -165,12 +146,7 @@ export class BitrixDealController {
       settings: [],
     },
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'api key',
-    example: 'bga token',
-    required: true,
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Get('/fields/field/:field_id')
   async getDealField(@Param('field_id') fieldId: string) {

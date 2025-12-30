@@ -11,12 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import {
-  ApiExcludeEndpoint,
-  ApiHeader,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { ImbotRegisterCommandDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-register-command.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -24,8 +19,11 @@ import { ImbotMessageAddDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-me
 import { BitrixBotCommandGuard } from '@/modules/bitrix/guards/bitrix-bot-command.guard';
 import { OnImCommandKeyboardDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
 import { WinstonLogger } from '@/config/winston.logger';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags(B24ApiTags.IMBOT)
+@ApiExceptions()
 @Controller('bot')
 export class BitrixBotController {
   private readonly logger = new WinstonLogger(
@@ -35,11 +33,7 @@ export class BitrixBotController {
 
   constructor(private readonly bitrixBotService: BitrixImBotService) {}
 
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization token',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @ApiOperation({
     summary: 'Add new command',
   })
@@ -52,11 +46,7 @@ export class BitrixBotController {
   @ApiOperation({
     summary: 'Get registered bot commands',
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization token',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Get('/commands')
   async getBotCommands() {
@@ -66,11 +56,7 @@ export class BitrixBotController {
   @ApiOperation({
     summary: 'Get bot command by id',
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization token',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Get('/commands/:id')
   async getBotCommandById(@Param('id') commandId: string) {
@@ -81,11 +67,7 @@ export class BitrixBotController {
   @ApiOperation({
     summary: 'create new bot',
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization token',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Post('/add')
   async addBot() {
@@ -95,11 +77,7 @@ export class BitrixBotController {
   @ApiOperation({
     summary: 'send message from bot',
   })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Authorization token',
-    example: 'bga token',
-  })
+  @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @Post('/message/add')
   async sendMessage(@Body() fields: ImbotMessageAddDto) {

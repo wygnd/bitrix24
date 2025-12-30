@@ -3,8 +3,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BitrixTelphinEventsAnswerDto } from '@/modules/bitrix/modules/integration/telphin/dtos/telphin-events.dto';
 import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration/telphin/services/telphin-events.service';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags('Telphin')
+@ApiExceptions()
 @Controller({
   version: '1',
   path: 'integration/telphin/events',

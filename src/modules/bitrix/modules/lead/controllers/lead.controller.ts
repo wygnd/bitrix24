@@ -12,36 +12,22 @@ import {
 } from '@nestjs/common';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import {
-  ApiHeader,
-  ApiOperation,
-  ApiQuery,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { LeadAvitoStatusResponseDto } from '@/modules/bitrix/modules/lead/dtos/lead-avito-status-response.dto';
 import {
   LeadObserveManagerCallingDto,
   LeadObserveManagerCallingResponseDto,
 } from '@/modules/bitrix/modules/lead/dtos/lead-observe-manager-calling.dto';
-import { WinstonLogger } from '@/config/winston.logger';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 
 @ApiTags(B24ApiTags.LEADS)
-@ApiHeader({
-  name: 'Authorization',
-  description: 'authorization token',
-  example: 'bga token',
-  required: true,
-})
+@ApiAuthHeader()
 @UseGuards(AuthGuard)
+@ApiExceptions()
 @Controller('leads')
 export class BitrixLeadController {
-  private readonly logger = new WinstonLogger(
-    BitrixLeadController.name,
-    'bitrix:controllers'.split(':'),
-  );
-
   constructor(private readonly bitrixLeadService: BitrixLeadService) {}
 
   @ApiOperation({
@@ -85,14 +71,6 @@ export class BitrixLeadController {
     status: HttpStatus.OK,
     description: 'Успешный ответ',
     type: LeadObserveManagerCallingResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Ошибка при выполнении батч запроса',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Внутренняя ошибка сервера',
   })
   @HttpCode(HttpStatus.OK)
   @Post('/observe-manager-calling')
