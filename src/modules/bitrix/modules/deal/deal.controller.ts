@@ -3,7 +3,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Param,
@@ -12,24 +11,24 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { BitrixService } from '../../bitrix.service';
 import { BitrixDealService } from './deal.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import type { B24ListParams } from '@/modules/bitrix/interfaces/bitrix.interface';
-import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
 import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitrix/modules/deal/dtos/deal-event.dto';
 import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @ApiTags('Deals')
 @ApiExceptions()
 @Controller('deals')
 export class BitrixDealController {
-  constructor(
-    private readonly bitrixService: BitrixService,
-    private readonly bitrixDealService: BitrixDealService,
-  ) {}
+  private readonly logger = new WinstonLogger(
+    BitrixDealController.name,
+    'bitrix:services:deal'.split(':'),
+  );
+
+  constructor(private readonly bitrixDealService: BitrixDealService) {}
 
   @ApiQuery({
     type: Number,
@@ -45,37 +44,7 @@ export class BitrixDealController {
     try {
       return this.bitrixDealService.getDealById(dealId);
     } catch (error) {
-      console.log(error);
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @ApiOperation({
-    summary: 'get deal with filter, select and order',
-  })
-  @HttpCode(200)
-  @Post('deal')
-  async getDeal(@Body('phone') phone: string) {
-    try {
-      return this.bitrixService.callMethod<
-        B24ListParams<Partial<B24Deal>>,
-        B24Deal
-      >('crm.deal.list', {
-        filter: {
-          '@UF_CRM_1638524259': [
-            phone,
-            phone.replace(/[()]/gim, ''),
-            phone.replace(/-/gim, ' '),
-            phone.replace(/[ \-()]/gim, ''),
-            phone.replace('8 ', '+7 '),
-            phone.replace('8 ', '+7 ').replace(/[()]/gim, ''),
-            phone.replace('8 ', '+7 ').replace(/-/gim, ' '),
-            phone.replace('8 ', '+7 ').replace(/[ \-()]/gim, ''),
-          ],
-        },
-      });
-      // return this.bitrixDealService.getDeal(fields);
-    } catch (error) {
+      this.logger.error(error, true);
       throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
