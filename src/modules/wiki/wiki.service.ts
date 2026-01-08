@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/wiki-api-new.service';
-import { DepartmentHeadDealCount } from '@/modules/bitrix/modules/department/interfaces/department-api.interface';
+import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
 import { WikiApiServiceOld } from '@/modules/wiki/wiki-api-old.service';
 import { GetWorkingSalesInterface } from '@/modules/wiki/interfaces/wiki-get-working-sales.interface';

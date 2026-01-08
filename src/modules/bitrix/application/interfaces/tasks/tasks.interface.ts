@@ -1,4 +1,4 @@
-import { B24TaskResult } from '@/modules/bitrix/modules/task/interfaces/task-result.interface';
+import { B24TaskResult } from '@/modules/bitrix/application/interfaces/tasks/tasks-result.interface';
 
 export interface B24TaskCreator {
   id: string;

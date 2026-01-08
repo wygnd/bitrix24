@@ -22,9 +22,8 @@ import {
 } from '@/modules/headhunter/interfaces/headhunter-resume.interface';
 import { CandidateContactInterface } from '@/modules/bitrix/modules/integration/headhunter/interfaces/headhunter-create-deal.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
-import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitrix/modules/integration/headhunter/headhunter.contstants';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { HHBitrixVacancy } from '@/modules/bitrix/modules/integration/headhunter/interfaces/headhunter-bitrix-vacancy.interface';
@@ -37,11 +36,12 @@ import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-negotiation-or-request.dto';
 import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-negotiation-employer-state-change.dto';
 import { HeadhunterWebhookCallResponse } from '@/modules/bitrix/modules/integration/headhunter/interfaces/headhunter-webhook-call.interface';
-import { B24DealHRRejectedStages } from '@/modules/bitrix/modules/deal/constants/deal-hr.constants';
+import { B24DealHRRejectedStages } from '@/modules/bitrix/application/constants/deal/deal-hr.constants';
 import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { WinstonLogger } from '@/config/winston.logger';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 
 @Injectable()
 export class BitrixHeadHunterService {
@@ -56,7 +56,7 @@ export class BitrixHeadHunterService {
     private readonly redisService: RedisService,
     private readonly bitrixService: BitrixService,
     private readonly bitrixUserService: BitrixUserService,
-    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly headHunterRestService: HeadhunterRestService,
     private readonly queueHeavyService: QueueHeavyService,
     private readonly tokensService: TokensService,
@@ -499,7 +499,7 @@ export class BitrixHeadHunterService {
         }
       } else {
         // Если вообще не нашли дублей - создаем новую сделку
-        const { result: newDealId } = await this.bitrixDealService.createDeal({
+        const newDealId = await this.bitrixDeals.createDeal({
           TITLE: candidateFullName,
           UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
           UF_CRM_1638524259: phone, // Номер телефона

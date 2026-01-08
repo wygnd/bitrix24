@@ -7,11 +7,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-distribute-deal.dto';
-import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
 import {
   B24Department,
   B24DepartmentTypeId,
-} from '@/modules/bitrix/modules/department/department.interface';
+} from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { RedisService } from '@/modules/redis/redis.service';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
@@ -30,8 +29,8 @@ import {
   ImbotHandleDistributeNewDeal,
 } from '@/modules/bitrix/modules/imbot/interfaces/imbot-handle.interface';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-deal.dto';
-import { B24Task } from '@/modules/bitrix/modules/task/interfaces/task.interface';
-import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+import { B24Task } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
+import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import dayjs from 'dayjs';
 import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook-approve-site-for-case.dto';
@@ -54,6 +53,7 @@ import {
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
+import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 
 @Injectable()
 export class BitrixWebhookService {
@@ -70,7 +70,7 @@ export class BitrixWebhookService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly bitrixBotService: BitrixImBotService,
-    private readonly bitrixDepartmentService: BitrixDepartmentService,
+    private readonly bitrixDepartments: BitrixDepartmentsUseCase,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
     private readonly bitrixLeadService: BitrixLeadService,
@@ -146,7 +146,7 @@ export class BitrixWebhookService {
     const { department, deal_title, deal_id, is_repeat = 0, category } = fields;
 
     const departmentIds =
-      this.bitrixDepartmentService.DEPARTMENT_TYPE_IDS(department);
+      this.bitrixDepartments.DEPARTMENT_TYPE_IDS(department);
 
     if (!departmentIds) throw new BadRequestException('Invalid department key');
 
@@ -228,7 +228,7 @@ export class BitrixWebhookService {
            *  где ключ - id руководителя, значение - кол-во сделок подчиненных за текущий/последний месяц
            */
           nextAdvertHead = await this.wikiService.getAdvertNextHead(
-            await this.bitrixDepartmentService.getHeadCountDealAtLastMonthRate([
+            await this.bitrixDepartments.getHeadCountDealAtLastMonthRate([
               '36',
               '54',
               '124',
@@ -236,7 +236,7 @@ export class BitrixWebhookService {
             ]),
           );
           const [departmentFiltered] =
-            await this.bitrixDepartmentService.getDepartmentByUserId(
+            await this.bitrixDepartments.getDepartmentByUserId(
               nextAdvertHead.bitrix_id,
             );
 
@@ -469,13 +469,12 @@ export class BitrixWebhookService {
     { project_manager_id, chat_id }: IncomingWebhookApproveSiteForDealDto,
     dealId: string,
   ) {
-    const advertDepartments =
-      await this.bitrixDepartmentService.getDepartmentById([
-        '36',
-        '54',
-        '124',
-        '128',
-      ]);
+    const advertDepartments = await this.bitrixDepartments.getDepartmentById([
+      '36',
+      '54',
+      '124',
+      '128',
+    ]);
     let advertDepartment =
       this.bitrixService.getRandomElement<B24Department>(advertDepartments);
 

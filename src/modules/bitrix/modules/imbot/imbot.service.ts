@@ -30,9 +30,7 @@ import {
 } from '@/modules/bitrix/modules/imbot/interfaces/imbot-handle.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24EventParams } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
-import { B24DepartmentTypeId } from '@/modules/bitrix/modules/department/department.interface';
-import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
-import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
+import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { B24Emoji } from '@/modules/bitrix/bitrix.constants';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
@@ -45,6 +43,8 @@ import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-
 import dayjs from 'dayjs';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
+import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 
 @Injectable()
 export class BitrixImBotService {
@@ -60,8 +60,8 @@ export class BitrixImBotService {
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
     private readonly wikiService: WikiService,
-    private readonly dealService: BitrixDealService,
-    private readonly departmentService: BitrixDepartmentService,
+    private readonly bitrixDeals: BitrixDealsUseCase,
+    private readonly bitrixDepartments: BitrixDepartmentsUseCase,
     @Inject(forwardRef(() => BitrixIntegrationAvitoService))
     private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
     private readonly avitoService: AvitoService,
@@ -371,8 +371,10 @@ export class BitrixImBotService {
       fields;
 
     const { DIALOG_ID, MESSAGE_ID } = params;
-    const deal = await this.dealService.getDealById(dealId, 'force');
+    const deal = await this.bitrixDeals.getDealById(dealId, 'force');
     let nextStage = stage ?? '';
+
+    if (!deal) return false;
 
     switch (department) {
       case B24DepartmentTypeId.SEO:
@@ -626,7 +628,7 @@ export class BitrixImBotService {
       this.bitrixService.generateDealUrl(dealId);
 
     const siteDepartmentHeadId =
-      (await this.departmentService.getDepartmentById(['98']))[0].UF_HEAD ?? '';
+      (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ?? '';
 
     this.bitrixService.callBatch({
       send_message_head_sites_category: {
@@ -828,7 +830,7 @@ export class BitrixImBotService {
     message: string,
   ) {
     const { isBudget, dealId, userId } = fields;
-    const dealFields = await this.dealService.getDealById(dealId);
+    const dealFields = await this.bitrixDeals.getDealById(dealId);
 
     if (!dealFields)
       throw new NotFoundException(`Deal was not found: ${dealId}`);

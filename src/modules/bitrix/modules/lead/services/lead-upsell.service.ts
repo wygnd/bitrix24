@@ -17,7 +17,6 @@ import { LeadUpsellModel } from '@/modules/bitrix/modules/lead/entities/lead-ups
 import { WinstonLogger } from '@/config/winston.logger';
 import { plainToInstance } from 'class-transformer';
 import { B24LeadUpsellDto } from '@/modules/bitrix/modules/lead/dtos/lead-upsell.dto';
-import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { FindOptions } from 'sequelize';
 import {
   B24BatchCommands,
@@ -31,11 +30,12 @@ import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.inte
 import {
   B24Deal,
   B24DealFields,
-} from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+} from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
-import { B24Department } from '@/modules/bitrix/modules/department/department.interface';
+import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24LeadConvertedStages } from '@/modules/bitrix/modules/lead/constants/lead.constants';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 
 @Injectable()
 export class BitrixLeadUpsellService {
@@ -101,7 +101,7 @@ export class BitrixLeadUpsellService {
   constructor(
     @Inject(LEAD_UPSELL_REPOSITORY)
     private readonly upsellRepository: typeof LeadUpsellModel,
-    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly queueLightService: QueueLightService,
     private readonly bitrixService: BitrixService,
     private readonly wikiService: WikiService,
@@ -121,7 +121,7 @@ export class BitrixLeadUpsellService {
     notified,
   }: B24LeadUpsellAddInQueueOptions) {
     try {
-      const { result } = await this.bitrixDealService.getDeals({
+      const deals = await this.bitrixDeals.getDeals({
         filter: {
           ID: dealId,
         },
@@ -135,13 +135,13 @@ export class BitrixLeadUpsellService {
         start: 0,
       });
 
-      if (!result || result.length === 0 || !result[0].UF_CRM_1731418991)
+      if (deals.length === 0 || !deals[0].UF_CRM_1731418991)
         return {
           message: 'Invalid add deal in upsell',
           status: false,
         };
 
-      const [deal] = result;
+      const [deal] = deals;
 
       let category: B24DealCategories = B24DealCategories.UNKNOWN;
 
@@ -286,7 +286,7 @@ export class BitrixLeadUpsellService {
     fields: QueueLightAddTaskHandleUpsellDeal,
   ) {
     const { dealId } = fields;
-    const deal = await this.bitrixDealService.getDealById(dealId);
+    const deal = await this.bitrixDeals.getDealById(dealId);
 
     if (!deal) throw new NotFoundException(`Deal not found: ${dealId}`);
 
@@ -358,7 +358,7 @@ export class BitrixLeadUpsellService {
     fields: QueueLightAddTaskHandleUpsellDeal,
   ) {
     const { dealId, dealStage } = fields;
-    const deal = await this.bitrixDealService.getDealById(dealId, 'force');
+    const deal = await this.bitrixDeals.getDealById(dealId, 'force');
 
     if (!deal) throw new NotFoundException(`Deal not found: ${dealId}`);
 
@@ -461,7 +461,7 @@ export class BitrixLeadUpsellService {
    */
   private async handleUpsellSeoDeal(fields: QueueLightAddTaskHandleUpsellDeal) {
     const { dealId, dealStage } = fields;
-    const deal = await this.bitrixDealService.getDealById(dealId);
+    const deal = await this.bitrixDeals.getDealById(dealId);
 
     if (!deal) throw new NotFoundException(`Deal not found: ${dealId}`);
 

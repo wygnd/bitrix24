@@ -29,3 +29,10 @@ export interface B24EventBody<T = any> {
   ts: number;
   auth: B24AuthOptions;
 }
+
+export interface B24EventItem {
+  event: B24EventList;
+  handler: string;
+  auth_type: string;
+  offline: number;
+}

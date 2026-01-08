@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import {
   PlacementBindOptions,
   PlacementUnbindOptions,
@@ -17,8 +21,8 @@ import {
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { B24Categories } from '@/modules/bitrix/bitrix.constants';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 
 @Injectable()
 export class BitrixPlacementService {
@@ -30,7 +34,7 @@ export class BitrixPlacementService {
     private readonly configService: ConfigService,
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixService: BitrixService,
-    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixDeals: BitrixDealsUseCase,
   ) {}
 
   public async testReceiveRedirectUrl(query: any, params: any, body: any) {
@@ -57,7 +61,9 @@ export class BitrixPlacementService {
       const { ID }: B24PlacementOptionsPlacementOptionsParsed = JSON.parse(
         body.PLACEMENT_OPTIONS,
       );
-      const { CATEGORY_ID } = await this.bitrixDealService.getDealById(ID);
+      const deal = await this.bitrixDeals.getDealById(ID);
+
+      if (!deal) throw new BadRequestException(`Invalid get deal by id: ${ID}`);
 
       let redirectUrl = this.configService.get<string>(
         'bitrixConstants.WIDGET_REDIRECT_HR_RATIO_VACANCIES_URL',
@@ -65,7 +71,7 @@ export class BitrixPlacementService {
 
       if (!redirectUrl) throw new InternalServerErrorException();
 
-      switch (CATEGORY_ID) {
+      switch (deal.CATEGORY_ID) {
         case B24Categories.HR:
           redirectUrl += `?member_id=${body.member_id}`;
           break;

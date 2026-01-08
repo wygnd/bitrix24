@@ -53,11 +53,11 @@ export class WinstonLogger {
     });
   }
 
-  public error<T>(message: T, disableConsoleLog: boolean = false) {
+  public error<T>(message: T, enableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.error(msg);
 
-    if (!disableConsoleLog) this.consoleLogger.error(msg);
+    if (enableConsoleLog) this.consoleLogger.error(msg);
   }
 
   public warn<T>(message: T, disableConsoleLog: boolean = false) {

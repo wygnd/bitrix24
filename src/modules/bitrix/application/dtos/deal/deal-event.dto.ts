@@ -1,7 +1,7 @@
 import {
   B24OnCRMDealUpdateEvent,
   B24OnCRMDealUpdateEventData,
-} from '@/modules/bitrix/modules/deal/interfaces/deal-event.interace';
+} from '@/modules/bitrix/application/interfaces/deals/deal-event.interace';
 import type { B24AuthOptions } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { ApiProperty } from '@nestjs/swagger';
 import { Equals, IsInt, IsNotEmpty, IsString } from 'class-validator';

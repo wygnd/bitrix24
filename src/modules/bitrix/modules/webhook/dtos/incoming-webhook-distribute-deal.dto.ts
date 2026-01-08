@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { B24DepartmentTypeId } from '@/modules/bitrix/modules/department/department.interface';
+import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 
 export class IncomingWebhookDistributeDealDto {
   @ApiProperty({

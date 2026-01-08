@@ -1,34 +1,17 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { BitrixDealService } from './deal.service';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { OnCRMDealUpdateEventBodyDto } from '@/modules/bitrix/modules/deal/dtos/deal-event.dto';
-import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
-import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 
 @ApiTags('Deals')
 @ApiExceptions()
+@ApiAuthHeader()
+@UseGuards(AuthGuard)
 @Controller('deals')
-export class BitrixDealController {
-  private readonly logger = new WinstonLogger(
-    BitrixDealController.name,
-    'bitrix:services:deal'.split(':'),
-  );
-
-  constructor(private readonly bitrixDealService: BitrixDealService) {}
+export class BitrixDealsController {
+  constructor(private readonly bitrixDeals: BitrixDealsUseCase) {}
 
   @ApiQuery({
     type: Number,
@@ -37,16 +20,9 @@ export class BitrixDealController {
     example: 49146,
     required: true,
   })
-  @ApiAuthHeader()
-  @UseGuards(AuthGuard)
   @Get('/deal/:deal_id')
-  async getDealById(@Param('deal_id', ParseIntPipe) dealId: number) {
-    try {
-      return this.bitrixDealService.getDealById(dealId);
-    } catch (error) {
-      this.logger.error(error, true);
-      throw new HttpException(error, HttpStatus.BAD_REQUEST);
-    }
+  async getDealById(@Param('deal_id') dealId: string) {
+    return this.bitrixDeals.getDealById(dealId);
   }
 
   @ApiOperation({
@@ -88,11 +64,9 @@ export class BitrixDealController {
       },
     },
   })
-  @ApiAuthHeader()
-  @UseGuards(AuthGuard)
   @Get('/fields')
   async getDealFields() {
-    return this.bitrixDealService.getDealFields();
+    return this.bitrixDeals.getDealFields();
   }
 
   @ApiOperation({
@@ -115,16 +89,18 @@ export class BitrixDealController {
       settings: [],
     },
   })
-  @ApiAuthHeader()
-  @UseGuards(AuthGuard)
   @Get('/fields/field/:field_id')
   async getDealField(@Param('field_id') fieldId: string) {
-    return this.bitrixDealService.getDealField(fieldId);
+    return this.bitrixDeals.getDealField(fieldId);
   }
 
-  @UseGuards(BitrixEventGuard)
-  @Post('/events/ONCRMDEALUPDATE')
-  async handleChangeDeal(@Body() body: OnCRMDealUpdateEventBodyDto) {
-    throw new BadRequestException('Execute error or deal was not handling');
+  @ApiOperation({ summary: 'Получить список сделок' })
+  @Get('/')
+  async getDealList() {
+    return this.bitrixDeals.getDeals({
+      filter: {
+        ID: '55352',
+      },
+    });
   }
 }

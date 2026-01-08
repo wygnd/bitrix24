@@ -15,7 +15,7 @@ import { AvitoFindDuplicateLeadsDto } from '@/modules/bitrix/modules/integration
 import { AvitoChatInfo } from '@/modules/bitrix/modules/integration/avito/interfaces/avito.interface';
 import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
 import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
-import { B24Department } from '@/modules/bitrix/modules/department/department.interface';
+import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import {
   B24LeadActiveStages,
   B24LeadConvertedStages,

@@ -11,7 +11,7 @@ import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integrat
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
-import { B24TaskExtended } from '@/modules/bitrix/modules/task/interfaces/task.interface';
+import { B24TaskExtended } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })

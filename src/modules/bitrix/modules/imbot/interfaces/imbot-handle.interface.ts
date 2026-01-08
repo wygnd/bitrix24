@@ -1,4 +1,4 @@
-import { B24DepartmentTypeId } from '@/modules/bitrix/modules/department/department.interface';
+import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 
 export interface ImbotHandleApproveSmmAdvertLayout {
   taskId: string;

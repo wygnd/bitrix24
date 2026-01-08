@@ -6,14 +6,14 @@ import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/
 import { UnloadLostCallingDto } from '@/modules/bitrix/modules/integration/wiki/dtos/wiki-unload-lost-calling.dto';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-waiting.inteface';
-import { BitrixDealService } from '@/modules/bitrix/modules/deal/deal.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-payments-notice-receive.inteface';
 import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integration/wiki/services/wiki-client-payments.service';
 import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
-import { B24Department } from '@/modules/bitrix/modules/department/department.interface';
+import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 
 @Injectable()
 export class BitrixWikiService {
@@ -25,7 +25,7 @@ export class BitrixWikiService {
   constructor(
     private readonly bitrixService: BitrixService,
     private readonly wikiService: WikiService,
-    private readonly bitrixDealService: BitrixDealService,
+    private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly bitrixImbotService: BitrixImBotService,
     private readonly bitrixWikiClientPayments: B24WikiClientPaymentsService,
   ) {}
@@ -241,7 +241,7 @@ export class BitrixWikiService {
 
       // Получаем информацию о сделке
       if (!dealId) {
-        const { result: deals } = await this.bitrixDealService.getDeals({
+        const deals = await this.bitrixDeals.getDeals({
           filter: {
             UF_CRM_1731418991: leadId, // Лид айди
           },
@@ -249,7 +249,7 @@ export class BitrixWikiService {
           start: 0,
         });
 
-        if (!deals || deals.length == 0)
+        if (deals.length == 0)
           throw new BadRequestException(
             `Invalid get deal by lead id: ${leadId}`,
           );

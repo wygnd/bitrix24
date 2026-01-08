@@ -1,30 +1,29 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import type { BitrixDepartmentPort } from '@/modules/bitrix/application/ports/departments.port';
 import {
-  B24Department,
   B24DepartmentTypeId,
   DepartmentTypeIds,
-} from '@/modules/bitrix/modules/department/department.interface';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+} from '@/modules/bitrix/application/interfaces/departments/departments.interface';
+import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
+import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
 import {
   B24BatchCommand,
   B24BatchCommands,
-  B24ListParams,
 } from '@/modules/bitrix/interfaces/bitrix.interface';
-import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { RedisService } from '@/modules/redis/redis.service';
-import { NotFoundError } from 'rxjs';
-import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
-import { B24Deal } from '@/modules/bitrix/modules/deal/interfaces/deal.interface';
+import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import dayjs from 'dayjs';
-import { DepartmentHeadDealCount } from '@/modules/bitrix/modules/department/interfaces/department-api.interface';
+import { RedisService } from '@/modules/redis/redis.service';
 
 @Injectable()
-export class BitrixDepartmentService {
+export class BitrixDepartmentsUseCase {
   private readonly departmentTypeIds: DepartmentTypeIds;
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    @Inject(B24PORTS.DEPARTMENTS.DEPARTMENT_DEFAULT)
+    private readonly bitrixDepartments: BitrixDepartmentPort,
     private readonly redisService: RedisService,
   ) {
     this.departmentTypeIds = {
@@ -34,76 +33,22 @@ export class BitrixDepartmentService {
     };
   }
 
-  async DEPARTMENTS_TYPE_IDS() {
-    return this.departmentTypeIds;
-  }
-
   DEPARTMENT_TYPE_IDS(departmentKey: B24DepartmentTypeId) {
     return departmentKey in this.departmentTypeIds
       ? this.departmentTypeIds[departmentKey]
       : null;
   }
 
-  // todo: doc
-  // todo: list params
-  async getDepartmentList(fields: B24ListParams<B24Department> = {}) {
-    const departmentListFromCache = await this.redisService.get<
-      B24Department[]
-    >(REDIS_KEYS.BITRIX_DATA_DEPARTMENT_LIST);
-
-    if (departmentListFromCache) return departmentListFromCache;
-
-    const { result: departments } = await this.bitrixService.callMethod<
-      B24ListParams<B24Department>,
-      B24Department[]
-    >('department.get');
-
-    if (!departments) throw new NotFoundError('Departments not found');
-
-    this.redisService.set<B24Department[]>(
-      REDIS_KEYS.BITRIX_DATA_DEPARTMENT_LIST,
-      departments,
-      1209600, // 14 дней
-    );
-
-    return departments;
+  async getDepartmentList() {
+    return this.bitrixDepartments.getDepartmentList();
   }
 
-  /**
-   * Function receive array of id departments
-   * and return array of department object.
-   *
-   * For more information: {@link https://apidocs.bitrix24.ru/api-reference/departments/department-get.html#obrabotka-otveta}
-   *
-   * ---
-   *
-   * Функция принимает массив идентификаторов подразделений
-   * и возвращает массив объектов подразделений.
-   *
-   * Подробнее: {@link https://apidocs.bitrix24.ru/api-reference/departments/department-get.html#obrabotka-otveta}
-   *
-   * @param ids
-   * @return Promise array of department
-   */
   async getDepartmentById(ids: string[]) {
-    let departments = await this.redisService.get<B24Department[]>(
-      REDIS_KEYS.BITRIX_DATA_DEPARTMENT_LIST,
-    );
-
-    if (!departments) departments = await this.getDepartmentList();
-
-    return departments.filter((d) => ids.includes(d.ID));
+    return this.bitrixDepartments.getDepartmentById(ids);
   }
 
   async getDepartmentByUserId(userId: string) {
-    const departments = await this.getDepartmentList();
-
-    const departmentsFiltered = departments.filter((d) => d.UF_HEAD === userId);
-
-    if (departmentsFiltered.length === 0)
-      throw new NotFoundException('Department not found');
-
-    return departmentsFiltered;
+    return this.bitrixDepartments.getDepartmentByUserId(userId);
   }
 
   /**
@@ -141,9 +86,7 @@ export class BitrixDepartmentService {
     // Если нет в кеше или объект пустой, делаем заного запрос
     if (!usersByHeadAdvert || Object.keys(usersByHeadAdvert).length === 0) {
       const { result: batchResponseGetUsersByDepartmentId } =
-        await this.bitrixService.callBatch<
-          B24BatchResponseMap<Record<string, B24User[]>>
-        >(
+        await this.bitrixDepartments.callBatch<Record<string, B24User[]>>(
           departmentHeads.reduce<B24BatchCommands>((acc, { ID, UF_HEAD }) => {
             acc[`get_user-${UF_HEAD}-${ID}`] = {
               method: 'user.get',
@@ -181,7 +124,7 @@ export class BitrixDepartmentService {
 
     // Проходим по объекту, собираем и выполняем запрос на получение кол-ва сделок за месяц
     const batchResponseGetTotalUserDeals = (
-      await this.bitrixService.callBatch<
+      await this.bitrixDepartments.callBatch<
         B24BatchResponseMap<Record<string, B24Deal[]>>
       >(
         Object.entries(usersByHeadAdvert).reduce<
