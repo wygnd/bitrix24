@@ -25,7 +25,7 @@ import {
 import { B24Categories } from '@/modules/bitrix/bitrix.constants';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import {
   B24Deal,
@@ -103,12 +103,12 @@ export class BitrixLeadUpsellService {
     private readonly upsellRepository: typeof LeadUpsellModel,
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly queueLightService: QueueLightService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly wikiService: WikiService,
   ) {}
 
   /**
-   * Add deal and lead info in database
+   * Add deals and lead info in database
    *
    * ---
    *
@@ -137,7 +137,7 @@ export class BitrixLeadUpsellService {
 
       if (deals.length === 0 || !deals[0].UF_CRM_1731418991)
         return {
-          message: 'Invalid add deal in upsell',
+          message: 'Invalid add deals in upsell',
           status: false,
         };
 
@@ -250,7 +250,7 @@ export class BitrixLeadUpsellService {
   }
 
   /**
-   * Distribute handle upsell by deal category
+   * Distribute handle upsell by deals category
    *
    * ---
    *
@@ -274,7 +274,7 @@ export class BitrixLeadUpsellService {
   }
 
   /**
-   * Handle SITE deal
+   * Handle SITE deals
    *
    * ---
    *
@@ -346,7 +346,7 @@ export class BitrixLeadUpsellService {
   }
 
   /**
-   * Handle ADVERT deal
+   * Handle ADVERT deals
    *
    * ---
    *
@@ -451,7 +451,7 @@ export class BitrixLeadUpsellService {
   }
 
   /**
-   * Handle SEO deal
+   * Handle SEO deals
    *
    * ---
    *

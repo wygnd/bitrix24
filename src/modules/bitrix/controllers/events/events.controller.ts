@@ -8,49 +8,49 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { EventAddDto } from '@/modules/bitrix/modules/events/dtos/event-add.dto';
+import { EventAddDto } from '@/modules/bitrix/application/dtos/events/event-add.dto';
 import { BitrixEventGuard } from '@/modules/bitrix/guards/bitrix-event.guard';
-import { EventHandleUpdateTaskDto } from '@/modules/bitrix/modules/events/dtos/event-task-update.dto';
-import { EventLeadDeleteDto } from '@/modules/bitrix/modules/events/dtos/event-lead-delete.dto';
-import { B24EventRemoveDto } from '@/modules/bitrix/modules/events/dtos/event-remove.dto';
+import { EventHandleUpdateTaskDto } from '@/modules/bitrix/application/dtos/events/event-task-update.dto';
+import { EventLeadDeleteDto } from '@/modules/bitrix/application/dtos/events/event-lead-delete.dto';
+import { B24EventRemoveDto } from '@/modules/bitrix/application/dtos/events/event-remove.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { BitrixEventsUseCase } from '@/modules/bitrix/application/use-cases/events/events.use-case';
 
 @ApiTags(B24ApiTags.EVENTS)
 @ApiExceptions()
 @Controller('events')
 export class BitrixEventsController {
-  constructor(private readonly eventsService: BitrixEventService) {}
+  constructor(private readonly bitrixEvents: BitrixEventsUseCase) {}
 
   @ApiOperation({ summary: 'Register new events' })
   @UseGuards(AuthGuard)
   @Post('event/add')
   async addEvent(@Body() fields: EventAddDto) {
-    return this.eventsService.addEvent(fields);
+    return this.bitrixEvents.addEvent(fields);
   }
 
   @ApiOperation({ summary: 'Get Event List' })
   @UseGuards(AuthGuard)
   @Get('/list')
   async getEventList() {
-    return this.eventsService.getEventList();
+    return this.bitrixEvents.getEventList();
   }
 
   @ApiOperation({ summary: 'Remove event listener' })
   @UseGuards(AuthGuard)
   @Delete('event/remove')
   async removeEvent(@Body() fields: B24EventRemoveDto) {
-    return this.eventsService.removeEvent(fields);
+    return this.bitrixEvents.removeEvent(fields);
   }
 
   @UseGuards(BitrixEventGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('/handle/task/update')
   async handleTaskUpdate(@Body() fields: EventHandleUpdateTaskDto) {
-    await this.eventsService.handleTaskUpdate(fields);
+    await this.bitrixEvents.handleTaskUpdate(fields);
     return true;
   }
 
@@ -58,6 +58,6 @@ export class BitrixEventsController {
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('/handle/lead/delete')
   async handleLeadDelete(@Body() fields: EventLeadDeleteDto) {
-    return this.eventsService.handleLeadDelete(fields);
+    return this.bitrixEvents.handleLeadDelete(fields);
   }
 }

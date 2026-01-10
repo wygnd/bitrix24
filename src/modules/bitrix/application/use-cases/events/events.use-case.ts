@@ -1,20 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { BitrixEventsAdapter } from '@/modules/bitrix/infrastructure/events/events.adapter';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   B24EventAdd,
   B24EventBody,
   B24EventTaskUpdateData,
-} from '@/modules/bitrix/modules/events/interfaces/events.interface';
-import { EventLeadDeleteDto } from '@/modules/bitrix/modules/events/dtos/event-lead-delete.dto';
-import { B24EventRemoveDto } from '@/modules/bitrix/modules/events/dtos/event-remove.dto';
+} from '@/modules/bitrix/application/interfaces/events/events.interface';
+import { EventLeadDeleteDto } from '@/modules/bitrix/application/dtos/events/event-lead-delete.dto';
+import { B24EventRemoveDto } from '@/modules/bitrix/application/dtos/events/event-remove.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { BitrixTasksAdapter } from '@/modules/bitrix/infrastructure/tasks/tasks.adapter';
+import type { BitrixEventsPort } from '@/modules/bitrix/application/ports/events/events.port';
+import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 
 @Injectable()
 export class BitrixEventsUseCase {
   constructor(
-    private readonly bitrixEvents: BitrixEventsAdapter,
+    @Inject(B24PORTS.EVENTS.EVENTS_DEFAULT)
+    private readonly bitrixEvents: BitrixEventsPort,
     private readonly queueLightService: QueueLightService,
     private readonly queueMiddleService: QueueMiddleService,
     private readonly bitrixTasks: BitrixTasksAdapter,

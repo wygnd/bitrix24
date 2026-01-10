@@ -16,21 +16,21 @@ export class BitrixDealsController {
   @ApiQuery({
     type: Number,
     name: 'deal_id',
-    description: 'deal id',
+    description: 'deals id',
     example: 49146,
     required: true,
   })
-  @Get('/deal/:deal_id')
+  @Get('/deals/:deal_id')
   async getDealById(@Param('deal_id') dealId: string) {
     return this.bitrixDeals.getDealById(dealId);
   }
 
   @ApiOperation({
-    summary: 'get deal fields',
+    summary: 'get deals fields',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'success get deal fields',
+    description: 'success get deals fields',
     example: {
       result: {
         ID: {
@@ -70,11 +70,11 @@ export class BitrixDealsController {
   }
 
   @ApiOperation({
-    summary: 'get deal field',
+    summary: 'get deals field',
   })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'success get deal field',
+    description: 'success get deals field',
     example: {
       type: 'employee',
       isRequired: false,

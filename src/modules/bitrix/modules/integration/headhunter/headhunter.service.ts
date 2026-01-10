@@ -13,7 +13,7 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { HeadHunterService } from '@/modules/headhunter/headhunter.service';
 import { RedisService } from '@/modules/redis/redis.service';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { HeadhunterWebhookCallDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
 import { HHVacancyInterface } from '@/modules/headhunter/interfaces/headhunter-vacancy.interface';
 import {
@@ -54,7 +54,7 @@ export class BitrixHeadHunterService {
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly headHunterApi: HeadHunterService,
     private readonly redisService: RedisService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly bitrixUserService: BitrixUserService,
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly headHunterRestService: HeadhunterRestService,
@@ -208,7 +208,7 @@ export class BitrixHeadHunterService {
   }
 
   /**
-   * Find or create deal and send message in chat
+   * Find or create deals and send message in chat
    *
    * ---
    *

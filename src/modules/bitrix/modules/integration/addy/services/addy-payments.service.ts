@@ -7,7 +7,7 @@ import {
 } from '@/modules/bitrix/modules/integration/addy/interfaces/addy-payments-send-message.interface';
 import { BitrixAddyPaymentOptions } from '@/common/interfaces/bitrix-config.interface';
 import { WinstonLogger } from '@/config/winston.logger';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
 
 @Injectable()
@@ -20,7 +20,7 @@ export class BitrixAddyPaymentsService {
   constructor(
     private readonly configService: ConfigService,
     private readonly bitrixBotService: BitrixImBotService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
   ) {
     const addySupportOptions = this.configService.get<BitrixAddyPaymentOptions>(
       'bitrixConstants.ADDY.payment',

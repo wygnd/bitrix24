@@ -1,4 +1,4 @@
-import { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals.port';
+import { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import { B24ActionType } from '@/modules/bitrix/interfaces/bitrix.interface';
 import {
   B24CreateDeal,
@@ -12,7 +12,7 @@ import {
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RedisService } from '@/modules/redis/redis.service';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
@@ -23,12 +23,12 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
   );
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly redisService: RedisService,
   ) {}
 
   /**
-   * Get deal by deal_id
+   * Get deals by deal_id
    *
    * ---
    *
@@ -69,7 +69,7 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
   }
 
   /**
-   * Get deal list
+   * Get deals list
    *
    * ---
    *
@@ -92,7 +92,7 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
   }
 
   /**
-   * Create deal
+   * Create deals
    *
    * ---
    *
@@ -113,13 +113,13 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
       return response.result ? response.result : 0;
     } catch (error) {
       this.logger.error(error);
-      this.logger.warn(error?.message ?? 'Invalid create deal');
+      this.logger.warn(error?.message ?? 'Invalid create deals');
       return 0;
     }
   }
 
   /**
-   * Get deal fields description
+   * Get deals fields description
    *
    * ---
    *
@@ -154,7 +154,7 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
   }
 
   /**
-   * Get specific deal field
+   * Get specific deals field
    *
    * ---
    *
@@ -187,6 +187,15 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
     }
   }
 
+  /**
+   * Update deal by deal_id and specific fields
+   *
+   * ---
+   *
+   * Обновляет сделку
+   * @param dealId
+   * @param fields
+   */
   async updateDeal(dealId: string, fields: Partial<B24Deal>) {
     try {
       const response = await this.bitrixService.callMethod<

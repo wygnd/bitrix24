@@ -4,13 +4,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { Request } from 'express';
 import { PlacementBodyRequestDto } from '@/modules/bitrix/modules/placement/dtos/placement-request.dto';
 
 @Injectable()
 export class BitrixPlacementGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();

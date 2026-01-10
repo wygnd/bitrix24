@@ -32,7 +32,7 @@ export class BitrixPlacementController {
   ) {}
 
   @UseGuards(BitrixPlacementGuard)
-  @Post('/crm/deal/detail-tab')
+  @Post('/crm/deals/detail-tab')
   async handleCrmDealDetailTab(
     @Body() body: PlacementBodyRequestDto,
     @Query() query: PlacementQueryRequestDto,

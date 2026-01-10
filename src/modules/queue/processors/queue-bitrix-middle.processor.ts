@@ -10,9 +10,9 @@ import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/module
 import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WikiService } from '@/modules/wiki/wiki.service';
-import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { B24TaskExtended } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
@@ -25,7 +25,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
     private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
     private readonly bitrixImBotService: BitrixImBotService,
     private readonly wikiService: WikiService,
-    private readonly bitrixTaskService: BitrixTaskService,
+    private readonly bitrixTasks: BitrixTasksUseCase,
   ) {
     super();
   }
@@ -61,7 +61,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
       case QUEUE_TASKS.MIDDLE.QUEUE_BX_TASK_UPDATE:
         response.data =
-          await this.bitrixTaskService.handleObserveEndSmmAdvertLayoutsTaskUpdate(
+          await this.bitrixTasks.handleObserveEndSmmAdvertLayoutsTaskUpdate(
             data as B24TaskExtended,
           );
         break;

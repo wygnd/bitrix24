@@ -1,4 +1,4 @@
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import {
   BadRequestException,
@@ -20,7 +20,7 @@ import {
   WebhookUserItem,
 } from '@/modules/bitrix/modules/webhook/interfaces/webhook-user.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import type { B24ImKeyboardOptions } from '@/modules/bitrix/modules/im/interfaces/im.interface';
+import type { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 import { WebhookDepartmentInfo } from '@/modules/bitrix/modules/webhook/interfaces/webhook-department-info.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
@@ -43,7 +43,7 @@ import {
 } from '@/modules/bitrix/modules/lead/constants/lead.constants';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
+import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-init.dto';
 import { TelphinService } from '@/modules/telphin/telphin.service';
 import {
   B24WebhookHandleCallInitForSaleManagersOptions,
@@ -68,7 +68,7 @@ export class BitrixWebhookService {
   );
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly bitrixBotService: BitrixImBotService,
     private readonly bitrixDepartments: BitrixDepartmentsUseCase,
     private readonly redisService: RedisService,
@@ -131,7 +131,7 @@ export class BitrixWebhookService {
 
   /**
    * Function handle incoming webhook from bitrix
-   * Get all employers department and form message for distribute deal
+   * Get all employers department and form message for distribute deals
    *
    * ---
    *
@@ -594,7 +594,7 @@ export class BitrixWebhookService {
 
   /**
    * Function handle incomng webhook from bitrix24.
-   * When deal stay in stage **converted** bitrix send request.
+   * When deals stay in stage **converted** bitrix send request.
    * Function send message to project manager with two buttons
    * and if ignored is true function send message to Irina Navolockaya
    * with message that manager doesnt approve site

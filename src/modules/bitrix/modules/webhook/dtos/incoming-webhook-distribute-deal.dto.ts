@@ -12,7 +12,7 @@ import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/dep
 export class IncomingWebhookDistributeDealDto {
   @ApiProperty({
     type: String,
-    description: 'deal id',
+    description: 'deals id',
     required: true,
     example: 'D_1234',
   })
@@ -58,7 +58,7 @@ export class IncomingWebhookDistributeDealDto {
     type: String,
     description: 'Deal title',
     required: true,
-    example: 'deal title',
+    example: 'deals title',
   })
   @IsNotEmpty()
   @IsString()

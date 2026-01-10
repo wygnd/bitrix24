@@ -1,5 +1,5 @@
 import { B24AuthOptions } from '../../../interfaces/bitrix.interface';
-import { B24EventList } from '@/modules/bitrix/modules/events/interfaces/events.interface';
+import { B24EventList } from '@/modules/bitrix/application/interfaces/events/events.interface';
 
 export interface B24EventCommand {
   [key: number]: B24EventCommandOptions;

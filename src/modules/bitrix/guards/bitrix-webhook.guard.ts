@@ -5,12 +5,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook.dto';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { Request } from 'express';
 
 @Injectable()
 export class BitrixWebhookGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();

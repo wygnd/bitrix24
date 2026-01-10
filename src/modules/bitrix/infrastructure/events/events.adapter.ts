@@ -1,28 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { BitrixAbstractAdapter } from '@/modules/bitrix/infrastructure/abstract.adapter';
-import type { BitrixEventsPort } from '@/modules/bitrix/application/ports/events.port';
+import type { BitrixEventsPort } from '@/modules/bitrix/application/ports/events/events.port';
 import {
   B24EventAdd,
   B24EventItem,
-} from '@/modules/bitrix/modules/events/interfaces/events.interface';
-import { B24EventRemoveDto } from '@/modules/bitrix/modules/events/dtos/event-remove.dto';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+} from '@/modules/bitrix/application/interfaces/events/events.interface';
+import { B24EventRemoveDto } from '@/modules/bitrix/application/dtos/events/event-remove.dto';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
-export class BitrixEventsAdapter
-  extends BitrixAbstractAdapter
-  implements BitrixEventsPort
-{
+export class BitrixEventsAdapter implements BitrixEventsPort {
   private readonly logger = new WinstonLogger(
     BitrixEventsAdapter.name,
     'bitrix:events'.split(':'),
   );
 
-  constructor(private readonly bitrixService: BitrixService) {
-    super(bitrixService);
-  }
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
+  /**
+   * Create new event listener
+   *
+   * ---
+   *
+   * Добавить новый обработчки событий
+   * @param fields
+   */
   async addEvent(fields: B24EventAdd) {
     return (
       (
@@ -34,6 +36,13 @@ export class BitrixEventsAdapter
     );
   }
 
+  /**
+   * Get event listeners list
+   *
+   * ---
+   *
+   * Получить список обработчиков событий
+   */
   async getEventList() {
     try {
       const response = await this.bitrixService.callMethod<any, B24EventItem[]>(
@@ -47,6 +56,14 @@ export class BitrixEventsAdapter
     }
   }
 
+  /**
+   * Remove event listener
+   *
+   * ---
+   *
+   * Удалить обработчик события
+   * @param fields
+   */
   async removeEvent(fields: B24EventRemoveDto) {
     try {
       const response = await this.bitrixService.callMethod<any, boolean>(

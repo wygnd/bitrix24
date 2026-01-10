@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { BitrixService } from '../../../bitrix.service';
+import { BitrixApiService } from '../../../bitrix-api.service';
 import {
   B24DuplicateFindByComm,
   B24DuplicateFindByCommResponse,
@@ -48,7 +48,7 @@ export class BitrixLeadService {
   );
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly redisService: RedisService,
     private readonly bitrixLeadObserveManagerCallingService: BitrixLeadObserveManagerCallingService,
   ) {}

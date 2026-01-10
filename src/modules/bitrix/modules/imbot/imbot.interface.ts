@@ -1,4 +1,4 @@
-import { B24ImKeyboardOptions } from '../im/interfaces/im.interface';
+import { B24ImKeyboardOptions } from '../../application/interfaces/messages/messages.interface';
 
 export interface B24ImbotRegisterCommand {
   BOT_ID: number;

@@ -1,5 +1,5 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import {
@@ -10,7 +10,6 @@ import {
 import { isArray } from 'class-validator';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
 import { AvitoCreateLeadDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito-create-lead.dto';
-import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
 import { AvitoFindDuplicateLeadsDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito.dto';
 import { AvitoChatInfo } from '@/modules/bitrix/modules/integration/avito/interfaces/avito.interface';
 import { BitrixUserService } from '@/modules/bitrix/modules/user/user.service';
@@ -31,6 +30,7 @@ import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/module
 import { AvitoClientRequestsType } from '@/modules/bitrix/modules/integration/avito/avito.constants';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { B24FileData } from '@/modules/bitrix/interfaces/bitrix-files.interface';
+import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
 
 @Injectable()
 export class BitrixIntegrationAvitoService {
@@ -38,8 +38,8 @@ export class BitrixIntegrationAvitoService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly bitrixService: BitrixService,
-    private readonly bitrixMessageService: BitrixMessageService,
+    private readonly bitrixService: BitrixApiService,
+    private readonly bitrixMessages: BitrixMessagesUseCase,
     private readonly bitrixLeadService: BitrixLeadService,
     private readonly bitrixUserService: BitrixUserService,
     @Inject(forwardRef(() => BitrixImBotService))
@@ -106,13 +106,10 @@ export class BitrixIntegrationAvitoService {
       return acc;
     }, '[b]Непрочитанные сообщения с Авито:[/b][br]');
 
-    const sendMessageResult =
-      await this.bitrixMessageService.sendPrivateMessage({
-        DIALOG_ID: 'chat17030', // Авито
-        MESSAGE: notifyMessage,
-      });
-
-    return sendMessageResult.result ?? -1;
+    return this.bitrixMessages.sendPrivateMessage({
+      DIALOG_ID: 'chat17030', // Авито
+      MESSAGE: notifyMessage,
+    });
   }
 
   public async handleDistributeClientRequestFromAvito(

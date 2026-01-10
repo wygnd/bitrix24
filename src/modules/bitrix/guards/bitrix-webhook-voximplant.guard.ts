@@ -4,13 +4,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { Request } from 'express';
 import { B24EventBodyVoxImplant } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
 
 @Injectable()
 export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -29,7 +29,7 @@ export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
 
 @Injectable()
 export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -48,7 +48,7 @@ export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
 
 @Injectable()
 export class BitrixVoxImplantInitCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();

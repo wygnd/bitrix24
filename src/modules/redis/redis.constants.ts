@@ -7,10 +7,10 @@ export const REDIS_KEYS = {
   BITRIX_ACCESS_EXPIRES: 'bitrix:access_expires',
 
   // BITRIX DATA
-  BITRIX_DATA_DEAL_FIELDS: 'bitrix:deal:fields',
-  BITRIX_DATA_DEAL_FIELD: 'bitrix:deal:field:',
-  BITRIX_DATA_RATIO_VACANCIES: 'bitrix:deal:hr:ratio:vacancies',
-  BITRIX_DATA_DEAL_ITEM: 'bitrix:deal:item:',
+  BITRIX_DATA_DEAL_FIELDS: 'bitrix:deals:fields',
+  BITRIX_DATA_DEAL_FIELD: 'bitrix:deals:field:',
+  BITRIX_DATA_RATIO_VACANCIES: 'bitrix:deals:hr:ratio:vacancies',
+  BITRIX_DATA_DEAL_ITEM: 'bitrix:deals:item:',
   BITRIX_DATA_BOT_COMMANDS: 'bitrix:bot:commands',
   BITRIX_DATA_USER_DEPARTMENTS: 'bitrix:user:departments',
   BITRIX_DATA_DEPARTMENT_LIST: 'bitrix:department:list',

@@ -1,7 +1,7 @@
 import type {
   B24ImKeyboardOptions,
   KeyboardBgColorToken,
-} from '@/modules/bitrix/modules/im/interfaces/im.interface';
+} from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 import {
   IsHexColor,
   IsIn,

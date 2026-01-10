@@ -7,7 +7,7 @@ import {
   PlacementBindOptions,
   PlacementUnbindOptions,
 } from './placement.interface';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { PlacementUnbindDto } from '@/modules/bitrix/modules/placement/dtos/placement-unbind.dto';
 import { WinstonLogger } from '@/config/winston.logger';
 import {
@@ -33,7 +33,7 @@ export class BitrixPlacementService {
   constructor(
     private readonly configService: ConfigService,
     private readonly bitrixImbotService: BitrixImBotService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly bitrixDeals: BitrixDealsUseCase,
   ) {}
 

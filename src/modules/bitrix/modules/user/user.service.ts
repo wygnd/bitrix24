@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BitrixService } from '../../bitrix.service';
+import { BitrixApiService } from '../../bitrix-api.service';
 import { B24User, B24UserListParams } from './interfaces/user.interface';
 import {
   B24BatchCommands,
@@ -16,7 +16,7 @@ export class BitrixUserService {
     'bitrix:services'.split(':'),
   );
 
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixApiService) {}
 
   async getUserById(userId: string) {
     try {

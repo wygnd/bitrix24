@@ -8,7 +8,7 @@ import type {
   B24EventParams,
   B24EventUser,
 } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
-import type { B24EventList } from '@/modules/bitrix/modules/events/interfaces/events.interface';
+import type { B24EventList } from '@/modules/bitrix/application/interfaces/events/events.interface';
 
 class OnImCommandAddEventDataDto implements B24EventData {
   COMMAND: B24EventCommand;

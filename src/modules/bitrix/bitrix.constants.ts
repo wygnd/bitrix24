@@ -22,6 +22,7 @@ export const B24Categories = {
 };
 
 export const B24PORTS = {
+  BITRIX: 'BITRIX_PORT',
   DEALS: {
     DEALS_DEFAULT: 'DEALS_PORT',
   },
@@ -33,5 +34,11 @@ export const B24PORTS = {
   },
   TASKS: {
     TASKS_DEFAULT: 'TASKS_PORT',
+  },
+  MESSAGES: {
+    MESSAGES_DEFAULT: 'MESSAGES_PORT',
+  },
+  BOT: {
+    BOT_DEFAULT: 'BOT_PORT',
   },
 };

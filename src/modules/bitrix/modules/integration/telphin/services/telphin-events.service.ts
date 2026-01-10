@@ -8,7 +8,7 @@ import { TelphinService } from '@/modules/telphin/telphin.service';
 import { BitrixTelphinEventsHandleAnswerCallForSaleDepartment } from '@/modules/bitrix/modules/integration/telphin/interfaces/telphin-events-handle.interface';
 import { TelphinExtensionItemExtraParams } from '@/modules/telphin/interfaces/telphin-extension.interface';
 import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import {
   B24LeadActiveStages,
   B24LeadNewStages,
@@ -20,7 +20,7 @@ import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 export class BitrixTelphinEventsService {
   constructor(
     private readonly telphinService: TelphinService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly bitrixLeadService: BitrixLeadService,
   ) {}
 

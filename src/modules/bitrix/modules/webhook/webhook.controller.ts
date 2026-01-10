@@ -20,9 +20,9 @@ import {
   BitrixVoxImplantFinishCallEventGuard,
   BitrixVoxImplantInitCallEventGuard,
 } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
-import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-init.dto';
+import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/modules/events/dtos/event-voximplant-call-end.dto';
+import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-end.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 
 @ApiTags(B24ApiTags.WEBHOOK)
@@ -37,7 +37,7 @@ export class BitrixWebhookController {
   constructor(private readonly bitrixWebhookService: BitrixWebhookService) {}
 
   @UseGuards(BitrixWebhookGuard)
-  @Post('/bitrix/distribute-new-deal')
+  @Post('/bitrix/distribute-new-deals')
   @HttpCode(HttpStatus.ACCEPTED)
   async distributeNewDeal(
     @Body() body: IncomingWebhookDto,

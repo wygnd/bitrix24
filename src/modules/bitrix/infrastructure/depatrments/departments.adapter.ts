@@ -1,29 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { BitrixDepartmentPort } from '@/modules/bitrix/application/ports/departments.port';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixDepartmentPort } from '@/modules/bitrix/application/ports/departments/departments.port';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { RedisService } from '@/modules/redis/redis.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24ListParams } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { BitrixAbstractAdapter } from '@/modules/bitrix/infrastructure/abstract.adapter';
 
 @Injectable()
-export class BitrixDepartmentAdapter
-  extends BitrixAbstractAdapter
-  implements BitrixDepartmentPort
-{
+export class BitrixDepartmentAdapter  implements BitrixDepartmentPort {
   private readonly logger = new WinstonLogger(
     BitrixDepartmentAdapter.name,
     'bitrix:department'.split(':'),
   );
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly redisService: RedisService,
-  ) {
-    super(bitrixService);
-  }
+  ) {}
 
   /**
    * Get department list
@@ -86,6 +80,14 @@ export class BitrixDepartmentAdapter
     return departments.filter((d) => ids.includes(d.ID));
   }
 
+  /**
+   * Get department by user id
+   *
+   * ---
+   *
+   * Получает подразделение по id пользователя
+   * @param userId
+   */
   async getDepartmentByUserId(userId: string) {
     const departments = await this.getDepartmentList();
 

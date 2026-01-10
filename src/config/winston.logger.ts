@@ -60,18 +60,18 @@ export class WinstonLogger {
     if (enableConsoleLog) this.consoleLogger.error(msg);
   }
 
-  public warn<T>(message: T, disableConsoleLog: boolean = false) {
+  public warn<T>(message: T, enableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.warn(msg);
 
-    if (!disableConsoleLog) this.consoleLogger.warn(msg);
+    if (enableConsoleLog) this.consoleLogger.warn(msg);
   }
 
-  public debug<T>(message: T, disableConsoleLog: boolean = false) {
+  public debug<T>(message: T, enableConsoleLog: boolean = false) {
     const msg = this.toSaveJson(message);
     this.logger.info(msg);
 
-    if (!disableConsoleLog) this.consoleLogger.debug(msg);
+    if (enableConsoleLog) this.consoleLogger.debug(msg);
   }
 
   public log<T>(message: T, level: LogLevel = 'debug') {

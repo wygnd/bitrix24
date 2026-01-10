@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import type { BitrixDepartmentPort } from '@/modules/bitrix/application/ports/departments.port';
+import type { BitrixDepartmentPort } from '@/modules/bitrix/application/ports/departments/departments.port';
 import {
   B24DepartmentTypeId,
   DepartmentTypeIds,
@@ -53,7 +53,7 @@ export class BitrixDepartmentsUseCase {
 
   /**
    * Function receive departments id array
-   * calculate count deal at last month on each receive department and
+   * calculate count deals at last month on each receive department and
    * return object where key is department head id
    * value is count user deals in department
    *

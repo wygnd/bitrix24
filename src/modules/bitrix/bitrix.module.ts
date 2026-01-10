@@ -1,9 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BitrixController } from './bitrix.controller';
-import { BitrixService } from './bitrix.service';
+import { BitrixApiService } from './bitrix-api.service';
 import { BitrixUserService } from './modules/user/user.service';
 import { BitrixLeadService } from './modules/lead/services/lead.service';
-import { BitrixMessageService } from './modules/im/im.service';
 import { BitrixImBotService } from './modules/imbot/imbot.service';
 import { RedisModule } from '../redis/redis.module';
 import { BitrixAvitoController } from './modules/integration/avito/avito.controller';
@@ -20,10 +19,8 @@ import { BitrixHeadHunterService } from '@/modules/bitrix/modules/integration/he
 import { BitrixBotController } from '@/modules/bitrix/modules/imbot/imbot.controller';
 import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
 import { BitrixEventsController } from '@/modules/bitrix/controllers/events/events.controller';
-import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
 import { BitrixDepartmentController } from '@/modules/bitrix/controllers/departments/departments.controller';
 import { BitrixTaskController } from '@/modules/bitrix/controllers/tasks/tasks.controller';
-import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { BitrixWikiController } from '@/modules/bitrix/modules/integration/wiki/controllers/wiki.controller';
 import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/services/wiki.service';
@@ -38,7 +35,7 @@ import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/
 import { TelphinModule } from '@/modules/telphin/telphin.module';
 import { BitrixLeadUpsellController } from '@/modules/bitrix/modules/lead/controllers/lead-upsells.controller';
 import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
-import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.controller';
+import { BitrixMessageControllerV1 } from '@/modules/bitrix/controllers/messages/messages.controller';
 import { BitrixTelphinEventsControllerV1 } from '@/modules/bitrix/modules/integration/telphin/controllers/telphin-events.controller';
 import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration/telphin/services/telphin-events.service';
 import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integration/wiki/services/wiki-client-payments.service';
@@ -49,8 +46,15 @@ import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals
 import { BitrixDealsController } from '@/modules/bitrix/controllers/deals/deals.controller';
 import { departmentProviders } from '@/modules/bitrix/providers/department.providers';
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
-import { tasksProviders } from '@/modules/bitrix/providers/tasks.providers';
+import { taskProviders } from '@/modules/bitrix/providers/task.providers';
 import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.adapter';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
+import { BitrixEventsUseCase } from '@/modules/bitrix/application/use-cases/events/events.use-case';
+import { messageProviders } from '@/modules/bitrix/providers/messages.provider';
+import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { botProviders } from '@/modules/bitrix/providers/bot.providers';
+import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { eventProviders } from '@/modules/bitrix/providers/event.providers';
 
 @Module({
   imports: [
@@ -74,19 +78,25 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     // TASKS
     BitrixTaskController,
 
+    // EVENTS
+    BitrixEventsController,
+
+    // MESSAGES
+    BitrixMessageControllerV1,
+
+    // BOT
+    BitrixBotController,
+
     BitrixAvitoController,
     BitrixHeadHunterController,
-    BitrixBotController,
     BitrixImbotEventsController,
     BitrixWebhookController,
     BitrixPlacementController,
-    BitrixEventsController,
     BitrixWikiController,
     BitrixLeadController,
     BitrixLeadUpsellController,
     BitrixAddySupportControllerV1,
     BitrixAddyPaymentsControllerV1,
-    BitrixMessageControllerV1,
     BitrixTelphinEventsControllerV1,
   ],
   providers: [
@@ -94,7 +104,7 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     ...bitrixProviders,
 
     // other services
-    BitrixService,
+    BitrixApiService,
 
     // USERS
     BitrixUserService,
@@ -105,10 +115,6 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     BitrixLeadUpsellService,
     ...bitrixLeadProviders,
 
-    // MESSAGES AND CHATS
-    BitrixMessageService,
-    BitrixImBotService,
-
     // DEALS
     ...bitrixDealProviders,
     BitrixDealsUseCase,
@@ -118,8 +124,20 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     BitrixDepartmentsUseCase,
 
     // TASKS
-    ...tasksProviders,
-    BitrixTaskService,
+    ...taskProviders,
+    BitrixTasksUseCase,
+
+    // EVENTS
+    ...eventProviders,
+    BitrixEventsUseCase,
+
+    // MESSAGES
+    ...messageProviders,
+    BitrixMessagesUseCase,
+
+    // BOT
+    ...botProviders,
+    BitrixBotUseCase,
 
     // WIKI
     ...bitrixWikiProviders,
@@ -129,7 +147,6 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     BitrixPlacementService,
     BitrixHeadHunterService,
     BitrixWebhookService,
-    BitrixEventService,
     BitrixWikiService,
     B24WikiClientPaymentsService,
     BitrixAddySupportService,
@@ -137,14 +154,19 @@ import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.
     BitrixTelphinEventsService,
   ],
   exports: [
+    BitrixApiService,
+
     // DEALS
     BitrixDealsAdapter,
 
+    // TASKS
+    BitrixTasksUseCase,
+
+    // MESSAGES
+    BitrixMessagesUseCase,
+
     BitrixLeadService,
-    BitrixService,
-    BitrixMessageService,
     BitrixImBotService,
-    BitrixTaskService,
     BitrixWebhookService,
     BitrixIntegrationAvitoService,
     BitrixHeadHunterService,

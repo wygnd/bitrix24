@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals.port';
+import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import {
   B24Deal,
   B24DealListParams,

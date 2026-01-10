@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BitrixService } from '../../bitrix.service';
+import { BitrixApiService } from '../../bitrix-api.service';
 import {
   B24ImbotRegisterCommand,
   B24ImbotSendMessageOptions,
@@ -41,10 +41,11 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 import dayjs from 'dayjs';
-import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
 import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
+import { BitrixService } from '@/modules/bitrix/infrastructure/common/bitrix.service';
 
 @Injectable()
 export class BitrixImBotService {
@@ -56,6 +57,7 @@ export class BitrixImBotService {
   private readonly distributeDealMessages: string[];
 
   constructor(
+    private readonly bitrixApiService: BitrixApiService,
     private readonly bitrixService: BitrixService,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
@@ -65,8 +67,7 @@ export class BitrixImBotService {
     @Inject(forwardRef(() => BitrixIntegrationAvitoService))
     private readonly avitoIntegrationService: BitrixIntegrationAvitoService,
     private readonly avitoService: AvitoService,
-    @Inject(forwardRef(() => BitrixTaskService))
-    private readonly taskService: BitrixTaskService,
+    private readonly taskService: BitrixTasksUseCase,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -99,7 +100,7 @@ export class BitrixImBotService {
 
     if (!commandLanguage) throw new BadRequestException('Invalid language');
 
-    const { result: commandId } = await this.bitrixService.callMethod<
+    const { result: commandId } = await this.bitrixApiService.callMethod<
       B24ImbotRegisterCommand,
       number
     >('imbot.command.register', {
@@ -161,10 +162,17 @@ export class BitrixImBotService {
    * @param fields
    */
   async sendMessage(fields: Omit<B24ImbotSendMessageOptions, 'BOT_ID'>) {
-    return this.bitrixService.callMethod<B24ImbotSendMessageOptions, number>(
-      'imbot.message.add',
-      { ...fields, BOT_ID: this.botId },
-    );
+    try {
+      const response = await this.bitrixApiService.callMethod<
+        B24ImbotSendMessageOptions,
+        number
+      >('imbot.message.add', { ...fields, BOT_ID: this.botId });
+
+      return response?.result ?? 0;
+    } catch (error) {
+      this.logger.error(error);
+      return 0;
+    }
   }
 
   /**
@@ -172,17 +180,19 @@ export class BitrixImBotService {
    * @param fields
    */
   async updateMessage(fields: Omit<B24ImbotUpdateMessageOptions, 'BOT_ID'>) {
-    return this.bitrixService.callMethod<B24ImbotUpdateMessageOptions, boolean>(
-      'imbot.message.update',
-      {
-        ...fields,
-        BOT_ID: this.botId,
-      },
-    );
+    return this.bitrixApiService.callMethod<
+      B24ImbotUpdateMessageOptions,
+      boolean
+    >('imbot.message.update', {
+      ...fields,
+      BOT_ID: this.botId,
+    });
   }
 
   async getBotList() {
-    return this.bitrixService.callMethod<never, ImbotBot[]>('imbot.bot.list');
+    return this.bitrixApiService.callMethod<never, ImbotBot[]>(
+      'imbot.bot.list',
+    );
   }
 
   get BOT_ID(): string {
@@ -325,7 +335,7 @@ export class BitrixImBotService {
 
   /**
    * Handle button with command **distributeNewDeal**
-   * Function update deal and send message in chat about distribute deal on target project-manager
+   * Function update deals and send message in chat about distribute deals on target project-manager
    *
    * ---
    *
@@ -447,7 +457,7 @@ export class BitrixImBotService {
       };
     }
 
-    this.bitrixService.callBatch(batchCommands);
+    this.bitrixApiService.callBatch(batchCommands);
     return true;
   }
 
@@ -473,7 +483,7 @@ export class BitrixImBotService {
       counter: userCounter,
     });
 
-    this.bitrixService
+    this.bitrixApiService
       .callBatch<B24BatchResponseMap>({
         update_message: {
           method: 'imbot.message.update',
@@ -588,7 +598,7 @@ export class BitrixImBotService {
       });
     }
 
-    this.bitrixService.callBatch(batchCommandsSendMessage);
+    this.bitrixApiService.callBatch(batchCommandsSendMessage);
     return true;
   }
 
@@ -630,7 +640,7 @@ export class BitrixImBotService {
     const siteDepartmentHeadId =
       (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ?? '';
 
-    this.bitrixService.callBatch({
+    this.bitrixApiService.callBatch({
       send_message_head_sites_category: {
         method: 'im.message.add',
         params: {
@@ -662,7 +672,7 @@ export class BitrixImBotService {
 
   /**
    * Handle button with commnad **approveSiteForCase**
-   * Function update project manager message set was handling in deal
+   * Function update project manager message set was handling in deals
    * and send message Irina Navolockaya if site is approve
    *
    * ---
@@ -715,7 +725,7 @@ export class BitrixImBotService {
       };
     }
 
-    this.bitrixService.callBatch(batchCommands);
+    this.bitrixApiService.callBatch(batchCommands);
     return true;
   }
 
@@ -786,7 +796,7 @@ export class BitrixImBotService {
     const messageDecoded = this.decodeText(message);
 
     // Обновляем сообщение и отправляем новое о том, что платеж поступил
-    this.bitrixService.callBatch({
+    this.bitrixApiService.callBatch({
       update_message: {
         method: 'imbot.message.update',
         params: {
@@ -841,7 +851,7 @@ export class BitrixImBotService {
     const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
     const [userName, action, price, contract, organization] =
       message.split(' | ');
-    const clearContract = this.bitrixService.clearBBCode(contract);
+    const clearContract = this.bitrixApiService.clearBBCode(contract);
     const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
     const createTaskFields = {
       TITLE: `TEST ${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
@@ -851,7 +861,7 @@ export class BitrixImBotService {
         `[list=1]\n[*]${clearContract}[*]${price}[*]${paymentType}\n[/list]\n\n` +
         'Перейдите по ссылке и заполните поля:\n' +
         '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
-        `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
+        `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixApiService.clearNumber(price)}&type=${paymentType}`,
       RESPONSIBLE_ID: '444', // Екатерина Огрохина
       DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
       ACCOMPLICES: ['216'], // Анна Теленкова
@@ -908,7 +918,7 @@ export class BitrixImBotService {
       },
     };
 
-    return this.bitrixService.callBatch(batchCommands);
+    return this.bitrixApiService.callBatch(batchCommands);
   }
 
   /**
@@ -978,10 +988,10 @@ export class BitrixImBotService {
       // Собираем объект для отправки в old wiki
       const data: WikiNotifyReceivePaymentOptions = {
         action: 'gft_log_user_money',
-        money: this.bitrixService.clearNumber(price),
-        deal_number: this.bitrixService.clearBBCode(contract),
+        money: this.bitrixApiService.clearNumber(price),
+        deal_number: this.bitrixApiService.clearBBCode(contract),
         bitrix_user_id: fields.userId,
-        user_name: this.bitrixService.clearBBCode(userName),
+        user_name: this.bitrixApiService.clearBBCode(userName),
         direction: direction ? direction.replaceAll(/\|/gi, '').trim() : '',
         INN: inn.replaceAll(/\|/gi, ''),
         budget: fields.isBudget,
@@ -993,7 +1003,7 @@ export class BitrixImBotService {
 
       // Отправляем данные
       return Promise.all([
-        this.bitrixService.callBatch(batchCommands),
+        this.bitrixApiService.callBatch(batchCommands),
         // this.wikiService.notifyWikiAboutReceivePayment(data),
         this.sendTestMessage(
           `[b]Обработка кнопки принятия платежа[/b][br]${JSON.stringify({ batchCommands, data })}`,
@@ -1032,12 +1042,10 @@ export class BitrixImBotService {
   }
 
   public async sendTestMessage(message: string) {
-    const { result } = await this.sendMessage({
+    return this.sendMessage({
       DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
       MESSAGE: message,
       URL_PREVIEW: 'N',
     });
-
-    return result;
   }
 }

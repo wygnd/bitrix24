@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { UnloadLostCallingResponse } from '@/modules/bitrix/modules/integration/wiki/interfaces/wiki-unload-lost-calling.interface';
@@ -23,7 +23,7 @@ export class BitrixWikiService {
   );
 
   constructor(
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixService: BitrixApiService,
     private readonly wikiService: WikiService,
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly bitrixImbotService: BitrixImBotService,
@@ -237,7 +237,7 @@ export class BitrixWikiService {
       const [, , , , , , inn = ''] = message.split(' | ');
 
       if (!deal_id && !leadId)
-        throw new BadRequestException('Invalid lead and deal ids');
+        throw new BadRequestException('Invalid lead and deals ids');
 
       // Получаем информацию о сделке
       if (!dealId) {

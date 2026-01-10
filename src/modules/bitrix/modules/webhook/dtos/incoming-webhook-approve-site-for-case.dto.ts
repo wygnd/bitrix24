@@ -22,7 +22,7 @@ export class IncomingWebhookApproveSiteForCase {
 
   @ApiProperty({
     type: String,
-    description: 'site type: crm field in deal card',
+    description: 'site type: crm field in deals card',
     required: true,
     example: 'Каталог Услуг уникальный',
   })
