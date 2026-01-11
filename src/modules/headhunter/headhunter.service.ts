@@ -3,14 +3,14 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
 import { RedisService } from '@/modules/redis/redis.service';
-import { HeadHunterAuthTokens } from '@/modules/bitrix/modules/integration/headhunter/interfaces/headhunter-auth.interface';
+import { HeadHunterAuthTokens } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-auth.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.interface';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 
 @Injectable()
 export class HeadHunterService {
@@ -27,7 +27,7 @@ export class HeadHunterService {
     @Inject('HeadHunterApiService')
     private readonly http: AxiosInstance,
     private readonly bitrixMessages: BitrixMessagesUseCase,
-    private readonly bitrixService: BitrixApiService,
+    private readonly bitrixService: BitrixUseCase,
     private readonly tokensService: TokensService,
   ) {
     const headHunterConfig =
@@ -144,7 +144,7 @@ export class HeadHunterService {
 
     // Temporary
     this.bitrixMessages.sendPrivateMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+      DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
       MESSAGE:
         'Обновлены токены авторизации для hh.ru[br]' + JSON.stringify(tokens),
     });

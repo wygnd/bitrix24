@@ -4,13 +4,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { IncomingWebhookDto } from '@/modules/bitrix/modules/webhook/dtos/incoming-webhook.dto';
-import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
+import { IncomingWebhookDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook.dto';
 import { Request } from 'express';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 
 @Injectable()
 export class BitrixWebhookGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixApiService) {}
+  constructor(private readonly bitrixService: BitrixUseCase) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -18,7 +18,9 @@ export class BitrixWebhookGuard implements CanActivate {
     const body: IncomingWebhookDto = request.body;
 
     const memberIdFromRequest = body?.auth?.member_id;
-    const memberId = this.bitrixService.WEBHOOK_INCOMING_TOKEN;
+    const memberId = this.bitrixService.getConstant(
+      'WEBHOOK_INCOMING_TOKEN',
+    );
 
     if (!memberId || !memberIdFromRequest || memberId !== memberIdFromRequest)
       throw new UnauthorizedException('Invalid credentials');

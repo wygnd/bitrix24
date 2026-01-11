@@ -3,14 +3,14 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
-import { BitrixTasksAdapter } from '@/modules/bitrix/infrastructure/tasks/tasks.adapter';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
 
 @ApiTags(B24ApiTags.TASKS)
 @ApiExceptions()
 @UseGuards(AuthGuard)
 @Controller('/tasks')
 export class BitrixTaskController {
-  constructor(private readonly taskService: BitrixTasksAdapter) {}
+  constructor(private readonly taskService: BitrixTasksUseCase) {}
 
   @Get('/task/:taskId')
   async getTaskById(@Param('taskId') taskId: string) {

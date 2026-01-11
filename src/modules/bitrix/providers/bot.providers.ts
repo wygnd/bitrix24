@@ -1,5 +1,5 @@
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import { BitrixBotAdapter } from '@/modules/bitrix/infrastructure/bot/bot.adapter';
+import { BitrixBotAdapter } from '@/modules/bitrix/infrastructure/adapters/bot/bot.adapter';
 
 export const botProviders = [
   {

@@ -44,7 +44,7 @@ export class WikiService {
     );
   }
 
-  public async getWorkingSalesFromWiki(force: boolean = false) {
+  public async getWorkingSales(force: boolean = false) {
     if (!force) {
       const salesFromCache = await this.redisService.get<string[]>(
         REDIS_KEYS.WIKI_WORKING_SALES,

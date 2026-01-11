@@ -2,8 +2,9 @@ import {
   B24ImbotRegisterCommand,
   B24ImbotSendMessageOptions,
   B24ImbotUpdateMessageOptions,
-} from '@/modules/bitrix/modules/imbot/imbot.interface';
-import { ImbotCommand } from '@/modules/bitrix/modules/imbot/interfaces/imbot.interface';
+  ImbotCommand,
+} from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
+import { ImbotBot } from '@/modules/bitrix/application/interfaces/bot/imbot-bot.interface';
 
 export interface BitrixBotPort {
   addCommand(fields: B24ImbotRegisterCommand): Promise<number>;
@@ -20,4 +21,5 @@ export interface BitrixBotPort {
   sendTestMessage(message: string): Promise<void>;
   limitAccessByPushButton(userId: string, userIds: string[]): boolean;
   getRandomDistributingMessage(): string;
+  getBotList(): Promise<ImbotBot[]>;
 }

@@ -1,5 +1,5 @@
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/deals/deals.adapter';
+import { BitrixDealsAdapter } from '@/modules/bitrix/infrastructure/adapters/deals/deals.adapter';
 
 export const bitrixDealProviders = [
   {

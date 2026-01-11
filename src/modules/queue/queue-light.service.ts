@@ -3,7 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { JobsOptions, Queue } from 'bullmq';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
-import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/application/interfaces/webhooks/webhook-voximplant-calls.interface';
 
 @Injectable()
 export class QueueLightService {

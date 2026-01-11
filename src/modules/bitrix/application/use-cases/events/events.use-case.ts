@@ -8,9 +8,9 @@ import { EventLeadDeleteDto } from '@/modules/bitrix/application/dtos/events/eve
 import { B24EventRemoveDto } from '@/modules/bitrix/application/dtos/events/event-remove.dto';
 import { QueueLightService } from '@/modules/queue/queue-light.service';
 import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
-import { BitrixTasksAdapter } from '@/modules/bitrix/infrastructure/tasks/tasks.adapter';
 import type { BitrixEventsPort } from '@/modules/bitrix/application/ports/events/events.port';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 
 @Injectable()
 export class BitrixEventsUseCase {
@@ -19,7 +19,8 @@ export class BitrixEventsUseCase {
     private readonly bitrixEvents: BitrixEventsPort,
     private readonly queueLightService: QueueLightService,
     private readonly queueMiddleService: QueueMiddleService,
-    private readonly bitrixTasks: BitrixTasksAdapter,
+    @Inject(B24PORTS.TASKS.TASKS_DEFAULT)
+    private readonly bitrixTasks: BitrixTasksPort,
   ) {}
 
   async addEvent(fields: B24EventAdd) {

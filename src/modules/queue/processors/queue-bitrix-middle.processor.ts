@@ -5,14 +5,14 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { AvitoCreateLeadDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito-create-lead.dto';
-import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/modules/integration/avito/interfaces/avito-distribute-lead-from-avito.interface';
-import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
-import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
+import { AvitoCreateLeadDto } from '@/modules/bitrix/application/dtos/avito/avito-create-lead.dto';
+import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/application/interfaces/avito/avito-distribute-lead-from-avito.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24TaskExtended } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
+import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
@@ -22,8 +22,8 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   ]);
 
   constructor(
-    private readonly bitrixIntegrationAvitoService: BitrixIntegrationAvitoService,
-    private readonly bitrixImBotService: BitrixImBotService,
+    private readonly bitrixAvito: BitrixAvitoUseCase,
+    private readonly bitrixBot: BitrixBotUseCase,
     private readonly wikiService: WikiService,
     private readonly bitrixTasks: BitrixTasksUseCase,
   ) {
@@ -33,7 +33,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
-    this.bitrixImBotService.sendTestMessage(
+    this.bitrixBot.sendTestMessage(
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
@@ -84,7 +84,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   }
 
   private async handleTaskClientRequestFromAvito(fields: AvitoCreateLeadDto) {
-    return this.bitrixIntegrationAvitoService.distributeClientRequestFromAvito(
+    return this.bitrixAvito.distributeClientRequestFromAvito(
       fields,
     );
   }
@@ -92,7 +92,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixImBotService.sendTestMessage(
+    this.bitrixBot.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
@@ -123,7 +123,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
-    this.bitrixImBotService.sendTestMessage(
+    this.bitrixBot.sendTestMessage(
       `[b]${logMessage}:[/b][br]` + JSON.stringify(job),
     );
 

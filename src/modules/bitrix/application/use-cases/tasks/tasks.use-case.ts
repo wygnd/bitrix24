@@ -1,16 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BitrixTasksAdapter } from '@/modules/bitrix/infrastructure/tasks/tasks.adapter';
 import {
   B24Task,
   B24TaskExtended,
   B24TaskSelect,
 } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 import { WinstonLogger } from '@/config/winston.logger';
-import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitrix/modules/imbot/interfaces/imbot-handle.interface';
+import { ImbotHandleApproveSmmAdvertLayout } from '@/modules/bitrix/application/interfaces/bot/imbot-handle.interface';
 import { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 import { B24ActionType } from '@/modules/bitrix/interfaces/bitrix.interface';
 import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
+import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 
 @Injectable()
 export class BitrixTasksUseCase {
@@ -22,6 +23,10 @@ export class BitrixTasksUseCase {
   constructor(
     @Inject(B24PORTS.TASKS.TASKS_DEFAULT)
     private readonly bitrixTasks: BitrixTasksPort,
+    @Inject(B24PORTS.BITRIX)
+    private readonly bitrixService: BitrixPort,
+    @Inject(B24PORTS.BOT.BOT_DEFAULT)
+    private readonly bitrixBot: BitrixBotPort,
   ) {}
 
   async getTaskById(
@@ -72,7 +77,7 @@ export class BitrixTasksUseCase {
 
     let message =
       'Задача: ' +
-      this.bitrixTasks.generateTaskUrl(responsibleId, taskId, title) +
+      this.bitrixService.generateTaskUrl(responsibleId, taskId, title) +
       ' была завершена. Необходимо согласовать';
 
     if (taskResult && taskResult?.length > 0) {
@@ -87,7 +92,7 @@ export class BitrixTasksUseCase {
       isApproved: true,
       responsibleId: responsibleId,
       accomplices: accomplices,
-      message: this.bitrixTasks.encodeText(message),
+      message: this.bitrixBot.encodeText(message),
     };
 
     const keyboardItems: B24ImKeyboardOptions[] = [
@@ -112,7 +117,7 @@ export class BitrixTasksUseCase {
       },
     ];
 
-    const responseSendMessage = await this.bitrixTasks.sendMessage({
+    const responseSendMessage = await this.bitrixBot.sendMessage({
       MESSAGE: message,
       DIALOG_ID: createdBy,
       KEYBOARD: keyboardItems,

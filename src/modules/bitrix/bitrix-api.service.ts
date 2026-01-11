@@ -23,7 +23,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24UserCurrent } from '@/modules/bitrix/modules/user/interfaces/user-current.interface';
+import { B24UserCurrent } from '@/modules/bitrix/application/interfaces/users/user-current.interface';
 
 @Injectable()
 export class BitrixApiService {

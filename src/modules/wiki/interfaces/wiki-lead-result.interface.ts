@@ -1,4 +1,4 @@
-import { B24LeadStatus } from '@/modules/bitrix/modules/lead/interfaces/lead.interface';
+import { B24LeadStatus } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 
 export interface WikiLeadResultRequestClientFromAvito {
   wiki_lead_id: number;

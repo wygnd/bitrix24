@@ -8,7 +8,7 @@ import {
 import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24User } from '@/modules/bitrix/modules/user/interfaces/user.interface';
+import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import {
   B24BatchCommand,
   B24BatchCommands,
@@ -16,6 +16,7 @@ import {
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import dayjs from 'dayjs';
 import { RedisService } from '@/modules/redis/redis.service';
+import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 
 @Injectable()
 export class BitrixDepartmentsUseCase {
@@ -25,6 +26,8 @@ export class BitrixDepartmentsUseCase {
     @Inject(B24PORTS.DEPARTMENTS.DEPARTMENT_DEFAULT)
     private readonly bitrixDepartments: BitrixDepartmentPort,
     private readonly redisService: RedisService,
+    @Inject(B24PORTS.BITRIX)
+    private readonly bitrixService: BitrixPort,
   ) {
     this.departmentTypeIds = {
       advert: [36, 54, 124, 128],
@@ -86,7 +89,7 @@ export class BitrixDepartmentsUseCase {
     // Если нет в кеше или объект пустой, делаем заного запрос
     if (!usersByHeadAdvert || Object.keys(usersByHeadAdvert).length === 0) {
       const { result: batchResponseGetUsersByDepartmentId } =
-        await this.bitrixDepartments.callBatch<Record<string, B24User[]>>(
+        await this.bitrixService.callBatch<Record<string, B24User[]>>(
           departmentHeads.reduce<B24BatchCommands>((acc, { ID, UF_HEAD }) => {
             acc[`get_user-${UF_HEAD}-${ID}`] = {
               method: 'user.get',
@@ -124,7 +127,7 @@ export class BitrixDepartmentsUseCase {
 
     // Проходим по объекту, собираем и выполняем запрос на получение кол-ва сделок за месяц
     const batchResponseGetTotalUserDeals = (
-      await this.bitrixDepartments.callBatch<
+      await this.bitrixService.callBatch<
         B24BatchResponseMap<Record<string, B24Deal[]>>
       >(
         Object.entries(usersByHeadAdvert).reduce<

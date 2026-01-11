@@ -1,5 +1,5 @@
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import { BitrixEventsAdapter } from '@/modules/bitrix/infrastructure/events/events.adapter';
+import { BitrixEventsAdapter } from '@/modules/bitrix/infrastructure/adapters/events/events.adapter';
 
 export const eventProviders = [
   {

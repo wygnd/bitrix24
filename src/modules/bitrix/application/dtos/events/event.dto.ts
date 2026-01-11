@@ -3,7 +3,7 @@ import { IsInt, IsNotEmpty } from 'class-validator';
 import type { B24EventList } from '@/modules/bitrix/application/interfaces/events/events.interface';
 import { Type } from 'class-transformer';
 import type { B24AuthOptions } from '@/modules/bitrix/interfaces/bitrix.interface';
-import { OnImCommandAddEventAuthOptionsDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
+import { OnImCommandAddEventAuthOptionsDto } from '@/modules/bitrix/application/dtos/bot/imbot-events.dto';
 
 export class EventOnDto<T> {
   @ApiProperty({

@@ -1,4 +1,4 @@
-import { B24BotEventBody } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
+import { B24BotEventBody } from '@/modules/bitrix/application/interfaces/bot/imbot-events.interface';
 
 export interface B24OnCRMDealUpdateEventData {
   FIELDS: {

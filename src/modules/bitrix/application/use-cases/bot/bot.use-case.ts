@@ -11,28 +11,34 @@ import {
   B24ImbotRegisterCommand,
   B24ImbotSendMessageOptions,
   B24ImbotUpdateMessageOptions,
-} from '@/modules/bitrix/modules/imbot/imbot.interface';
-import { OnImCommandKeyboardDto } from '@/modules/bitrix/modules/imbot/dtos/imbot-events.dto';
+} from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
+import { OnImCommandKeyboardDto } from '@/modules/bitrix/application/dtos/bot/imbot-events.dto';
 import {
   ImbotHandleApproveSiteForAdvert,
   ImbotHandleApproveSmmAdvertLayout,
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
   ImbotHandleDistributeNewDealUnknown,
-} from '@/modules/bitrix/modules/imbot/interfaces/imbot-handle.interface';
-import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-approve-site-for-case.interface';
-import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/modules/imbot/interfaces/imbot-approve-distribute-lead-from-avito-by-ai.interface';
-import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-payments-notice-waiting.interface';
-import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/modules/imbot/interfaces/imbot-keyboard-addy-payments-approve.interface';
-import { B24EventParams } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
+} from '@/modules/bitrix/application/interfaces/bot/imbot-handle.interface';
+import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-site-for-case.interface';
+import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/application/interfaces/bot/imbot-approve-distribute-lead-from-avito-by-ai.interface';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-payments-notice-waiting.interface';
+import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-addy-payments-approve.interface';
+import { B24EventParams } from '@/modules/bitrix/application/interfaces/bot/imbot-events.interface';
 import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
-import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/modules/integration/wiki/constants/wiki-payments.constants';
+import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
 import dayjs from 'dayjs';
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
+import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
+import { WikiService } from '@/modules/wiki/wiki.service';
+import { AvitoService } from '@/modules/avito/avito.service';
+import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
 
 @Injectable()
 export class BitrixBotUseCase {
@@ -44,7 +50,13 @@ export class BitrixBotUseCase {
   constructor(
     @Inject(B24PORTS.BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
+    private readonly bitrixService: BitrixUseCase,
     private readonly bitrixDeals: BitrixDealsUseCase,
+    private readonly bitrixTasks: BitrixTasksUseCase,
+    private readonly bitrixDepartments: BitrixDepartmentsUseCase,
+    private readonly wikiService: WikiService,
+    private readonly avitoService: AvitoService,
+    private readonly bitrixAvito: BitrixAvitoUseCase,
   ) {}
 
   async addCommand(fields: B24ImbotRegisterCommand) {
@@ -85,6 +97,10 @@ export class BitrixBotUseCase {
 
   async sendTestMessage(message: string) {
     return this.bitrixBot.sendTestMessage(message);
+  }
+
+  async getBotList() {
+    return this.bitrixBot.getBotList();
   }
 
   /**
@@ -315,11 +331,11 @@ export class BitrixBotUseCase {
       batchCommands['send_next_chat_message'] = {
         method: 'imbot.message.add',
         params: {
-          BOT_ID: this.BOT_ID,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           DIALOG_ID: chatId,
           MESSAGE:
             'Распределение сделки ' +
-            this.bitrixBot.generateDealUrl(dealId, deal.TITLE) +
+            this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
             ` на [user=${managerId}][/user]${secondManager}[br]` +
             this.getRandomDistributingMessage(),
         },
@@ -329,7 +345,7 @@ export class BitrixBotUseCase {
       batchCommands['update_old_message'] = {
         method: 'imbot.message.update',
         params: {
-          BOT_ID: this.BOT_ID,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           MESSAGE_ID: MESSAGE_ID,
           DIALOG_ID: DIALOG_ID,
           MESSAGE:
@@ -456,7 +472,7 @@ export class BitrixBotUseCase {
     batchCommandsSendMessage['update_old_message'] = {
       method: 'imbot.message.update',
       params: {
-        BOT_ID: this.botId,
+        BOT_ID: this.bitrixService.getConstant('BOT_ID'),
         MESSAGE_ID: messageId,
         MESSAGE: changeMessage + this.decodeText(oldMessage),
         KEYBOARD: '',
@@ -544,7 +560,7 @@ export class BitrixBotUseCase {
       update_message: {
         method: 'imbot.message.update',
         params: {
-          BOT_ID: this.botId,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           MESSAGE_ID: messageId,
           MESSAGE: changeMessage,
           KEYBOARD: '',
@@ -577,7 +593,7 @@ export class BitrixBotUseCase {
       update_message: {
         method: 'imbot.message.update',
         params: {
-          BOT_ID: this.botId,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           MESSAGE_ID: messageId,
           MESSAGE:
             `[b]Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
@@ -600,8 +616,8 @@ export class BitrixBotUseCase {
       batchCommands['send_message'] = {
         method: 'imbot.message.add',
         params: {
-          BOT_ID: this.botId,
-          DIALOG_ID: this.bitrixService.ADDY_CASES_CHAT_ID, // Чат для кейсов,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+          DIALOG_ID: this.bitrixService.getConstant('ADDY').casesChatId, // Чат для кейсов,
           MESSAGE:
             'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
             this.bitrixService.generateDealUrl(dealId),
@@ -655,7 +671,7 @@ export class BitrixBotUseCase {
       return false;
     }
 
-    this.avitoIntegrationService.distributeClientRequestFromAvito(fields);
+    this.bitrixAvito.distributeClientRequestFromAvito(fields);
     return true;
   }
 
@@ -684,7 +700,7 @@ export class BitrixBotUseCase {
       update_message: {
         method: 'imbot.message.update',
         params: {
-          BOT_ID: this.botId,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           MESSAGE_ID: messageId,
           MESSAGE: messageDecoded,
           KEYBOARD: '',
@@ -693,7 +709,7 @@ export class BitrixBotUseCase {
       send_new_message: {
         method: 'imbot.message.add',
         params: {
-          BOT_ID: this.botId,
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           DIALOG_ID: dialogId,
           MESSAGE: messageDecoded + '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
         },
@@ -759,7 +775,7 @@ export class BitrixBotUseCase {
       createTaskFields.DESCRIPTION = '';
     }
 
-    const task = await this.taskService.createTask(createTaskFields);
+    const task = await this.bitrixTasks.createTask(createTaskFields);
 
     if (!task)
       return {

@@ -1,5 +1,5 @@
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import { BitrixMessagesAdapter } from '@/modules/bitrix/infrastructure/messages/messages.adapter';
+import { BitrixMessagesAdapter } from '@/modules/bitrix/infrastructure/adapters/messages/messages.adapter';
 
 export const messageProviders = [
   {

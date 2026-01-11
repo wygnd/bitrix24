@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { JobsOptions, Queue } from 'bullmq';
-import { HeadhunterWebhookCallDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
-import { LeadObserveManagerCallingDto } from '@/modules/bitrix/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
+import { LeadManagerCallingDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
 
 @Injectable()
 export class QueueHeavyService {
@@ -29,7 +29,7 @@ export class QueueHeavyService {
   }
 
   async addTaskToHandleObserveManagerCalling(
-    data: LeadObserveManagerCallingDto,
+    data: LeadManagerCallingDto,
     options?: JobsOptions,
   ) {
     return this.queueBitrixHeavy.add(

@@ -6,12 +6,12 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { WikiService } from '@/modules/wiki/wiki.service';
-import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
 import { WinstonLogger } from '@/config/winston.logger';
-import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
-import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
-import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/modules/webhook/interfaces/webhook-voximplant-calls.interface';
+import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/application/interfaces/webhooks/webhook-voximplant-calls.interface';
+import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { BitrixLeadsUpsellUseCase } from '@/modules/bitrix/application/use-cases/leads/leads-upsell.use-case';
+import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -22,9 +22,9 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   constructor(
     private readonly wikiService: WikiService,
-    private readonly bitrixImBotService: BitrixImBotService,
-    private readonly bitrixLeadUpsellService: BitrixLeadUpsellService,
-    private readonly bitrixWebhookService: BitrixWebhookService,
+    private readonly bitrixBot: BitrixBotUseCase,
+    private readonly bitrixLeadUpsell: BitrixLeadsUpsellUseCase,
+    private readonly bitrixWebhooks: BitrixWebhooksUseCase,
   ) {
     super();
   }
@@ -32,7 +32,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
-    this.bitrixImBotService
+    this.bitrixBot
       .sendTestMessage(
         `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
           JSON.stringify(data),
@@ -60,14 +60,14 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
 
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_UPSELL_DEAL:
-        response.data = await this.bitrixLeadUpsellService.handleTaskUpsellDeal(
+        response.data = await this.bitrixLeadUpsell.handleTaskUpsellDeal(
           data as QueueLightAddTaskHandleUpsellDeal,
         );
         break;
 
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
         response.data =
-          await this.bitrixWebhookService.handleVoxImplantCallInit(
+          await this.bitrixWebhooks.handleVoxImplantCallInit(
             data as B24WebhookVoxImplantCallInitTaskOptions,
           );
         break;
@@ -93,7 +93,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixImBotService.sendTestMessage(
+    this.bitrixBot.sendTestMessage(
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
@@ -111,7 +111,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     const logMessage = 'Ошибка выполнения задачи';
 
     this.logger.error({ message: logMessage, job }, true);
-    this.bitrixImBotService.sendTestMessage(
+    this.bitrixBot.sendTestMessage(
       `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
     );
   }
