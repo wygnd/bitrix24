@@ -30,7 +30,7 @@ export class BitrixPlacementController {
   constructor(private readonly bitrixPlacements: BitrixPlacementsUseCase) {}
 
   @UseGuards(BitrixPlacementGuard)
-  @Post('/crm/deals/detail-tab')
+  @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(
     @Body() body: PlacementBodyRequestDto,
     @Query() query: PlacementQueryRequestDto,
