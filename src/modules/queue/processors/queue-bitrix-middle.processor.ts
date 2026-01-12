@@ -34,8 +34,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
     this.bitrixBot.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
-        JSON.stringify(data),
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b]`,
     );
     this.logger.debug({
       message: `Добавлена задача [${name}][${id}] в очередь`,
@@ -85,17 +84,13 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixBot.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(response),
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
     );
 
-    this.logger.debug(
-      {
-        message: `Задача [${name}][${id}] выполнена`,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
 
     switch (name) {
       case QUEUE_TASKS.MIDDLE
@@ -116,18 +111,9 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
     this.bitrixBot.sendTestMessage(
-      `[b]${logMessage}:[/b][br]` + JSON.stringify(job),
+      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
     );
 
-    this.logger.error({ message: logMessage, job }, true);
-    this.logger.log(
-      {
-        message: logMessage,
-        id: job.id,
-        name: job.name,
-        reason: job.failedReason,
-      },
-      'error',
-    );
+    this.logger.error({ message: logMessage, job });
   }
 }

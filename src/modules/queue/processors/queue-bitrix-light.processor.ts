@@ -32,19 +32,13 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
-    this.bitrixBot
-      .sendTestMessage(
-        `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
-          JSON.stringify(data),
-      )
-      .catch(() => {});
-    this.logger.debug(
-      {
-        message: `Добавлена задача [${name}][${id}] в очередь`,
-        data,
-      },
-      true,
+    this.bitrixBot.sendTestMessage(
+      `[b]Добавлена задача [${name}][${id}] в очередь:[/b]`,
     );
+    this.logger.debug({
+      message: `Добавлена задача [${name}][${id}] в очередь`,
+      data,
+    });
 
     const response: QueueProcessorResponse = {
       message: '',
@@ -78,13 +72,10 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.debug(
-      {
-        message: 'check result run task',
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check result run task',
+      response,
+    });
 
     return response;
   }
@@ -93,16 +84,12 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
     this.bitrixBot.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(response),
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
     );
-    this.logger.debug(
-      {
-        message: `Задача [${name}][${id}] выполнена`,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('failed')
@@ -111,7 +98,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
     this.logger.error({ message: logMessage, job });
     this.bitrixBot.sendTestMessage(
-      `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
+      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
     );
   }
 }

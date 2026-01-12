@@ -953,13 +953,10 @@ export class BitrixWebhooksUseCase {
         },
       };
 
-      this.logger.debug(
-        {
-          message: 'check batch commands on target number',
-          callManagerCommands,
-        },
-        true,
-      );
+      this.logger.debug({
+        message: 'check batch commands on target number',
+        callManagerCommands,
+      });
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
