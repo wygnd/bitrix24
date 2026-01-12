@@ -98,6 +98,15 @@ export class BitrixAdapter implements BitrixPort {
     }).format(price);
   }
 
+  /**
+   * Generate html bitrix lead url
+   *
+   * ---
+   *
+   * Формирует html ссылку на лид
+   * @param leadId
+   * @param label
+   */
   public generateLeadUrlHtml(leadId: number | string, label?: string) {
     const url = `${this.bitrixConfig.bitrixDomain}/crm/lead/details/${leadId}/`;
 
@@ -112,10 +121,28 @@ export class BitrixAdapter implements BitrixPort {
     });
   }
 
+  /**
+   * Clear BB code from string
+   *
+   * ---
+   *
+   * Отчищает строку от BB кода
+   * @example [b]string[/b] => string
+   * @param str
+   */
   public clearBBCode(str: string) {
     return str.replaceAll(/\[.*?]/g, '');
   }
 
+  /**
+   * Clear number string
+   *
+   * ---
+   *
+   * Отчищает число из строки
+   * @example ИНН: 123 => 123
+   * @param str
+   */
   public clearNumber(str: string) {
     return str.replaceAll(/[^0-9]/gi, '');
   }
@@ -132,10 +159,33 @@ export class BitrixAdapter implements BitrixPort {
     return this.bitrixConstants[key];
   }
 
+  /**
+   * Return boolean metric is available to distribute on sales manager
+   *
+   * ---
+   *
+   * Возвращает булевое значение, обозначающее можно ли распределять на менеджеров
+   */
   public isAvailableToDistributeOnManager() {
-    return false;
+    const now = new Date();
+
+    return (
+      now.getDay() > 0 &&
+      now.getDay() < 6 &&
+      ((now.getUTCHours() >= 6 && now.getUTCHours() < 14) ||
+        (now.getUTCHours() === 14 && now.getUTCMinutes() <= 30))
+    );
   }
 
+  /**
+   * Base method to do with bitrix rest api
+   *
+   * ---
+   *
+   * Основной метод для взаимодействия с bitrix api
+   * @param method
+   * @param params
+   */
   public async callMethod<
     T extends Record<string, any> = Record<string, any>,
     U = any,
@@ -146,6 +196,15 @@ export class BitrixAdapter implements BitrixPort {
     return this.bitrixApiService.callMethod(method, params);
   }
 
+  /**
+   * Batch query methods to do with bitrix api
+   *
+   * ---
+   *
+   * Пакеты запросов для взаимодействия с bitrix api
+   * @param commands
+   * @param halt
+   */
   public async callBatch<T extends Record<string, any>>(
     commands: B24BatchCommands,
     halt: boolean = false,
