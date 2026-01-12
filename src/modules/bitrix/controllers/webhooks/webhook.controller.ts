@@ -59,14 +59,11 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForDealDto,
   ) {
-    this.logger.debug(
-      {
-        message: 'approve site for advert',
-        body,
-        query,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'approve site for advert',
+      body,
+      query,
+    });
     this.bitrixWebhooks.handleIncomingWebhookToApproveSiteForAdvert(
       query,
       body.document_id[2],
@@ -87,14 +84,11 @@ export class BitrixWebhookController {
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookApproveSiteForCase,
   ) {
-    this.logger.debug(
-      {
-        message: 'approve site for case',
-        body,
-        query,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'approve site for case',
+      body,
+      query,
+    });
     this.bitrixWebhooks.handleIncomingWebhookToApproveSiteForCase(
       query,
       body.document_id[2],
@@ -109,13 +103,10 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantInitCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallInitDto,
   ) {
-    this.logger.debug(
-      {
-        message: 'init call',
-        body,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'init call',
+      body,
+    });
     return this.bitrixWebhooks.handleVoxImplantCallInitTask(body);
   }
 
@@ -126,13 +117,10 @@ export class BitrixWebhookController {
   async handleWebhookVoxImplantEndCallingFromBitrix(
     @Body() body: B24EventVoxImplantCallEndDto,
   ) {
-    this.logger.debug(
-      {
-        message: 'start call',
-        body,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'start call',
+      body,
+    });
 
     throw new NotAcceptableException();
     // return this.bitrixWebhooks.handleVoxImplantCallEnd(body);
