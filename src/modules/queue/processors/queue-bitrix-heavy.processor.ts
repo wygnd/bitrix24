@@ -37,9 +37,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
     const { name, data, id } = job;
     this.bitrixBot.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
+      `[b]Добавлена задача [${name}][${id}] в очередь[/b]`,
     );
-    this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`, true);
+    this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`);
 
     switch (name) {
       case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
@@ -65,13 +65,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.debug(
-      {
-        message: 'check result run task',
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check result run task',
+      response,
+    });
 
     return response;
   }
@@ -83,13 +80,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
         JSON.stringify(response),
     );
-    this.logger.debug(
-      {
-        message: `Задача [${name}][${id}] выполнена`,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('closed')
@@ -98,13 +92,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
 
     this.bitrixBot.sendTestMessage(message);
-    this.logger.debug(
-      {
-        message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
-        job,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
+      job,
+    });
   }
 
   @OnWorkerEvent('failed')
@@ -115,13 +106,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
       error.message;
 
     this.bitrixBot.sendTestMessage(message);
-    this.logger.error(
-      {
-        message: `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
-        error,
-      },
-      true,
-    );
+    this.logger.error({
+      message: `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
+      error,
+    });
   }
 
   @OnWorkerEvent('error')
@@ -130,7 +118,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const message = `[b]${logMessage}:[/b][br]${error.toString()}`;
 
     this.bitrixBot.sendTestMessage(message);
-    this.logger.error({ message: logMessage, error }, true);
+    this.logger.error({ message: logMessage, error });
     this.logger.log(message, 'error');
   }
 }

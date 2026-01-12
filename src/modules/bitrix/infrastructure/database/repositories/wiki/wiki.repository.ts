@@ -36,7 +36,7 @@ export class BitrixWikiRepository implements BitrixWikiClientPaymentsRepositoryP
       const payment = await this.wikiClientPaymentsRepository.create(fields);
       return this.dto(payment);
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return null;
     }
   }

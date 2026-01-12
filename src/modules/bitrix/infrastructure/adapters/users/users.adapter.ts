@@ -46,7 +46,7 @@ export class BitrixUsersAdapter implements BitrixUsersPort {
 
       return result ?? null;
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return null;
     }
   }

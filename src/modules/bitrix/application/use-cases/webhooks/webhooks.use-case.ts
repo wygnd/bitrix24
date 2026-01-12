@@ -698,8 +698,6 @@ export class BitrixWebhooksUseCase {
       10, // 10 seconds
     );
 
-    // this.logger.debug(`init call handle: ${phone}`, 'log');
-
     this.queueLightService.addTaskHandleWebhookFromBitrixOnVoxImplantCallInit({
       callId: callId,
       phone: clientPhone,
@@ -723,14 +721,11 @@ export class BitrixWebhooksUseCase {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
-    this.logger.debug(
-      {
-        message: 'check current calls',
-        phone: clientPhone,
-        currentCalls,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check current calls',
+      phone: clientPhone,
+      currentCalls,
+    });
 
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
@@ -739,14 +734,11 @@ export class BitrixWebhooksUseCase {
         [caller_id_name, caller_id_number].includes(clientPhone),
     );
 
-    this.logger.debug(
-      {
-        message: 'check current calls and finded target call by client phone',
-        currentCalls,
-        targetCalls,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check current calls and finded target call by client phone',
+      currentCalls,
+      targetCalls,
+    });
 
     // Если не нашли текущий звонок по номеру клиента: выходим
     if (targetCalls.length === 0)
@@ -764,13 +756,10 @@ export class BitrixWebhooksUseCase {
       ),
     ]);
 
-    this.logger.debug(
-      {
-        message: 'check extension group',
-        extensionGroup,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check extension group',
+      extensionGroup,
+    });
 
     if (!extensionGroup)
       throw new NotFoundException('Extension group was not found');
@@ -842,15 +831,12 @@ export class BitrixWebhooksUseCase {
     if (saleExtensionList.length === 0)
       throw new NotFoundException('Extension list is empty');
 
-    this.logger.debug(
-      {
-        message: 'check extension phone and saleList from telphin',
-        saleExtensionList,
-        extensionPhone,
-        leadIds,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check extension phone and saleList from telphin',
+      saleExtensionList,
+      extensionPhone,
+      leadIds,
+    });
 
     if (calls.length > 1 && calledDid && calledDid in AvitoPhoneList) {
       // Если клиент звонит на авито
@@ -910,13 +896,10 @@ export class BitrixWebhooksUseCase {
         };
       });
 
-      this.logger.debug(
-        {
-          message: 'check batch commands on avito number',
-          callAvitoCommands,
-        },
-        true,
-      );
+      this.logger.debug({
+        message: 'check batch commands on avito number',
+        callAvitoCommands,
+      });
 
       this.bitrixService.callBatch(callAvitoCommands);
     } else {

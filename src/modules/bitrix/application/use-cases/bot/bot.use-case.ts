@@ -112,7 +112,7 @@ export class BitrixBotUseCase {
    * @param body
    */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
-    this.logger.debug({ message: `New command handler`, body }, true);
+    this.logger.debug({ message: `New command handler`, body });
     const { event, data } = body;
 
     if (event !== 'ONIMCOMMANDADD')
@@ -224,10 +224,10 @@ export class BitrixBotUseCase {
 
     response
       .then((result) => {
-        this.logger.debug({ message: 'Result handled button', result }, true);
+        this.logger.debug({ message: 'Result handled button', result });
       })
       .catch((error) => {
-        this.logger.error(error, true);
+        this.logger.error(error);
       });
 
     return status;
@@ -650,23 +650,17 @@ export class BitrixBotUseCase {
       this.avitoService
         .rejectDistributeLeadByAi(phone)
         .then((response) => {
-          this.logger.debug(
-            {
-              message: 'Check respose from avito on reject distributed ai lead',
-              data: response,
-            },
-            true,
-          );
+          this.logger.debug({
+            message: 'Check respose from avito on reject distributed ai lead',
+            data: response,
+          });
         })
         .catch((err) => {
-          this.logger.error(
-            {
-              message:
-                'Error on send reject distribute lead by AI to avito service',
-              error: err,
-            },
-            true,
-          );
+          this.logger.error({
+            message:
+              'Error on send reject distribute lead by AI to avito service',
+            error: err,
+          });
         });
       return false;
     }
@@ -785,8 +779,6 @@ export class BitrixBotUseCase {
 
     const { id: taskId, responsibleId: taskResponsibleId } = task;
 
-    this.logger.log(`New task id: ${taskId}`, 'warn');
-
     const batchCommands: B24BatchCommands = {
       notify_about_new_task: {
         method: 'im.message.add',
@@ -899,7 +891,7 @@ export class BitrixBotUseCase {
         date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
       };
 
-      this.logger.debug({ data, batchCommands }, true);
+      this.logger.debug({ data, batchCommands });
 
       // Отправляем данные
       return Promise.all([
@@ -910,7 +902,7 @@ export class BitrixBotUseCase {
         ),
       ]);
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return false;
     }
   }

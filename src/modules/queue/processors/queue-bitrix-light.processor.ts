@@ -66,10 +66,9 @@ export class QueueBitrixLightProcessor extends WorkerHost {
         break;
 
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
-        response.data =
-          await this.bitrixWebhooks.handleVoxImplantCallInit(
-            data as B24WebhookVoxImplantCallInitTaskOptions,
-          );
+        response.data = await this.bitrixWebhooks.handleVoxImplantCallInit(
+          data as B24WebhookVoxImplantCallInitTaskOptions,
+        );
         break;
 
       default:
@@ -110,7 +109,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   onFailed(job: Job) {
     const logMessage = 'Ошибка выполнения задачи';
 
-    this.logger.error({ message: logMessage, job }, true);
+    this.logger.error({ message: logMessage, job });
     this.bitrixBot.sendTestMessage(
       `[b]${logMessage}:[/b][br] ` + JSON.stringify(job),
     );

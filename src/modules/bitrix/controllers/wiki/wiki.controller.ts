@@ -53,13 +53,10 @@ export class BitrixWikiController {
 
     if (!response) throw new BadRequestException('Invalid send message');
 
-    this.logger.debug(
-      {
-        body: fields,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      body: fields,
+      response,
+    });
 
     return response;
   }
@@ -74,13 +71,10 @@ export class BitrixWikiController {
 
     if (!response) throw new BadRequestException('Invalid send message');
 
-    this.logger.debug(
-      {
-        body: fields,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      body: fields,
+      response,
+    });
 
     return response;
   }

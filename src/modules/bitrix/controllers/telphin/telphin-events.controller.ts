@@ -17,9 +17,7 @@ export class BitrixTelphinEventsControllerV1 {
     'bitrix:services:integration:telphin:events'.split(':'),
   );
 
-  constructor(
-    private readonly bitrixTelphin: BitrixTelphinUseCase,
-  ) {}
+  constructor(private readonly bitrixTelphin: BitrixTelphinUseCase) {}
 
   @ApiOperation({ summary: 'Обработка входящих звонков с telphin' })
   @HttpCode(HttpStatus.OK)
@@ -28,13 +26,12 @@ export class BitrixTelphinEventsControllerV1 {
     @Body() body: BitrixTelphinEventsAnswerDto,
   ) {
     try {
-      const response =
-        await this.bitrixTelphin.handleAnswerCall(body);
-      this.logger.debug({ body, response }, true);
+      const response = await this.bitrixTelphin.handleAnswerCall(body);
+      this.logger.debug({ body, response });
 
       return response;
     } catch (error) {
-      this.logger.error({ body, error }, true);
+      this.logger.error({ body, error });
       throw error;
     }
   }

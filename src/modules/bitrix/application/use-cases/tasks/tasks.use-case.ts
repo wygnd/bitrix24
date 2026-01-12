@@ -34,7 +34,7 @@ export class BitrixTasksUseCase {
     select: B24TaskSelect = [],
     action: B24ActionType = 'cache',
   ): Promise<B24TaskExtended | null> {
-    return this.bitrixTasks.getTaskById(id);
+    return this.bitrixTasks.getTaskById(id, select, action);
   }
 
   async createTask(taskFields: Partial<B24Task>): Promise<B24Task | null> {
@@ -52,22 +52,16 @@ export class BitrixTasksUseCase {
       createdBy,
     } = task;
 
-    this.logger.debug(
-      {
-        message: 'check task',
-        task,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check task',
+      task,
+    });
 
     if (status !== '4') {
-      this.logger.warn(
-        {
-          message: `task was not handled status: ${status}`,
-          task,
-        },
-        true,
-      );
+      this.logger.warn({
+        message: `task was not handled status: ${status}`,
+        task,
+      });
       return {
         status: false,
         message: `Task was in not handled status: ${status}`,

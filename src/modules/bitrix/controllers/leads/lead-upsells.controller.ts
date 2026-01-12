@@ -45,13 +45,10 @@ export class BitrixLeadUpsellController {
         dealId: body.document_id[2],
         ...query,
       });
-      this.logger.debug(
-        {
-          message: 'Add upsell in queue',
-          response,
-        },
-        true,
-      );
+      this.logger.debug({
+        message: 'Add upsell in queue',
+        response,
+      });
       return response;
     } catch (error) {
       this.logger.error({ message: 'Invalid add upsell in queue', error });

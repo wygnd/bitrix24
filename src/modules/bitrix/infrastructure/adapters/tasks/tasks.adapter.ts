@@ -110,7 +110,7 @@ export class BitrixTasksAdapter implements BitrixTasksPort {
 
       return result ? result.task : null;
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return null;
     }
   }

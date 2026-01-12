@@ -806,19 +806,13 @@ export class BitrixLeadsUpsellUseCase {
       }),
     ])
       .then((result) => {
-        this.logger.debug(
-          {
-            message: 'Final upsell steps',
-            data: result,
-          },
-          true,
-        );
+        this.logger.debug({
+          message: 'Final upsell steps',
+          data: result,
+        });
       })
       .catch((error) => {
-        this.logger.error(
-          { message: 'Invalid on final upsell steps', error },
-          true,
-        );
+        this.logger.error({ message: 'Invalid on final upsell steps', error });
       });
 
     return { status: true, message: `Was successfully sending: ${dealId}` };

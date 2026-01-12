@@ -81,13 +81,13 @@ export class BitrixPlacementsAdapter implements BitrixPlacementsPort {
       >('placement.get');
 
       if (!response?.result) {
-        this.logger.error(response, true);
+        this.logger.error(response);
         return [];
       }
 
       return response.result;
-    } catch (e) {
-      this.logger.error(e, true);
+    } catch (error) {
+      this.logger.error(error);
       return [];
     }
   }

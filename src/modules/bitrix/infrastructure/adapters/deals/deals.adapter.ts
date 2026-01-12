@@ -80,7 +80,6 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
    */
   async getDeals(fields?: B24DealListParams) {
     try {
-      this.logger.log('check');
       const response = await this.bitrixService.callMethod<
         B24DealListParams,
         B24Deal[]
@@ -115,7 +114,6 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
       return response.result ? response.result : 0;
     } catch (error) {
       this.logger.error(error);
-      this.logger.warn(error?.message ?? 'Invalid create deals');
       return 0;
     }
   }

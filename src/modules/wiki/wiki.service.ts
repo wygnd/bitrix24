@@ -111,10 +111,10 @@ export class WikiService {
         '',
         qs.stringify(data),
       );
-      this.logger.debug(response, true);
+      this.logger.debug(response);
       return true;
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return false;
     }
   }

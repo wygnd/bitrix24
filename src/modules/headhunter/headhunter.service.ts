@@ -14,7 +14,10 @@ import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bit
 
 @Injectable()
 export class HeadHunterService {
-  private readonly logger = new WinstonLogger(HeadHunterService.name);
+  private readonly logger = new WinstonLogger(
+    HeadHunterService.name,
+    'headhunter'.split(':'),
+  );
   private readonly client_id: string;
   private readonly client_secret: string;
   private readonly redirect_uri: string;

@@ -315,7 +315,7 @@ export class BitrixWikiUseCase {
 
       return { messageId: messageId ?? null };
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       throw error;
     }
   }

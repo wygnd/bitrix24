@@ -37,13 +37,10 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
       `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]` +
         JSON.stringify(data),
     );
-    this.logger.debug(
-      {
-        message: `Добавлена задача [${name}][${id}] в очередь`,
-        data,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Добавлена задача [${name}][${id}] в очередь`,
+      data,
+    });
 
     const response: QueueProcessorResponse = {
       message: '',
@@ -72,21 +69,16 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
         response.status = QueueProcessorStatus.NOT_HANDLED;
     }
 
-    this.logger.debug(
-      {
-        message: 'check result run task',
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check result run task',
+      response,
+    });
 
     return response;
   }
 
   private async handleTaskClientRequestFromAvito(fields: AvitoCreateLeadDto) {
-    return this.bitrixAvito.distributeClientRequestFromAvito(
-      fields,
-    );
+    return this.bitrixAvito.distributeClientRequestFromAvito(fields);
   }
 
   /* ==================== EVENTS LISTENERS ==================== */

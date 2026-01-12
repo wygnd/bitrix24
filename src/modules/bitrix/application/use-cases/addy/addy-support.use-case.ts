@@ -67,7 +67,7 @@ export class BitrixAddySupportUseCase {
 
       responseData.status = true;
       responseData.message = messageId.toString();
-      this.logger.debug(`request: ${fields} => response: ${messageId}`, true);
+      this.logger.debug(`request: ${fields} => response: ${messageId}`);
 
       return responseData;
     } catch (e) {

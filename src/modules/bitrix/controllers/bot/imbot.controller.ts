@@ -105,7 +105,7 @@ export class BitrixBotController {
   @HttpCode(HttpStatus.OK)
   @Post('onimcommandadd')
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
-    this.logger.debug(body, true);
+    this.logger.debug(body);
     return this.bitrixBotService.handleOnImCommandAdd(body);
   }
 }

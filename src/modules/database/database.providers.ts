@@ -42,6 +42,8 @@ export const databaseProviders = [
         LeadUpsellModel,
         B24WikiClientPaymentsModel,
       ]);
+
+      // important: depends on change db structure
       await sequelize.sync({
         force: false,
         alter: false,

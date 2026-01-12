@@ -415,13 +415,10 @@ export class BitrixLeadsUseCase {
         ),
       );
     } catch (err) {
-      this.logger.error(
-        {
-          message: 'Error on find leads by phone',
-          error: isAxiosError(err) ? err.response : err,
-        },
-        true,
-      );
+      this.logger.error({
+        message: 'Error on find leads by phone',
+        error: isAxiosError(err) ? err.response : err,
+      });
       throw err;
     }
 

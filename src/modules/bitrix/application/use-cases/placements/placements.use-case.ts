@@ -53,13 +53,10 @@ export class BitrixPlacementsUseCase {
     query: PlacementQueryRequestDto,
   ) {
     try {
-      this.logger.debug(
-        {
-          message: 'New open widget',
-          data: { query, body },
-        },
-        true,
-      );
+      this.logger.debug({
+        message: 'New open widget',
+        data: { query, body },
+      });
 
       const { ID }: B24PlacementOptionsPlacementOptionsParsed = JSON.parse(
         body.PLACEMENT_OPTIONS,
@@ -83,7 +80,7 @@ export class BitrixPlacementsUseCase {
       response.redirect(301, redirectUrl);
       return true;
     } catch (e) {
-      this.logger.error(e, true);
+      this.logger.error(e);
       return false;
     }
   }
