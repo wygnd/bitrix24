@@ -37,12 +37,17 @@ export class BitrixWebhookController {
   constructor(private readonly bitrixWebhooks: BitrixWebhooksUseCase) {}
 
   @UseGuards(BitrixWebhookGuard)
-  @Post('/bitrix/distribute-new-deals')
+  @Post('/bitrix/distribute-new-deal')
   @HttpCode(HttpStatus.ACCEPTED)
   async distributeNewDeal(
     @Body() body: IncomingWebhookDto,
     @Query() query: IncomingWebhookDistributeDealDto,
   ) {
+    this.logger.debug({
+      message: 'new deal to distribute',
+      body,
+      query,
+    });
     this.bitrixWebhooks.handleIncomingWebhookToDistributeNewDeal(query);
     return true;
   }
