@@ -112,125 +112,130 @@ export class BitrixBotUseCase {
    * @param body
    */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
-    this.logger.debug({ message: `New command handler`, body });
-    const { event, data } = body;
+    try {
+      this.logger.debug({ message: `New command handler`, body });
+      const { event, data } = body;
 
-    if (event !== 'ONIMCOMMANDADD')
-      throw new ForbiddenException('Invalid event');
+      if (event !== 'ONIMCOMMANDADD')
+        throw new ForbiddenException('Invalid event');
 
-    const {
-      MESSAGE,
-      MESSAGE_ID,
-      DIALOG_ID,
-      FROM_USER_ID: pushButtonUserId,
-    } = data.PARAMS;
-    const [command, _] = MESSAGE.split(' ', 2);
-    const commandParamsDecoded: unknown = JSON.parse(
-      MESSAGE.replace(command, ''),
-    );
-    let response: Promise<unknown>;
-    let status: boolean;
+      const {
+        MESSAGE,
+        MESSAGE_ID,
+        DIALOG_ID,
+        FROM_USER_ID: pushButtonUserId,
+      } = data.PARAMS;
+      const [command, _] = MESSAGE.split(' ', 2);
+      const commandParamsDecoded: unknown = JSON.parse(
+        MESSAGE.replace(command, ''),
+      );
+      let response: Promise<unknown>;
+      let status: boolean;
 
-    switch (command) {
-      case '/distributeNewDeal':
-        response = this.handleDistributeNewDeal(
-          commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
-          data.PARAMS,
-        );
-        return true;
-
-      case '/approveSmmAdvertLayouts':
-        response = this.handleApproveSmmAdvertLayout(
-          commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
-          MESSAGE_ID,
-        );
-        status = true;
-        break;
-
-      case '/approveSiteDealForAdvert':
-        response = this.handleApproveSiteForAdvert(
-          commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
-          MESSAGE_ID,
-        );
-        status = true;
-        break;
-
-      case '/approveSiteForCase':
-        response = this.handleApproveSiteForCase(
-          commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
-          MESSAGE_ID,
-        );
-        status = true;
-        break;
-
-      case '/approveDistributeDealFromAvitoByAI':
-        response = this.handleApproveDistributeDealFromAvitoByAI(
-          commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
-          MESSAGE_ID,
-        );
-        status = true;
-        break;
-
-      case '/approveReceivedPayment':
-        // Если нажал на кнопку кто-то, кроме:
-        // Иван Ильин, Анастасия Самыловская, Grampus
-        // Выходим
-        if (
-          this.limitAccessByPushButton(pushButtonUserId, [
-            '27',
-            '442',
-            '460',
-            '376',
-          ])
-        ) {
-          response = Promise.resolve(
-            `[${command}]: Forbidden push button ${pushButtonUserId}`,
+      switch (command) {
+        case '/distributeNewDeal':
+          response = this.handleDistributeNewDeal(
+            commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
+            data.PARAMS,
           );
-          status = false;
-          break;
-        }
+          return true;
 
-        response = this.handleApprovePayment(
-          commandParamsDecoded as ImbotKeyboardPaymentsNoticeWaiting,
-          MESSAGE_ID,
-          DIALOG_ID,
-        );
-        status = true;
-        break;
-
-      case '/approveAddyPaymentOnPay':
-        if (
-          this.limitAccessByPushButton(pushButtonUserId, ['27', '460', '376'])
-        ) {
-          response = Promise.resolve(
-            `[${command}]: Forbidden push button ${pushButtonUserId}`,
+        case '/approveSmmAdvertLayouts':
+          response = this.handleApproveSmmAdvertLayout(
+            commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
+            MESSAGE_ID,
           );
-          status = false;
+          status = true;
           break;
-        }
 
-        response = this.handleApproveAddyPaymentOnPay(
-          commandParamsDecoded as B24ImboKeyboardAddyPaymentsApprove,
-          MESSAGE_ID,
-        );
-        status = true;
-        break;
+        case '/approveSiteDealForAdvert':
+          response = this.handleApproveSiteForAdvert(
+            commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
+            MESSAGE_ID,
+          );
+          status = true;
+          break;
 
-      default:
-        status = false;
-        response = Promise.resolve('Not handled yet');
-        break;
+        case '/approveSiteForCase':
+          response = this.handleApproveSiteForCase(
+            commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
+            MESSAGE_ID,
+          );
+          status = true;
+          break;
+
+        case '/approveDistributeDealFromAvitoByAI':
+          response = this.handleApproveDistributeDealFromAvitoByAI(
+            commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
+            MESSAGE_ID,
+          );
+          status = true;
+          break;
+
+        case '/approveReceivedPayment':
+          // Если нажал на кнопку кто-то, кроме:
+          // Иван Ильин, Анастасия Самыловская, Grampus
+          // Выходим
+          if (
+            this.limitAccessByPushButton(pushButtonUserId, [
+              '27',
+              '442',
+              '460',
+              '376',
+            ])
+          ) {
+            response = Promise.resolve(
+              `[${command}]: Forbidden push button ${pushButtonUserId}`,
+            );
+            status = false;
+            break;
+          }
+
+          response = this.handleApprovePayment(
+            commandParamsDecoded as ImbotKeyboardPaymentsNoticeWaiting,
+            MESSAGE_ID,
+            DIALOG_ID,
+          );
+          status = true;
+          break;
+
+        case '/approveAddyPaymentOnPay':
+          if (
+            this.limitAccessByPushButton(pushButtonUserId, ['27', '460', '376'])
+          ) {
+            response = Promise.resolve(
+              `[${command}]: Forbidden push button ${pushButtonUserId}`,
+            );
+            status = false;
+            break;
+          }
+
+          response = this.handleApproveAddyPaymentOnPay(
+            commandParamsDecoded as B24ImboKeyboardAddyPaymentsApprove,
+            MESSAGE_ID,
+          );
+          status = true;
+          break;
+
+        default:
+          status = false;
+          response = Promise.resolve('Not handled yet');
+          break;
+      }
+
+      response
+        .then((result) => {
+          this.logger.debug({ message: 'Result handled button', result });
+        })
+        .catch((error) => {
+          this.logger.error(error);
+        });
+
+      return status;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
     }
-
-    response
-      .then((result) => {
-        this.logger.debug({ message: 'Result handled button', result });
-      })
-      .catch((error) => {
-        this.logger.error(error);
-      });
-
-    return status;
   }
 
   /**
@@ -277,88 +282,93 @@ export class BitrixBotUseCase {
     fields: ImbotHandleDistributeNewDeal,
     params: B24EventParams,
   ) {
-    const { dealId, department, chatId, managerId, stage, assignedFieldId } =
-      fields;
+    try {
+      const { dealId, department, chatId, managerId, stage, assignedFieldId } =
+        fields;
 
-    const { DIALOG_ID, MESSAGE_ID } = params;
-    const deal = await this.bitrixDeals.getDealById(dealId, 'force');
-    let nextStage = stage ?? '';
+      const { DIALOG_ID, MESSAGE_ID } = params;
+      const deal = await this.bitrixDeals.getDealById(dealId, 'force');
+      let nextStage = stage ?? '';
 
-    if (!deal) return false;
+      if (!deal) return false;
 
-    switch (department) {
-      case B24DepartmentTypeId.SEO:
-        if (!stage) break;
+      switch (department) {
+        case B24DepartmentTypeId.SEO:
+          if (!stage) break;
 
-        switch (deal.CATEGORY_ID) {
-          case '34':
-            nextStage = 'C34:PREPAYMENT_INVOIC';
-            break;
+          switch (deal.CATEGORY_ID) {
+            case '34':
+              nextStage = 'C34:PREPAYMENT_INVOIC';
+              break;
 
-          case '7':
-            nextStage = 'C7:NEW';
-            break;
+            case '7':
+              nextStage = 'C7:NEW';
+              break;
 
-          case '16':
-            nextStage = 'C16:NEW';
-            break;
-        }
+            case '16':
+              nextStage = 'C16:NEW';
+              break;
+          }
 
-        break;
-    }
+          break;
+      }
 
-    const batchCommands: B24BatchCommands = {
-      update_deal: {
-        method: 'crm.deal.update',
-        params: {
-          id: dealId,
-          fields: {
-            [assignedFieldId]: managerId,
-            STAGE_ID: nextStage,
+      const batchCommands: B24BatchCommands = {
+        update_deal: {
+          method: 'crm.deal.update',
+          params: {
+            id: dealId,
+            fields: {
+              [assignedFieldId]: managerId,
+              STAGE_ID: nextStage,
+            },
           },
         },
-      },
-    };
-
-    if (stage) {
-      // Если Ответственный SEO специалист выбран
-      // в сообщении его тоже указать надо
-      const secondManager = deal['UF_CRM_1623766928']
-        ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
-        : '';
-
-      // Отправляем в другой чат сообщение о распределенной сделке
-      batchCommands['send_next_chat_message'] = {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          DIALOG_ID: chatId,
-          MESSAGE:
-            'Распределение сделки ' +
-            this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
-            ` на [user=${managerId}][/user]${secondManager}[br]` +
-            this.getRandomDistributingMessage(),
-        },
       };
 
-      // Обновляем сообщение. Помечаем его как "Обработанное"
-      batchCommands['update_old_message'] = {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          MESSAGE_ID: MESSAGE_ID,
-          DIALOG_ID: DIALOG_ID,
-          MESSAGE:
-            `[b]${B24Emoji.SUCCESS} Обработано[/b][br]` +
-            `Сделка распределена на [user=${managerId}][/user]${secondManager}[br][br]` +
-            this.bitrixService.generateDealUrl(dealId, deal.TITLE),
-          KEYBOARD: '',
-        },
-      };
+      if (stage) {
+        // Если Ответственный SEO специалист выбран
+        // в сообщении его тоже указать надо
+        const secondManager = deal['UF_CRM_1623766928']
+          ? ` и [user=${deal['UF_CRM_1623766928']}][/user]`
+          : '';
+
+        // Отправляем в другой чат сообщение о распределенной сделке
+        batchCommands['send_next_chat_message'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: chatId,
+            MESSAGE:
+              'Распределение сделки ' +
+              this.bitrixService.generateDealUrl(dealId, deal.TITLE) +
+              ` на [user=${managerId}][/user]${secondManager}[br]` +
+              this.getRandomDistributingMessage(),
+          },
+        };
+
+        // Обновляем сообщение. Помечаем его как "Обработанное"
+        batchCommands['update_old_message'] = {
+          method: 'imbot.message.update',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            MESSAGE_ID: MESSAGE_ID,
+            DIALOG_ID: DIALOG_ID,
+            MESSAGE:
+              `[b]${B24Emoji.SUCCESS} Обработано[/b][br]` +
+              `Сделка распределена на [user=${managerId}][/user]${secondManager}[br][br]` +
+              this.bitrixService.generateDealUrl(dealId, deal.TITLE),
+            KEYBOARD: '',
+          },
+        };
+      }
+
+      this.bitrixService.callBatch(batchCommands);
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
     }
-
-    this.bitrixService.callBatch(batchCommands);
-    return true;
   }
 
   /**
@@ -433,73 +443,78 @@ export class BitrixBotUseCase {
     fields: ImbotHandleApproveSmmAdvertLayout,
     messageId: number,
   ) {
-    const {
-      taskId,
-      isApproved,
-      responsibleId,
-      accomplices,
-      message: oldMessage,
-    } = fields;
-    let message: string;
-    let changeMessage: string;
-    let batchCommandsSendMessage: B24BatchCommands = {};
+    try {
+      const {
+        taskId,
+        isApproved,
+        responsibleId,
+        accomplices,
+        message: oldMessage,
+      } = fields;
+      let message: string;
+      let changeMessage: string;
+      let batchCommandsSendMessage: B24BatchCommands = {};
 
-    // Если согласованно
-    if (isApproved) {
-      batchCommandsSendMessage['set_complete_task'] = {
-        method: 'tasks.task.approve',
-        params: {
-          taskId: taskId,
-        },
-      };
-      message = 'Макет согласован. Задача завершена.[br]';
-      changeMessage = '>>[b]Обарботанно: Макет согласован[/b][br][br]';
-    } else {
-      // Если не согласованно
-      batchCommandsSendMessage['return_task'] = {
-        method: 'tasks.task.disapprove',
-        params: {
-          taskId: taskId,
-        },
-      };
-
-      message = 'Макет не согласован. Задача возвращена.[br]';
-      changeMessage = '>>[b]Обарботанно: Макет не согласован[/b][br][br]';
-    }
-
-    message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
-
-    batchCommandsSendMessage['update_old_message'] = {
-      method: 'imbot.message.update',
-      params: {
-        BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-        MESSAGE_ID: messageId,
-        MESSAGE: changeMessage + this.decodeText(oldMessage),
-        KEYBOARD: '',
-      },
-    };
-    batchCommandsSendMessage['send_message_to_responsible'] = {
-      method: 'im.message.add',
-      params: {
-        DIALOG_ID: responsibleId,
-        MESSAGE: message,
-      },
-    };
-
-    if (accomplices.length > 0) {
-      accomplices.forEach((userId) => {
-        batchCommandsSendMessage[`send_message_to_accomplices_${userId}`] = {
-          method: 'im.message.add',
+      // Если согласованно
+      if (isApproved) {
+        batchCommandsSendMessage['set_complete_task'] = {
+          method: 'tasks.task.approve',
           params: {
-            DIALOG_ID: userId,
-            MESSAGE: message,
+            taskId: taskId,
           },
         };
-      });
-    }
+        message = 'Макет согласован. Задача завершена.[br]';
+        changeMessage = '>>[b]Обарботанно: Макет согласован[/b][br][br]';
+      } else {
+        // Если не согласованно
+        batchCommandsSendMessage['return_task'] = {
+          method: 'tasks.task.disapprove',
+          params: {
+            taskId: taskId,
+          },
+        };
 
-    this.bitrixService.callBatch(batchCommandsSendMessage);
-    return true;
+        message = 'Макет не согласован. Задача возвращена.[br]';
+        changeMessage = '>>[b]Обарботанно: Макет не согласован[/b][br][br]';
+      }
+
+      message += this.bitrixService.generateTaskUrl(responsibleId, taskId);
+
+      batchCommandsSendMessage['update_old_message'] = {
+        method: 'imbot.message.update',
+        params: {
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+          MESSAGE_ID: messageId,
+          MESSAGE: changeMessage + this.decodeText(oldMessage),
+          KEYBOARD: '',
+        },
+      };
+      batchCommandsSendMessage['send_message_to_responsible'] = {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: responsibleId,
+          MESSAGE: message,
+        },
+      };
+
+      if (accomplices.length > 0) {
+        accomplices.forEach((userId) => {
+          batchCommandsSendMessage[`send_message_to_accomplices_${userId}`] = {
+            method: 'im.message.add',
+            params: {
+              DIALOG_ID: userId,
+              MESSAGE: message,
+            },
+          };
+        });
+      }
+
+      this.bitrixService.callBatch(batchCommandsSendMessage);
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
   }
 
   /**
@@ -521,53 +536,59 @@ export class BitrixBotUseCase {
     { dealId, isApprove, managerId }: ImbotHandleApproveSiteForAdvert,
     messageId: number,
   ) {
-    let managerMessage = isApprove
-      ? 'Ваш проект [u]согласован[/u] отделом рекламы[br]' +
-        this.bitrixService.generateDealUrl(dealId) +
-        '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
-        'Вам необходимо зайти в сделку РК и отправить её в распределение.'
-      : 'Ваш проект [u]НЕ согласован[/u] отделом рекламы.[br]' +
-        this.bitrixService.generateDealUrl(dealId) +
-        '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
-        ' и заходите в сделку РК и отправляйте её в распределение.';
+    try {
+      let managerMessage = isApprove
+        ? 'Ваш проект [u]согласован[/u] отделом рекламы[br]' +
+          this.bitrixService.generateDealUrl(dealId) +
+          '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
+          'Вам необходимо зайти в сделку РК и отправить её в распределение.'
+        : 'Ваш проект [u]НЕ согласован[/u] отделом рекламы.[br]' +
+          this.bitrixService.generateDealUrl(dealId) +
+          '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
+          ' и заходите в сделку РК и отправляйте её в распределение.';
 
-    let changeMessage =
-      '[b]Сообщение обработано: ' +
-      (isApprove ? 'Сайт согласован' : 'Сайт не согласован') +
-      `[/b][br][br]` +
-      this.bitrixService.generateDealUrl(dealId);
+      let changeMessage =
+        '[b]Сообщение обработано: ' +
+        (isApprove ? 'Сайт согласован' : 'Сайт не согласован') +
+        `[/b][br][br]` +
+        this.bitrixService.generateDealUrl(dealId);
 
-    const siteDepartmentHeadId =
-      (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ?? '';
+      const siteDepartmentHeadId =
+        (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ??
+        '';
 
-    this.bitrixService.callBatch({
-      send_message_head_sites_category: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: siteDepartmentHeadId,
-          MESSAGE: managerMessage,
-          SYSTEM: 'Y',
+      this.bitrixService.callBatch({
+        send_message_head_sites_category: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: siteDepartmentHeadId,
+            MESSAGE: managerMessage,
+            SYSTEM: 'Y',
+          },
         },
-      },
-      send_message_manager_deal: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: managerId,
-          MESSAGE: managerMessage,
-          SYSTEM: 'Y',
+        send_message_manager_deal: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: managerId,
+            MESSAGE: managerMessage,
+            SYSTEM: 'Y',
+          },
         },
-      },
-      update_message: {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          MESSAGE_ID: messageId,
-          MESSAGE: changeMessage,
-          KEYBOARD: '',
+        update_message: {
+          method: 'imbot.message.update',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            MESSAGE_ID: messageId,
+            MESSAGE: changeMessage,
+            KEYBOARD: '',
+          },
         },
-      },
-    });
-    return true;
+      });
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
   }
 
   /**
@@ -589,44 +610,49 @@ export class BitrixBotUseCase {
     { dealId, approved, oldMessage }: ImbotKeyboardApproveSiteForCase,
     messageId: number,
   ) {
-    const batchCommands: B24BatchCommands = {
-      update_message: {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          MESSAGE_ID: messageId,
-          MESSAGE:
-            `[b]Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
-            this.decodeText(oldMessage),
-          KEYBOARD: '',
-        },
-      },
-      update_deal: {
-        method: 'crm.deal.update',
-        params: {
-          id: dealId,
-          fields: {
-            UF_CRM_1760972834021: '1', // Поле: Обработка кейса
+    try {
+      const batchCommands: B24BatchCommands = {
+        update_message: {
+          method: 'imbot.message.update',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            MESSAGE_ID: messageId,
+            MESSAGE:
+              `[b]Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
+              this.decodeText(oldMessage),
+            KEYBOARD: '',
           },
         },
-      },
-    };
-
-    if (approved) {
-      batchCommands['send_message'] = {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          DIALOG_ID: this.bitrixService.getConstant('ADDY').casesChatId, // Чат для кейсов,
-          MESSAGE:
-            'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
-            this.bitrixService.generateDealUrl(dealId),
+        update_deal: {
+          method: 'crm.deal.update',
+          params: {
+            id: dealId,
+            fields: {
+              UF_CRM_1760972834021: '1', // Поле: Обработка кейса
+            },
+          },
         },
       };
-    }
 
-    this.bitrixService.callBatch(batchCommands);
-    return true;
+      if (approved) {
+        batchCommands['send_message'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: this.bitrixService.getConstant('ADDY').casesChatId, // Чат для кейсов,
+            MESSAGE:
+              'Этот сайт соответствует требованиям для кейса[br]Сделка: ' +
+              this.bitrixService.generateDealUrl(dealId),
+          },
+        };
+      }
+
+      this.bitrixService.callBatch(batchCommands);
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
   }
 
   async handleApproveDistributeDealFromAvitoByAI(
@@ -733,84 +759,89 @@ export class BitrixBotUseCase {
     fields: ImbotKeyboardPaymentsNoticeWaiting,
     message: string,
   ) {
-    const { isBudget, dealId, userId } = fields;
-    const dealFields = await this.bitrixDeals.getDealById(dealId);
+    try {
+      const { isBudget, dealId, userId } = fields;
+      const dealFields = await this.bitrixDeals.getDealById(dealId);
 
-    if (!dealFields)
-      throw new NotFoundException(`Deal was not found: ${dealId}`);
+      if (!dealFields)
+        throw new NotFoundException(`Deal was not found: ${dealId}`);
 
-    /**
-     * UF_CRM_1638351463: Поле "Кто ведет"
-     */
-    const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
-    const [userName, action, price, contract, organization] =
-      message.split(' | ');
-    const clearContract = this.bitrixService.clearBBCode(contract);
-    const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
-    const createTaskFields = {
-      TITLE: `TEST ${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
-      CREATED_BY: dealAdvertResponsibleId,
-      DESCRIPTION:
-        `${isBudget ? '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]' : ''}\n` +
-        `[list=1]\n[*]${clearContract}[*]${price}[*]${paymentType}\n[/list]\n\n` +
-        'Перейдите по ссылке и заполните поля:\n' +
-        '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
-        `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
-      RESPONSIBLE_ID: '444', // Екатерина Огрохина
-      DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
-      ACCOMPLICES: ['216'], // Анна Теленкова
-      UF_CRM_TASK: ['D_' + dealId],
-    };
-
-    if (/ндсип1/gi.test(message)) {
-      createTaskFields.TITLE =
-        'TEST ' + (isBudget ? 'Пополнить бюджет НДСИП1' : 'Оплата');
-      createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
-      createTaskFields.DESCRIPTION = '';
-    }
-
-    const task = await this.bitrixTasks.createTask(createTaskFields);
-
-    if (!task)
-      return {
-        status: false,
-        message: 'Invalid handle command: execute error on creating task',
+      /**
+       * UF_CRM_1638351463: Поле "Кто ведет"
+       */
+      const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
+      const [userName, action, price, contract, organization] =
+        message.split(' | ');
+      const clearContract = this.bitrixService.clearBBCode(contract);
+      const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
+      const createTaskFields = {
+        TITLE: `TEST ${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
+        CREATED_BY: dealAdvertResponsibleId,
+        DESCRIPTION:
+          `${isBudget ? '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]' : ''}\n` +
+          `[list=1]\n[*]${clearContract}[*]${price}[*]${paymentType}\n[/list]\n\n` +
+          'Перейдите по ссылке и заполните поля:\n' +
+          '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
+          `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
+        RESPONSIBLE_ID: '444', // Екатерина Огрохина
+        DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
+        ACCOMPLICES: ['216'], // Анна Теленкова
+        UF_CRM_TASK: ['D_' + dealId],
       };
 
-    const { id: taskId, responsibleId: taskResponsibleId } = task;
+      if (/ндсип1/gi.test(message)) {
+        createTaskFields.TITLE =
+          'TEST ' + (isBudget ? 'Пополнить бюджет НДСИП1' : 'Оплата');
+        createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
+        createTaskFields.DESCRIPTION = '';
+      }
 
-    const batchCommands: B24BatchCommands = {
-      notify_about_new_task: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: dealAdvertResponsibleId,
-          MESSAGE:
-            'TEST[br]' +
-            `${
-              isBudget
-                ? 'Поступила оплата за рекламный бюджет.[br]'
-                : 'Поступила оплата за ведение/допродажу.[br]'
-            } Нужно выставить счет из Яндекс.Директ и прикрепить к этой задаче.[br]` +
-            this.bitrixService.generateTaskUrl(
-              createTaskFields.RESPONSIBLE_ID,
-              taskId,
-            ),
-        },
-      },
-      send_message_to_head: {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: taskResponsibleId,
-          MESSAGE:
-            'TEST[br]' + isBudget
-              ? 'Необходимо занести рекламный бюджет.[br]' +
-                this.bitrixService.generateTaskUrl(userId, taskId)
-              : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
-        },
-      },
-    };
+      const task = await this.bitrixTasks.createTask(createTaskFields);
 
-    return this.bitrixService.callBatch(batchCommands);
+      if (!task)
+        return {
+          status: false,
+          message: 'Invalid handle command: execute error on creating task',
+        };
+
+      const { id: taskId, responsibleId: taskResponsibleId } = task;
+
+      const batchCommands: B24BatchCommands = {
+        notify_about_new_task: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: dealAdvertResponsibleId,
+            MESSAGE:
+              'TEST[br]' +
+              `${
+                isBudget
+                  ? 'Поступила оплата за рекламный бюджет.[br]'
+                  : 'Поступила оплата за ведение/допродажу.[br]'
+              } Нужно выставить счет из Яндекс.Директ и прикрепить к этой задаче.[br]` +
+              this.bitrixService.generateTaskUrl(
+                createTaskFields.RESPONSIBLE_ID,
+                taskId,
+              ),
+          },
+        },
+        send_message_to_head: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: taskResponsibleId,
+            MESSAGE:
+              'TEST[br]' + isBudget
+                ? 'Необходимо занести рекламный бюджет.[br]' +
+                  this.bitrixService.generateTaskUrl(userId, taskId)
+                : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
+          },
+        },
+      };
+
+      return this.bitrixService.callBatch(batchCommands);
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
   }
 
   /**

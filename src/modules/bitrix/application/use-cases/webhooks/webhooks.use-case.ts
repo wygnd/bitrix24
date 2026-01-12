@@ -382,7 +382,7 @@ export class BitrixWebhooksUseCase {
               case '92':
                 // SEO Технический специалист
                 keyboardItemParams.assignedFieldId = 'UF_CRM_1623766928';
-                keyboardItemParams.stage = '';
+                keyboardItemParams.stage = null;
                 break;
             }
 
