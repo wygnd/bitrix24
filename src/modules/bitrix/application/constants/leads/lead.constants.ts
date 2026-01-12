@@ -29,6 +29,3 @@ export const B24LeadConvertedStages = [
   'UC_LAZJ4H', // '10. Ожидаем подписанный договор'
   'UC_S6V3NW', // Допродажа действующему
 ];
-
-export const LEAD_OBSERVE_MANAGER_REPOSITORY =
-  'LEAD_OBSERVE_MANAGER_REPOSITORY';

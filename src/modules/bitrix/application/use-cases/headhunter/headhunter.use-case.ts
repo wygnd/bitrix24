@@ -20,7 +20,11 @@ import {
 import { CandidateContactInterface } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-create-deal.interface';
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitrix/application/constants/headhunter/headhunter.contstants';
-import { HHBitrixVacancy } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-bitrix-vacancy.interface';
+import {
+  BitrixHeadhunterUpdateVacancyAttributes,
+  HHBitrixVacancy,
+  HHBitrixVacancyCreationalAttributes,
+} from '@/modules/bitrix/application/interfaces/headhunter/headhunter-bitrix-vacancy.interface';
 import { isAxiosError } from 'axios';
 import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
@@ -42,6 +46,7 @@ import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.p
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/users.port';
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
+import type { BitrixHeadhunterVacanciesRepositoryPort } from '@/modules/bitrix/application/ports/headhunter/headhunter-vacancies-repository.port';
 
 @Injectable()
 export class BitrixHeadhunterUseCase {
@@ -64,6 +69,8 @@ export class BitrixHeadhunterUseCase {
     private readonly headHunterRestService: HeadhunterRestService,
     private readonly queueHeavyService: QueueHeavyService,
     private readonly tokensService: TokensService,
+    @Inject(B24PORTS.HEADHUNTER.HH_VACANCIES_REPOSITORY)
+    private readonly headhunterVacanciesRepository: BitrixHeadhunterVacanciesRepositoryPort,
   ) {}
 
   async handleApp(fields: any, query: HeadhunterRedirectDto) {
@@ -336,9 +343,9 @@ export class BitrixHeadhunterUseCase {
       let bitrixVacancy = '';
 
       try {
-        const vacancy = await this.getRatioVacancyBitrix(vacancyId);
+        const vacancy = await this.getRatioVacancy(vacancyId);
 
-        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.ID;
+        if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.id;
       } catch (e) {
         bitrixVacancy = '';
       }
@@ -584,75 +591,54 @@ export class BitrixHeadhunterUseCase {
     }
   }
 
-  // todo: add table
   /**
-   * Return ratio vacancy
+   * Get vacancy list
    *
    * ---
    *
-   * Возвращает соотношение вакансий hh.ru и поля в сделке HR вакансия
-   *
+   * Получить список вакансий
    */
-  async getRatioVacancies() {
-    const ratioVacanciesFromCache = await this.redisService.get<
-      HHBitrixVacancy[]
-    >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
+  async getVacancies() {
+    try {
+      const vacanciesFromDB =
+        await this.headhunterVacanciesRepository.getVacancies();
 
-    const vacancies = await this.headHunterRestService.getActiveVacancies(true);
+      // if (vacanciesFromDB.length > 0) {
+      //   return [];
+      // }
 
-    // Сравниваем вакансии по кол-ву элементов
-    if (ratioVacanciesFromCache && ratioVacanciesFromCache.length > 0) {
-      const newRatioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
-        (acc, vacancy) => {
-          const vacancyIndex = ratioVacanciesFromCache.findIndex(
-            (v) => v.id === vacancy.id,
-          );
-          const vacancyObject: HHBitrixVacancy = {
-            id: vacancy.id,
-            label: vacancy.name,
-            url: vacancy.alternate_url,
-            bitrixField: null,
-          };
+      const vacanciesFromHH =
+        await this.headHunterRestService.getActiveVacancies(true);
 
-          vacancyIndex !== -1
-            ? acc.push({
-                ...vacancyObject,
-                bitrixField: ratioVacanciesFromCache[vacancyIndex].bitrixField,
-              })
-            : acc.push(vacancyObject);
-
-          return acc;
-        },
-        [],
+      return this.headhunterVacanciesRepository.addVacancies(
+        vacanciesFromHH.reduce<HHBitrixVacancyCreationalAttributes[]>(
+          (acc, vacancy) => {
+            acc.push({
+              vacancyId: vacancy.id,
+              label: vacancy.name,
+              url: vacancy.alternate_url,
+              bitrixField: null,
+            });
+            return acc;
+          },
+          [],
+        ),
       );
-
-      this.redisService.set<HHBitrixVacancy[]>(
-        REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
-        newRatioVacancies,
-      );
-
-      return newRatioVacancies;
+    } catch (error) {
+      return [];
     }
+  }
 
-    const ratioVacancies = vacancies.reduce<HHBitrixVacancy[]>(
-      (acc, { id, name, alternate_url }) => {
-        acc.push({
-          id: id,
-          label: name,
-          url: alternate_url,
-          bitrixField: null,
-        });
-        return acc;
-      },
-      [],
-    );
+  async updateVacancies(records: BitrixHeadhunterUpdateVacancyAttributes[]) {
+    return this.headhunterVacanciesRepository.updateVacancies(records);
+  }
 
-    this.redisService.set<HHBitrixVacancy[]>(
-      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
-      ratioVacancies,
-    );
+  async updateVacancy(fields: BitrixHeadhunterUpdateVacancyAttributes) {
+    return this.headhunterVacanciesRepository.updateVacancy(fields);
+  }
 
-    return ratioVacancies;
+  async addVacancy(fields: HHBitrixVacancyCreationalAttributes) {
+    return this.headhunterVacanciesRepository.addVacancy(fields);
   }
 
   async setRatioVacancies(vacancies: HHBitrixVacancy[]) {
@@ -666,14 +652,14 @@ export class BitrixHeadhunterUseCase {
    * Try finding ratio vacancy from hh in bitrix
    * @param vacancyId
    */
-  async getRatioVacancyBitrix(vacancyId: string) {
+  async getRatioVacancy(vacancyId: string) {
     const ratioVacanciesFromCache = await this.redisService.get<
       HHBitrixVacancy[]
     >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
 
     if (ratioVacanciesFromCache) {
       const findVacancy = ratioVacanciesFromCache.find(
-        (v) => v.id === vacancyId,
+        (v) => v.vacancyId === vacancyId,
       );
 
       if (!findVacancy) throw new NotFoundException('Vacancy not found');
@@ -681,8 +667,8 @@ export class BitrixHeadhunterUseCase {
       return findVacancy;
     }
 
-    const findVacancy = (await this.getRatioVacancies()).find(
-      (v) => v.id === vacancyId,
+    const findVacancy = (await this.getVacancies()).find(
+      (v) => v.vacancyId === vacancyId,
     );
 
     if (!findVacancy) throw new NotFoundException('Vacancy not found');

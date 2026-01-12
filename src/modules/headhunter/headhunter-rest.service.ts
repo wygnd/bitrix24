@@ -12,9 +12,14 @@ import { HHResumeInterface } from '@/modules/headhunter/interfaces/headhunter-re
 import { ConfigService } from '@nestjs/config';
 import { BitrixHRConstants } from '@/common/interfaces/bitrix-config.interface';
 import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class HeadhunterRestService {
+  private readonly logger = new WinstonLogger(
+    HeadhunterRestService.name,
+    'headhunter'.split(':'),
+  );
   private readonly hrChatId: string;
 
   constructor(
@@ -36,39 +41,52 @@ export class HeadhunterRestService {
     this.hrChatId = hrChatId;
   }
 
+  /**
+   * Get visible vacancies from headhunter
+   *
+   * ---
+   *
+   * Получить действующие вакансии с headhunter
+   * @param force
+   */
   async getActiveVacancies(force = false) {
-    if (!force) {
-      const vacanciesFromCache = await this.redisService.get<HHVacancyDto[]>(
-        REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
+    try {
+      if (!force) {
+        const vacanciesFromCache = await this.redisService.get<HHVacancyDto[]>(
+          REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
+        );
+
+        if (vacanciesFromCache) return vacanciesFromCache;
+      }
+
+      const vacanciesFromApi = await this.headHunterService.get<
+        object,
+        HHVacanciesResponse
+      >(
+        `/employers/${this.headHunterService.EMPLOYER_ID}/vacancies/active?all_accessible=true`,
       );
 
-      if (vacanciesFromCache) return vacanciesFromCache;
+      if (vacanciesFromApi.items.length === 0)
+        throw new NotFoundException('No active vacancies');
+
+      const vacanciesClear = vacanciesFromApi.items
+        .filter(
+          ({ archived, has_test, closed_for_applicants }) =>
+            !archived && !has_test && !closed_for_applicants,
+        )
+        .map((vacancy) => this.toVacancyDto(vacancy));
+
+      await this.redisService.set<HHVacancyDto[]>(
+        REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
+        vacanciesClear,
+        86400, // 24 hours
+      );
+
+      return vacanciesClear;
+    } catch (error) {
+      this.logger.error(error);
+      return [];
     }
-
-    const vacanciesFromApi = await this.headHunterService.get<
-      object,
-      HHVacanciesResponse
-    >(
-      `/employers/${this.headHunterService.EMPLOYER_ID}/vacancies/active?all_accessible=true`,
-    );
-
-    if (vacanciesFromApi.items.length === 0)
-      throw new NotFoundException('No active vacancies');
-
-    const vacanciesClear = vacanciesFromApi.items
-      .filter(
-        ({ archived, has_test, closed_for_applicants }) =>
-          !archived && !has_test && !closed_for_applicants,
-      )
-      .map((vacancy) => this.toVacancyDto(vacancy));
-
-    await this.redisService.set<HHVacancyDto[]>(
-      REDIS_KEYS.HEADHUNTER_API_ACTIVE_VACANCIES,
-      vacanciesClear,
-      86400, // 24 hours
-    );
-
-    return vacanciesClear;
   }
 
   async getResumeById(resumeId: string) {

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { BitrixWikiClientPaymentsRepositoryPort } from '@/modules/bitrix/application/ports/wiki/wiki-client-payments-repository.port';
 import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/database/entities/wiki/wiki-client-payments.entity';
 import { B24WikiClientPaymentsPaymentDto } from '@/modules/bitrix/application/dtos/wiki/wiki-client-payments.dto';
@@ -8,18 +8,18 @@ import {
 } from '@/modules/bitrix/application/interfaces/wiki/wiki-client-payments.interface';
 import { FindOptions } from 'sequelize';
 import { plainToInstance } from 'class-transformer';
-import { WIKI_CLIENT_PAYMENTS_REPOSITORY } from '@/modules/bitrix/application/constants/wiki/wiki-client-payments.constants';
 import { WinstonLogger } from '@/config/winston.logger';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
-export class BitrixWikiRepository implements BitrixWikiClientPaymentsRepositoryPort {
+export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPaymentsRepositoryPort {
   private readonly logger = new WinstonLogger(
-    BitrixWikiRepository.name,
+    BitrixWikiClientPaymentsRepository.name,
     'bitrix:wiki'.split(':'),
   );
 
   constructor(
-    @Inject(WIKI_CLIENT_PAYMENTS_REPOSITORY)
+    @InjectModel(B24WikiClientPaymentsModel)
     private readonly wikiClientPaymentsRepository: typeof B24WikiClientPaymentsModel,
   ) {}
 

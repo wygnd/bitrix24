@@ -54,6 +54,12 @@ import { BitrixWikiClientPaymentsUseCase } from '@/modules/bitrix/application/us
 import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki.use-case';
 import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
+import { headhunterProviders } from '@/modules/bitrix/providers/headhunter.providers';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-observe-manager-calling.entity';
+import { LeadUpsellModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-upsell.entity';
+import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/database/entities/wiki/wiki-client-payments.entity';
+import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/database/entities/headhunter/headhunter-vacancy.entity';
 
 @Module({
   imports: [
@@ -64,6 +70,12 @@ import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
     AvitoModule,
     TokensModule,
     forwardRef(() => TelphinModule),
+    SequelizeModule.forFeature([
+      LeadUpsellModel,
+      LeadObserveManagerCallingModel,
+      B24WikiClientPaymentsModel,
+      BitrixHeadhunterVacancyModel,
+    ]),
   ],
   controllers: [
     BitrixController,
@@ -166,6 +178,7 @@ import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
     BitrixAvitoUseCase,
 
     // HEADHUNTER
+    ...headhunterProviders,
     BitrixHeadhunterUseCase,
 
     // TELPHIN

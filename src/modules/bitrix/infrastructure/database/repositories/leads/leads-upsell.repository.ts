@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BitrixLeadsUpsellRepositoryPort } from '@/modules/bitrix/application/ports/leads/leads-upsell-repository.port';
 import {
   B24LeadUpsellAttributes,
@@ -7,9 +7,9 @@ import {
 import { FindOptions } from 'sequelize';
 import { B24LeadUpsellDto } from '@/modules/bitrix/application/dtos/leads/lead-upsell.dto';
 import { plainToInstance } from 'class-transformer';
-import { LEAD_UPSELL_REPOSITORY } from '@/modules/bitrix/application/constants/leads/lead-upsell.constants';
 import { LeadUpsellModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-upsell.entity';
 import { WinstonLogger } from '@/config/winston.logger';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class BitrixLeadsUpsellRepository implements BitrixLeadsUpsellRepositoryPort {
@@ -19,7 +19,7 @@ export class BitrixLeadsUpsellRepository implements BitrixLeadsUpsellRepositoryP
   );
 
   constructor(
-    @Inject(LEAD_UPSELL_REPOSITORY)
+    @InjectModel(LeadUpsellModel)
     private readonly upsellRepository: typeof LeadUpsellModel,
   ) {}
 

@@ -1,6 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TokensModel } from '@/modules/tokens/tokens.entity';
-import { TOKENS_REPOSITORY } from '@/modules/tokens/tokens.constants';
 import { TokensCreationalAttributes } from '@/modules/tokens/interfaces/tokens-attributes.interface';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { plainToClass, plainToInstance } from 'class-transformer';
@@ -9,13 +8,14 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { TokensCreateOrUpdateResponse } from '@/modules/tokens/interfaces/tokens-create-or-update-response.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class TokensService {
   private readonly logger = new WinstonLogger(TokensService.name, ['tokens']);
 
   constructor(
-    @Inject(TOKENS_REPOSITORY)
+    @InjectModel(TokensModel)
     private readonly tokensRepository: typeof TokensModel,
     private readonly redisService: RedisService,
   ) {}

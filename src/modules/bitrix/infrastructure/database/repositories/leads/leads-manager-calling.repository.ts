@@ -1,19 +1,19 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BitrixLeadsManagerCallingRepositoryPort } from '@/modules/bitrix/application/ports/leads/leads-manager-calling.port';
 import {
   LeadObserveManagerCallingAttributes,
   LeadObserveManagerCallingCreationalAttributes,
 } from '@/modules/bitrix/application/interfaces/leads/lead-observe-manager-calling.interface';
 import { BulkCreateOptions, FindOptions, Op } from 'sequelize';
-import { LEAD_OBSERVE_MANAGER_REPOSITORY } from '@/modules/bitrix/application/constants/leads/lead.constants';
 import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-observe-manager-calling.entity';
 import { plainToInstance } from 'class-transformer';
 import { LeadManagerCallDTO } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class BitrixLeadsMangerCallingRepository implements BitrixLeadsManagerCallingRepositoryPort {
   constructor(
-    @Inject(LEAD_OBSERVE_MANAGER_REPOSITORY)
+    @InjectModel(LeadObserveManagerCallingModel)
     private readonly leadsManagerCallingRepository: typeof LeadObserveManagerCallingModel,
   ) {}
 

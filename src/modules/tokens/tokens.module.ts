@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { tokensProviders } from '@/modules/tokens/tokens.providers';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { RedisModule } from '@/modules/redis/redis.module';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { TokensModel } from '@/modules/tokens/tokens.entity';
 
 @Module({
-  imports: [RedisModule],
-  providers: [...tokensProviders, TokensService],
+  imports: [RedisModule, SequelizeModule.forFeature([TokensModel])],
+  providers: [TokensService],
   exports: [TokensService],
 })
 export class TokensModule {}

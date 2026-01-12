@@ -1,11 +1,25 @@
 export interface HHBitrixVacancy {
-  id: string;
+  vacancyId: string;
   url: string;
   label: string;
-  bitrixField: HHBitrixVacancyItem | null
+  bitrixField: HHBitrixVacancyItem | null;
 }
 
 export type HHBitrixVacancyItem = {
-  ID: string;
-  VALUE: string;
+  id: string;
+  value: string;
 };
+
+export interface HHBitrixVacancyAttributes extends HHBitrixVacancy {
+  id: number;
+}
+
+export type HHBitrixVacancyCreationalAttributes = Omit<
+  HHBitrixVacancyAttributes,
+  'id'
+>;
+
+export interface BitrixHeadhunterUpdateVacancyAttributes {
+  id: number;
+  fields: Partial<HHBitrixVacancyAttributes>;
+}
