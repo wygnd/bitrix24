@@ -297,7 +297,6 @@ export class BitrixBotUseCase {
 
           switch (deal.CATEGORY_ID) {
             case '34':
-              this.logger.log(fields, 'warn');
               nextStage = 'C34:PREPAYMENT_INVOIC';
               break;
 
