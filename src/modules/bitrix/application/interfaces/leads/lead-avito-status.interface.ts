@@ -1,0 +1,14 @@
+import { B24LeadStatus } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
+
+export interface LeadAvitoStatus {
+  avito_number: string;
+  avito_name: string;
+  date_cerate: string;
+  date_last_request: string;
+  status: B24LeadStatus;
+}
+
+export interface LeadAvitoStatusResponse {
+  count_leads: number;
+  leads: Record<string, LeadAvitoStatus>;
+}

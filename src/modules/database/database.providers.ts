@@ -2,10 +2,10 @@ import { ConfigService } from '@nestjs/config';
 import { Sequelize, SequelizeOptions } from 'sequelize-typescript';
 import { DEVELOPMENT, PRODUCTION } from '@/constants';
 import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
-import { LeadObserveManagerCallingModel } from '@/modules/bitrix/modules/lead/entities/lead-observe-manager-calling.entity';
+import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-observe-manager-calling.entity';
 import { TokensModel } from '@/modules/tokens/tokens.entity';
-import { LeadUpsellModel } from '@/modules/bitrix/modules/lead/entities/lead-upsell.entity';
-import { B24WikiClientPaymentsModel } from '@/modules/bitrix/modules/integration/wiki/etities/wiki-client-payments.entity';
+import { LeadUpsellModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-upsell.entity';
+import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/database/entities/wiki/wiki-client-payments.entity';
 
 export const databaseProviders = [
   {
@@ -42,6 +42,8 @@ export const databaseProviders = [
         LeadUpsellModel,
         B24WikiClientPaymentsModel,
       ]);
+
+      // important: depends on change db structure
       await sequelize.sync({
         force: false,
         alter: false,

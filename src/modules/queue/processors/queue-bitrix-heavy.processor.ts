@@ -5,12 +5,12 @@ import {
   QueueProcessorStatus,
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { BitrixHeadHunterService } from '@/modules/bitrix/modules/integration/headhunter/headhunter.service';
-import { HeadhunterWebhookCallDto } from '@/modules/bitrix/modules/integration/headhunter/dto/headhunter-webhook-call.dto';
-import { BitrixImBotService } from '@/modules/bitrix/modules/imbot/imbot.service';
-import { BitrixLeadService } from '@/modules/bitrix/modules/lead/services/lead.service';
-import { LeadObserveManagerCallingDto } from '@/modules/bitrix/modules/lead/dtos/lead-observe-manager-calling.dto';
+import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
+import { LeadManagerCallingDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
+import { BitrixHeadhunterUseCase } from '@/modules/bitrix/application/use-cases/headhunter/headhunter.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
 export class QueueBitrixHeavyProcessor extends WorkerHost {
@@ -20,9 +20,9 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   ]);
 
   constructor(
-    private readonly bitrixHeadhunterIntegrationService: BitrixHeadHunterService,
-    private readonly bitrixImBotService: BitrixImBotService,
-    private readonly bitrixLeadService: BitrixLeadService,
+    private readonly bitrixHeadhunter: BitrixHeadhunterUseCase,
+    private readonly bitrixBot: BitrixBotUseCase,
+    private readonly bitrixLeadService: BitrixLeadsUseCase,
   ) {
     super();
   }
@@ -36,16 +36,16 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     };
 
     const { name, data, id } = job;
-    this.bitrixImBotService.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b][br]`,
+    this.bitrixBot.sendTestMessage(
+      `[b]Добавлена задача [${name}][${id}] в очередь[/b]`,
     );
-    this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`, true);
+    this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`);
 
     switch (name) {
       case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_WEBHOOK_FROM_HH:
         response.message = 'handle new webhook from hh.ru';
         response.data =
-          await this.bitrixHeadhunterIntegrationService.handleNewResponseVacancyWebhook(
+          await this.bitrixHeadhunter.handleNewResponseVacancyWebhook(
             data as HeadhunterWebhookCallDto,
           );
         break;
@@ -54,7 +54,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         response.message = 'handle observe manager calling task';
         response.data =
           await this.bitrixLeadService.handleObserveManagerCalling(
-            data as LeadObserveManagerCallingDto,
+            data as LeadManagerCallingDto,
           );
         break;
 
@@ -65,13 +65,10 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         break;
     }
 
-    this.logger.debug(
-      {
-        message: 'check result run task',
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: 'check result run task',
+      response,
+    });
 
     return response;
   }
@@ -79,17 +76,13 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixImBotService.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]` +
-        JSON.stringify(response),
+    this.bitrixBot.sendTestMessage(
+      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
     );
-    this.logger.debug(
-      {
-        message: `Задача [${name}][${id}] выполнена`,
-        response,
-      },
-      true,
-    );
+    this.logger.debug({
+      message: `Задача [${name}][${id}] выполнена`,
+      response,
+    });
   }
 
   @OnWorkerEvent('closed')
@@ -97,31 +90,25 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const { name, id, stacktrace, failedReason } = job;
     const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
 
-    this.bitrixImBotService.sendTestMessage(message);
-    this.logger.debug(
-      {
-        message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
-        job,
-      },
-      true,
-    );
+    this.bitrixBot.sendTestMessage(message);
+    this.logger.debug({
+      message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
+      job,
+    });
   }
 
   @OnWorkerEvent('failed')
   onFailed(job: Job, error: Error) {
-    const { name, id, stacktrace, failedReason } = job;
-    const message =
-      `[b]Ошибка выполнения задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}[br][br]` +
-      error.message;
+    const logMessage = `Ошибка выполнения задачи:`;
 
-    this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error(
-      {
-        message: `Ошибка выполнения задачи [${name}][${id}]: ${failedReason} => ${stacktrace.join('||')}`,
-        error,
-      },
-      true,
+    this.bitrixBot.sendTestMessage(
+      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
     );
+
+    this.logger.error({
+      message: logMessage,
+      error,
+    });
   }
 
   @OnWorkerEvent('error')
@@ -129,8 +116,8 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     const logMessage = 'Ошибка выполнения задачи';
     const message = `[b]${logMessage}:[/b][br]${error.toString()}`;
 
-    this.bitrixImBotService.sendTestMessage(message);
-    this.logger.error({ message: logMessage, error }, true);
+    this.bitrixBot.sendTestMessage(message);
+    this.logger.error({ message: logMessage, error });
     this.logger.log(message, 'error');
   }
 }

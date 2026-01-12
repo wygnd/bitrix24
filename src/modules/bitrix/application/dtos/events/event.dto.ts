@@ -1,0 +1,52 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty } from 'class-validator';
+import type { B24EventList } from '@/modules/bitrix/application/interfaces/events/events.interface';
+import { Type } from 'class-transformer';
+import type { B24AuthOptions } from '@/modules/bitrix/interfaces/bitrix.interface';
+import { OnImCommandAddEventAuthOptionsDto } from '@/modules/bitrix/application/dtos/bot/imbot-events.dto';
+
+export class EventOnDto<T> {
+  @ApiProperty({
+    type: String,
+    description: 'Event type',
+    required: true,
+  })
+  @IsNotEmpty()
+  event: B24EventList;
+
+  @ApiProperty({
+    type: Number,
+    required: true,
+    description: 'Event handler id',
+  })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  event_handler_id: number;
+
+  @ApiProperty({
+    type: Object,
+    required: true,
+    description: 'Event data',
+  })
+  @IsNotEmpty()
+  data: T;
+
+  @ApiProperty({
+    type: Number,
+    required: true,
+    description: 'time',
+  })
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  ts: number;
+
+  @ApiProperty({
+    type: OnImCommandAddEventAuthOptionsDto,
+    required: true,
+    description: 'Auth options',
+  })
+  @IsNotEmpty()
+  auth: B24AuthOptions;
+}

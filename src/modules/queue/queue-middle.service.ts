@@ -3,8 +3,8 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { Queue } from 'bullmq';
 import { JobsOptions } from 'bullmq';
-import { AvitoCreateLeadDto } from '@/modules/bitrix/modules/integration/avito/dtos/avito-create-lead.dto';
-import { B24TaskExtended } from '@/modules/bitrix/modules/task/interfaces/task.interface';
+import { AvitoCreateLeadDto } from '@/modules/bitrix/application/dtos/avito/avito-create-lead.dto';
+import { B24TaskExtended } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 
 @Injectable()
 export class QueueMiddleService {

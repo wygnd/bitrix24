@@ -1,0 +1,106 @@
+import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@/common/guards/auth.guard';
+import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
+import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
+
+@ApiTags('Deals')
+@ApiExceptions()
+@ApiAuthHeader()
+@UseGuards(AuthGuard)
+@Controller('deals')
+export class BitrixDealsController {
+  constructor(private readonly bitrixDeals: BitrixDealsUseCase) {}
+
+  @ApiQuery({
+    type: Number,
+    name: 'deal_id',
+    description: 'deals id',
+    example: 49146,
+    required: true,
+  })
+  @Get('/deals/:deal_id')
+  async getDealById(@Param('deal_id') dealId: string) {
+    return this.bitrixDeals.getDealById(dealId);
+  }
+
+  @ApiOperation({
+    summary: 'get deals fields',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'success get deals fields',
+    example: {
+      result: {
+        ID: {
+          type: 'integer',
+          isRequired: false,
+          isReadOnly: true,
+          isImmutable: false,
+          isMultiple: false,
+          isDynamic: false,
+          title: 'ID',
+        },
+        TITLE: {
+          type: 'string',
+          isRequired: false,
+          isReadOnly: false,
+          isImmutable: false,
+          isMultiple: false,
+          isDynamic: false,
+          title: 'Название',
+        },
+        TYPE_ID: {
+          type: 'crm_status',
+          isRequired: false,
+          isReadOnly: false,
+          isImmutable: false,
+          isMultiple: false,
+          isDynamic: false,
+          statusType: 'DEAL_TYPE',
+          title: 'Тип',
+        },
+      },
+    },
+  })
+  @Get('/fields')
+  async getDealFields() {
+    return this.bitrixDeals.getDealFields();
+  }
+
+  @ApiOperation({
+    summary: 'get deals field',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'success get deals field',
+    example: {
+      type: 'employee',
+      isRequired: false,
+      isReadOnly: false,
+      isImmutable: false,
+      isMultiple: false,
+      isDynamic: true,
+      title: 'UF_CRM_1638351463',
+      listLabel: 'Кто ведет',
+      formLabel: 'Кто ведет',
+      filterLabel: 'Кто ведет',
+      settings: [],
+    },
+  })
+  @Get('/fields/field/:field_id')
+  async getDealField(@Param('field_id') fieldId: string) {
+    return this.bitrixDeals.getDealField(fieldId);
+  }
+
+  @ApiOperation({ summary: 'Получить список сделок' })
+  @Get('/')
+  async getDealList() {
+    return this.bitrixDeals.getDeals({
+      filter: {
+        ID: '55352',
+      },
+    });
+  }
+}

@@ -6,18 +6,18 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiExcludeController, ApiTags } from '@nestjs/swagger';
-import { BitrixMessageService } from './modules/im/im.service';
+import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
 
 @ApiExcludeController()
 @ApiTags('Base methods')
 @Controller()
 export class BitrixController {
-  constructor(private readonly bitrixMessageService: BitrixMessageService) {}
+  constructor(private readonly bitrixMessages: BitrixMessagesUseCase) {}
 
   @Post('/app/handle')
   async handleApp(@Body() data: any) {
     try {
-      return await this.bitrixMessageService.sendPrivateMessage({
+      return await this.bitrixMessages.sendPrivateMessage({
         DIALOG_ID: 'chat77152',
         MESSAGE: `Обработка приложения [b](Node)![/b][br][br]${JSON.stringify(data) ?? ''}`,
       });

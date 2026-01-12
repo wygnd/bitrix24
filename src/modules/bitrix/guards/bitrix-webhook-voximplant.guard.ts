@@ -4,13 +4,13 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { Request } from 'express';
-import { B24EventBodyVoxImplant } from '@/modules/bitrix/modules/imbot/interfaces/imbot-events.interface';
+import { B24EventBodyVoxImplant } from '@/modules/bitrix/application/interfaces/bot/imbot-events.interface';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 
 @Injectable()
 export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixUseCase) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -18,7 +18,8 @@ export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
     const body: B24EventBodyVoxImplant = request.body;
 
     const tokenFromRequest = body?.auth?.application_token;
-    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_FINISH_CALL_TOKEN;
+    const token =
+      this.bitrixService.getConstant('WEBHOOK').voxImplant.finishCallToken;
 
     if (!token || !tokenFromRequest || token !== tokenFromRequest)
       throw new UnauthorizedException('Invalid webhook token');
@@ -29,7 +30,7 @@ export class BitrixVoxImplantFinishCallEventGuard implements CanActivate {
 
 @Injectable()
 export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixUseCase) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -37,7 +38,8 @@ export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
     const body: B24EventBodyVoxImplant = request.body;
 
     const tokenFromRequest = body?.auth?.application_token;
-    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_START_CALL_TOKEN;
+    const token =
+      this.bitrixService.getConstant('WEBHOOK').voxImplant.startCallToken;
 
     if (!token || !tokenFromRequest || token !== tokenFromRequest)
       throw new UnauthorizedException('Invalid webhook token');
@@ -48,7 +50,7 @@ export class BitrixVoxImplantStartCallEventGuard implements CanActivate {
 
 @Injectable()
 export class BitrixVoxImplantInitCallEventGuard implements CanActivate {
-  constructor(private readonly bitrixService: BitrixService) {}
+  constructor(private readonly bitrixService: BitrixUseCase) {}
 
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
@@ -56,7 +58,8 @@ export class BitrixVoxImplantInitCallEventGuard implements CanActivate {
     const body: B24EventBodyVoxImplant = request.body;
 
     const tokenFromRequest = body?.auth?.application_token;
-    const token = this.bitrixService.WEBHOOK_VOXIMPLANT_INIT_CALL_TOKEN;
+    const token =
+      this.bitrixService.getConstant('WEBHOOK').voxImplant.initCallToken;
 
     if (!token || !tokenFromRequest || token !== tokenFromRequest)
       throw new UnauthorizedException('Invalid webhook token');

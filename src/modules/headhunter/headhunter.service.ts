@@ -3,18 +3,21 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
 import { RedisService } from '@/modules/redis/redis.service';
-import { HeadHunterAuthTokens } from '@/modules/bitrix/modules/integration/headhunter/interfaces/headhunter-auth.interface';
+import { HeadHunterAuthTokens } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-auth.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { BitrixMessageService } from '@/modules/bitrix/modules/im/im.service';
-import { BitrixService } from '@/modules/bitrix/bitrix.service';
 import { HHMeInterface } from '@/modules/headhunter/interfaces/headhunter-me.interface';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 
 @Injectable()
 export class HeadHunterService {
-  private readonly logger = new WinstonLogger(HeadHunterService.name);
+  private readonly logger = new WinstonLogger(
+    HeadHunterService.name,
+    'headhunter'.split(':'),
+  );
   private readonly client_id: string;
   private readonly client_secret: string;
   private readonly redirect_uri: string;
@@ -26,8 +29,8 @@ export class HeadHunterService {
     private readonly configService: ConfigService,
     @Inject('HeadHunterApiService')
     private readonly http: AxiosInstance,
-    private readonly bitrixMessageService: BitrixMessageService,
-    private readonly bitrixService: BitrixService,
+    private readonly bitrixMessages: BitrixMessagesUseCase,
+    private readonly bitrixService: BitrixUseCase,
     private readonly tokensService: TokensService,
   ) {
     const headHunterConfig =
@@ -115,7 +118,7 @@ export class HeadHunterService {
 
     if (wasSendingNotification) return;
 
-    await this.bitrixMessageService.sendPrivateMessage({
+    await this.bitrixMessages.sendPrivateMessage({
       DIALOG_ID: 'chat68032', // Chat Отклики HH.ru
       MESSAGE:
         '[USER=190][/USER][br]' +
@@ -143,8 +146,8 @@ export class HeadHunterService {
       `Bearer ${tokens.access_token}`;
 
     // Temporary
-    this.bitrixMessageService.sendPrivateMessage({
-      DIALOG_ID: this.bitrixService.TEST_CHAT_ID,
+    this.bitrixMessages.sendPrivateMessage({
+      DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
       MESSAGE:
         'Обновлены токены авторизации для hh.ru[br]' + JSON.stringify(tokens),
     });

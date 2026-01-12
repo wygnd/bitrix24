@@ -12,6 +12,6 @@ export class WikiController {
     @Query('force', new ParseBoolPipe({ optional: true }))
     force: boolean = false,
   ) {
-    return this.wikiService.getWorkingSalesFromWiki(force);
+    return this.wikiService.getWorkingSales(force);
   }
 }

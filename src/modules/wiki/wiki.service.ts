@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/wiki-api-new.service';
-import { DepartmentHeadDealCount } from '@/modules/bitrix/modules/department/interfaces/department-api.interface';
+import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
 import { WikiApiServiceOld } from '@/modules/wiki/wiki-api-old.service';
 import { GetWorkingSalesInterface } from '@/modules/wiki/interfaces/wiki-get-working-sales.interface';
@@ -44,7 +44,7 @@ export class WikiService {
     );
   }
 
-  public async getWorkingSalesFromWiki(force: boolean = false) {
+  public async getWorkingSales(force: boolean = false) {
     if (!force) {
       const salesFromCache = await this.redisService.get<string[]>(
         REDIS_KEYS.WIKI_WORKING_SALES,
@@ -111,10 +111,10 @@ export class WikiService {
         '',
         qs.stringify(data),
       );
-      this.logger.debug(response, true);
+      this.logger.debug(response);
       return true;
     } catch (error) {
-      this.logger.error(error, true);
+      this.logger.error(error);
       return false;
     }
   }

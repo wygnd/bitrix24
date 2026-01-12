@@ -1,50 +1,59 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { BitrixController } from './bitrix.controller';
-import { BitrixService } from './bitrix.service';
-import { BitrixUserService } from './modules/user/user.service';
-import { BitrixLeadService } from './modules/lead/services/lead.service';
-import { BitrixMessageService } from './modules/im/im.service';
-import { BitrixImBotService } from './modules/imbot/imbot.service';
 import { RedisModule } from '../redis/redis.module';
-import { BitrixAvitoController } from './modules/integration/avito/avito.controller';
-import { BitrixDealController } from './modules/deal/deal.controller';
-import { BitrixDealService } from './modules/deal/deal.service';
-import { BitrixIntegrationAvitoService } from '@/modules/bitrix/modules/integration/avito/avito.service';
-import { BitrixHeadHunterController } from '@/modules/bitrix/modules/integration/headhunter/headhunter.controller';
-import { bitrixProviders } from '@/modules/bitrix/bitrix.providers';
+import { BitrixAvitoController } from './controllers/avito/avito.controller';
+import { BitrixHeadHunterController } from '@/modules/bitrix/controllers/headhunter/headhunter.controller';
+import { bitrixProviders } from '@/modules/bitrix/providers/bitrix.providers';
 import { HeadHunterModule } from '@/modules/headhunter/headhunter.module';
 import { HttpModule } from '@nestjs/axios';
-import { BitrixImbotEventsController } from '@/modules/bitrix/modules/imbot/imbot-events.controller';
-import { BitrixWebhookController } from '@/modules/bitrix/modules/webhook/webhook.controller';
-import { BitrixPlacementService } from '@/modules/bitrix/modules/placement/placement.service';
-import { BitrixPlacementController } from '@/modules/bitrix/modules/placement/placement.controller';
-import { BitrixHeadHunterService } from '@/modules/bitrix/modules/integration/headhunter/headhunter.service';
-import { BitrixBotController } from '@/modules/bitrix/modules/imbot/imbot.controller';
-import { BitrixWebhookService } from '@/modules/bitrix/modules/webhook/webhook.service';
-import { BitrixDepartmentService } from '@/modules/bitrix/modules/department/department.service';
-import { BitrixEventsController } from '@/modules/bitrix/modules/events/events.controller';
-import { BitrixEventService } from '@/modules/bitrix/modules/events/event.service';
-import { BitrixDepartmentController } from '@/modules/bitrix/modules/department/department.controller';
-import { BitrixTaskController } from '@/modules/bitrix/modules/task/task.controller';
-import { BitrixTaskService } from '@/modules/bitrix/modules/task/task.service';
+import { BitrixImbotEventsController } from '@/modules/bitrix/controllers/bot/imbot-events.controller';
+import { BitrixWebhookController } from '@/modules/bitrix/controllers/webhooks/webhook.controller';
+import { BitrixPlacementController } from '@/modules/bitrix/controllers/placements/placement.controller';
+import { BitrixBotController } from '@/modules/bitrix/controllers/bot/imbot.controller';
+import { BitrixEventsController } from '@/modules/bitrix/controllers/events/events.controller';
+import { BitrixDepartmentController } from '@/modules/bitrix/controllers/departments/departments.controller';
+import { BitrixTaskController } from '@/modules/bitrix/controllers/tasks/tasks.controller';
 import { WikiModule } from '@/modules/wiki/wiki.module';
-import { BitrixWikiController } from '@/modules/bitrix/modules/integration/wiki/controllers/wiki.controller';
-import { BitrixWikiService } from '@/modules/bitrix/modules/integration/wiki/services/wiki.service';
+import { BitrixWikiController } from '@/modules/bitrix/controllers/wiki/wiki.controller';
 import { AvitoModule } from '@/modules/avito/avito.module';
-import { BitrixLeadController } from '@/modules/bitrix/modules/lead/controllers/lead.controller';
-import { BitrixLeadObserveManagerCallingService } from '@/modules/bitrix/modules/lead/services/lead-observe-manager-calling.service';
+import { BitrixLeadController } from '@/modules/bitrix/controllers/leads/lead.controller';
 import { TokensModule } from '@/modules/tokens/tokens.module';
-import { BitrixAddySupportService } from '@/modules/bitrix/modules/integration/addy/services/addy-support.service';
-import { BitrixAddySupportControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-support.controller';
-import { BitrixAddyPaymentsControllerV1 } from '@/modules/bitrix/modules/integration/addy/controllers/addy-payments.controller';
-import { BitrixAddyPaymentsService } from '@/modules/bitrix/modules/integration/addy/services/addy-payments.service';
+import { BitrixAddySupportControllerV1 } from '@/modules/bitrix/controllers/addy/addy-support.controller';
+import { BitrixAddyPaymentsControllerV1 } from '@/modules/bitrix/controllers/addy/addy-payments.controller';
 import { TelphinModule } from '@/modules/telphin/telphin.module';
-import { BitrixLeadUpsellController } from '@/modules/bitrix/modules/lead/controllers/lead-upsells.controller';
-import { BitrixLeadUpsellService } from '@/modules/bitrix/modules/lead/services/lead-upsell.service';
-import { BitrixMessageControllerV1 } from '@/modules/bitrix/modules/im/im.controller';
-import { BitrixTelphinEventsControllerV1 } from '@/modules/bitrix/modules/integration/telphin/controllers/telphin-events.controller';
-import { BitrixTelphinEventsService } from '@/modules/bitrix/modules/integration/telphin/services/telphin-events.service';
-import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integration/wiki/services/wiki-client-payments.service';
+import { BitrixLeadUpsellController } from '@/modules/bitrix/controllers/leads/lead-upsells.controller';
+import { BitrixMessageControllerV1 } from '@/modules/bitrix/controllers/messages/messages.controller';
+import { BitrixTelphinEventsControllerV1 } from '@/modules/bitrix/controllers/telphin/telphin-events.controller';
+import { bitrixDealProviders } from '@/modules/bitrix/providers/deal.providers';
+import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
+import { BitrixDealsController } from '@/modules/bitrix/controllers/deals/deals.controller';
+import { departmentProviders } from '@/modules/bitrix/providers/department.providers';
+import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
+import { taskProviders } from '@/modules/bitrix/providers/task.providers';
+import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
+import { BitrixEventsUseCase } from '@/modules/bitrix/application/use-cases/events/events.use-case';
+import { messageProviders } from '@/modules/bitrix/providers/messages.provider';
+import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { botProviders } from '@/modules/bitrix/providers/bot.providers';
+import { eventProviders } from '@/modules/bitrix/providers/event.providers';
+import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { userProviders } from '@/modules/bitrix/providers/user.providers';
+import { leadProviders } from '@/modules/bitrix/providers/lead.providers';
+import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
+import { BitrixLeadsUpsellUseCase } from '@/modules/bitrix/application/use-cases/leads/leads-upsell.use-case';
+import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
+import { placementProviders } from '@/modules/bitrix/providers/placement.providers';
+import { BitrixPlacementsUseCase } from '@/modules/bitrix/application/use-cases/placements/placements.use-case';
+import { BitrixAddyPaymentsUseCase } from '@/modules/bitrix/application/use-cases/addy/addy-paymnets.use-case';
+import { BitrixAddySupportUseCase } from '@/modules/bitrix/application/use-cases/addy/addy-support.use-case';
+import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
+import { BitrixHeadhunterUseCase } from '@/modules/bitrix/application/use-cases/headhunter/headhunter.use-case';
+import { BitrixTelphinUseCase } from '@/modules/bitrix/application/use-cases/telphin/telphin.use-case';
+import { wikiProviders } from '@/modules/bitrix/providers/wiki.providers';
+import { BitrixWikiClientPaymentsUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki-client-payments.use-case';
+import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki.use-case';
+import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
+import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
 
 @Module({
   imports: [
@@ -58,74 +67,145 @@ import { B24WikiClientPaymentsService } from '@/modules/bitrix/modules/integrati
   ],
   controllers: [
     BitrixController,
-    BitrixAvitoController,
-    BitrixDealController,
-    BitrixHeadHunterController,
-    BitrixBotController,
-    BitrixImbotEventsController,
-    BitrixWebhookController,
-    BitrixPlacementController,
-    BitrixDepartmentController,
-    BitrixEventsController,
-    BitrixTaskController,
-    BitrixWikiController,
+
+    // LEADS
     BitrixLeadController,
     BitrixLeadUpsellController,
+
+    // DEALS
+    BitrixDealsController,
+
+    // DEPARTMENTS
+    BitrixDepartmentController,
+
+    // TASKS
+    BitrixTaskController,
+
+    // EVENTS
+    BitrixEventsController,
+
+    // MESSAGES
+    BitrixMessageControllerV1,
+
+    // BOT
+    BitrixBotController,
+    BitrixImbotEventsController,
+
+    // WEBHOOKS
+    BitrixWebhookController,
+
+    // PLACEMENT
+    BitrixPlacementController,
+
+    // ADDY
     BitrixAddySupportControllerV1,
     BitrixAddyPaymentsControllerV1,
-    BitrixMessageControllerV1,
+
+    // AVTIO
+    BitrixAvitoController,
+
+    // HEADHUNTER
+    BitrixHeadHunterController,
+
+    // TELPHIN
     BitrixTelphinEventsControllerV1,
+
+    // WIKI
+    BitrixWikiController,
   ],
   providers: [
     // providers
     ...bitrixProviders,
-
-    // other services
-    BitrixService,
-
-    // USERS
-    BitrixUserService,
+    BitrixUseCase,
+    BitrixApiService,
 
     // LEADS
-    BitrixLeadService,
-    BitrixLeadObserveManagerCallingService,
-    BitrixLeadUpsellService,
-
-    // MESSAGES AND CHATS
-    BitrixMessageService,
-    BitrixImBotService,
+    ...leadProviders,
+    BitrixLeadsUseCase,
+    BitrixLeadsUpsellUseCase,
 
     // DEALS
-    BitrixDealService,
+    ...bitrixDealProviders,
+    BitrixDealsUseCase,
+
+    // DEPARTMENTS
+    ...departmentProviders,
+    BitrixDepartmentsUseCase,
 
     // TASKS
-    BitrixTaskService,
+    ...taskProviders,
+    BitrixTasksUseCase,
 
-    // INTEGRATIONS
-    BitrixIntegrationAvitoService,
-    BitrixPlacementService,
-    BitrixHeadHunterService,
-    BitrixWebhookService,
-    BitrixDepartmentService,
-    BitrixEventService,
-    BitrixWikiService,
-    B24WikiClientPaymentsService,
-    BitrixAddySupportService,
-    BitrixAddyPaymentsService,
-    BitrixTelphinEventsService,
+    // EVENTS
+    ...eventProviders,
+    BitrixEventsUseCase,
+
+    // MESSAGES
+    ...messageProviders,
+    BitrixMessagesUseCase,
+
+    // BOT
+    ...botProviders,
+    BitrixBotUseCase,
+
+    // USERS
+    ...userProviders,
+
+    // WEBHOOKS
+    BitrixWebhooksUseCase,
+
+    // PLACEMENTS
+    ...placementProviders,
+    BitrixPlacementsUseCase,
+
+    // ADDY
+    BitrixAddySupportUseCase,
+    BitrixAddyPaymentsUseCase,
+
+    // AVITO
+    BitrixAvitoUseCase,
+
+    // HEADHUNTER
+    BitrixHeadhunterUseCase,
+
+    // TELPHIN
+    BitrixTelphinUseCase,
+
+    // WIKI
+    ...wikiProviders,
+    BitrixWikiUseCase,
+    BitrixWikiClientPaymentsUseCase,
   ],
   exports: [
-    BitrixLeadService,
-    BitrixService,
-    BitrixMessageService,
-    BitrixImBotService,
-    BitrixTaskService,
-    BitrixDealService,
-    BitrixWebhookService,
-    BitrixIntegrationAvitoService,
-    BitrixHeadHunterService,
-    BitrixLeadUpsellService,
-    B24WikiClientPaymentsService,
+    BitrixUseCase,
+
+    // LEADS
+    BitrixLeadsUseCase,
+    BitrixLeadsUpsellUseCase,
+
+    // DEALS
+    BitrixDealsUseCase,
+
+    // TASKS
+    BitrixTasksUseCase,
+
+    // MESSAGES
+    BitrixMessagesUseCase,
+
+    // BOT
+    BitrixBotUseCase,
+
+    // WEBHOOKS
+    BitrixWebhooksUseCase,
+
+    // AVITO
+    BitrixAvitoUseCase,
+
+    // HEADHUNTER
+    BitrixHeadhunterUseCase,
+
+    // WIKI
+    BitrixWikiClientPaymentsUseCase,
   ],
 })
 export class BitrixModule {}
