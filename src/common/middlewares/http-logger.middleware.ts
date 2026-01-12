@@ -31,7 +31,6 @@ export class HttpLoggerMiddleware implements NestMiddleware {
       this.logger.debug(message);
       this.fileLogger.debug(
         `${message} | params: ${JSON.stringify(params)} | query: ${JSON.stringify(query)} | body: ${JSON.stringify(body)}`,
-        true,
       );
     });
 
