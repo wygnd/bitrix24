@@ -14,7 +14,7 @@ import { BitrixTelphinUseCase } from '@/modules/bitrix/application/use-cases/tel
 export class BitrixTelphinEventsControllerV1 {
   private readonly logger = new WinstonLogger(
     BitrixTelphinEventsControllerV1.name,
-    'bitrix:services:integration:telphin:events'.split(':'),
+    'bitrix:telphin'.split(':'),
   );
 
   constructor(private readonly bitrixTelphin: BitrixTelphinUseCase) {}

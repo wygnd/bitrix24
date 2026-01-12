@@ -113,7 +113,6 @@ export class BitrixBotUseCase {
    */
   async handleOnImCommandAdd(body: OnImCommandKeyboardDto) {
     try {
-      this.logger.debug({ message: `New command handler`, body });
       const { event, data } = body;
 
       if (event !== 'ONIMCOMMANDADD')
@@ -298,6 +297,7 @@ export class BitrixBotUseCase {
 
           switch (deal.CATEGORY_ID) {
             case '34':
+              this.logger.log(fields, 'warn');
               nextStage = 'C34:PREPAYMENT_INVOIC';
               break;
 

@@ -29,7 +29,7 @@ import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/w
 export class BitrixWikiController {
   private readonly logger = new WinstonLogger(
     BitrixWikiController.name,
-    'bitrix:services:integration:wiki:'.split(':'),
+    'bitrix:wiki'.split(':'),
   );
 
   constructor(private readonly bitrixWiki: BitrixWikiUseCase) {}

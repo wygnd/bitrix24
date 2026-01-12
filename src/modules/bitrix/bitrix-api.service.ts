@@ -34,7 +34,7 @@ export class BitrixApiService {
   private readonly bitrixClientSecret: string;
   private readonly logger = new WinstonLogger(
     BitrixApiService.name,
-    'bitrix:services'.split(':'),
+    'bitrix'.split(':'),
   );
 
   constructor(

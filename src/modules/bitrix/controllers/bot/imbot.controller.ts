@@ -28,7 +28,7 @@ import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot
 export class BitrixBotController {
   private readonly logger = new WinstonLogger(
     BitrixBotController.name,
-    'bitrix:services:bot'.split(':'),
+    'bitrix:bot'.split(':'),
   );
 
   constructor(private readonly bitrixBotService: BitrixBotUseCase) {}

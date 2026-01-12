@@ -25,7 +25,7 @@ import { BitrixLeadsUpsellUseCase } from '@/modules/bitrix/application/use-cases
 export class BitrixLeadUpsellController {
   private readonly logger = new WinstonLogger(
     BitrixLeadUpsellController.name,
-    'bitrix:services:upsell'.split(':'),
+    'bitrix:leads'.split(':'),
   );
 
   constructor(private readonly bitrixUpsellService: BitrixLeadsUpsellUseCase) {}

@@ -31,7 +31,7 @@ import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/we
 export class BitrixWebhookController {
   private readonly logger = new WinstonLogger(
     BitrixWebhookController.name,
-    'bitrix:services:webhook'.split(':'),
+    'bitrix:webhook'.split(':'),
   );
 
   constructor(private readonly bitrixWebhooks: BitrixWebhooksUseCase) {}

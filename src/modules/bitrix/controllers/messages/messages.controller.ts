@@ -19,7 +19,7 @@ import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/me
 export class BitrixMessageControllerV1 {
   private readonly logger = new WinstonLogger(
     BitrixMessageControllerV1.name,
-    'bitrix:services'.split(':'),
+    'bitrix:messages'.split(':'),
   );
 
   constructor(private readonly bitrixMessages: BitrixMessagesUseCase) {}
