@@ -60,6 +60,8 @@ import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/
 import { LeadUpsellModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-upsell.entity';
 import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/database/entities/wiki/wiki-client-payments.entity';
 import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/database/entities/headhunter/headhunter-vacancy.entity';
+import { BitrixGrampusUseCase } from '@/modules/bitrix/application/use-cases/grampus/grampus.use-case';
+import { BitrixGrampusController } from '@/modules/bitrix/controllers/grampus/grampus.controller';
 
 @Module({
   imports: [
@@ -124,6 +126,9 @@ import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/da
 
     // WIKI
     BitrixWikiController,
+
+    // GRAMPUS
+    BitrixGrampusController,
   ],
   providers: [
     // providers
@@ -188,6 +193,9 @@ import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/da
     ...wikiProviders,
     BitrixWikiUseCase,
     BitrixWikiClientPaymentsUseCase,
+
+    // GRAMPUS
+    BitrixGrampusUseCase,
   ],
   exports: [
     BitrixUseCase,

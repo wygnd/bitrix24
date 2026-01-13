@@ -15,6 +15,7 @@ export interface BitrixConstants {
   avito: BitrixAvitoConstants;
   LEAD: BitrixLEADConstants;
   WEBHOOK: BitrixWebhookConstants;
+  GRAMPUS: BitrixGrampusOptions;
 }
 
 export interface BitrixOptions {
@@ -57,4 +58,8 @@ export interface BitrixWebhookConstantsVoxImplantOptions {
   finishCallToken: string;
   initCallToken: string;
   startCallToken: string;
+}
+
+export interface BitrixGrampusOptions {
+  trafficsChatId: string;
 }

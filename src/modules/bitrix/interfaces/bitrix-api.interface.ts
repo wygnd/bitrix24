@@ -13,6 +13,7 @@ export enum B24ApiTags {
   TASKS = 'Tasks',
   WIKI = 'Wiki',
   ADDY = 'Addy',
+  GRAMPUS = 'Grampus',
 }
 
 export interface B24Timestamp {

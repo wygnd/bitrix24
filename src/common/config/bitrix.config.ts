@@ -43,5 +43,8 @@ export default (): BitrixOptions => ({
           process.env.BITRIX_DATA_WEBHOOK_VOXIMPLANT_START_CALL_TOKEN ?? '',
       },
     },
+    GRAMPUS: {
+      trafficsChatId: process.env.BITRIX_DATA_GRAMPUS_TRAFICS_CHAT_ID ?? '',
+    },
   },
 });
