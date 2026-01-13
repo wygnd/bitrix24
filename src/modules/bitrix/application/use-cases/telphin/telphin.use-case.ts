@@ -17,6 +17,8 @@ import {
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
+import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
+import { AvitoPhoneList } from '@/modules/bitrix/application/constants/avito/avito.constants';
 
 @Injectable()
 export class BitrixTelphinUseCase {
@@ -26,6 +28,8 @@ export class BitrixTelphinUseCase {
     private readonly bitrixService: BitrixPort,
     @Inject(B24PORTS.LEADS.LEADS_DEFAULT)
     private readonly bitrixLeads: BitrixLeadsPort,
+    @Inject(B24PORTS.MESSAGES.MESSAGES_DEFAULT)
+    private readonly bitrixMessages: BitrixMessagesPort,
   ) {}
 
   async handleAnswerCall(fields: BitrixEventsAnswerOptions) {
@@ -116,7 +120,7 @@ export class BitrixTelphinUseCase {
   private async handleAnswerCallForSaleDepartment(
     fields: BitrixTelphinEventsHandleAnswerCallForSaleDepartment,
   ) {
-    const { userId, phone } = fields;
+    const { userId, phone, calledDid } = fields;
     const batchCommands: B24BatchCommands = {};
 
     // Ищем лиды по номеру клиента
@@ -150,7 +154,19 @@ export class BitrixTelphinUseCase {
 
       if (!leadInfo) throw new BadRequestException('Lead was not found');
 
-      const { ID: leadId, STATUS_ID: leadStatusId } = leadInfo;
+      const {
+        ID: leadId,
+        STATUS_ID: leadStatusId,
+        ASSIGNED_BY_ID: leadAssignedId,
+      } = leadInfo;
+
+      this.bitrixMessages.sendPrivateMessage({
+        DIALOG_ID: leadAssignedId,
+        MESSAGE:
+          'Твой клиент звонил ' +
+          `${calledDid && calledDid in AvitoPhoneList ? `на авито [b][${AvitoPhoneList[calledDid]}][/b]` : ''}[br]` +
+          this.bitrixService.generateLeadUrl(leadId),
+      });
 
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
