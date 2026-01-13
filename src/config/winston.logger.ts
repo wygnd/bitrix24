@@ -54,33 +54,40 @@ export class WinstonLogger {
   }
 
   public error<T>(message: T, enableConsoleLog: boolean = false) {
-    const msg = this.toSaveJson(message);
+    const msg = this.JSONSave(message);
     this.logger.error(msg);
 
     if (enableConsoleLog) this.consoleLogger.error(msg);
   }
 
   public warn<T>(message: T, enableConsoleLog: boolean = false) {
-    const msg = this.toSaveJson(message);
+    const msg = this.JSONSave(message);
     this.logger.warn(msg);
 
     if (enableConsoleLog) this.consoleLogger.warn(msg);
   }
 
   public debug<T>(message: T, enableConsoleLog: boolean = false) {
-    const msg = this.toSaveJson(message);
+    const msg = this.JSONSave(message);
     this.logger.info(msg);
 
     if (enableConsoleLog) this.consoleLogger.debug(msg);
   }
 
   public log<T>(message: T, level: LogLevel = 'debug') {
-    const msg = this.toSaveJson(message);
+    const msg = this.JSONSave(message);
 
     this.consoleLogger[level](msg);
   }
 
-  private toSaveJson(data: any) {
+  public fatal<T>(message: T) {
+    const msg = this.JSONSave(message);
+
+    this.logger.error(msg);
+    this.consoleLogger['fatal'](msg);
+  }
+
+  private JSONSave(data: any) {
     return safeJsonStringify(data) as string;
   }
 }
