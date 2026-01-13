@@ -1,4 +1,11 @@
-import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -27,6 +34,7 @@ export class BitrixGrampusController {
     type: BitrixGrampusSiteRequestReceiveResponseDTO,
     description: 'Успех',
   })
+  @HttpCode(HttpStatus.OK)
   @Post('/sites/request')
   async confirmRequestFromSite(
     @Body() fields: BitrixGrampusSiteRequestReceiveDTO,

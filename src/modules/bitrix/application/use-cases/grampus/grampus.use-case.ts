@@ -159,11 +159,12 @@ export class BitrixGrampusUseCase {
       } = lead;
 
       const batchCommands: B24BatchCommands = {};
+      let updatedMessage: string;
 
       switch (true) {
         case B24LeadRejectStages.includes(leadStatusId):
           // Если лид в неактивной стадии: меняем ответственного и уведомляем об этом
-          const updatedMessage =
+          updatedMessage =
             `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
 
@@ -204,6 +205,10 @@ export class BitrixGrampusUseCase {
         case B24LeadConvertedStages.includes(leadStatusId):
           // Если лид в активных или завершающих стадиях
           // добавляем комментарий и отправляем сообщение в чат
+          updatedMessage =
+            `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
+            this.bitrixService.generateLeadUrl(leadId);
+
           batchCommands['add_comment'] = {
             method: 'crm.timeline.comment.add',
             params: {
@@ -221,9 +226,17 @@ export class BitrixGrampusUseCase {
             params: {
               BOT_ID: BOT_ID,
               DIALOG_ID: trafficsChatId,
-              MESSAGE:
-                `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
-                this.bitrixService.generateLeadUrl(leadId),
+              MESSAGE: updatedMessage,
+              URL_PREVIEW: 'N',
+            },
+          };
+
+          batchCommands['notify_manager'] = {
+            method: 'im.message.add',
+            params: {
+              DIALOG_ID: leadAssignedId,
+              MESSAGE: updatedMessage,
+              URL_PREVIEW: 'N',
             },
           };
           break;
