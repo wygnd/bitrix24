@@ -26,6 +26,7 @@ export class TokensService {
       REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + service,
     );
 
+    this.logger.log({ msg: `tokens from cache`, tokenFromCache }, 'warn');
     if (tokenFromCache) return tokenFromCache;
 
     this.logger.log(`trying get tokens from DB: ${service}`, 'warn');
@@ -43,7 +44,7 @@ export class TokensService {
           : null,
       );
 
-    this.logger.log(tokenFromDB, 'warn');
+    this.logger.log({ msg: 'token from DB', tokenFromDB }, 'warn');
 
     if (!tokenFromDB) return null;
 
