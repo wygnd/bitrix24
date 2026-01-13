@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -599,53 +600,102 @@ export class BitrixHeadhunterUseCase {
    * Получить список вакансий
    */
   async getVacancies() {
-    try {
-      const vacanciesFromDB =
-        await this.headhunterVacanciesRepository.getVacancies();
+    const vacanciesFromDB =
+      await this.headhunterVacanciesRepository.getVacancies({
+        order: [['id', 'asc']],
+      });
 
-      // if (vacanciesFromDB.length > 0) {
-      //   return [];
-      // }
+    if (vacanciesFromDB.length > 0) return vacanciesFromDB;
 
-      const vacanciesFromHH =
-        await this.headHunterRestService.getActiveVacancies(true);
+    const vacanciesFromHH =
+      await this.headHunterRestService.getActiveVacancies(true);
 
-      return this.headhunterVacanciesRepository.addVacancies(
-        vacanciesFromHH.reduce<HHBitrixVacancyCreationalAttributes[]>(
-          (acc, vacancy) => {
-            acc.push({
-              vacancyId: vacancy.id,
-              label: vacancy.name,
-              url: vacancy.alternate_url,
-              bitrixField: null,
-            });
-            return acc;
-          },
-          [],
-        ),
+    if (vacanciesFromHH.length === 0)
+      throw new InternalServerErrorException(
+        'Invalid get vacancies from headhunter',
       );
-    } catch (error) {
-      return [];
-    }
+
+    return this.headhunterVacanciesRepository.addVacancies(
+      vacanciesFromHH.reduce<HHBitrixVacancyCreationalAttributes[]>(
+        (acc, vacancy) => {
+          acc.push({
+            vacancyId: vacancy.id,
+            label: vacancy.name,
+            url: vacancy.alternate_url,
+            bitrixField: null,
+          });
+          return acc;
+        },
+        [],
+      ),
+    );
   }
 
   async updateVacancies(records: BitrixHeadhunterUpdateVacancyAttributes[]) {
-    return this.headhunterVacanciesRepository.updateVacancies(records);
+    return {
+      status: await this.headhunterVacanciesRepository.updateVacancies(records),
+    };
   }
 
   async updateVacancy(fields: BitrixHeadhunterUpdateVacancyAttributes) {
-    return this.headhunterVacanciesRepository.updateVacancy(fields);
+    return {
+      status: await this.headhunterVacanciesRepository.updateVacancy(fields),
+    };
   }
 
   async addVacancy(fields: HHBitrixVacancyCreationalAttributes) {
-    return this.headhunterVacanciesRepository.addVacancy(fields);
+    const vacancy = await this.headhunterVacanciesRepository.addVacancy(fields);
+
+    if (!vacancy) throw new BadRequestException('Invalid add vacancy');
+
+    return vacancy;
   }
 
-  async setRatioVacancies(vacancies: HHBitrixVacancy[]) {
-    return this.redisService.set<HHBitrixVacancy[]>(
-      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES,
-      vacancies,
-    );
+  async checkUpdateVacanciesFromHH() {
+    const [vacanciesFromDB, vacanciesFromHH] = await Promise.all([
+      this.headhunterVacanciesRepository.getVacancies({
+        order: [['id', 'asc']],
+      }),
+      this.headHunterRestService.getActiveVacancies(true),
+    ]);
+    let countNewRows = 0;
+
+    const trueVacancies = vacanciesFromHH.reduce<
+      HHBitrixVacancyCreationalAttributes[]
+    >((acc, vacancy) => {
+      const vacancyIndex = vacanciesFromDB.findIndex(
+        (v) => vacancy.id === v.vacancyId,
+      );
+
+      if (vacancyIndex !== -1) {
+        acc.push(Object.assign({}, vacanciesFromDB[vacancyIndex]));
+      } else {
+        countNewRows++;
+        acc.push({
+          vacancyId: vacancy.id,
+          label: vacancy.name,
+          url: vacancy.alternate_url,
+          bitrixField: null,
+        });
+      }
+
+      return acc;
+    }, []);
+
+    if (countNewRows > 0) {
+      return {
+        status: true,
+        vacancies: await this.headhunterVacanciesRepository.addVacancies(
+          trueVacancies,
+          true,
+        ),
+      };
+    }
+
+    return {
+      status: false,
+      vacancies: [],
+    };
   }
 
   /**

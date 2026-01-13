@@ -9,7 +9,7 @@ import {
 import { WinstonLogger } from '@/config/winston.logger';
 import { plainToInstance } from 'class-transformer';
 import { HHBitrixVacancyDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
-import { FindOptions } from 'sequelize';
+import { FindOptions, TruncateOptions } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { InjectModel } from '@nestjs/sequelize';
 
@@ -123,17 +123,34 @@ export class BitrixHeadhunterVacanciesRepository implements BitrixHeadhunterVaca
    *
    * Добавить несколько вакансий
    * @param records
+   * @param clearBeforeAdd
    */
   public async addVacancies(
     records: HHBitrixVacancyCreationalAttributes[],
+    clearBeforeAdd: boolean = false,
   ): Promise<HHBitrixVacancyDto[]> {
+    const t = await this.sequelize.transaction();
     try {
-      return (await this.headhunterVacanciesRepository.bulkCreate(records)).map(
-        (r) => this.formDTO(r),
-      );
+      if (clearBeforeAdd)
+        await this.clearVacancies({
+          restartIdentity: true,
+          cascade: true,
+          transaction: t,
+        });
+
+      const response = (
+        await this.headhunterVacanciesRepository.bulkCreate(records, {
+          transaction: t,
+          updateOnDuplicate: ['bitrixField'],
+        })
+      ).map((r) => this.formDTO(r));
+      await t.commit();
+      return response;
     } catch (error) {
+      this.logger.log(error, 'fatal');
+      await t.rollback();
       this.logger.error(error);
-      return [];
+      throw error;
     }
   }
 
@@ -167,6 +184,25 @@ export class BitrixHeadhunterVacanciesRepository implements BitrixHeadhunterVaca
           ),
         ),
       );
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear vacancies in database
+   *
+   * ---
+   *
+   * Отчистить записи в БД
+   */
+  private async clearVacancies(
+    options?: TruncateOptions<HHBitrixVacancyAttributes>,
+  ) {
+    try {
+      await this.headhunterVacanciesRepository.truncate(options);
       return true;
     } catch (error) {
       this.logger.error(error);

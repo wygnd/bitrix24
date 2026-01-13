@@ -4,11 +4,6 @@ import { SequelizeOptions } from 'sequelize-typescript';
 import { DEVELOPMENT, PRODUCTION } from '@/constants';
 import { DatabaseConfig } from '@/common/interfaces/database-config.interface';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/database/entities/wiki/wiki-client-payments.entity';
-import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/database/entities/headhunter/headhunter-vacancy.entity';
-import { TokensModel } from '@/modules/tokens/tokens.entity';
-import { LeadUpsellModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-upsell.entity';
-import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/database/entities/leads/lead-observe-manager-calling.entity';
 
 @Module({
   imports: [
@@ -42,13 +37,6 @@ import { LeadObserveManagerCallingModel } from '@/modules/bitrix/infrastructure/
           dialect: 'postgres',
           ...config,
           autoLoadModels: true,
-          models: [
-            TokensModel,
-            B24WikiClientPaymentsModel,
-            BitrixHeadhunterVacancyModel,
-            LeadUpsellModel,
-            LeadObserveManagerCallingModel,
-          ],
           synchronize: true,
         };
       },

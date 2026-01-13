@@ -58,6 +58,7 @@ export class HeadHunterService {
     // Send message about update credentials If not exists
     this.tokensService.getToken(TokensServices.HH).then(async (tokens) => {
       if (!tokens) {
+        this.logger.log(tokens, 'warn');
         this.notifyAboutInvalidCredentials();
         this.logger.error('Invalid headhunter authorization');
         return;

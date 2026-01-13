@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
@@ -53,13 +52,17 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadhunter.getVacancies();
   }
 
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
+  // @Get('/vacancies/check')
+  async checkVacanciesFromHH() {
+    // todo
+    return this.bitrixHeadhunter.checkUpdateVacanciesFromHH();
+  }
+
   @Post('/vacancies/add')
   async addVacancy(@Body() dto: BitrixHeadhunterVacancyCreateDTO) {
-    const vacancy = await this.bitrixHeadhunter.addVacancy(dto);
-
-    if (!vacancy) throw new BadRequestException('Invalid add vacancy');
-
-    return vacancy;
+    return this.bitrixHeadhunter.addVacancy(dto);
   }
 
   @Patch('/vacancies/:id')

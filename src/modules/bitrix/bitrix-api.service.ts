@@ -27,15 +27,15 @@ import { B24UserCurrent } from '@/modules/bitrix/application/interfaces/users/us
 
 @Injectable()
 export class BitrixApiService {
+  private readonly logger = new WinstonLogger(
+    BitrixApiService.name,
+    'bitrix'.split(':'),
+  );
   private tokens: BitrixTokens;
   private readonly bitrixOauthUrl = 'https://oauth.bitrix24.tech/oauth/token/';
   private readonly bitrixDomain: string;
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
-  private readonly logger = new WinstonLogger(
-    BitrixApiService.name,
-    'bitrix'.split(':'),
-  );
 
   constructor(
     private readonly configService: ConfigService,
@@ -183,8 +183,10 @@ export class BitrixApiService {
 
     const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
 
-    if (!tokens || !tokens.refreshToken)
+    if (!tokens || !tokens.refreshToken) {
+      this.logger.fatal('Invalid bitrix access or refresh token');
       throw new UnauthorizedException('Invalid refresh token');
+    }
 
     const { accessToken, refreshToken, expires } = tokens;
 

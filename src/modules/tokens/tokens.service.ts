@@ -21,15 +21,12 @@ export class TokensService {
   ) {}
 
   public async getToken(service: TokensServices) {
-    this.logger.log(`trying get tokens from CACHE: ${service}`, 'warn');
     const tokenFromCache = await this.redisService.get<TokensDto>(
       REDIS_KEYS.APPLICATION_TOKEN_BY_SERVICE + service,
     );
 
-    this.logger.log({ msg: `tokens from cache`, tokenFromCache }, 'warn');
     if (tokenFromCache) return tokenFromCache;
 
-    this.logger.log(`trying get tokens from DB: ${service}`, 'warn');
     const tokenFromDB = await this.tokensRepository
       .findOne({
         where: {
@@ -43,8 +40,6 @@ export class TokensService {
             })
           : null,
       );
-
-    this.logger.log({ msg: 'token from DB', tokenFromDB }, 'warn');
 
     if (!tokenFromDB) return null;
 
