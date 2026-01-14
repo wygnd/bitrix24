@@ -42,7 +42,6 @@ export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequ
     example: '+7 (999) 999-99-99',
   })
   @IsNotEmpty()
-  @IsOptional()
   phone: string;
 
   @ApiProperty({
