@@ -71,7 +71,7 @@ export class BitrixGrampusUseCase {
   ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
     this.logger.debug(fields);
     try {
-      const { phone, url, clientName = '', comment = '' } = fields;
+      const { phone, url, clientName = '', comment = '', discount } = fields;
 
       // Ищем дубликаты по номеру клиента
       const duplicateLeads =
@@ -88,7 +88,12 @@ export class BitrixGrampusUseCase {
           UF_CRM_1573459036: '70', // Откуда: С сайта
           UF_CRM_1598441630: '4834', // С чем обратился: Разработка сайта
           STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          COMMENTS: comment,
+          COMMENTS:
+            (discount?.percent
+              ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
+              : '') +
+            comment +
+            (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
           ASSIGNED_BY_ID: managerId,
           PHONE: [
             {
