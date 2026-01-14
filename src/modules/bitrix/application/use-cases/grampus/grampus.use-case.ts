@@ -20,6 +20,7 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
+import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 
 const { LEADS, BITRIX, USERS, BOT } = B24PORTS;
 
@@ -82,7 +83,7 @@ export class BitrixGrampusUseCase {
 
       // Если не нашли дубликатов: создаем лид
       if (duplicateLeads.length === 0) {
-        const leadId = await this.bitrixLeads.createLead({
+        const createLeadFields: Partial<B24Lead> = {
           NAME: clientName, // Имя
           UF_CRM_1651577716: '11816', // Тип лида: Заявка с сайта
           UF_CRM_1573459036: '70', // Откуда: С сайта
@@ -102,7 +103,16 @@ export class BitrixGrampusUseCase {
               VALUE: phone,
             },
           ],
-        });
+        };
+
+        if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
+          // Если со страницы "Разработка сайтов на битрикс"
+
+          createLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
+          createLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
+        }
+
+        const leadId = await this.bitrixLeads.createLead(createLeadFields);
 
         let message: string;
 
@@ -171,27 +181,35 @@ export class BitrixGrampusUseCase {
       switch (true) {
         case B24LeadRejectStages.includes(leadStatusId):
           // Если лид в неактивной стадии: меняем ответственного и уведомляем об этом
+          const updateLeadFields: Partial<B24Lead> = {
+            ASSIGNED_BY_ID: managerId,
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            NAME: clientName,
+            COMMENTS:
+              leadComments +
+              '\nДобавлен со страницы: ${url}\n' +
+              (discount?.percent
+                ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
+                : '') +
+              comment +
+              (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
+          };
           updatedMessage =
             `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
+
+          if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
+            // Если со страницы "Разработка сайта на битркис"
+
+            updateLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
+            updateLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
+          }
 
           batchCommands['update_lead'] = {
             method: 'crm.lead.update',
             params: {
               id: leadId,
-              fields: {
-                ASSIGNED_BY_ID: managerId,
-                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-                NAME: clientName,
-                COMMENTS:
-                  leadComments +
-                  '\nДобавлен со страницы: ${url}\n' +
-                  (discount?.percent
-                    ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
-                    : '') +
-                  comment +
-                  (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
-              },
+              fields: updateLeadFields,
             },
           };
 
