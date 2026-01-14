@@ -295,7 +295,12 @@ export class BitrixAvitoUseCase {
 
     const { get_lead: lead, get_assigned_lead: user } = batchResponse.result;
 
-    const { STATUS_ID, ASSIGNED_BY_ID, DATE_CREATE } = lead[0];
+    const {
+      STATUS_ID,
+      ASSIGNED_BY_ID,
+      DATE_CREATE,
+      UF_CRM_1653291114976: leadComment = '',
+    } = lead[0];
 
     const leadDateCreate = new Date(DATE_CREATE);
     const now = new Date();
@@ -304,7 +309,7 @@ export class BitrixAvitoUseCase {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: leadMessage,
+      UF_CRM_1653291114976: leadComment + '\n' + leadMessage,
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
@@ -402,9 +407,7 @@ export class BitrixAvitoUseCase {
         batchCommandsUpdateLead['send_message_converted'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: this.bitrixService.getConstant(
-              'ZLATA_ZIMINA_BITRIX_ID',
-            ),
+            DIALOG_ID: this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'),
             MESSAGE:
               `${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
               'Необходимо посмотреть действующие сделки ' +
