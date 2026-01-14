@@ -161,6 +161,7 @@ export class BitrixGrampusUseCase {
         STATUS_ID: leadStatusId,
         ID: leadId,
         ASSIGNED_BY_ID: leadAssignedId,
+        COMMENTS: leadComments = '',
       } = lead;
 
       const batchCommands: B24BatchCommands = {};
@@ -181,7 +182,13 @@ export class BitrixGrampusUseCase {
                 ASSIGNED_BY_ID: managerId,
                 STATUS_ID: B24LeadActiveStages[0], // Новый в работе
                 NAME: clientName,
-                COMMENTS: comment,
+                COMMENTS:
+                  leadComments +
+                  (discount?.percent
+                    ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
+                    : '') +
+                  comment +
+                  (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
               },
             },
           };
