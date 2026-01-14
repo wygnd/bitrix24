@@ -77,8 +77,8 @@ export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequ
 
   @ApiProperty()
   @IsOptional()
-  @Type(() => BitrixGrampusSiteRequestReceiveDiscountDTO)
   @ValidateNested()
+  @Type(() => BitrixGrampusSiteRequestReceiveDiscountDTO)
   discount?: BitrixGrampusSiteRequestReceiveDiscountDTO;
 }
 
