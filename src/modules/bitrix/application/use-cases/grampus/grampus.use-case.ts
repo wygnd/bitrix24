@@ -89,6 +89,7 @@ export class BitrixGrampusUseCase {
           UF_CRM_1598441630: '4834', // С чем обратился: Разработка сайта
           STATUS_ID: B24LeadActiveStages[0], // Новый в работе
           COMMENTS:
+            `Добавлен со страницы: ${url}\n` +
             (discount?.percent
               ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
               : '') +
@@ -184,6 +185,7 @@ export class BitrixGrampusUseCase {
                 NAME: clientName,
                 COMMENTS:
                   leadComments +
+                  '\nДобавлен со страницы: ${url}\n' +
                   (discount?.percent
                     ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
                     : '') +
