@@ -12,6 +12,7 @@ import {
 import {
   B24LeadActiveStages,
   B24LeadConvertedStages,
+  B24LeadNewStages,
   B24LeadRejectStages,
 } from '@/modules/bitrix/application/constants/leads/lead.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
@@ -233,14 +234,22 @@ export class BitrixGrampusUseCase {
           };
           break;
 
+        case B24LeadNewStages.includes(leadStatusId):
         case B24LeadActiveStages.includes(leadStatusId):
         case B24LeadConvertedStages.includes(leadStatusId):
-          // Если лид в активных или завершающих стадиях
+          // Если лид в новых или активных или завершающих стадиях
           // добавляем комментарий и отправляем сообщение в чат
           updatedMessage =
-            `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
+            `Клиент повторно обратился на сайт ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
 
+          if (B24LeadConvertedStages.includes(leadStatusId)) {
+            // Если лид в завершающих стадиях
+
+            updatedMessage =
+              `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
+              this.bitrixService.generateLeadUrl(leadId);
+          }
           batchCommands['add_comment'] = {
             method: 'crm.timeline.comment.add',
             params: {
