@@ -93,13 +93,13 @@ export class BitrixLeadsUseCase {
   ): Promise<LeadAvitoStatusResponse> {
     const filterLeadsByDate = {
       '!UF_CRM_1713765220416': '',
-      '>=DATE_CREATE': `${date.toLocaleDateString()}T00:00:00`,
-      '<=DATE_CREATE': `${date.toLocaleDateString()}T23:59:59`,
+      '>=DATE_CREATE': `${date.toLocaleDateString()}T00:00:00`, // Дата создания
+      '<=DATE_CREATE': `${date.toLocaleDateString()}T23:59:59`, // Дата создания
     };
     const filterLeadsByDateRequest = {
       '!UF_CRM_1713765220416': '',
-      '>=UF_CRM_1715671150': `${date.toLocaleDateString()}T00:00:00`,
-      '<=UF_CRM_1715671150': `${date.toLocaleDateString()}T23:59:59`,
+      '>=UF_CRM_1715671150': `${date.toLocaleDateString()}T00:00:00`, // Дата последнего обращения
+      '<=UF_CRM_1715671150': `${date.toLocaleDateString()}T23:59:59`, // Дата последнего обращения
     };
     const selectLeadFields = [
       'ID',
@@ -223,16 +223,19 @@ export class BitrixLeadsUseCase {
             const dateCreate = new Date(DATE_CREATE);
 
             switch (true) {
+              // Если лид в активных стадиях
               case B24LeadActiveStages.includes(statusId) &&
                 dateCreate.toLocaleDateString() !== date.toLocaleDateString():
                 leadStatus = B24LeadStatus.ACTIVE;
                 break;
 
+              // Если лид в неактивных стадиях
               case B24LeadRejectStages.includes(statusId) &&
                 dateCreate.toLocaleDateString() !== date.toLocaleDateString():
                 leadStatus = B24LeadStatus.NONACTIVE;
                 break;
 
+              // Если лид в новых стадиях
               case dateCreate.toLocaleDateString() ===
                 date.toLocaleDateString() ||
                 (B24LeadNewStages.includes(statusId) &&
@@ -241,6 +244,7 @@ export class BitrixLeadsUseCase {
                 leadStatus = B24LeadStatus.NEW;
                 break;
 
+              // Если лид в завершающих стадиях
               case B24LeadConvertedStages.includes(statusId):
                 leadStatus = B24LeadStatus.FINISH;
                 break;
@@ -306,15 +310,23 @@ export class BitrixLeadsUseCase {
           const leadId = commandName.split('-')[1];
           const lead = leadsMap.get(leadId);
 
-          if (!lead) return;
-          if (new Date(lead.date_cerate).toISOString() === date.toISOString())
+          if (
+            !lead ||
+            new Date(lead.date_cerate).toISOString() === date.toISOString() ||
+            leadStageHistory.length < 2
+          )
             return;
-          if (leadStageHistory.length < 2) return;
 
-          if (!B24LeadRejectStages.includes(leadStageHistory[1].STATUS_ID))
-            return;
+          switch (true) {
+            case B24LeadRejectStages.includes(leadStageHistory[1].STATUS_ID):
+              lead.status = B24LeadStatus.NONACTIVE;
+              break;
 
-          lead.status = B24LeadStatus.NONACTIVE;
+            case B24LeadNewStages.includes(leadStageHistory[1].STATUS_ID):
+              lead.status = B24LeadStatus.ACTIVE;
+              break;
+          }
+
           leadsMap.set(leadId, lead);
         },
       );

@@ -2,12 +2,7 @@ import {
   BitrixGrampusSiteRequestReceive,
   BitrixGrampusSiteRequestReceiveResponse,
 } from '@/modules/bitrix/application/interfaces/grampus/bitrix-site-request.interface';
-import {
-  IsJSON,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsJSON, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequestReceive {
