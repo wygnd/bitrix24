@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-redirect.dto';
 import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
@@ -75,6 +75,14 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadhunter.updateVacancy(dto);
   }
 
+  @ApiOperation({ summary: 'Обновление нескольких записей' })
+  @ApiBody({
+    type: BitrixHeadhunterVacancyUpdateDTO,
+    required: true,
+    isArray: true,
+  })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
   @Patch('/vacancies/bulk/update')
   async updateVacancies(
     @Body(

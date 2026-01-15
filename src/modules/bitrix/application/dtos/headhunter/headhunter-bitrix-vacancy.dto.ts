@@ -60,12 +60,10 @@ export class HHBitrixVacancyDto implements HHBitrixVacancyAttributes {
     type: String,
     description: 'Vacancy ids from bitrix field',
     required: true,
-    example: [
-      {
-        ID: '2345',
-        VALUE: 'Developer',
-      },
-    ],
+    example: {
+      id: '2345',
+      value: 'Developer',
+    },
   })
   @Expose()
   @IsOptional()
@@ -141,11 +139,22 @@ export class BitrixHeadhunterVacancyCreateDTO implements HHBitrixVacancyCreation
 }
 
 export class BitrixHeadhunterVacancyUpdateDTO implements BitrixHeadhunterUpdateVacancyAttributes {
+  @ApiProperty({
+    type: Number,
+    description: 'ID записи',
+    required: true,
+    example: 1,
+  })
   @IsNotEmpty()
   @Type(() => Number)
   @IsInt()
   id: number;
 
+  @ApiProperty({
+    type: HHBitrixVacancyDto,
+    description: 'Поля записи',
+    required: true,
+  })
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => HHBitrixVacancyDto)
