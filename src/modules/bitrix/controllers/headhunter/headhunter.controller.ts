@@ -85,10 +85,7 @@ export class BitrixHeadHunterController {
   @UseGuards(AuthGuard)
   @Patch('/vacancies/bulk/update')
   async updateVacancies(
-    @Body(
-      'fields',
-      new ParseArrayPipe({ items: BitrixHeadhunterVacancyUpdateDTO }),
-    )
+    @Body(new ParseArrayPipe({ items: BitrixHeadhunterVacancyUpdateDTO }))
     records: BitrixHeadhunterVacancyUpdateDTO[],
   ) {
     return this.bitrixHeadhunter.updateVacancies(records);
