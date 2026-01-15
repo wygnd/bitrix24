@@ -317,7 +317,7 @@ export class BitrixWikiUseCase {
         ],
       });
 
-      return { messageId: messageId ?? null };
+      return { message_id: messageId ?? null };
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -392,6 +392,6 @@ export class BitrixWikiUseCase {
 
     const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
 
-    return { messageId };
+    return { message_id: messageId };
   }
 }
