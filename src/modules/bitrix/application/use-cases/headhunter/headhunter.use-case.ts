@@ -23,7 +23,6 @@ import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.int
 import { HH_WEBHOOK_EVENTS } from '@/modules/bitrix/application/constants/headhunter/headhunter.contstants';
 import {
   BitrixHeadhunterUpdateVacancyAttributes,
-  HHBitrixVacancy,
   HHBitrixVacancyCreationalAttributes,
 } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-bitrix-vacancy.interface';
 import { isAxiosError } from 'axios';
@@ -670,77 +669,28 @@ export class BitrixHeadhunterUseCase {
     return vacancy;
   }
 
-  async checkUpdateVacanciesFromHH() {
-    const [vacanciesFromDB, vacanciesFromHH] = await Promise.all([
-      this.headhunterVacanciesRepository.getVacancies({
-        order: [['id', 'asc']],
-      }),
-      this.headHunterRestService.getActiveVacancies(true),
-    ]);
-    let countNewRows = 0;
-
-    const trueVacancies = vacanciesFromHH.reduce<
-      HHBitrixVacancyCreationalAttributes[]
-    >((acc, vacancy) => {
-      const vacancyIndex = vacanciesFromDB.findIndex(
-        (v) => vacancy.id === v.vacancyId,
-      );
-
-      if (vacancyIndex !== -1) {
-        acc.push(Object.assign({}, vacanciesFromDB[vacancyIndex]));
-      } else {
-        countNewRows++;
-        acc.push({
-          vacancyId: vacancy.id,
-          label: vacancy.name,
-          url: vacancy.alternate_url,
-          bitrixField: null,
-        });
-      }
-
-      return acc;
-    }, []);
-
-    if (countNewRows > 0) {
-      return {
-        status: true,
-        vacancies: await this.headhunterVacanciesRepository.addVacancies(
-          trueVacancies,
-          true,
-        ),
-      };
-    }
-
-    return {
-      status: false,
-      vacancies: [],
-    };
-  }
-
   /**
    * Try finding ratio vacancy from hh in bitrix
    * @param vacancyId
    */
   async getRatioVacancy(vacancyId: string) {
-    const ratioVacanciesFromCache = await this.redisService.get<
-      HHBitrixVacancy[]
-    >(REDIS_KEYS.BITRIX_DATA_RATIO_VACANCIES);
+    const vacancyFromCache = await this.redisService.get<HHBitrixVacancyDto>(
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY,
+    );
 
-    if (ratioVacanciesFromCache) {
-      const findVacancy = ratioVacanciesFromCache.find(
-        (v) => v.vacancyId === vacancyId,
-      );
-
-      if (!findVacancy) throw new NotFoundException('Vacancy not found');
-
-      return findVacancy;
-    }
+    if (vacancyFromCache) return vacancyFromCache;
 
     const findVacancy = (await this.getVacancies()).find(
       (v) => v.vacancyId === vacancyId,
     );
 
     if (!findVacancy) throw new NotFoundException('Vacancy not found');
+
+    this.redisService.set<HHBitrixVacancyDto>(
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY,
+      findVacancy,
+      300, // 5 minute
+    );
 
     return findVacancy;
   }

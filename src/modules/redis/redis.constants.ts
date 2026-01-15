@@ -9,7 +9,7 @@ export const REDIS_KEYS = {
   // BITRIX DATA
   BITRIX_DATA_DEAL_FIELDS: 'bitrix:deals:fields',
   BITRIX_DATA_DEAL_FIELD: 'bitrix:deals:field:',
-  BITRIX_DATA_RATIO_VACANCIES: 'bitrix:deals:hr:ratio:vacancies',
+  BITRIX_DATA_RATIO_VACANCY: 'bitrix:deals:hr:ratio:vacancy:',
   BITRIX_DATA_DEAL_ITEM: 'bitrix:deals:item:',
   BITRIX_DATA_BOT_COMMANDS: 'bitrix:bot:commands',
   BITRIX_DATA_USER_DEPARTMENTS: 'bitrix:user:departments',
