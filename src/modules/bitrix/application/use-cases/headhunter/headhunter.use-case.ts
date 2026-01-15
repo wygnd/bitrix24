@@ -160,6 +160,8 @@ export class BitrixHeadhunterUseCase {
     if (notificationWasReceived)
       throw new ConflictException('Notification was received');
 
+    this.logger.debug(body);
+
     this.redisService
       .set<string>(redisNotificationKey, notificationId, 3600)
       .catch(() => {});
@@ -409,6 +411,13 @@ export class BitrixHeadhunterUseCase {
               .replace(/[ \-()]/gim, ''),
           );
         }
+
+        filterPhones = filterPhones.reduce<string[]>((acc, phone) => {
+          acc.push(` ${phone}`);
+          acc.push(`${phone} `);
+          acc.push(phone);
+          return acc;
+        }, []);
 
         // Формируем запрос на получение дублей по номеру телефона
         batchCommands['get_deal_by_phone'] = {
