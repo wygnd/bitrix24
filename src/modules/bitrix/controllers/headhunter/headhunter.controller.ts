@@ -57,19 +57,9 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadhunter.getVacancies();
   }
 
-  // @ApiAuthHeader()
-  // @ApiOperation({ summary: 'Добавить новую вакансию' })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   type: HHBitrixVacancyDto,
-  //   description: 'Успешный ответ',
-  // })
-  // @UseGuards(AuthGuard)
-  // @Post('/vacancies/add')
-  // async addVacancy(@Body() dto: BitrixHeadhunterVacancyCreateDTO) {
-  //   return this.bitrixHeadhunter.addVacancy(dto);
-  // }
-
+  @ApiOperation({ summary: 'Обновить вакансию' })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
   @Patch('/vacancies/:id')
   async updateVacancy(@Body() dto: BitrixHeadhunterVacancyUpdateDTO) {
     return this.bitrixHeadhunter.updateVacancy(dto);
