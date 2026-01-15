@@ -8,6 +8,7 @@ export interface B24LeadDefault {
   STATUS_ID: string;
   DATE_CREATE: string;
   PHONE: Omit<B24CRMMultifield, 'ID' | 'TYPE_ID'>[];
+  COMMENTS?: string;
 }
 
 export interface B24DuplicateFindByComm {

@@ -1,38 +1,14 @@
 import {
   BitrixGrampusSiteRequestReceive,
-  BitrixGrampusSiteRequestReceiveDiscountOptions,
   BitrixGrampusSiteRequestReceiveResponse,
 } from '@/modules/bitrix/application/interfaces/grampus/bitrix-site-request.interface';
 import {
+  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-
-export class BitrixGrampusSiteRequestReceiveDiscountDTO implements BitrixGrampusSiteRequestReceiveDiscountOptions {
-  @ApiProperty({
-    type: String,
-    description: 'Процент скидки',
-    required: false,
-    example: '10%',
-  })
-  @IsOptional()
-  @IsString()
-  percent?: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Бонус',
-    required: false,
-    example: 'Подарок',
-  })
-  @IsOptional()
-  @IsString()
-  bonus?: string;
-}
 
 export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequestReceive {
   @ApiProperty({
@@ -74,11 +50,21 @@ export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequ
   @IsString()
   comment?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    description: 'Дополнительные параметры в формате JSON',
+    required: false,
+    example: JSON.stringify({
+      type: 'some type',
+      fields: {
+        fieldA: 'value',
+        fieldsB: 'value',
+      },
+    }),
+  })
   @IsOptional()
-  @ValidateNested()
-  @Type(() => BitrixGrampusSiteRequestReceiveDiscountDTO)
-  discount?: BitrixGrampusSiteRequestReceiveDiscountDTO;
+  @IsJSON()
+  extraParams: string;
 }
 
 export class BitrixGrampusSiteRequestReceiveResponseDTO implements BitrixGrampusSiteRequestReceiveResponse {

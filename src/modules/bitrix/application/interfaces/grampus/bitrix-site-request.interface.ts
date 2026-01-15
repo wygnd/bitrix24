@@ -3,10 +3,10 @@ export interface BitrixGrampusSiteRequestReceive {
   url: string;
   clientName?: string;
   comment?: string;
-  discount?: BitrixGrampusSiteRequestReceiveDiscountOptions;
+  extraParams?: string;
 }
 
-export interface BitrixGrampusSiteRequestReceiveDiscountOptions {
+export interface BitrixGrampusSiteRequestReceiveExtraParamsFieldsDiscount {
   percent?: string;
   bonus?: string;
 }
@@ -15,3 +15,17 @@ export interface BitrixGrampusSiteRequestReceiveResponse {
   status: boolean;
   message: string;
 }
+
+export interface BitrixGrampusSiteRequestReceiveExtraParamsDiscountOptions {
+  type: 'discount';
+  fields: BitrixGrampusSiteRequestReceiveExtraParamsFieldsDiscount;
+}
+
+export interface BitrixGrampusSiteRequestReceiveExtraParamsCalculatorOptions {
+  type: 'calculator';
+  fields: any;
+}
+
+export type BitrixGrampusSiteRequestReceiveExtraParamsOptions =
+  | BitrixGrampusSiteRequestReceiveExtraParamsDiscountOptions
+  | BitrixGrampusSiteRequestReceiveExtraParamsCalculatorOptions;

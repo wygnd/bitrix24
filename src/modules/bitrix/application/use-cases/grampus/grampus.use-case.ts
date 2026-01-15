@@ -7,6 +7,7 @@ import { B24Emoji, B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import {
   BitrixGrampusSiteRequestReceive,
+  BitrixGrampusSiteRequestReceiveExtraParamsOptions,
   BitrixGrampusSiteRequestReceiveResponse,
 } from '@/modules/bitrix/application/interfaces/grampus/bitrix-site-request.interface';
 import {
@@ -73,7 +74,18 @@ export class BitrixGrampusUseCase {
   ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
     this.logger.debug(fields);
     try {
-      const { phone, url, clientName = '', comment = '', discount } = fields;
+      const {
+        phone,
+        url,
+        clientName = '',
+        comment = '',
+        extraParams = '',
+      } = fields;
+      const params = extraParams
+        ? (JSON.parse(
+            extraParams,
+          ) as BitrixGrampusSiteRequestReceiveExtraParamsOptions)
+        : null;
 
       // Ищем дубликаты по номеру клиента
       const duplicateLeads =
@@ -90,13 +102,7 @@ export class BitrixGrampusUseCase {
           UF_CRM_1573459036: '70', // Откуда: С сайта
           UF_CRM_1598441630: '4834', // С чем обратился: Разработка сайта
           STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          COMMENTS:
-            `Добавлен со страницы: ${url}\n` +
-            (discount?.percent
-              ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
-              : '') +
-            comment +
-            (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
+          COMMENTS: `Добавлен со страницы: ${url}\n`,
           ASSIGNED_BY_ID: managerId,
           PHONE: [
             {
@@ -105,6 +111,23 @@ export class BitrixGrampusUseCase {
             },
           ],
         };
+
+        switch (params && params?.type) {
+          case 'discount':
+            createLeadFields.COMMENTS +=
+              (params?.fields?.discount?.percent
+                ? `Процент скидки: ${params?.fields?.discount.percent}\nСо страницы ${url}\n`
+                : '') +
+              (params?.fields?.discount?.bonus
+                ? `\nБонус: ${params?.fields?.discount.bonus}`
+                : '') +
+              comment;
+            break;
+
+          default:
+            createLeadFields.COMMENTS += comment;
+            break;
+        }
 
         if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
           // Если со страницы "Разработка сайтов на битрикс"
@@ -186,15 +209,26 @@ export class BitrixGrampusUseCase {
             ASSIGNED_BY_ID: managerId,
             STATUS_ID: B24LeadActiveStages[0], // Новый в работе
             NAME: clientName,
-            COMMENTS:
-              leadComments +
-              '\nДобавлен со страницы: ${url}\n' +
-              (discount?.percent
-                ? `Процент скидки: ${discount.percent}\nСо страницы ${url}\n`
-                : '') +
-              comment +
-              (discount?.bonus ? `\nБонус: ${discount.bonus}` : ''),
+            COMMENTS: leadComments,
           };
+
+          switch (params && params?.type) {
+            case 'discount':
+              updateLeadFields.COMMENTS +=
+                (params?.fields?.discount?.percent
+                  ? `Процент скидки: ${params?.fields?.discount.percent}\nСо страницы ${url}\n`
+                  : '') +
+                (params?.fields?.discount?.bonus
+                  ? `\nБонус: ${params?.fields?.discount.bonus}`
+                  : '') +
+                comment;
+              break;
+
+            default:
+              updateLeadFields.COMMENTS += comment;
+              break;
+          }
+
           updatedMessage =
             `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
@@ -290,8 +324,9 @@ export class BitrixGrampusUseCase {
         status: true,
       };
     } catch (error) {
+      console.log(error);
       this.logger.error(error);
-      throw new InternalServerErrorException(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 
