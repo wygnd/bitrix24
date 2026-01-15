@@ -48,7 +48,7 @@ export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWai
   @ApiProperty({
     type: String,
     description: 'роль пользователя: определяет, куда направить сообщение',
-    required: false,
+    required: true,
     example: 'ad_specialist',
   })
   @IsNotEmpty()
@@ -65,7 +65,7 @@ export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWai
   @ApiProperty({
     type: String,
     description: 'Сообщение',
-    required: false,
+    required: true,
     example:
       '[user=123]Имя Фамилия[/user] | [b]Продажа[/b]:Ожидание | [b]Первый аванс:[/b] 20 000 | 12345 | СБП |  | ',
   })
