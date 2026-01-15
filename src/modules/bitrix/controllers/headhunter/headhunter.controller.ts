@@ -10,14 +10,14 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-redirect.dto';
 import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import {
-  BitrixHeadhunterVacancyCreateDTO,
   BitrixHeadhunterVacancyUpdateDTO,
+  HHBitrixVacancyDto,
 } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
@@ -43,7 +43,12 @@ export class BitrixHeadHunterController {
   }
 
   @ApiOperation({
-    summary: 'get vacancies',
+    summary: 'Получить список вакансий',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: [HHBitrixVacancyDto],
+    description: 'Успешный ответ',
   })
   @ApiAuthHeader()
   @UseGuards(AuthGuard)
@@ -52,18 +57,18 @@ export class BitrixHeadHunterController {
     return this.bitrixHeadhunter.getVacancies();
   }
 
-  @ApiAuthHeader()
-  @UseGuards(AuthGuard)
-  // @Get('/vacancies/check')
-  async checkVacanciesFromHH() {
-    // todo
-    return this.bitrixHeadhunter.checkUpdateVacanciesFromHH();
-  }
-
-  @Post('/vacancies/add')
-  async addVacancy(@Body() dto: BitrixHeadhunterVacancyCreateDTO) {
-    return this.bitrixHeadhunter.addVacancy(dto);
-  }
+  // @ApiAuthHeader()
+  // @ApiOperation({ summary: 'Добавить новую вакансию' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   type: HHBitrixVacancyDto,
+  //   description: 'Успешный ответ',
+  // })
+  // @UseGuards(AuthGuard)
+  // @Post('/vacancies/add')
+  // async addVacancy(@Body() dto: BitrixHeadhunterVacancyCreateDTO) {
+  //   return this.bitrixHeadhunter.addVacancy(dto);
+  // }
 
   @Patch('/vacancies/:id')
   async updateVacancy(@Body() dto: BitrixHeadhunterVacancyUpdateDTO) {

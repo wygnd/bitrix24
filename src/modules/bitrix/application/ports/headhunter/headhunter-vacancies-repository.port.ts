@@ -20,7 +20,7 @@ export interface BitrixHeadhunterVacanciesRepositoryPort {
     records: HHBitrixVacancyCreationalAttributes[],
     clearBeforeAdd?: boolean,
   ): Promise<HHBitrixVacancyDto[]>;
-  removeVacancy(id: number): Promise<boolean>;
+  removeVacancy(id: number | number[]): Promise<boolean>;
   updateVacancies(
     records: BitrixHeadhunterUpdateVacancyAttributes[],
   ): Promise<boolean>;

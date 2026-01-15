@@ -9,7 +9,7 @@ import {
 import { WinstonLogger } from '@/config/winston.logger';
 import { plainToInstance } from 'class-transformer';
 import { HHBitrixVacancyDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
-import { FindOptions, TruncateOptions } from 'sequelize';
+import { DestroyOptions, FindOptions } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { InjectModel } from '@nestjs/sequelize';
 
@@ -101,11 +101,11 @@ export class BitrixHeadhunterVacanciesRepository implements BitrixHeadhunterVaca
    *
    * Удалить вакансию из БД
    */
-  public async removeVacancy(id: number): Promise<boolean> {
+  public async removeVacancy(id: number | number[]): Promise<boolean> {
     try {
       const wasDeleted = await this.headhunterVacanciesRepository.destroy({
         where: {
-          id: id,
+          id: Array.isArray(id) ? id : [id],
         },
       });
 
@@ -141,7 +141,6 @@ export class BitrixHeadhunterVacanciesRepository implements BitrixHeadhunterVaca
       const response = (
         await this.headhunterVacanciesRepository.bulkCreate(records, {
           transaction: t,
-          updateOnDuplicate: ['bitrixField'],
         })
       ).map((r) => this.formDTO(r));
       await t.commit();
@@ -199,7 +198,7 @@ export class BitrixHeadhunterVacanciesRepository implements BitrixHeadhunterVaca
    * Отчистить записи в БД
    */
   private async clearVacancies(
-    options?: TruncateOptions<HHBitrixVacancyAttributes>,
+    options?: DestroyOptions<HHBitrixVacancyAttributes>,
   ) {
     try {
       await this.headhunterVacanciesRepository.truncate(options);

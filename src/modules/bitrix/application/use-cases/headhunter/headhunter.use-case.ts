@@ -48,6 +48,7 @@ import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitri
 import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/users.port';
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import type { BitrixHeadhunterVacanciesRepositoryPort } from '@/modules/bitrix/application/ports/headhunter/headhunter-vacancies-repository.port';
+import { HHBitrixVacancyDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
 
 @Injectable()
 export class BitrixHeadhunterUseCase {
@@ -592,43 +593,61 @@ export class BitrixHeadhunterUseCase {
     }
   }
 
-  /**
-   * Get vacancy list
-   *
-   * ---
-   *
-   * Получить список вакансий
-   */
-  async getVacancies() {
-    const vacanciesFromDB =
-      await this.headhunterVacanciesRepository.getVacancies({
+  async getVacancies(): Promise<HHBitrixVacancyDto[]> {
+    const [vacanciesDB, vacanciesHH] = await Promise.all([
+      this.headhunterVacanciesRepository.getVacancies({
         order: [['id', 'asc']],
+      }),
+      this.headHunterRestService.getActiveVacancies(true),
+    ]);
+    const createVacancies = new Set<HHBitrixVacancyCreationalAttributes>();
+    const visitedVacancies = new Set<string>();
+    const removeVacancies = new Set<number>();
+    const trueVacancies: HHBitrixVacancyDto[] = [];
+
+    // Проходим по активным вакансиям и сверяем их со списком из БД
+    // Если не нашли в списке из БД: добавляем в список для создания
+    // Если нашли: добавляем в список пройденных - нужно, чтобы потом убрать лишние из БД
+    vacanciesHH.forEach(({ id, name, alternate_url }) => {
+      visitedVacancies.add(id);
+      const vacancyDBIndex = vacanciesDB.findIndex((v) => v.vacancyId == id);
+
+      if (vacancyDBIndex === -1) {
+        createVacancies.add({
+          vacancyId: id,
+          label: name,
+          url: alternate_url,
+          bitrixField: null,
+        });
+      }
+    });
+
+    // Проходим по списку из БД и ищем устаревшие вакансии
+    vacanciesDB.forEach((vacancy) => {
+      // Если не нашли ваканию в списке посещенных вакансий с HH: добавляем в список на удаление
+      if (!visitedVacancies.has(vacancy.vacancyId)) {
+        removeVacancies.add(vacancy.id);
+      } else {
+        trueVacancies.push(Object.assign({}, vacancy));
+      }
+    });
+
+    if (createVacancies.size > 0) {
+      const newDBVacancies =
+        await this.headhunterVacanciesRepository.addVacancies([
+          ...createVacancies,
+        ]);
+
+      // Добавляем в итоговый массив новые вакансии
+      newDBVacancies.forEach((vacancy) => {
+        trueVacancies.push(Object.assign({}, vacancy));
       });
+    }
 
-    if (vacanciesFromDB.length > 0) return vacanciesFromDB;
+    if (removeVacancies.size > 0)
+      this.headhunterVacanciesRepository.removeVacancy([...removeVacancies]);
 
-    const vacanciesFromHH =
-      await this.headHunterRestService.getActiveVacancies(true);
-
-    if (vacanciesFromHH.length === 0)
-      throw new InternalServerErrorException(
-        'Invalid get vacancies from headhunter',
-      );
-
-    return this.headhunterVacanciesRepository.addVacancies(
-      vacanciesFromHH.reduce<HHBitrixVacancyCreationalAttributes[]>(
-        (acc, vacancy) => {
-          acc.push({
-            vacancyId: vacancy.id,
-            label: vacancy.name,
-            url: vacancy.alternate_url,
-            bitrixField: null,
-          });
-          return acc;
-        },
-        [],
-      ),
-    );
+    return trueVacancies;
   }
 
   async updateVacancies(records: BitrixHeadhunterUpdateVacancyAttributes[]) {
