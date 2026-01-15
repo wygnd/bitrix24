@@ -16,6 +16,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
 import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
+import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -231,7 +232,7 @@ export class BitrixWikiUseCase {
     deal_id,
     lead_id,
     user_role: chatId,
-  }: B24WikiPaymentsNoticeWaitingOptions) {
+  }: B24WikiPaymentsNoticeWaitingOptions): Promise<B24WikiNPaymentsNoticesResponse> {
     try {
       let leadId = lead_id;
       let dealId = deal_id;
@@ -334,7 +335,7 @@ export class BitrixWikiUseCase {
    */
   public async sendNoticeReceivePayment(
     fields: B24WikiPaymentsNoticeReceiveOptions,
-  ) {
+  ): Promise<B24WikiNPaymentsNoticesResponse> {
     const { message, group, payment_id } = fields;
     const chatId =
       group in B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG

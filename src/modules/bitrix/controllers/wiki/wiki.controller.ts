@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { UnloadLostCallingDto } from '@/modules/bitrix/application/dtos/wiki/wiki-unload-lost-calling.dto';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24WikiPaymentsNoticeWaitingDto } from '@/modules/bitrix/application/dtos/wiki/wiki-payments-notice-waiting.dto';
 import { WinstonLogger } from '@/config/winston.logger';
@@ -17,6 +17,7 @@ import { B24WikiPaymentsNoticeReceiveDto } from '@/modules/bitrix/application/dt
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki.use-case';
+import { B24WikiPaymentsNoticesResponseDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-response.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiAuthHeader()
@@ -43,6 +44,11 @@ export class BitrixWikiController {
     return this.bitrixWiki.unloadLostCalling(fields);
   }
 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Успех',
+    type: B24WikiPaymentsNoticesResponseDTO,
+  })
   @ApiOperation({ summary: 'Отправить сообщение о поступлении платежа' })
   @HttpCode(HttpStatus.OK)
   @Post('/payments/notices/waiting')
@@ -62,6 +68,11 @@ export class BitrixWikiController {
   }
 
   @ApiOperation({ summary: 'Отправить сообщение о принятии платежа' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Успех',
+    type: B24WikiPaymentsNoticesResponseDTO,
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/payments/notices/receive')
   async sendNoticePaymentReceived(
