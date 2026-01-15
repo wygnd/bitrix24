@@ -348,8 +348,11 @@ export class BitrixHeadhunterUseCase {
       try {
         const vacancy = await this.getRatioVacancy(vacancyId);
 
+        this.logger.log(`trying get vacancy: ${vacancy}`, 'warn');
+
         if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.id;
       } catch (e) {
+        this.logger.log(`error get vacancy: ${vacancyId}`, 'error');
         bitrixVacancy = '';
       }
 
