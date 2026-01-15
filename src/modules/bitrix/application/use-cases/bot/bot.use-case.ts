@@ -786,7 +786,20 @@ export class BitrixBotUseCase {
     message: string,
   ) {
     try {
-      const { isBudget, dealId, userId } = fields;
+      const { isBudget, dealId, userId, dialogId } = fields;
+
+      if (!dealId) {
+        this.bitrixBot.sendMessage({
+          MESSAGE: 'Не удалось обработать платеж: в лиде не было указан id сделки',
+          DIALOG_ID: dialogId
+        });
+        this.logger.error({
+          message: 'Invalid deal id',
+          fields,
+        });
+        throw new BadRequestException('Invalid dealId');
+      }
+
       const dealFields = await this.bitrixDeals.getDealById(dealId);
 
       if (!dealFields)

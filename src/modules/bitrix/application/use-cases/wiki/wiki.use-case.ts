@@ -252,12 +252,7 @@ export class BitrixWikiUseCase {
           start: 0,
         });
 
-        if (deals.length == 0)
-          throw new BadRequestException(
-            `Invalid get deal by lead id: ${leadId}`,
-          );
-
-        dealId = deals[0].ID;
+        if (deals.length !== 0) dealId = deals[0]?.ID;
       }
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
