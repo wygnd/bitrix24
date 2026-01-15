@@ -19,9 +19,7 @@ import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito
 @UseGuards(AuthGuard)
 @Controller('integration/avito')
 export class BitrixAvitoController {
-  constructor(
-    private readonly bitrixAvito: BitrixAvitoUseCase,
-  ) {}
+  constructor(private readonly bitrixAvito: BitrixAvitoUseCase) {}
 
   @ApiOperation({
     summary: 'Find duplicate leads by phone',
@@ -35,7 +33,7 @@ export class BitrixAvitoController {
   @Post('/find-duplicate-leads')
   @HttpCode(HttpStatus.OK)
   async findDuplicateLeadsByPhone(@Body() body: AvitoFindDuplicateLeadsDto[]) {
-    return this.bitrixAvito.findDuplicatesLeadsBPhones(body);
+    return this.bitrixAvito.findDuplicatesLeadsByPhones(body);
   }
 
   @ApiOperation({
@@ -49,9 +47,7 @@ export class BitrixAvitoController {
   @ApiBody({ type: String, isArray: true })
   @Post('/notify-about-unread-chats')
   async notifyAboutUnreadChats(@Body() accountNames: string[]) {
-    return this.bitrixAvito.notifyAboutUnreadChatsOnAvito(
-      accountNames,
-    );
+    return this.bitrixAvito.notifyAboutUnreadChatsOnAvito(accountNames);
   }
 
   @ApiOperation({
@@ -61,8 +57,6 @@ export class BitrixAvitoController {
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('/receive-client-request')
   async createLeadFromAvito(@Body() fields: AvitoCreateLeadDto) {
-    return this.bitrixAvito.handleDistributeClientRequestFromAvito(
-      fields,
-    );
+    return this.bitrixAvito.handleDistributeClientRequestFromAvito(fields);
   }
 }

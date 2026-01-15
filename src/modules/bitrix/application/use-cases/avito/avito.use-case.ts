@@ -29,9 +29,14 @@ import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/mess
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/users.port';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixAvitoUseCase {
+  private readonly logger = new WinstonLogger(
+    BitrixAvitoUseCase.name,
+    'bitrix:avito'.split(':'),
+  );
   private readonly avitoAiChatId: string;
 
   constructor(
@@ -63,7 +68,7 @@ export class BitrixAvitoUseCase {
     this.avitoAiChatId = avitoAiChatId;
   }
 
-  public async findDuplicatesLeadsBPhones(
+  public async findDuplicatesLeadsByPhones(
     fields: AvitoFindDuplicateLeadsDto[],
   ) {
     const batchCommands = fields.reduce((acc, { phone, chat_id }) => {
@@ -115,6 +120,8 @@ export class BitrixAvitoUseCase {
   public async handleDistributeClientRequestFromAvito(
     fields: AvitoCreateLeadDto,
   ) {
+    this.logger.debug(fields);
+
     fields.is_ai === '1'
       ? this.distributeClientRequestFromAvitoByAI(fields)
       : this.queueMiddleService.addTaskForDistributeClientRequestFromAvito(
