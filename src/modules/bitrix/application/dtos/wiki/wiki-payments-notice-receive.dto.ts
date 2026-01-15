@@ -1,23 +1,36 @@
 import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-receive.inteface';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
-import { B24_WIKI_PAYMENTS_CHAT_IDS_BY_GROUP } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeReceiveOptions {
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    description: 'Сообщение о поступлении платежа',
+    required: true,
+    example: 'Поступил платеж',
+  })
   @IsNotEmpty()
   @IsString()
   message: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    description: '',
+    required: false,
+    example: '',
+    default: '0',
+  })
   @IsOptional()
-  @Transform(({ value }) =>
-    value in B24_WIKI_PAYMENTS_CHAT_IDS_BY_GROUP
-      ? B24_WIKI_PAYMENTS_CHAT_IDS_BY_GROUP[value]
-      : B24_WIKI_PAYMENTS_CHAT_IDS_BY_GROUP[0],
-  )
   @IsString()
-  @IsIn(Object.values(B24_WIKI_PAYMENTS_CHAT_IDS_BY_GROUP))
-  group: string;
+  group: string = '0';
+
+  @ApiProperty({
+    type: String,
+    description: 'ID платежа',
+    required: true,
+    example: '1232363',
+  })
+  @IsNotEmpty()
+  @IsString()
+  payment_id: string;
 }

@@ -14,6 +14,7 @@ import { WikiDeleteLead } from '@/modules/wiki/interfaces/wiki-delete-lead.inter
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 import { WinstonLogger } from '@/config/winston.logger';
 import qs from 'qs';
+import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wiki-send-defin-payment-group.interface';
 
 @Injectable()
 export class WikiService {
@@ -44,6 +45,14 @@ export class WikiService {
     );
   }
 
+  /**
+   * Get working sales from wiki
+   *
+   * ---
+   *
+   * Получить список менеджеров по продажам, кто начал рабочий день и не на перерыве
+   * @param force
+   */
   public async getWorkingSales(force: boolean = false) {
     if (!force) {
       const salesFromCache = await this.redisService.get<string[]>(
@@ -110,6 +119,25 @@ export class WikiService {
       const response = await this.wikiApiServiceOld.post(
         '',
         qs.stringify(data),
+      );
+      this.logger.debug(response);
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
+    }
+  }
+
+  public async sendRequestDefinePaymentGroup(
+    fields: WikiSendDefinPaymentGroupInterface,
+  ) {
+    try {
+      const response = await this.wikiApiServiceOld.post(
+        '',
+        qs.stringify({
+          action: 'gft_setup_payment_group',
+          ...fields,
+        }),
       );
       this.logger.debug(response);
       return true;

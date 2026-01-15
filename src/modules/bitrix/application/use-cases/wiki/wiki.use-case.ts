@@ -13,6 +13,9 @@ import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/applicatio
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import { B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
+import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
+import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -299,9 +302,10 @@ export class BitrixWikiUseCase {
         }
       }
 
+      // Отправляем сообщение
       const messageId = await this.bitrixBot.sendMessage({
-        DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
-        MESSAGE: '[b]TEST[/b][br][br]' + message,
+        DIALOG_ID: chatId,
+        MESSAGE: message,
         KEYBOARD: [
           {
             TEXT: isBudget ? 'Бюджет' : 'Платеж поступил',
@@ -331,12 +335,16 @@ export class BitrixWikiUseCase {
   public async sendNoticeReceivePayment(
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ) {
-    const { message, group: chatId } = fields;
+    const { message, group, payment_id } = fields;
+    const chatId =
+      group in B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG
+        ? B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[group]
+        : B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[0];
+
     const [, , , , inn] = message.split(' | ');
     let clientDepartmentHistory = '';
 
-    // Если есть ИНН
-    // нужно в сообщение добавлять названия отделов, с которыми работал клиент
+    // Если есть ИНН нужно в сообщение добавлять названия отделов, с которыми работал клиент
     if (/инн/gi.test(inn)) {
       const paymentsSet = new Set<number>();
       const payments = await this.bitrixWikiClientPayments.getPaymentList({
@@ -360,11 +368,29 @@ export class BitrixWikiUseCase {
       }
     }
 
-    const messageId = await this.bitrixBot.sendMessage({
-      DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
-      // DIALOG_ID: chatId,
+    const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
+      DIALOG_ID: chatId,
       MESSAGE: message + clientDepartmentHistory,
-    });
+    };
+
+    if (group == '0') {
+      sendMessageOptions.KEYBOARD = [
+        {
+          TEXT: 'Определить платеж',
+          COMMAND: 'defineUnknownPayment',
+          COMMAND_PARAMS: JSON.stringify({
+            group: group,
+            paymentId: payment_id,
+            message: this.bitrixBot.encodeText(message),
+          } as ImbotKeyboardDefineUnknownPaymentOptions),
+          DISPLAY: 'BLOCK',
+          BLOCK: 'Y',
+          BG_COLOR_TOKEN: 'primary',
+        },
+      ];
+    }
+
+    const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
 
     return { messageId };
   }

@@ -45,6 +45,7 @@ export default (): BitrixOptions => ({
     },
     GRAMPUS: {
       trafficsChatId: process.env.BITRIX_DATA_GRAMPUS_TRAFICS_CHAT_ID ?? '',
+      GPayChatId: process.env.BITRIX_DATA_GRAMPUS_GRAMPUS_PAY_CHAT_ID ?? '',
     },
   },
 });

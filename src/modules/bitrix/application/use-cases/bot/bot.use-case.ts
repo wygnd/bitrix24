@@ -33,12 +33,13 @@ import dayjs from 'dayjs';
 import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-notify-receive-payment';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 import { WinstonLogger } from '@/config/winston.logger';
-import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { AvitoService } from '@/modules/avito/avito.service';
 import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
+import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
+import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 
 @Injectable()
 export class BitrixBotUseCase {
@@ -50,7 +51,8 @@ export class BitrixBotUseCase {
   constructor(
     @Inject(B24PORTS.BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
-    private readonly bitrixService: BitrixUseCase,
+    @Inject(B24PORTS.BITRIX)
+    private readonly bitrixService: BitrixPort,
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly bitrixTasks: BitrixTasksUseCase,
     private readonly bitrixDepartments: BitrixDepartmentsUseCase,
@@ -211,6 +213,31 @@ export class BitrixBotUseCase {
 
           response = this.handleApproveAddyPaymentOnPay(
             commandParamsDecoded as B24ImboKeyboardAddyPaymentsApprove,
+            MESSAGE_ID,
+          );
+          status = true;
+          break;
+
+        case '/defineUnknownPayment':
+          // Если нажал на кнопку кто-то, кроме:
+          // Иван Ильин, Анастасия Самыловская, Grampus
+          // Выходим
+          if (
+            this.limitAccessByPushButton(pushButtonUserId, [
+              '27',
+              '442',
+              '460',
+              '376',
+            ])
+          ) {
+            response = Promise.resolve(
+              `[${command}]: Forbidden push button ${pushButtonUserId}`,
+            );
+            status = false;
+            break;
+          }
+          response = this.handleDefineUnknowPayment(
+            commandParamsDecoded as ImbotKeyboardDefineUnknownPaymentOptions,
             MESSAGE_ID,
           );
           status = true;
@@ -774,11 +801,11 @@ export class BitrixBotUseCase {
       const clearContract = this.bitrixService.clearBBCode(contract);
       const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
       const createTaskFields = {
-        TITLE: `TEST ${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
+        TITLE: `${isBudget ? 'Пополнить бюджет НДС' : 'Оплата НДС'}`,
         CREATED_BY: dealAdvertResponsibleId,
         DESCRIPTION:
           `${isBudget ? '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]' : ''}\n` +
-          `[list=1]\n[*]${clearContract}[*]${price}[*]${paymentType}\n[/list]\n\n` +
+          `[list=1]\n[*]${this.bitrixService.generateDealUrl(dealId, clearContract)}[*]${price}[*]${paymentType}\n[/list]\n\n` +
           'Перейдите по ссылке и заполните поля:\n' +
           '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
           `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
@@ -789,10 +816,10 @@ export class BitrixBotUseCase {
       };
 
       if (/ндсип1/gi.test(message)) {
-        createTaskFields.TITLE =
-          'TEST ' + (isBudget ? 'Пополнить бюджет НДСИП1' : 'Оплата');
+        createTaskFields.TITLE = isBudget
+          ? 'Пополнить бюджет НДСИП1'
+          : 'Оплата';
         createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
-        createTaskFields.DESCRIPTION = '';
       }
 
       const task = await this.bitrixTasks.createTask(createTaskFields);
@@ -811,12 +838,10 @@ export class BitrixBotUseCase {
           params: {
             DIALOG_ID: dealAdvertResponsibleId,
             MESSAGE:
-              'TEST[br]' +
-              `${
-                isBudget
-                  ? 'Поступила оплата за рекламный бюджет.[br]'
-                  : 'Поступила оплата за ведение/допродажу.[br]'
-              } Нужно выставить счет из Яндекс.Директ и прикрепить к этой задаче.[br]` +
+              (isBudget
+                ? 'Поступила оплата за рекламный бюджет.[br]'
+                : 'Поступила оплата за ведение/допродажу.[br]') +
+              'Нужно выставить счет из Яндекс.Директ и прикрепить к этой задаче.[br]' +
               this.bitrixService.generateTaskUrl(
                 createTaskFields.RESPONSIBLE_ID,
                 taskId,
@@ -827,11 +852,10 @@ export class BitrixBotUseCase {
           method: 'im.message.add',
           params: {
             DIALOG_ID: taskResponsibleId,
-            MESSAGE:
-              'TEST[br]' + isBudget
-                ? 'Необходимо занести рекламный бюджет.[br]' +
-                  this.bitrixService.generateTaskUrl(userId, taskId)
-                : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
+            MESSAGE: isBudget
+              ? 'Необходимо занести рекламный бюджет.[br]' +
+                this.bitrixService.generateTaskUrl(userId, taskId)
+              : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
           },
         },
       };
@@ -903,7 +927,7 @@ export class BitrixBotUseCase {
         method: 'im.message.add',
         params: {
           DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
-          MESSAGE: `[b]TEST[/b][br][br]Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+          MESSAGE: `[br][br]Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
         },
       };
 
@@ -926,10 +950,7 @@ export class BitrixBotUseCase {
       // Отправляем данные
       return Promise.all([
         this.bitrixService.callBatch(batchCommands),
-        // this.wikiService.notifyWikiAboutReceivePayment(data),
-        this.sendTestMessage(
-          `[b]Обработка кнопки принятия платежа[/b][br]${JSON.stringify({ batchCommands, data })}`,
-        ),
+        this.wikiService.notifyWikiAboutReceivePayment(data),
       ]);
     } catch (error) {
       this.logger.error(error);
@@ -947,5 +968,38 @@ export class BitrixBotUseCase {
       MESSAGE: this.decodeText(message),
       KEYBOARD: '',
     });
+  }
+
+  /**
+   * Обработка кнопки "Определить платеж"
+   * @param fields
+   * @param messageId
+   * @private
+   */
+  private async handleDefineUnknowPayment(
+    fields: ImbotKeyboardDefineUnknownPaymentOptions,
+    messageId: number,
+  ) {
+    const { message, group, paymentId } = fields;
+
+    Promise.all([
+      this.updateMessage({
+        MESSAGE_ID: messageId,
+        MESSAGE: this.decodeText(message),
+        KEYBOARD: '',
+      }),
+      this.wikiService.sendRequestDefinePaymentGroup({
+        payment_group: group,
+        payment_id: paymentId,
+      }),
+    ])
+      .then((res) => {
+        this.logger.debug(res);
+      })
+      .catch((err) => {
+        this.logger.error(err);
+      });
+
+    return true;
   }
 }

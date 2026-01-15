@@ -1,4 +1,4 @@
-export type WikiOldActions = 'gft_log_user_money';
+import { WikiOldActions } from '@/modules/wiki/interfaces/wiki.interface';
 
 export interface WikiNotifyReceivePaymentOptions {
   action: WikiOldActions;

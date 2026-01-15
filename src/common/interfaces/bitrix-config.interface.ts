@@ -62,4 +62,5 @@ export interface BitrixWebhookConstantsVoxImplantOptions {
 
 export interface BitrixGrampusOptions {
   trafficsChatId: string;
+  GPayChatId: string;
 }
