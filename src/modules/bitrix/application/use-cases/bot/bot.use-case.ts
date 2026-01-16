@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { B24Emoji, B24PORTS } from '@/modules/bitrix/bitrix.constants';
@@ -62,7 +63,11 @@ export class BitrixBotUseCase {
   ) {}
 
   async addCommand(fields: B24ImbotRegisterCommand) {
-    return this.bitrixBot.addCommand(fields);
+    const response = await this.bitrixBot.addCommand(fields);
+
+    if (!response) new InternalServerErrorException('Invalid add command');
+
+    return response
   }
 
   async getCommands() {
@@ -70,7 +75,11 @@ export class BitrixBotUseCase {
   }
 
   async getCommandById(commandId: string) {
-    return this.bitrixBot.getBotCommandById(commandId);
+    const response = await this.bitrixBot.getBotCommandById(commandId);
+
+    if (!response) throw new NotFoundException('Command not found');
+
+    return response;
   }
 
   async sendMessage(fields: Omit<B24ImbotSendMessageOptions, 'BOT_ID'>) {

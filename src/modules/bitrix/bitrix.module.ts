@@ -62,6 +62,7 @@ import { B24WikiClientPaymentsModel } from '@/modules/bitrix/infrastructure/data
 import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/database/entities/headhunter/headhunter-vacancy.entity';
 import { BitrixGrampusUseCase } from '@/modules/bitrix/application/use-cases/grampus/grampus.use-case';
 import { BitrixGrampusController } from '@/modules/bitrix/controllers/grampus/grampus.controller';
+import { BitrixBotCommandsModel } from '@/modules/bitrix/infrastructure/database/entities/bot/bot-commands.entity';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { BitrixGrampusController } from '@/modules/bitrix/controllers/grampus/gr
       LeadObserveManagerCallingModel,
       B24WikiClientPaymentsModel,
       BitrixHeadhunterVacancyModel,
+      BitrixBotCommandsModel,
     ]),
   ],
   controllers: [

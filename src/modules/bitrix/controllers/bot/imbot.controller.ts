@@ -1,8 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -10,7 +8,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiExcludeEndpoint, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { ImbotRegisterCommandDto } from '@/modules/bitrix/application/dtos/bot/imbot-register-command.dto';
 import { AuthGuard } from '@/common/guards/auth.guard';
@@ -63,17 +61,6 @@ export class BitrixBotController {
     return this.bitrixBotService.getCommandById(commandId);
   }
 
-  @ApiExcludeEndpoint()
-  @ApiOperation({
-    summary: 'create new bot',
-  })
-  @ApiAuthHeader()
-  @UseGuards(AuthGuard)
-  @Post('/add')
-  async addBot() {
-    throw new ForbiddenException();
-  }
-
   @ApiOperation({
     summary: 'send message from bot',
   })
@@ -88,13 +75,6 @@ export class BitrixBotController {
   @Get('/list')
   async getBotList() {
     return this.bitrixBotService.getBotList();
-  }
-
-  @ApiExcludeEndpoint()
-  @UseGuards(AuthGuard)
-  @Delete('/remove')
-  async removeBot() {
-    throw new ForbiddenException();
   }
 
   @ApiOperation({

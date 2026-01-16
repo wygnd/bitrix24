@@ -3,9 +3,8 @@ import {
   B24ImbotRegisterCommand,
   B24ImbotSendMessageOptions,
   B24ImbotUpdateMessageOptions,
-  ImbotCommand,
 } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
-import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject } from '@nestjs/common';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { RedisService } from '@/modules/redis/redis.service';
 import { ImbotBot } from '@/modules/bitrix/application/interfaces/bot/imbot-bot.interface';
@@ -14,6 +13,8 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { ConfigService } from '@nestjs/config';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
+import type { BitrixBotCommandsRepositoryPort } from '@/modules/bitrix/application/ports/bot/bot-commands-repository.port';
+import { BitrixBotCommandsDTO } from '@/modules/bitrix/application/dtos/bot/bot-commands.dto';
 
 export class BitrixBotAdapter implements BitrixBotPort {
   private readonly logger = new WinstonLogger(
@@ -28,6 +29,8 @@ export class BitrixBotAdapter implements BitrixBotPort {
     private readonly bitrixService: BitrixPort,
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
+    @Inject(B24PORTS.BOT.BOT_COMMANDS_REPOSITORY)
+    private readonly bitrixBotCommandsRepository: BitrixBotCommandsRepositoryPort,
   ) {
     const bitrixConstants =
       this.configService.get<BitrixConstants>('bitrixConstants');
@@ -54,40 +57,36 @@ export class BitrixBotAdapter implements BitrixBotPort {
    * see: https://apidocs.bitrix24.ru/api-reference/chat-bots/commands/imbot-command-register.html
    * @param fields
    */
-  async addCommand(fields: B24ImbotRegisterCommand) {
-    const commandLanguage = fields.LANG.find((l) => l.LANGUAGE_ID === 'ru');
+  async addCommand(
+    fields: B24ImbotRegisterCommand,
+  ): Promise<BitrixBotCommandsDTO | null> {
+    try {
+      const commandLanguage = fields.LANG.find((l) => l.LANGUAGE_ID === 'ru');
 
-    if (!commandLanguage) throw new BadRequestException('Invalid language');
+      if (!commandLanguage) throw new BadRequestException('Invalid language');
 
-    const { result: commandId } = await this.bitrixService.callMethod<
-      B24ImbotRegisterCommand,
-      number
-    >('imbot.command.register', {
-      ...fields,
-    });
+      const { result: commandId } = await this.bitrixService.callMethod<
+        B24ImbotRegisterCommand,
+        number
+      >('imbot.command.register', {
+        ...fields,
+      });
 
-    if (!commandId) throw new BadRequestException('Error on add command');
+      if (!commandId) throw new BadRequestException('Error on add command');
 
-    let commandsFromCache = await this.redisService.get<ImbotCommand[]>(
-      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
-    );
-
-    const newCommand: ImbotCommand = {
-      id: `${commandId}`,
-      command: fields.COMMAND,
-      name: commandLanguage.TITLE,
-    };
-
-    if (!commandsFromCache) commandsFromCache = [];
-
-    commandsFromCache.push(newCommand);
-
-    this.redisService.set<ImbotCommand[]>(
-      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
-      commandsFromCache,
-    );
-
-    return commandId;
+      const response = await this.bitrixBotCommandsRepository.createCommand({
+        commandId: commandId,
+        botId: Number(this.botId),
+        command: fields.COMMAND,
+        description: commandLanguage.TITLE,
+        handler: fields.EVENT_COMMAND_ADD,
+      });
+      this.logger.debug(response);
+      return response ?? null;
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
   }
 
   /**
@@ -98,11 +97,21 @@ export class BitrixBotAdapter implements BitrixBotPort {
    * Получение списка команд бота
    */
   async getBotCommands() {
-    const commands = await this.redisService.get<ImbotCommand[]>(
+    const commandsCache = await this.redisService.get<BitrixBotCommandsDTO[]>(
       REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
     );
 
-    return commands ? commands : [];
+    if (commandsCache) return commandsCache;
+
+    const commands = await this.bitrixBotCommandsRepository.getCommands();
+
+    this.redisService.set<BitrixBotCommandsDTO[]>(
+      REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
+      commands,
+      600, // 10 minutes
+    );
+
+    return commands;
   }
 
   /**
@@ -113,17 +122,11 @@ export class BitrixBotAdapter implements BitrixBotPort {
    * Получить поля команды по ID
    * @param commandId
    */
-  async getBotCommandById(commandId: string) {
+  async getBotCommandById(
+    commandId: string,
+  ): Promise<BitrixBotCommandsDTO | null> {
     try {
-      const commands = await this.redisService.get<ImbotCommand[]>(
-        REDIS_KEYS.BITRIX_DATA_BOT_COMMANDS,
-      );
-      const command = commands?.find((c) => c.id === commandId);
-
-      if (!commands || !command)
-        throw new NotFoundException('Command not found');
-
-      return command;
+      return this.bitrixBotCommandsRepository.getCommand(Number(commandId));
     } catch (error) {
       this.logger.error(error);
       return null;
