@@ -201,16 +201,21 @@ export class BitrixBotAdapter implements BitrixBotPort {
   }
 
   /**
-   * Limit push button by user ids
+   * Limit push button by user ids.
+   * **true** if id is exists in list
+   * **false** else
    *
    * ---
    *
-   * Ограничивает нажатие кнопок по id пользователей
+   * Ограничивает нажатие кнопок по id пользователей.
+   * Возвращает **true** если id есть в списке
+   * **false** если нет в списке
+   *
    * @param userId
    * @param userIds
    */
   limitAccessByPushButton(userId: string, userIds: string[]): boolean {
-    return !userIds.includes(userId);
+    return userIds.includes(userId);
   }
 
   /**

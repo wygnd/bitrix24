@@ -194,7 +194,7 @@ export class BitrixBotUseCase {
           // Иван Ильин, Анастасия Самыловская, Grampus
           // Выходим
           if (
-            this.checkCanAccessToPushButton(pushButtonUserId, [
+            !this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '442',
               '460',
@@ -220,7 +220,7 @@ export class BitrixBotUseCase {
         case '/approveAddyPaymentOnPay':
           // Доступно только Иван Ильин, Анастасия Самыловская, Grampus
           if (
-            this.checkCanAccessToPushButton(pushButtonUserId, [
+            !this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '460',
               '376',
@@ -244,7 +244,7 @@ export class BitrixBotUseCase {
         case '/defineUnknownPayment':
           // Доступно только Иван Ильин, Анастасия Самыловская, Grampus
           if (
-            this.checkCanAccessToPushButton(pushButtonUserId, [
+            !this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '442',
               '460',
@@ -266,9 +266,13 @@ export class BitrixBotUseCase {
 
         // Подтвердить создание сделки от
         case '/approveCreateHRDeal':
-          if (!this.checkCanAccessToPushButton(pushButtonUserId, ['460'])) {
+          if (
+            !this.checkCanAccessToPushButton(pushButtonUserId, ['894', '460'])
+          ) {
             status = false;
-            response = Promise.resolve('Forbidden to push button');
+            response = Promise.resolve(
+              `Forbidden to push button: ${pushButtonUserId}`,
+            );
             break;
           }
 
@@ -1085,7 +1089,7 @@ export class BitrixBotUseCase {
     //   UF_CRM_1638524000: bitrixVacancy, // Вакансия
     // })
 
-    if(!fields.isApproved) return true;
+    if (!fields.isApproved) return true;
 
     this.sendTestMessage(
       'Test handle approve deal by request[br][br]' + JSON.stringify(fields),
