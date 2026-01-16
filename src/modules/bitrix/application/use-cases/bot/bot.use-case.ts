@@ -1076,26 +1076,46 @@ export class BitrixBotUseCase {
     fields: ImbotKeyboardApproveCreateHrDealByRequestCandidate,
     messageId: number,
   ) {
-    // this.bitrixDeals.createDeal({
-    //   TITLE: candidateFullName,
-    //   UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
-    //   UF_CRM_1638524259: phone, // Номер телефона
-    //   UF_CRM_1760598515308: telegram, // Телеграмм
-    //   UF_CRM_1638524275: email, // E-mail
-    //   UF_CRM_1638524306: resume.alternate_url, // Ссылка на резюме
-    //   ASSIGNED_BY_ID: bitrixUser?.ID || '',
-    //   CATEGORY_ID: '14',
-    //   STAGE_ID: 'C14:NEW',
-    //   UF_CRM_1638524000: bitrixVacancy, // Вакансия
-    // })
+    if (!fields.isApproved) return false;
 
-    if (!fields.isApproved) return true;
+    const {
+      candidateName,
+      searchType,
+      phone,
+      telegram,
+      email,
+      resumeLink,
+      assignedId,
+      vacancy,
+    } = fields;
 
-    this.sendTestMessage(
-      'Test handle approve deal by request[br][br]' + JSON.stringify(fields),
-    )
-      .then((res) => this.logger.log(res))
-      .catch((err) => this.logger.log(err));
+    const dealId = await this.bitrixDeals.createDeal({
+      TITLE: candidateName,
+      UF_CRM_1644922120: searchType, // Тип поиска
+      UF_CRM_1638524259: phone, // Номер телефона
+      UF_CRM_1760598515308: telegram, // Телеграмм
+      UF_CRM_1638524275: email, // E-mail
+      UF_CRM_1638524306: resumeLink, // Ссылка на резюме
+      ASSIGNED_BY_ID: assignedId,
+      CATEGORY_ID: '14',
+      STAGE_ID: 'C14:NEW',
+      UF_CRM_1638524000: vacancy, // Вакансия
+    });
+
+    if (!dealId) {
+      this.logger.error({
+        message: 'Invalid create deal',
+        fields,
+      });
+      return false;
+    }
+
+    this.sendMessage({
+      DIALOG_ID: 'chat68032',
+      MESSAGE:
+        'TEST Создана сделка[br]' + this.bitrixService.generateDealUrl(dealId),
+    });
+
     return true;
   }
 }
