@@ -3,7 +3,8 @@ export const B24_WIKI_PAYMENTS_ROLES_CHAT_IDS = {
   seo_manager: 'chat6368', // SEO сопровождение
   project_manager: 'chat766', // Ведение проектов
   sale_manager: 'chat588', // Отдел продаж
-  test: 'chat77152', // Тестовый чат
+  home_sale_manager: 'chat82650', // Отдел продаж (Удаленщики)
+  // test: 'chat77152', // Тестовый чат
 };
 
 export const B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG = {
