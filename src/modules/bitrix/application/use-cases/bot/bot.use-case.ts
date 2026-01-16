@@ -91,7 +91,7 @@ export class BitrixBotUseCase {
     return this.bitrixBot.updateMessage(fields);
   }
 
-  private limitAccessByPushButton(userId: string, userIds: string[]) {
+  private checkCanAccessToPushButton(userId: string, userIds: string[]) {
     return this.bitrixBot.limitAccessByPushButton(userId, userIds);
   }
 
@@ -194,7 +194,7 @@ export class BitrixBotUseCase {
           // Иван Ильин, Анастасия Самыловская, Grampus
           // Выходим
           if (
-            this.limitAccessByPushButton(pushButtonUserId, [
+            this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '442',
               '460',
@@ -218,8 +218,13 @@ export class BitrixBotUseCase {
 
         // Подтвердить платеж ADDY
         case '/approveAddyPaymentOnPay':
+          // Доступно только Иван Ильин, Анастасия Самыловская, Grampus
           if (
-            this.limitAccessByPushButton(pushButtonUserId, ['27', '460', '376'])
+            this.checkCanAccessToPushButton(pushButtonUserId, [
+              '27',
+              '460',
+              '376',
+            ])
           ) {
             response = Promise.resolve(
               `[${command}]: Forbidden push button ${pushButtonUserId}`,
@@ -237,11 +242,9 @@ export class BitrixBotUseCase {
 
         // Определить неопознанный платеж
         case '/defineUnknownPayment':
-          // Если нажал на кнопку кто-то, кроме:
-          // Иван Ильин, Анастасия Самыловская, Grampus
-          // Выходим
+          // Доступно только Иван Ильин, Анастасия Самыловская, Grampus
           if (
-            this.limitAccessByPushButton(pushButtonUserId, [
+            this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '442',
               '460',
@@ -263,6 +266,12 @@ export class BitrixBotUseCase {
 
         // Подтвердить создание сделки от
         case '/approveCreateHRDeal':
+          if (!this.checkCanAccessToPushButton(pushButtonUserId, ['460'])) {
+            status = false;
+            response = Promise.resolve('Forbidden to push button');
+            break;
+          }
+
           status = true;
           response = this.handleAproveCreateHRDealByRequestCandidate(
             commandParamsDecoded as ImbotKeyboardApproveCreateHrDealByRequestCandidate,
