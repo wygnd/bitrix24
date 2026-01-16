@@ -317,7 +317,7 @@ export class BitrixHeadhunterUseCase {
           : '') +
         `${responseType} на вакансию ${vacancy.name}[br]` +
         `Кандидат: ${candidateFullName}[br]` +
-        `Резюме: ${resume.alternate_url}[br][br]`;
+        `Резюме: ${resume.alternate_url}`;
 
       // Инициализируем батч запрос для поиска дублей по сделкам HR
       const selectFieldsFindDuplicateDeals = [
@@ -447,13 +447,14 @@ export class BitrixHeadhunterUseCase {
 
       if (dealsByPhone && dealsByPhone?.length > 0) {
         // Сначала ищем по телефону
-        message +=
+        message =
           'Совпадение со сделкой: ' +
           dealsByPhone.reduce((acc, { ID: dealId }) => {
             acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
             return acc;
           }, '') +
-          '[b]ЗАПЛАНИРУЙ ЗВОНОК[/b]';
+          '[b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' +
+          message;
 
         dealsByPhone.forEach(({ ID, STAGE_ID }) => {
           // Если сделка в неактивной стадии выходим
@@ -482,20 +483,18 @@ export class BitrixHeadhunterUseCase {
 
         // Если не нашли по номеру
         if (dealsFindByPhone.length === 0) {
-          message +=
-            `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br]` +
-            dealsByName.reduce((acc, { ID: dealId }) => {
-              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-              return acc;
-            }, '');
+          message =
+            `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br][br]` +
+            message;
         } else {
-          message +=
+          message =
             '[b]Совпадение со сделкой: [/b][br]' +
             dealsFindByPhone.reduce((acc, { ID: dealId }) => {
               acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
               return acc;
             }, '') +
-            '[b]ЗАПЛАНИРУЙ ЗВОНОК![/b]';
+            '[b]ЗАПЛАНИРУЙ ЗВОНОК![/b][br][br]' +
+            message;
 
           // Обновляем найденные лиды
           dealsFindByPhone.forEach(({ ID, STAGE_ID }) => {
@@ -532,9 +531,11 @@ export class BitrixHeadhunterUseCase {
         });
 
         newDealId
-          ? (message +=
+          ? (message =
               '[b]Создана сделка:[/b][br]' +
-              this.bitrixService.generateDealUrl(newDealId))
+              this.bitrixService.generateDealUrl(newDealId) +
+              '[br][br]' +
+              message)
           : (message =
               'Сделки не найдено.[br]Что то пошло не так при создании сделки');
       }
