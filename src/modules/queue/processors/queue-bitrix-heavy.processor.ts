@@ -8,7 +8,6 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
 import { LeadManagerCallingDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
 import { WinstonLogger } from '@/config/winston.logger';
-import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
 import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
 import { BitrixHeadhunterUseCase } from '@/modules/bitrix/application/use-cases/headhunter/headhunter.use-case';
 
@@ -21,7 +20,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   constructor(
     private readonly bitrixHeadhunter: BitrixHeadhunterUseCase,
-    private readonly bitrixBot: BitrixBotUseCase,
     private readonly bitrixLeadService: BitrixLeadsUseCase,
   ) {
     super();
@@ -36,9 +34,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     };
 
     const { name, data, id } = job;
-    this.bitrixBot.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь[/b]`,
-    );
     this.logger.debug(`Добавлена задача [${name}][${id}] в очередь`);
 
     switch (name) {
@@ -76,9 +71,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixBot.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
-    );
     this.logger.debug({
       message: `Задача [${name}][${id}] выполнена`,
       response,
@@ -87,10 +79,8 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   @OnWorkerEvent('closed')
   onClosed(job: Job) {
-    const { name, id, stacktrace, failedReason } = job;
-    const message = `[b]Закрытие задачи [${name}][${id}]: ${failedReason}[/b][br]>>${stacktrace.join('>>[br]')}`;
+    const { name, id, failedReason } = job;
 
-    this.bitrixBot.sendTestMessage(message);
     this.logger.debug({
       message: `Закрытие задачи [${name}][${id}]: ${failedReason}`,
       job,
@@ -99,25 +89,14 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job, error: Error) {
-    const logMessage = `Ошибка выполнения задачи:`;
-
-    this.bitrixBot.sendTestMessage(
-      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
-    );
-
     this.logger.error({
-      message: logMessage,
+      job,
       error,
     });
   }
 
   @OnWorkerEvent('error')
   onError(error: Error) {
-    const logMessage = 'Ошибка выполнения задачи';
-    const message = `[b]${logMessage}:[/b][br]${error.toString()}`;
-
-    this.bitrixBot.sendTestMessage(message);
-    this.logger.error({ message: logMessage, error });
-    this.logger.log(message, 'error');
+    this.logger.error({ error });
   }
 }

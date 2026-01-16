@@ -9,7 +9,6 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
 import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/application/interfaces/webhooks/webhook-voximplant-calls.interface';
-import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
 import { BitrixLeadsUpsellUseCase } from '@/modules/bitrix/application/use-cases/leads/leads-upsell.use-case';
 import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
 
@@ -22,7 +21,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   constructor(
     private readonly wikiService: WikiService,
-    private readonly bitrixBot: BitrixBotUseCase,
     private readonly bitrixLeadUpsell: BitrixLeadsUpsellUseCase,
     private readonly bitrixWebhooks: BitrixWebhooksUseCase,
   ) {
@@ -32,9 +30,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
-    this.bitrixBot.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b]`,
-    );
+
     this.logger.debug({
       message: `Добавлена задача [${name}][${id}] в очередь`,
       data,
@@ -83,9 +79,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixBot.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
-    );
     this.logger.debug({
       message: `Задача [${name}][${id}] выполнена`,
       response,
@@ -94,11 +87,6 @@ export class QueueBitrixLightProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
-    const logMessage = 'Ошибка выполнения задачи';
-
-    this.logger.error({ message: logMessage, job });
-    this.bitrixBot.sendTestMessage(
-      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
-    );
+    this.logger.error({ job });
   }
 }

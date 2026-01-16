@@ -11,7 +11,6 @@ import { WikiService } from '@/modules/wiki/wiki.service';
 import { B24TaskExtended } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixTasksUseCase } from '@/modules/bitrix/application/use-cases/tasks/tasks.use-case';
-import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
 import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
@@ -23,7 +22,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
   constructor(
     private readonly bitrixAvito: BitrixAvitoUseCase,
-    private readonly bitrixBot: BitrixBotUseCase,
     private readonly wikiService: WikiService,
     private readonly bitrixTasks: BitrixTasksUseCase,
   ) {
@@ -33,9 +31,7 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== CONSUMERS ==================== */
   async process(job: Job): Promise<QueueProcessorResponse> {
     const { name, data, id } = job;
-    this.bitrixBot.sendTestMessage(
-      `[b]Добавлена задача [${name}][${id}] в очередь:[/b]`,
-    );
+
     this.logger.debug({
       message: `Добавлена задача [${name}][${id}] в очередь`,
       data,
@@ -83,10 +79,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
   /* ==================== EVENTS LISTENERS ==================== */
   @OnWorkerEvent('completed')
   onCompleted({ name, returnvalue: response, id }: Job) {
-    this.bitrixBot.sendTestMessage(
-      `[b]Задача [${name}][${id}] выполнена:[/b][br]`,
-    );
-
     this.logger.debug({
       message: `Задача [${name}][${id}] выполнена`,
       response,
@@ -109,11 +101,6 @@ export class QueueBitrixMiddleProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   onFailed(job: Job) {
-    const logMessage = 'Ошибка выполнения задачи';
-    this.bitrixBot.sendTestMessage(
-      `[b]${logMessage}: [${job.name}][${job.id}][/b] `,
-    );
-
-    this.logger.error({ message: logMessage, job });
+    this.logger.error({ job });
   }
 }
