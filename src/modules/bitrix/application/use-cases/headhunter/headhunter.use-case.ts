@@ -48,6 +48,8 @@ import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/u
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import type { BitrixHeadhunterVacanciesRepositoryPort } from '@/modules/bitrix/application/ports/headhunter/headhunter-vacancies-repository.port';
 import { HHBitrixVacancyDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
+import { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
+import { ImbotKeyboardApproveCreateHrDealByRequestCandidate } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-create-hr-deal-by-request-candidate.interface';
 
 @Injectable()
 export class BitrixHeadhunterUseCase {
@@ -443,6 +445,7 @@ export class BitrixHeadhunterUseCase {
         get_deal_by_name: dealsByName = [],
       } = batchResponse.result;
 
+      const messageKeyboardItems: B24ImKeyboardOptions[] = [];
       const batchCommandsUpdateDealAndSendMessage: B24BatchCommands = {};
 
       if (dealsByPhone && dealsByPhone?.length > 0) {
@@ -486,6 +489,23 @@ export class BitrixHeadhunterUseCase {
           message =
             `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br][br]` +
             message;
+          messageKeyboardItems.push({
+            TEXT: 'Создать сделку',
+            COMMAND: 'approveCreateHRDeal',
+            COMMAND_PARAMS: JSON.stringify({
+              candidateName: candidateFullName,
+              searchType: bitrixSearchTypeField,
+              phone: phone,
+              email: email,
+              telegram: telegram,
+              resumeLink: resume.alternate_url,
+              assignedId: bitrixUser?.ID ?? '',
+              vacancy: bitrixVacancy,
+            } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
+            DISPLAY: 'BLOCK',
+            BLOCK: 'Y',
+            BG_COLOR_TOKEN: 'primary',
+          });
         } else {
           message =
             '[b]Совпадение со сделкой: [/b][br]' +
@@ -545,6 +565,7 @@ export class BitrixHeadhunterUseCase {
         params: {
           BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           DIALOG_ID: 'chat68032',
+          KEYBOARD: messageKeyboardItems,
           MESSAGE: message,
           URL_PREVIEW: 'N',
         },

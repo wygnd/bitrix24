@@ -41,6 +41,7 @@ import { AvitoService } from '@/modules/avito/avito.service';
 import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
+import { ImbotKeyboardApproveCreateHrDealByRequestCandidate } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-create-hr-deal-by-request-candidate.interface';
 
 @Injectable()
 export class BitrixBotUseCase {
@@ -264,7 +265,7 @@ export class BitrixBotUseCase {
         case '/approveCreateHRDeal':
           status = true;
           response = this.handleAproveCreateHRDealByRequestCandidate(
-            commandParamsDecoded as any,
+            commandParamsDecoded as ImbotKeyboardApproveCreateHrDealByRequestCandidate,
             MESSAGE_ID,
           );
           break;
@@ -1059,10 +1060,24 @@ export class BitrixBotUseCase {
   }
 
   private async handleAproveCreateHRDealByRequestCandidate(
-    fields,
+    fields: ImbotKeyboardApproveCreateHrDealByRequestCandidate,
     messageId: number,
   ) {
-    this.sendTestMessage('Test handle approve deal by request');
+    // this.bitrixDeals.createDeal({
+    //   TITLE: candidateFullName,
+    //   UF_CRM_1644922120: bitrixSearchTypeField, // Тип поиска
+    //   UF_CRM_1638524259: phone, // Номер телефона
+    //   UF_CRM_1760598515308: telegram, // Телеграмм
+    //   UF_CRM_1638524275: email, // E-mail
+    //   UF_CRM_1638524306: resume.alternate_url, // Ссылка на резюме
+    //   ASSIGNED_BY_ID: bitrixUser?.ID || '',
+    //   CATEGORY_ID: '14',
+    //   STAGE_ID: 'C14:NEW',
+    //   UF_CRM_1638524000: bitrixVacancy, // Вакансия
+    // })
+    this.sendTestMessage(
+      'Test handle approve deal by request[br][br]' + JSON.stringify(fields),
+    );
     return true;
   }
 }
