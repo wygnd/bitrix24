@@ -134,6 +134,7 @@ export class BitrixBotUseCase {
       let status: boolean;
 
       switch (command) {
+        // Распределение сделок
         case '/distributeNewDeal':
           response = this.handleDistributeNewDeal(
             commandParamsDecoded as ImbotHandleDistributeNewDealUnknown,
@@ -141,6 +142,7 @@ export class BitrixBotUseCase {
           );
           return true;
 
+        // Согласование Задачи для SMM
         case '/approveSmmAdvertLayouts':
           response = this.handleApproveSmmAdvertLayout(
             commandParamsDecoded as ImbotHandleApproveSmmAdvertLayout,
@@ -149,6 +151,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+        // Солгласование сайта для РК
         case '/approveSiteDealForAdvert':
           response = this.handleApproveSiteForAdvert(
             commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
@@ -157,6 +160,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+        // Подтвердить сайт для наших кейсов
         case '/approveSiteForCase':
           response = this.handleApproveSiteForCase(
             commandParamsDecoded as ImbotKeyboardApproveSiteForCase,
@@ -165,6 +169,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+        // Подтвердить распределение лида ИИ из авито чата
         case '/approveDistributeDealFromAvitoByAI':
           response = this.handleApproveDistributeDealFromAvitoByAI(
             commandParamsDecoded as ImbotApproveDistributeLeadFromAvitoByAi,
@@ -173,6 +178,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+        // Подтвердить платеж
         case '/approveReceivedPayment':
           // Если нажал на кнопку кто-то, кроме:
           // Иван Ильин, Анастасия Самыловская, Grampus
@@ -200,6 +206,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+        // Подтвердить платеж ADDY
         case '/approveAddyPaymentOnPay':
           if (
             this.limitAccessByPushButton(pushButtonUserId, ['27', '460', '376'])
@@ -218,6 +225,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
+          // Определить неопознанный платеж
         case '/defineUnknownPayment':
           // Если нажал на кнопку кто-то, кроме:
           // Иван Ильин, Анастасия Самыловская, Grampus

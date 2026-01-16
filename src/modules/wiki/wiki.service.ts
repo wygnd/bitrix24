@@ -25,7 +25,7 @@ export class WikiService {
 
   constructor(
     private readonly wikiApiServiceNew: WikiApiServiceNew, // new-wiki
-    private readonly wikiApiServiceOld: WikiApiServiceOld, // wiki.grampus-server
+    private readonly wikiApiServiceOld: WikiApiServiceOld, // wiki.grampus-studio
     private readonly redisService: RedisService,
   ) {}
 
@@ -119,7 +119,13 @@ export class WikiService {
       const response = await this.wikiApiServiceOld.post(
         '',
         qs.stringify(data),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
       );
+
       this.logger.debug(response);
       return true;
     } catch (error) {
@@ -138,6 +144,11 @@ export class WikiService {
           action: 'gft_setup_payment_group',
           ...fields,
         }),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
       );
       this.logger.debug(response);
       return true;
