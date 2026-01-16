@@ -225,7 +225,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
-          // Определить неопознанный платеж
+        // Определить неопознанный платеж
         case '/defineUnknownPayment':
           // Если нажал на кнопку кто-то, кроме:
           // Иван Ильин, Анастасия Самыловская, Grampus
@@ -798,8 +798,9 @@ export class BitrixBotUseCase {
 
       if (!dealId) {
         this.bitrixBot.sendMessage({
-          MESSAGE: 'Не удалось обработать платеж: в лиде не было указан id сделки',
-          DIALOG_ID: dialogId
+          MESSAGE:
+            'Не удалось обработать платеж: в лиде не было указан id сделки',
+          DIALOG_ID: dialogId,
         });
         this.logger.error({
           message: 'Invalid deal id',
@@ -840,21 +841,27 @@ export class BitrixBotUseCase {
         createTaskFields.TITLE = isBudget
           ? 'Пополнить бюджет НДСИП1'
           : 'Оплата';
+        createTaskFields.DESCRIPTION =
+          '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]\n' +
+          createTaskFields.DESCRIPTION;
         createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
       }
 
-      const task = await this.bitrixTasks.createTask(createTaskFields);
+      const batchCommands: B24BatchCommands = {};
 
-      if (!task)
-        return {
-          status: false,
-          message: 'Invalid handle command: execute error on creating task',
-        };
+      // Если нет "Введение": ставится задача
+      if (!/введение/i.test(message)) {
+        const task = await this.bitrixTasks.createTask(createTaskFields);
 
-      const { id: taskId, responsibleId: taskResponsibleId } = task;
+        if (!task)
+          return {
+            status: false,
+            message: 'Invalid handle command: execute error on creating task',
+          };
 
-      const batchCommands: B24BatchCommands = {
-        notify_about_new_task: {
+        const { id: taskId, responsibleId: taskResponsibleId } = task;
+
+        batchCommands['notify_about_new_task'] = {
           method: 'im.message.add',
           params: {
             DIALOG_ID: dealAdvertResponsibleId,
@@ -868,8 +875,9 @@ export class BitrixBotUseCase {
                 taskId,
               ),
           },
-        },
-        send_message_to_head: {
+        };
+
+        batchCommands['send_message_to_head'] = {
           method: 'im.message.add',
           params: {
             DIALOG_ID: taskResponsibleId,
@@ -878,8 +886,16 @@ export class BitrixBotUseCase {
                 this.bitrixService.generateTaskUrl(userId, taskId)
               : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`,
           },
-        },
-      };
+        };
+      } else {
+        batchCommands['send_message_head'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: createTaskFields.RESPONSIBLE_ID,
+            MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+          },
+        };
+      }
 
       return this.bitrixService.callBatch(batchCommands);
     } catch (error) {
@@ -948,7 +964,7 @@ export class BitrixBotUseCase {
         method: 'im.message.add',
         params: {
           DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
-          MESSAGE: `[br][br]Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+          MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
         },
       };
 
