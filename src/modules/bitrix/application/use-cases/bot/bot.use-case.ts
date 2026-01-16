@@ -882,7 +882,7 @@ export class BitrixBotUseCase {
       const batchCommands: B24BatchCommands = {};
 
       // Если нет "Введение": ставится задача
-      if (!/введение/i.test(message)) {
+      if (!/ведение/gi.test(message)) {
         const task = await this.bitrixTasks.createTask(createTaskFields);
 
         if (!task)
