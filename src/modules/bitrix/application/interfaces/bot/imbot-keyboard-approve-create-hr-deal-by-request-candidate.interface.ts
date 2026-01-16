@@ -1,4 +1,5 @@
 export interface ImbotKeyboardApproveCreateHrDealByRequestCandidate {
+  isApproved: boolean;
   candidateName: string;
   searchType: string;
   phone: string;

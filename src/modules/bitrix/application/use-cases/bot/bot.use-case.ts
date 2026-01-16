@@ -1084,6 +1084,9 @@ export class BitrixBotUseCase {
     //   STAGE_ID: 'C14:NEW',
     //   UF_CRM_1638524000: bitrixVacancy, // Вакансия
     // })
+
+    if(!fields.isApproved) return true;
+
     this.sendTestMessage(
       'Test handle approve deal by request[br][br]' + JSON.stringify(fields),
     );

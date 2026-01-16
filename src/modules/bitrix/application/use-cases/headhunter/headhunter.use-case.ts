@@ -489,23 +489,44 @@ export class BitrixHeadhunterUseCase {
           message =
             `${new Array(3).fill(B24Emoji.HR.HEADHUNTER.ATTENTION).join('')}[b]Найдены дубли по ФИО: [/b][br][br]` +
             message;
-          messageKeyboardItems.push({
-            TEXT: 'Создать сделку',
-            COMMAND: 'approveCreateHRDeal',
-            COMMAND_PARAMS: JSON.stringify({
-              candidateName: candidateFullName,
-              searchType: bitrixSearchTypeField,
-              phone: phone,
-              email: email,
-              telegram: telegram,
-              resumeLink: resume.alternate_url,
-              assignedId: bitrixUser?.ID ?? '',
-              vacancy: bitrixVacancy,
-            } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
-            DISPLAY: 'BLOCK',
-            BLOCK: 'Y',
-            BG_COLOR_TOKEN: 'primary',
-          });
+          messageKeyboardItems.push(
+            {
+              TEXT: 'Создать сделку',
+              COMMAND: 'approveCreateHRDeal',
+              COMMAND_PARAMS: JSON.stringify({
+                isApproved: true,
+                candidateName: candidateFullName,
+                searchType: bitrixSearchTypeField,
+                phone: phone,
+                email: email,
+                telegram: telegram,
+                resumeLink: resume.alternate_url,
+                assignedId: bitrixUser?.ID ?? '',
+                vacancy: bitrixVacancy,
+              } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
+              DISPLAY: 'BLOCK',
+              BLOCK: 'Y',
+              BG_COLOR_TOKEN: 'primary',
+            },
+            {
+              TEXT: 'Не создавать сделку',
+              COMMAND: 'approveCreateHRDeal',
+              COMMAND_PARAMS: JSON.stringify({
+                isApproved: false,
+                candidateName: candidateFullName,
+                searchType: bitrixSearchTypeField,
+                phone: phone,
+                email: email,
+                telegram: telegram,
+                resumeLink: resume.alternate_url,
+                assignedId: bitrixUser?.ID ?? '',
+                vacancy: bitrixVacancy,
+              } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
+              DISPLAY: 'BLOCK',
+              BLOCK: 'Y',
+              BG_COLOR_TOKEN: 'alert',
+            },
+          );
         } else {
           message =
             '[b]Совпадение со сделкой: [/b][br]' +
