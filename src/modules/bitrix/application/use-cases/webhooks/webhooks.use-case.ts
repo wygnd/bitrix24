@@ -39,8 +39,6 @@ import {
   ImbotHandleDistributeNewDeal,
 } from '@/modules/bitrix/application/interfaces/bot/imbot-handle.interface';
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
-import { B24Task } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
-import dayjs from 'dayjs';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-site-for-case.interface';
 import { B24CallType } from '@/modules/bitrix/interfaces/bitrix-call.interface';
 import {
@@ -55,6 +53,9 @@ import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.p
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import { AvitoPhoneList } from '@/modules/bitrix/application/constants/avito/avito.constants';
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
+import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
+import dayjs from 'dayjs';
+import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 
 @Injectable()
 export class BitrixWebhooksUseCase {
@@ -129,6 +130,8 @@ export class BitrixWebhooksUseCase {
     private readonly bitrixBot: BitrixBotPort,
     @Inject(B24PORTS.LEADS.LEADS_DEFAULT)
     private readonly bitrixLeads: BitrixLeadsPort,
+    @Inject(B24PORTS.TASKS.TASKS_DEFAULT)
+    private readonly bitrixTasks: BitrixTasksPort,
   ) {}
 
   /**
@@ -468,9 +471,10 @@ export class BitrixWebhooksUseCase {
   }
 
   async handleIncomingWebhookToApproveSiteForAdvert(
-    { project_manager_id, chat_id }: IncomingWebhookApproveSiteForDealDto,
+    fields: IncomingWebhookApproveSiteForDealDto,
     dealId: string,
   ) {
+    const { project_manager_id, chat_id } = fields;
     const advertDepartments = await this.bitrixDepartments.getDepartmentById([
       '36',
       '54',
@@ -518,7 +522,8 @@ export class BitrixWebhooksUseCase {
     const { result: batchResponseCreateTask } =
       await this.bitrixService.callBatch<{
         get_deal: B24Deal;
-        create_task: { task: B24Task };
+        get_lead: B24Lead[];
+        get_advert_deal: B24Deal[];
       }>({
         get_deal: {
           method: 'crm.deal.get',
@@ -545,37 +550,43 @@ export class BitrixWebhooksUseCase {
             SELECT: ['ID', 'UF_CRM_1716383143'],
           },
         },
-        create_task: {
-          method: 'tasks.task.add',
-          params: {
-            fields: {
-              TITLE:
-                'Необходимо проверить сайт на дееспособность работы на РК.',
-              DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
-              DESCRIPTION:
-                '$result[get_deal][UF_CRM_1600184739]\n' +
-                '$result[get_deal][UF_CRM_1600184739]\n\n' +
-                'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
-                'Если есть правки, то:\n- НЕ завершай задачу\n' +
-                '- Пропиши в комментариях задачи список правок\n' +
-                '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
-                'Комментарий сделки РК:\n$result[get_advert_deal][0][UF_CRM_1716383143]',
-              CREATED_BY: '460',
-              RESPONSIBLE_ID: advertDepartment.UF_HEAD,
-              UF_CRM_TASK: [`D_${dealId}`],
-              ACCOMPLICES: advertDepartments
-                .filter((d) => d.ID !== advertDepartment.ID)
-                .map((d) => d.UF_HEAD),
-              AUDITORS: [project_manager_id],
-            },
-          },
-        },
       });
 
     if (Object.keys(batchResponseCreateTask.result_error).length !== 0)
       throw new BadRequestException(batchResponseCreateTask.result_error);
 
-    const { id: taskId } = batchResponseCreateTask.result.create_task.task;
+    const { get_deal: deal, get_advert_deal: advertDeal } =
+      batchResponseCreateTask.result;
+
+    const task = await this.bitrixTasks.createTask({
+      TITLE: 'Необходимо проверить сайт на дееспособность работы на РК.',
+      DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
+      DESCRIPTION:
+        (deal?.UF_CRM_1600184739 ? `${deal.UF_CRM_1600184739}\n` : '') +
+        'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
+        'Если есть правки, то:\n- НЕ завершай задачу\n' +
+        '- Пропиши в комментариях задачи список правок\n' +
+        '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
+        'Комментарий сделки РК:\n' +
+        (advertDeal.length > 0 && advertDeal[0]?.UF_CRM_1716383143
+          ? `${advertDeal[0]?.UF_CRM_1716383143}`
+          : ''),
+      CREATED_BY: '460',
+      RESPONSIBLE_ID: advertDepartment.UF_HEAD,
+      UF_CRM_TASK: [`D_${dealId}`],
+      ACCOMPLICES: advertDepartments
+        .filter((d) => d.ID !== advertDepartment.ID)
+        .map((d) => d.UF_HEAD),
+      AUDITORS: [project_manager_id],
+    });
+
+    if (!task) {
+      this.logger.debug({
+        message: 'Invalid create task',
+        fields,
+      });
+      return false;
+    }
 
     this.bitrixBot.sendMessage({
       DIALOG_ID: chat_id,
@@ -585,11 +596,12 @@ export class BitrixWebhooksUseCase {
         'Нужно согласовать и принять наш сайт в работу РК.[br]' +
         this.bitrixService.generateTaskUrl(
           advertDepartment.UF_HEAD,
-          taskId,
+          task.taskId,
           'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
         ),
       KEYBOARD: keyboard,
     });
+    return true;
   }
 
   /**
