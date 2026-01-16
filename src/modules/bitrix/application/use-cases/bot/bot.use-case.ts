@@ -1093,7 +1093,9 @@ export class BitrixBotUseCase {
 
     this.sendTestMessage(
       'Test handle approve deal by request[br][br]' + JSON.stringify(fields),
-    );
+    )
+      .then((res) => this.logger.log(res))
+      .catch((err) => this.logger.log(err));
     return true;
   }
 }
