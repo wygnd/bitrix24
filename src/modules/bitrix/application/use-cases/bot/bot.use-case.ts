@@ -67,7 +67,7 @@ export class BitrixBotUseCase {
 
     if (!response) new InternalServerErrorException('Invalid add command');
 
-    return response
+    return response;
   }
 
   async getCommands() {
@@ -258,6 +258,15 @@ export class BitrixBotUseCase {
             MESSAGE_ID,
           );
           status = true;
+          break;
+
+        // Подтвердить создание сделки от
+        case '/approveCreateHRDeal':
+          status = true;
+          response = this.handleAproveCreateHRDealByRequestCandidate(
+            commandParamsDecoded as any,
+            MESSAGE_ID,
+          );
           break;
 
         default:
@@ -1046,6 +1055,14 @@ export class BitrixBotUseCase {
         this.logger.error(err);
       });
 
+    return true;
+  }
+
+  private async handleAproveCreateHRDealByRequestCandidate(
+    fields,
+    messageId: number,
+  ) {
+    this.sendTestMessage('Test handle approve deal by request');
     return true;
   }
 }
