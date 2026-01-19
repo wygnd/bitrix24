@@ -306,14 +306,15 @@ export class BitrixGrampusUseCase {
             },
           };
 
-          batchCommands['notify_manager'] = {
-            method: 'im.message.add',
-            params: {
-              DIALOG_ID: leadAssignedId,
-              MESSAGE: updatedMessage,
-              URL_PREVIEW: 'N',
-            },
-          };
+          if (!B24LeadConvertedStages.includes(leadStatusId))
+            batchCommands['notify_manager'] = {
+              method: 'im.message.add',
+              params: {
+                DIALOG_ID: leadAssignedId,
+                MESSAGE: updatedMessage,
+                URL_PREVIEW: 'N',
+              },
+            };
           break;
       }
 

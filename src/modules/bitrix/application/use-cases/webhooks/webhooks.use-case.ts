@@ -818,23 +818,21 @@ export class BitrixWebhooksUseCase {
    * ---
    *
    * Обработка инициализации звонка для отдела продаж
-   * @param clientPhone
-   * @param extensionExtraParamsEncoded
-   * @param extensionPhone
-   * @param calledDid
-   * @param calls
-   * @param extensionGroupId
+   * @param fields
    */
-  async handleVoxImplantCallInitForSaleManagers({
-    phone: clientPhone,
-    extension: {
-      extra_params: extensionExtraParamsEncoded,
-      ani: extensionPhone,
-    },
-    called_did: calledDid = '',
-    calls,
-    group: { id: extensionGroupId },
-  }: B24WebhookHandleCallInitForSaleManagersOptions) {
+  async handleVoxImplantCallInitForSaleManagers(
+    fields: B24WebhookHandleCallInitForSaleManagersOptions,
+  ) {
+    const {
+      phone: clientPhone,
+      extension: {
+        extra_params: extensionExtraParamsEncoded,
+        ani: extensionPhone,
+      },
+      called_did: calledDid = '',
+      calls,
+      group: { id: extensionGroupId },
+    } = fields;
     // Ищем лид по номеру телефона
     // Получаем список внутренних номеров все sale отделов
     const [leadIds, saleExtensionList] = await Promise.all([
@@ -931,6 +929,11 @@ export class BitrixWebhooksUseCase {
 
     const callAvitoCommands: B24BatchCommands = {};
 
+    this.logger.debug({
+      fields,
+      source,
+    });
+
     let notifyMessageAboutAvitoCall = '';
 
     if (leadIds.length === 0) {
@@ -951,19 +954,19 @@ export class BitrixWebhooksUseCase {
 
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-          notifyMessageAboutAvitoCall = `Новый лид с Авито [${source}]. Бери в работу!`;
+          notifyMessageAboutAvitoCall = `Новый лид ${source}. Бери в работу!`;
           break;
 
         case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
-          notifyMessageAboutAvitoCall = `Клиент с авито [${source}] в неактивной стадии. Бери в работу себе`;
+          notifyMessageAboutAvitoCall = `Клиент с авито ${source} в неактивной стадии. Бери в работу себе`;
           break;
 
         case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
-          notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито [${source}]. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
+          notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито ${source}. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
           break;
 
         default:
-          notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито [${source}] повторно. Скажи, что передашь его обращение ответственному менеджеру`;
+          notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито ${source} повторно. Скажи, что передашь его обращение ответственному менеджеру`;
           break;
       }
     }
