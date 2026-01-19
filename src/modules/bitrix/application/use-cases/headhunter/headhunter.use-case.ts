@@ -164,9 +164,7 @@ export class BitrixHeadhunterUseCase {
 
     this.logger.debug(body);
 
-    this.redisService
-      .set<string>(redisNotificationKey, notificationId, 3600)
-      .catch(() => {});
+    this.redisService.set<string>(redisNotificationKey, notificationId, 3600);
 
     this.queueHeavyService.addTaskToHandleReceiveNewRequestFromHH(body);
     return true;
