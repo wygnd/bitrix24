@@ -919,11 +919,11 @@ export class BitrixWebhooksUseCase {
 
     let source = calledDid
       ? calledDid in AvitoPhoneList
-        ? `с авито [${AvitoPhoneList[calledDid]}]`
+        ? ` с авито [${AvitoPhoneList[calledDid]}] `
         : calledDid in FLPhoneList
-          ? `c FL [${FLPhoneList[calledDid]}]`
+          ? ` c FL [${FLPhoneList[calledDid]}] `
           : calledDid in ProfiRUPhoneList
-            ? `с ПРОФИ.РУ [${ProfiRUPhoneList[calledDid]}]`
+            ? ` с ПРОФИ.РУ [${ProfiRUPhoneList[calledDid]}] `
             : ''
       : '';
 
@@ -954,15 +954,15 @@ export class BitrixWebhooksUseCase {
 
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-          notifyMessageAboutAvitoCall = `Новый лид ${source}. Бери в работу!`;
+          notifyMessageAboutAvitoCall = `Новый лид${source}. Бери в работу!`;
           break;
 
         case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
-          notifyMessageAboutAvitoCall = `Клиент с авито ${source} в неактивной стадии. Бери в работу себе`;
+          notifyMessageAboutAvitoCall = `Клиент${source}в неактивной стадии. Бери в работу себе`;
           break;
 
         case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
-          notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито ${source}. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
+          notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит${source}. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
           break;
 
         default:
