@@ -503,6 +503,9 @@ export class BitrixHeadhunterUseCase {
                 resumeLink: resume.alternate_url,
                 assignedId: bitrixUser?.ID ?? '',
                 vacancy: bitrixVacancy,
+                message: this.bitrixBot.encodeText(message),
+                area: resume?.area.name ?? '',
+                birthday: resume?.birth_date ?? '',
               } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
               DISPLAY: 'LINE',
               BLOCK: 'Y',
@@ -521,6 +524,7 @@ export class BitrixHeadhunterUseCase {
                 resumeLink: resume.alternate_url,
                 assignedId: bitrixUser?.ID ?? '',
                 vacancy: bitrixVacancy,
+                message: this.bitrixBot.encodeText(message),
               } as ImbotKeyboardApproveCreateHrDealByRequestCandidate),
               DISPLAY: 'LINE',
               BLOCK: 'Y',
@@ -551,6 +555,8 @@ export class BitrixHeadhunterUseCase {
                   ASSIGNED_BY_ID: bitrixUser?.ID,
                   UF_CRM_1638524000: bitrixVacancy, // Вакансия
                   STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+                  UF_CRM_5F4F9B3E93B15: resume?.area.name, // Город
+                  UF_CRM_1671701454: resume?.birth_date, // Дата рождения
                 },
               },
             };
@@ -569,6 +575,8 @@ export class BitrixHeadhunterUseCase {
           CATEGORY_ID: '14',
           STAGE_ID: 'C14:NEW',
           UF_CRM_1638524000: bitrixVacancy, // Вакансия
+          UF_CRM_5F4F9B3E93B15: resume?.area.name ?? '', // Город
+          UF_CRM_1671701454: resume?.birth_date ?? '', // Дата рождения
         });
 
         newDealId

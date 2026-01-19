@@ -8,4 +8,7 @@ export interface ImbotKeyboardApproveCreateHrDealByRequestCandidate {
   resumeLink: string;
   assignedId: string;
   vacancy: string;
+  message: Buffer<ArrayBuffer>;
+  area: string;
+  birthday: string;
 }

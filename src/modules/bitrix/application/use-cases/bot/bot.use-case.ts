@@ -1099,7 +1099,16 @@ export class BitrixBotUseCase {
     fields: ImbotKeyboardApproveCreateHrDealByRequestCandidate,
     messageId: number,
   ) {
-    if (!fields.isApproved) return false;
+    const decodedMessage = this.decodeText(fields.message);
+
+    if (!fields.isApproved) {
+      this.updateMessage({
+        MESSAGE_ID: messageId,
+        MESSAGE: decodedMessage,
+        KEYBOARD: '',
+      });
+      return false;
+    }
 
     const {
       candidateName,
@@ -1110,6 +1119,8 @@ export class BitrixBotUseCase {
       resumeLink,
       assignedId,
       vacancy,
+      area,
+      birthday,
     } = fields;
 
     const dealId = await this.bitrixDeals.createDeal({
@@ -1123,6 +1134,8 @@ export class BitrixBotUseCase {
       CATEGORY_ID: '14',
       STAGE_ID: 'C14:NEW',
       UF_CRM_1638524000: vacancy, // Вакансия
+      UF_CRM_5F4F9B3E93B15: area, // Город
+      UF_CRM_1671701454: birthday, // Дата рождения
     });
 
     if (!dealId) {
@@ -1133,10 +1146,13 @@ export class BitrixBotUseCase {
       return false;
     }
 
-    this.sendMessage({
-      DIALOG_ID: 'chat68032',
+    this.updateMessage({
+      MESSAGE_ID: messageId,
       MESSAGE:
-        'TEST Создана сделка[br]' + this.bitrixService.generateDealUrl(dealId),
+        decodedMessage +
+        '[br][br][b]Создана сделка: [/b]' +
+        this.bitrixService.generateDealUrl(dealId),
+      KEYBOARD: '',
     });
 
     return true;
