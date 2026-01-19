@@ -63,9 +63,9 @@ export class AvitoCreateLeadFileDto implements B24FileReceive {
 }
 
 export class AvitoCreateLeadDto {
-  @IsNotEmpty()
-  @IsArray()
-  users: string[];
+  // @IsNotEmpty()
+  // @IsArray()
+  // users: string[];
 
   @ApiProperty({
     type: Number,

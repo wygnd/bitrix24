@@ -18,27 +18,8 @@ export class AppController {
 
   @Get('/test')
   async test() {
-    return this.bitrixService.callBatch({
-      get_advert_deal: {
-        method: 'crm.deal.list',
-        params: {
-          filter: {
-            ID: '55368',
-          },
-          select: ['ID', 'UF_CRM_1716383143'],
-        },
-      },
-      create_task: {
-        method: 'tasks.task.add',
-        params: {
-          fields: {
-            TITLE: 'test task',
-            DESCRIPTION: 'test $result[get_advert_deal][0][UF_CRM_1716383143]',
-            RESPONSIBLE_ID: '376',
-            CREATED_BY: '460',
-          },
-        },
-      },
-    });
+    return {
+      status: this.bitrixService.isAvailableToDistributeOnManager(),
+    };
   }
 }

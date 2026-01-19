@@ -30,6 +30,7 @@ import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/l
 import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/users.port';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import { WinstonLogger } from '@/config/winston.logger';
+import { WikiService } from '@/modules/wiki/wiki.service';
 
 @Injectable()
 export class BitrixAvitoUseCase {
@@ -52,6 +53,7 @@ export class BitrixAvitoUseCase {
     @Inject(B24PORTS.BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
     private readonly queueMiddleService: QueueMiddleService,
+    private readonly wikiService: WikiService,
   ) {
     const avitoConstants = this.configService.get<BitrixAvitoConstants>(
       'bitrixConstants.avito',
@@ -154,8 +156,8 @@ export class BitrixAvitoUseCase {
       time,
       files,
       wiki_lead_id,
-      users,
     } = fields;
+    const users = await this.wikiService.getWorkingSales();
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
         ? ((await this.bitrixUsers.getMinWorkflowUser(users)) ??

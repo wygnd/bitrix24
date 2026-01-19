@@ -15,10 +15,10 @@ import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_MIDDLE, { concurrency: 3 })
 export class QueueBitrixMiddleProcessor extends WorkerHost {
-  private readonly logger = new WinstonLogger(QueueBitrixMiddleProcessor.name, [
-    'queue',
-    'handle',
-  ]);
+  private readonly logger = new WinstonLogger(
+    QueueBitrixMiddleProcessor.name,
+    'queue:handle'.split(':'),
+  );
 
   constructor(
     private readonly bitrixAvito: BitrixAvitoUseCase,
