@@ -277,7 +277,7 @@ export class BitrixBotUseCase {
           }
 
           status = true;
-          response = this.handleAproveCreateHRDealByRequestCandidate(
+          response = this.handleApproveCreateHRDealByRequestCandidate(
             commandParamsDecoded as ImbotKeyboardApproveCreateHrDealByRequestCandidate,
             MESSAGE_ID,
           );
@@ -1095,18 +1095,21 @@ export class BitrixBotUseCase {
     return true;
   }
 
-  private async handleAproveCreateHRDealByRequestCandidate(
+  private async handleApproveCreateHRDealByRequestCandidate(
     fields: ImbotKeyboardApproveCreateHrDealByRequestCandidate,
     messageId: number,
   ) {
-    const decodedMessage = this.decodeText(fields.message);
+    const decodedMessage = fields.message
+      ? this.decodeText(fields.message)
+      : '';
 
     if (!fields.isApproved) {
-      this.updateMessage({
-        MESSAGE_ID: messageId,
-        MESSAGE: decodedMessage,
-        KEYBOARD: '',
-      });
+      if (decodedMessage)
+        this.updateMessage({
+          MESSAGE_ID: messageId,
+          MESSAGE: decodedMessage,
+          KEYBOARD: '',
+        });
       return false;
     }
 
@@ -1146,14 +1149,15 @@ export class BitrixBotUseCase {
       return false;
     }
 
-    this.updateMessage({
-      MESSAGE_ID: messageId,
-      MESSAGE:
-        decodedMessage +
-        '[br][br][b]Создана сделка: [/b]' +
-        this.bitrixService.generateDealUrl(dealId),
-      KEYBOARD: '',
-    });
+    if (decodedMessage)
+      this.updateMessage({
+        MESSAGE_ID: messageId,
+        MESSAGE:
+          decodedMessage +
+          '[br][br][b]Создана сделка: [/b]' +
+          this.bitrixService.generateDealUrl(dealId),
+        KEYBOARD: '',
+      });
 
     return true;
   }
