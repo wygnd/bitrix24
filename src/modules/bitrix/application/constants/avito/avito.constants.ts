@@ -31,3 +31,11 @@ export const AvitoPhoneList = {
   '79585707397': 'Дарья Романова',
   '79311782564': 'Анастасия Заварина',
 };
+
+export const ProfiRUPhoneList = {
+  '79300369453': 'Николаев К. А.',
+};
+
+export const FLPhoneList = {
+  '79310091090': 'Николаев К. А.',
+};

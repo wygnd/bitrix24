@@ -51,7 +51,11 @@ import { WinstonLogger } from '@/config/winston.logger';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
-import { AvitoPhoneList } from '@/modules/bitrix/application/constants/avito/avito.constants';
+import {
+  AvitoPhoneList,
+  FLPhoneList,
+  ProfiRUPhoneList,
+} from '@/modules/bitrix/application/constants/avito/avito.constants';
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 import dayjs from 'dayjs';
@@ -827,7 +831,7 @@ export class BitrixWebhooksUseCase {
       extra_params: extensionExtraParamsEncoded,
       ani: extensionPhone,
     },
-    called_did: calledDid,
+    called_did: calledDid = '',
     calls,
     group: { id: extensionGroupId },
   }: B24WebhookHandleCallInitForSaleManagersOptions) {
@@ -850,71 +854,7 @@ export class BitrixWebhooksUseCase {
       leadIds,
     });
 
-    if (calls.length > 1 && calledDid && calledDid in AvitoPhoneList) {
-      // Если клиент звонит на авито
-      const avitoName = AvitoPhoneList[calledDid];
-      const callAvitoCommands: B24BatchCommands = {};
-
-      let notifyMessageAboutAvitoCall = '';
-
-      if (leadIds.length === 0) {
-        // Если лид не найден
-        notifyMessageAboutAvitoCall = `Новый лид с Авито [${avitoName}]. Бери в работу!`;
-      } else {
-        //   Если нашли лид
-
-        // Получаем информацию о лиде
-        const leadInfo = await this.bitrixLeads.getLeadById(
-          leadIds[0].toString(),
-        );
-
-        if (!leadInfo)
-          throw new NotFoundException(`Lead [${leadIds[0]}] was not found`);
-
-        const { STATUS_ID: leadStatusId } = leadInfo;
-
-        switch (true) {
-          case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-            notifyMessageAboutAvitoCall = `Новый лид с Авито [${avitoName}]. Бери в работу!`;
-            break;
-
-          case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
-            notifyMessageAboutAvitoCall = `Клиент с авито [${avitoName}] в неактивной стадии. Бери в работу себе`;
-            break;
-
-          case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
-            notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито [${avitoName}]. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
-            break;
-
-          default:
-            notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито [${avitoName}] повторно. Скажи, что передашь его обращение ответственному менеджеру`;
-            break;
-        }
-      }
-
-      // Отправляем всем сотрудникам уведомление
-      saleExtensionList.forEach(({ extra_params }) => {
-        const extraParamsDecoded: TelphinExtensionItemExtraParams =
-          JSON.parse(extra_params);
-
-        if (!extraParamsDecoded) return;
-
-        callAvitoCommands[`notify_manager=${extraParamsDecoded.comment}`] = {
-          method: 'im.notify.system.add',
-          params: {
-            USER_ID: extraParamsDecoded.comment,
-            MESSAGE: notifyMessageAboutAvitoCall,
-          },
-        };
-      });
-
-      this.logger.debug({
-        message: 'check batch commands on avito number',
-        callAvitoCommands,
-      });
-
-      this.bitrixService.callBatch(callAvitoCommands);
-    } else {
+    if (calls.length === 0) {
       // Если клиент звонит напрямую
       const callManagerCommands: B24BatchCommands = {};
       let notifyManagerMessage: string;
@@ -972,7 +912,84 @@ export class BitrixWebhooksUseCase {
 
       // Отправляем запрос
       this.bitrixService.callBatch(callManagerCommands);
+
+      return {
+        status: true,
+        message: 'successfully handle call init for sale managers',
+      };
     }
+
+    let source = calledDid
+      ? calledDid in AvitoPhoneList
+        ? `с авито [${AvitoPhoneList[calledDid]}]`
+        : calledDid in FLPhoneList
+          ? `c FL [${FLPhoneList[calledDid]}]`
+          : calledDid in ProfiRUPhoneList
+            ? `с ПРОФИ.РУ [${ProfiRUPhoneList[calledDid]}]`
+            : ''
+      : '';
+
+    const callAvitoCommands: B24BatchCommands = {};
+
+    let notifyMessageAboutAvitoCall = '';
+
+    if (leadIds.length === 0) {
+      // Если лид не найден
+      notifyMessageAboutAvitoCall = `Новый лид ${source}. Бери в работу!`;
+    } else {
+      //   Если нашли лид
+
+      // Получаем информацию о лиде
+      const leadInfo = await this.bitrixLeads.getLeadById(
+        leadIds[0].toString(),
+      );
+
+      if (!leadInfo)
+        throw new NotFoundException(`Lead [${leadIds[0]}] was not found`);
+
+      const { STATUS_ID: leadStatusId } = leadInfo;
+
+      switch (true) {
+        case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
+          notifyMessageAboutAvitoCall = `Новый лид с Авито [${source}]. Бери в работу!`;
+          break;
+
+        case B24LeadRejectStages.includes(leadStatusId): // Лид в неактивных стадиях
+          notifyMessageAboutAvitoCall = `Клиент с авито [${source}] в неактивной стадии. Бери в работу себе`;
+          break;
+
+        case B24LeadConvertedStages.includes(leadStatusId): // Лид в завершаюих стадиях
+          notifyMessageAboutAvitoCall = `Ответь сразу! Действующий клиент звонит на авито [${source}]. Скажи, что передашь обращение ответственному менеджеру/руководителю`;
+          break;
+
+        default:
+          notifyMessageAboutAvitoCall = `Ответь сразу! Клиент звонит на Авито [${source}] повторно. Скажи, что передашь его обращение ответственному менеджеру`;
+          break;
+      }
+    }
+
+    // Отправляем всем сотрудникам уведомление
+    saleExtensionList.forEach(({ extra_params }) => {
+      const extraParamsDecoded: TelphinExtensionItemExtraParams =
+        JSON.parse(extra_params);
+
+      if (!extraParamsDecoded) return;
+
+      callAvitoCommands[`notify_manager=${extraParamsDecoded.comment}`] = {
+        method: 'im.notify.system.add',
+        params: {
+          USER_ID: extraParamsDecoded.comment,
+          MESSAGE: notifyMessageAboutAvitoCall,
+        },
+      };
+    });
+
+    this.logger.debug({
+      message: 'check batch commands on avito number',
+      callAvitoCommands,
+    });
+
+    this.bitrixService.callBatch(callAvitoCommands);
 
     return {
       status: true,
