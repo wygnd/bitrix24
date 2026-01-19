@@ -879,7 +879,22 @@ export class BitrixBotUseCase {
         createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
       }
 
-      const batchCommands: B24BatchCommands = {};
+      const batchCommands: B24BatchCommands = {
+        get_assigned_user: {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: dealAdvertResponsibleId,
+            },
+          },
+        },
+        get_assigned_department: {
+          method: 'department.get',
+          params: {
+            ID: '$result[get_assigned_user][0][UF_DEPARTMENT][0]',
+          },
+        },
+      };
 
       // Если нет "Введение": ставится задача
       if (!/ведение/gi.test(message)) {
@@ -891,7 +906,7 @@ export class BitrixBotUseCase {
             message: 'Invalid handle command: execute error on creating task',
           };
 
-        const { id: taskId, responsibleId: taskResponsibleId } = task;
+        const { id: taskId } = task;
 
         batchCommands['notify_about_new_task'] = {
           method: 'im.message.add',
@@ -912,7 +927,7 @@ export class BitrixBotUseCase {
         batchCommands['send_message_to_head'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: taskResponsibleId,
+            DIALOG_ID: '$result[get_assigned_department][0][UF_HEAD]',
             MESSAGE: isBudget
               ? 'Необходимо занести рекламный бюджет.[br]' +
                 this.bitrixService.generateTaskUrl(userId, taskId)
@@ -923,7 +938,15 @@ export class BitrixBotUseCase {
         batchCommands['send_message_head'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: createTaskFields.RESPONSIBLE_ID,
+            DIALOG_ID: '$result[get_assigned_department][0][UF_HEAD]',
+            MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+          },
+        };
+
+        batchCommands['send_duplicate_message_to_alexandra_sergushova'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: '634',
             MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
           },
         };
