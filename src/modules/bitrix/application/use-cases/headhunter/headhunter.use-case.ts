@@ -576,55 +576,64 @@ export class BitrixHeadhunterUseCase {
       const [deal] = deals;
       const comment = `${new Date().toLocaleDateString()} отказ с нашей стороны - неподходящий возраст${resume?.age ? ' - ' + resume.age : ''}`;
 
-      // Получаем последний звонок, закрываем его
-      // Обновляем сделку
-      // Добавляем коментраий к сделке
-      this.bitrixService.callBatch({
-        get_deal_calls: {
-          method: 'crm.activity.list',
-          params: {
-            filter: {
-              OWNER_ID: deal.ID,
-              PROVIDER_TYPE_ID: 'CALL',
-              COMPLETED: 'N',
-            },
-            select: ['ID', 'OWNER_TYPE_ID', 'OWNER_ID', 'TYPE_ID'],
-          },
-        },
-        update_activity: {
-          method: 'crm.activity.update',
-          params: {
-            id: '$result[get_deal_calls][0][ID]',
-            fields: {
-              TYPE_ID: '$result[get_deal_calls][0][TYPE_ID]',
-              OWNER_TYPE_ID: '$result[get_deal_calls][0][OWNER_TYPE_ID]',
-              OWNER_ID: '$result[get_deal_calls][0][OWNER_ID]',
-              COMPLETED: 'Y',
+      Promise.all([
+        // Получаем последний звонок, закрываем его
+        // Обновляем сделку
+        // Добавляем коментраий к сделке
+        this.bitrixService.callBatch({
+          get_deal_calls: {
+            method: 'crm.activity.list',
+            params: {
+              filter: {
+                OWNER_ID: deal.ID,
+                PROVIDER_TYPE_ID: 'CALL',
+                COMPLETED: 'N',
+              },
+              select: ['ID', 'OWNER_TYPE_ID', 'OWNER_ID', 'TYPE_ID'],
             },
           },
-        },
-        update_deal: {
-          method: 'crm.deal.update',
-          params: {
-            id: deal.ID,
-            fields: {
-              STATUS_ID: 'C14:PREPAYMENT_INVOIC', // Стадия: Мы отказали
-              UF_CRM_1657280095: '8324', // Причина отказа с нашей стороны: Неподходящий возраст
+          update_activity: {
+            method: 'crm.activity.update',
+            params: {
+              id: '$result[get_deal_calls][0][ID]',
+              fields: {
+                TYPE_ID: '$result[get_deal_calls][0][TYPE_ID]',
+                OWNER_TYPE_ID: '$result[get_deal_calls][0][OWNER_TYPE_ID]',
+                OWNER_ID: '$result[get_deal_calls][0][OWNER_ID]',
+                COMPLETED: 'Y',
+              },
             },
           },
-        },
-        add_deal_comment: {
-          method: 'crm.timeline.comment.add',
-          params: {
-            fields: {
-              ENTITY_ID: deal.ID,
-              ENTITY_TYPE: 'deal',
-              AUTHOR_ID: deal.ASSIGNED_BY_ID,
-              COMMENT: comment,
+          update_deal: {
+            method: 'crm.deal.update',
+            params: {
+              id: deal.ID,
+              fields: {
+                STATUS_ID: 'C14:PREPAYMENT_INVOIC', // Стадия: Мы отказали
+                UF_CRM_1657280095: '8324', // Причина отказа с нашей стороны: Неподходящий возраст
+              },
             },
           },
-        },
-      });
+          add_deal_comment: {
+            method: 'crm.timeline.comment.add',
+            params: {
+              fields: {
+                ENTITY_ID: deal.ID,
+                ENTITY_TYPE: 'deal',
+                AUTHOR_ID: deal.ASSIGNED_BY_ID,
+                COMMENT: comment,
+              },
+            },
+          },
+        }),
+
+        // Добавить комментарий к соискателю
+        this.headHunterRestService.addCandidateComment(
+          resume.owner.id,
+          comment,
+          'coworkers',
+        ),
+      ]);
 
       return {
         status: false,

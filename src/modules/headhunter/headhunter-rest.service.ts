@@ -89,6 +89,14 @@ export class HeadhunterRestService {
     }
   }
 
+  /**
+   * Get resume by resume_id
+   *
+   * ---
+   *
+   * Получить резюме по ID
+   * @param resumeId
+   */
   async getResumeById(resumeId: string) {
     const resumeFromCache = await this.redisService.get<HHResumeInterface>(
       REDIS_KEYS.HEADHUNTER_DATA_RESUME + resumeId,
@@ -109,6 +117,14 @@ export class HeadhunterRestService {
     return resume;
   }
 
+  /**
+   * Get vacancy by vacancy_id
+   *
+   * ---
+   *
+   * Получить вакансию по ID
+   * @param vacancyId
+   */
   async getVacancyById(vacancyId: string) {
     const vacancyFromCache = await this.redisService.get<HHVacancyInterface>(
       REDIS_KEYS.HEADHUNTER_DATA_VACANCY + vacancyId,
@@ -146,6 +162,38 @@ export class HeadhunterRestService {
       );
     } catch (error) {
       return null;
+    }
+  }
+
+  /**
+   * Add comment to candidate
+   *
+   * ---
+   *
+   * Добавить комментарий к соискателю
+   * @param ownerId
+   * @param comment
+   * @param visible
+   */
+  public async addCandidateComment(
+    ownerId: string,
+    comment: string,
+    visible: 'coworkers' | 'owner' = 'owner',
+  ) {
+    try {
+      const response = await this.headHunterService.post(
+        `/applicant_comments/${ownerId}`,
+        {
+          text: comment,
+          access_type: visible,
+        },
+      );
+
+      this.logger.debug(response);
+      return true;
+    } catch (error) {
+      this.logger.error(error);
+      return false;
     }
   }
 }
