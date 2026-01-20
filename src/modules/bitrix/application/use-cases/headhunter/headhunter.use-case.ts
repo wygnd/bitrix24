@@ -575,7 +575,7 @@ export class BitrixHeadhunterUseCase {
         };
 
       const [deal] = deals;
-      const comment = `${dayjs().format('YYYY.MM.DD')} отказ с нашей стороны - неподходящий возраст${resume?.age ? ' - ' + resume.age : ''}`;
+      const comment = `${dayjs().format('DD.MM.YYYY')} отказ с нашей стороны - неподходящий возраст${resume?.age ? ' - ' + resume.age : ''}`;
 
       Promise.all([
         // Получаем последний звонок, закрываем его
