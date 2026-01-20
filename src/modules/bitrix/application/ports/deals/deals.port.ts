@@ -7,7 +7,7 @@ import {
 } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import { B24ActionType } from '@/modules/bitrix/interfaces/bitrix.interface';
 
-export interface BitrixDealsPort  {
+export interface BitrixDealsPort {
   getDealById(
     dealId: number | string,
     action?: B24ActionType,
