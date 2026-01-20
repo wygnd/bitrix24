@@ -970,7 +970,7 @@ export class BitrixBotUseCase {
       // Или есть счет на ведение и сумма до 15к включительно
       if (
         (/спец/gi.test(message) && /тариф/gi.test(message)) ||
-        /ведение/.test(message) && Number(clearPrice) <= 15000
+        (/ведение/.test(message) && Number(clearPrice) <= 15000)
       ) {
         batchCommands['send_duplicate_message_to_alexandra_sergushova'] = {
           method: 'im.message.add',
@@ -1170,6 +1170,7 @@ export class BitrixBotUseCase {
           '[br][br][b]Создана сделка: [/b]' +
           this.bitrixService.generateDealUrl(dealId),
         KEYBOARD: '',
+        URL_PREVIEW: 'N',
       });
 
     return true;
