@@ -848,6 +848,9 @@ export class BitrixBotUseCase {
   ) {
     try {
       const { isBudget, dealId, userId, dialogId } = fields;
+      const [userName, action, price, contract, organization] =
+        message.split(' | ');
+      const clearPrice = this.bitrixService.clearNumber(price);
 
       if (!dealId) {
         this.bitrixBot.sendMessage({
@@ -871,8 +874,6 @@ export class BitrixBotUseCase {
        * UF_CRM_1638351463: Поле "Кто ведет"
        */
       const { UF_CRM_1638351463: dealAdvertResponsibleId } = dealFields;
-      const [userName, action, price, contract, organization] =
-        message.split(' | ');
       const clearContract = this.bitrixService.clearBBCode(contract);
       const paymentType = /сбп/gi.test(organization) ? 'СБП' : 'РС';
       const createTaskFields = {
@@ -883,7 +884,7 @@ export class BitrixBotUseCase {
           `[list=1]\n[*]${this.bitrixService.generateDealUrl(dealId, clearContract)}[*]${price}[*]${paymentType}\n[/list]\n\n` +
           'Перейдите по ссылке и заполните поля:\n' +
           '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
-          `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${this.bitrixService.clearNumber(price)}&type=${paymentType}`,
+          `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${clearPrice}&type=${paymentType}`,
         RESPONSIBLE_ID: '444', // Екатерина Огрохина
         DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
         ACCOMPLICES: ['216'], // Анна Теленкова
@@ -963,12 +964,19 @@ export class BitrixBotUseCase {
             MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
           },
         };
+      }
 
+      // Если есть специальный тариф - отправить сообщение Алексанре Сергушовой
+      // Или есть счет на ведение и сумма до 15к включительно
+      if (
+        (/спец/gi.test(message) && /тариф/gi.test(message)) ||
+        /ведение/.test(message) && Number(clearPrice) <= 15000
+      ) {
         batchCommands['send_duplicate_message_to_alexandra_sergushova'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: '634',
-            MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+            DIALOG_ID: '634', // Александра Сергушова
+            MESSAGE: message,
           },
         };
       }
