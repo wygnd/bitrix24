@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { BitrixHRConstants } from '@/common/interfaces/bitrix-config.interface';
 import { HHNegotiationInterface } from '@/modules/headhunter/interfaces/headhunter-negotiation.interface';
 import { WinstonLogger } from '@/config/winston.logger';
+import qs from 'qs';
 
 @Injectable()
 export class HeadhunterRestService {
@@ -183,9 +184,14 @@ export class HeadhunterRestService {
     try {
       const response = await this.headHunterService.post(
         `/applicant_comments/${ownerId}`,
-        {
+        qs.stringify({
           text: comment,
           access_type: visible,
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
         },
       );
 

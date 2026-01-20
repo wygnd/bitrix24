@@ -50,6 +50,7 @@ import type { BitrixHeadhunterVacanciesRepositoryPort } from '@/modules/bitrix/a
 import { HHBitrixVacancyDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-bitrix-vacancy.dto';
 import { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 import { ImbotKeyboardApproveCreateHrDealByRequestCandidate } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-create-hr-deal-by-request-candidate.interface';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class BitrixHeadhunterUseCase {
@@ -574,7 +575,7 @@ export class BitrixHeadhunterUseCase {
         };
 
       const [deal] = deals;
-      const comment = `${new Date().toLocaleDateString()} отказ с нашей стороны - неподходящий возраст${resume?.age ? ' - ' + resume.age : ''}`;
+      const comment = `${dayjs().format('YYYY.MM.DD')} отказ с нашей стороны - неподходящий возраст${resume?.age ? ' - ' + resume.age : ''}`;
 
       Promise.all([
         // Получаем последний звонок, закрываем его
@@ -609,7 +610,7 @@ export class BitrixHeadhunterUseCase {
             params: {
               id: deal.ID,
               fields: {
-                STATUS_ID: 'C14:PREPAYMENT_INVOIC', // Стадия: Мы отказали
+                STAGE_ID: 'C14:PREPAYMENT_INVOIC', // Стадия: Мы отказали
                 UF_CRM_1657280095: '8324', // Причина отказа с нашей стороны: Неподходящий возраст
               },
             },
@@ -688,7 +689,7 @@ export class BitrixHeadhunterUseCase {
         params: {
           filter: {
             CATEGORY_ID: '14',
-            'TITLE%': candidateName.trim(),
+            '%TITLE': candidateName.trim(),
           },
           select: selectFieldsFindDuplicateDeals,
         },
