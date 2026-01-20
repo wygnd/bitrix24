@@ -780,6 +780,8 @@ export class BitrixBotUseCase {
   ) {
     const { message, dialogId: toChatId } = fields;
     const messageDecoded = this.decodeText(message);
+    const [userName, , price, contract, organization, direction, inn, , date] =
+      messageDecoded.split(' | ');
 
     // Обновляем сообщение и отправляем новое о том, что платеж поступил
     this.bitrixService.callBatch({
@@ -801,6 +803,23 @@ export class BitrixBotUseCase {
         },
       },
     });
+
+    // Формируем монетки для отправки в old wiki
+    const data: WikiNotifyReceivePaymentOptions = {
+      action: 'gft_log_user_money',
+      money: this.bitrixService.clearNumber(price),
+      deal_number: this.bitrixService.clearBBCode(contract),
+      bitrix_user_id: fields.userId,
+      user_name: this.bitrixService.clearBBCode(userName),
+      direction: direction ? direction.replaceAll(/\|/gi, '').trim() : '',
+      INN: inn.replaceAll(/\|/gi, ''),
+      budget: fields.isBudget,
+      payment_type: /сбп/gi.test(organization) ? 'СБП' : 'РС',
+      date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
+    };
+
+    // Отправляем запрос в Old wiki
+    this.wikiService.notifyWikiAboutReceivePayment(data);
 
     switch (toChatId) {
       // Чат: Отдел контекстной рекламы
@@ -1002,17 +1021,7 @@ export class BitrixBotUseCase {
        * unknown
        * date
        */
-      const [
-        userName,
-        action,
-        price,
-        contract,
-        organization,
-        direction,
-        inn,
-        ,
-        date,
-      ] = message.split(' | ');
+      const [userName, action, price, contract] = message.split(' | ');
 
       // Собираем запрос для отправки сообщения руководителю
       batchCommands['send_message_head'] = {
@@ -1023,27 +1032,10 @@ export class BitrixBotUseCase {
         },
       };
 
-      // Собираем объект для отправки в old wiki
-      const data: WikiNotifyReceivePaymentOptions = {
-        action: 'gft_log_user_money',
-        money: this.bitrixService.clearNumber(price),
-        deal_number: this.bitrixService.clearBBCode(contract),
-        bitrix_user_id: fields.userId,
-        user_name: this.bitrixService.clearBBCode(userName),
-        direction: direction ? direction.replaceAll(/\|/gi, '').trim() : '',
-        INN: inn.replaceAll(/\|/gi, ''),
-        budget: fields.isBudget,
-        payment_type: /сбп/gi.test(organization) ? 'СБП' : 'РС',
-        date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
-      };
-
-      this.logger.debug({ data, batchCommands });
+      this.logger.debug({ batchCommands });
 
       // Отправляем данные
-      return Promise.all([
-        this.bitrixService.callBatch(batchCommands),
-        this.wikiService.notifyWikiAboutReceivePayment(data),
-      ]);
+      return this.bitrixService.callBatch(batchCommands);
     } catch (error) {
       this.logger.error(error);
       return false;
