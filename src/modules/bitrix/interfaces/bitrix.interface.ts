@@ -45,7 +45,9 @@ export type B24AvailableMethods =
   | 'im.notify.system.add'
   | 'crm.contact.list'
   | 'crm.item.list'
-  | 'crm.company.list';
+  | 'crm.company.list'
+  | 'crm.activity.list'
+  | 'crm.activity.update';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
