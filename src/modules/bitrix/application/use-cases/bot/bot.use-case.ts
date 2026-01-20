@@ -783,27 +783,6 @@ export class BitrixBotUseCase {
     const [userName, , price, contract, organization, direction, inn, , date] =
       messageDecoded.split(' | ');
 
-    // Обновляем сообщение и отправляем новое о том, что платеж поступил
-    this.bitrixService.callBatch({
-      update_message: {
-        method: 'imbot.message.update',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          MESSAGE_ID: messageId,
-          MESSAGE: messageDecoded,
-          KEYBOARD: '',
-        },
-      },
-      send_new_message: {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          DIALOG_ID: dialogId,
-          MESSAGE: messageDecoded + '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
-        },
-      },
-    });
-
     // Формируем монетки для отправки в old wiki
     const data: WikiNotifyReceivePaymentOptions = {
       action: 'gft_log_user_money',
@@ -818,8 +797,31 @@ export class BitrixBotUseCase {
       date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
     };
 
-    // Отправляем запрос в Old wiki
-    this.wikiService.notifyWikiAboutReceivePayment(data);
+    Promise.all([
+      // Обновляем сообщение и отправляем новое о том, что платеж поступил
+      this.bitrixService.callBatch({
+        update_message: {
+          method: 'imbot.message.update',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            MESSAGE_ID: messageId,
+            MESSAGE: messageDecoded,
+            KEYBOARD: '',
+          },
+        },
+        send_new_message: {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: dialogId,
+            MESSAGE: messageDecoded + '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
+          },
+        },
+      }),
+
+      // Отправляем запрос в Old wiki
+      this.wikiService.notifyWikiAboutReceivePayment(data),
+    ]);
 
     switch (toChatId) {
       // Чат: Отдел контекстной рекламы
@@ -971,7 +973,13 @@ export class BitrixBotUseCase {
         };
       }
 
-      return this.bitrixService.callBatch(batchCommands);
+      this.bitrixService.callBatch(batchCommands).then((response) =>
+        this.logger.debug({
+          batchCommands,
+          response,
+        }),
+      );
+      return true;
     } catch (error) {
       this.logger.error(error);
       return false;
@@ -1011,6 +1019,7 @@ export class BitrixBotUseCase {
       };
 
       /**
+       * @Example
        * Виталий Баймурзаев - userName
        * Ожидание; Продление хостинга; Продление домена - action
        * Общая сумма: 6400 - price
@@ -1032,10 +1041,14 @@ export class BitrixBotUseCase {
         },
       };
 
-      this.logger.debug({ batchCommands });
-
       // Отправляем данные
-      return this.bitrixService.callBatch(batchCommands);
+      this.bitrixService.callBatch(batchCommands).then((response) =>
+        this.logger.debug({
+          batchCommands,
+          response,
+        }),
+      );
+      return true;
     } catch (error) {
       this.logger.error(error);
       return false;
