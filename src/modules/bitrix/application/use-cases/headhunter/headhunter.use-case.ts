@@ -202,16 +202,27 @@ export class BitrixHeadhunterUseCase {
           payload,
         );
 
-        return this.handleDealHRFromHeadhunterRequest({
-          resumeId: payloadDto.resume_id,
-          vacancyId: payloadDto.vacancy_id,
-          topicId: payloadDto.topic_id,
-          messageType:
-            payloadDto.from_state === 'consider' &&
-            payloadDto.to_state === 'phone_interview'
-              ? 'bot'
-              : 'manager',
-        });
+        this.logger.log(`STATUS: ${payloadDto.to_state}`, 'warn');
+
+        // В зависимости от того, на какую стадию перевели
+        switch (payloadDto.to_state) {
+          // Если стадия Вакансия закрыта
+          // case 'discard_vacancy_closed':
+          //   return this.handleRejectStatusFromHeadhunterRequest();
+
+          // В остальных случаях идем по стандартному пути
+          default:
+            return this.handleDealHRFromHeadhunterRequest({
+              resumeId: payloadDto.resume_id,
+              vacancyId: payloadDto.vacancy_id,
+              topicId: payloadDto.topic_id,
+              messageType:
+                payloadDto.from_state === 'consider' &&
+                payloadDto.to_state === 'phone_interview'
+                  ? 'bot'
+                  : 'manager',
+            });
+        }
 
       default:
         return {
@@ -332,7 +343,7 @@ export class BitrixHeadhunterUseCase {
           params: {
             filter: {
               CATEGORY_ID: '14',
-              '%TITLE': candidateName.trim(),
+              'TITLE%': candidateName.trim(),
             },
             select: selectFieldsFindDuplicateDeals,
           },
@@ -470,6 +481,8 @@ export class BitrixHeadhunterUseCase {
                 ASSIGNED_BY_ID: bitrixUser?.ID,
                 UF_CRM_1638524000: bitrixVacancy, // Вакансия
                 STAGE_ID: 'C14:NEW', // Стадия сделки: Звонок
+                UF_CRM_5F4F9B3E93B15: resume?.area.name, // Город
+                UF_CRM_1671701454: resume?.birth_date, // Дата рождения
               },
             },
           };
@@ -648,6 +661,13 @@ export class BitrixHeadhunterUseCase {
         message: 'Exit script, cause cathcing error',
       };
     }
+  }
+
+  async handleRejectStatusFromHeadhunterRequest(): Promise<HeadhunterWebhookCallResponse> {
+    return {
+      status: false,
+      message: 'Not implemented',
+    };
   }
 
   async getVacancies(): Promise<HHBitrixVacancyDto[]> {
