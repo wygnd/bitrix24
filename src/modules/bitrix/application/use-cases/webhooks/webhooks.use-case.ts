@@ -558,7 +558,7 @@ export class BitrixWebhooksUseCase {
         get_advert_deal: B24Deal[];
       }>(batchCommandsGetInfo);
 
-    this.logger.log({
+    this.logger.debug({
       message: 'check batch commands and result on approve site for advert',
       batchCommandsGetInfo,
       batchResponseGetInfo,
@@ -614,7 +614,7 @@ export class BitrixWebhooksUseCase {
           'Нужно согласовать и принять наш сайт в работу РК.[br]' +
           this.bitrixService.generateTaskUrl(
             advertDepartment.UF_HEAD,
-            task.taskId,
+            task.id,
             'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
           ) +
           '[br][br]Сделка: ' +
