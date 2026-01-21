@@ -41,9 +41,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       `[${status}]: Exception error: ${safeJSONStringify(message)}`,
     );
 
-    response.status(status).json({
-      statusCode: status,
-      message: message,
-    });
+    if (typeof message === 'string') {
+      response.status(status).json({
+        statusCode: status,
+        message: message,
+      });
+    } else {
+      response.status(status).json({
+        statusCode: status,
+        ...message,
+      });
+    }
   }
 }

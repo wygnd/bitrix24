@@ -19,6 +19,7 @@ import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.deco
 import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki.use-case';
 import { B24WikiPaymentsNoticesResponseDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-response.dto';
 import { BitrixWikiPaymentsNoticeExpenseDto } from '@/modules/bitrix/application/dtos/wiki/wiki-payments-notice-expense.dto';
+import { BitrixDistributeLeadWishManagerDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-distribute-lead-wish-manager.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiAuthHeader()
@@ -98,5 +99,14 @@ export class BitrixWikiController {
     @Body() fields: BitrixWikiPaymentsNoticeExpenseDto,
   ) {
     return this.bitrixWiki.sendNoticeExpensePayment(fields);
+  }
+
+  @ApiOperation({ summary: 'Распределение лидов на желающих' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/leads/distribute_wish_manager')
+  async distributeLeadOnWishManager(
+    @Body() fields: BitrixDistributeLeadWishManagerDTO,
+  ) {
+    return this.bitrixWiki.distributeLeadOnWishManager(fields);
   }
 }

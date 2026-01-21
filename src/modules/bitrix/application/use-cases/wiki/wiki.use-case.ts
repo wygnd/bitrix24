@@ -1,4 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
@@ -18,6 +26,16 @@ import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfa
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
 import { BitrixWikiPaymentsNoticeExpenseOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-expense.interface';
+import { BitrixWikiDistributeLeadWishManager } from '@/modules/bitrix/application/interfaces/wiki/wiki-distribute-lead-wish-manager.interface';
+import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
+import {
+  B24LeadActiveStages,
+  B24LeadNewStages,
+} from '@/modules/bitrix/application/constants/leads/lead.constants';
+import { RedisService } from '@/modules/redis/redis.service';
+import { REDIS_KEYS } from '@/modules/redis/redis.constants';
+import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -32,6 +50,9 @@ export class BitrixWikiUseCase {
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly bitrixBot: BitrixBotUseCase,
     private readonly bitrixWikiClientPayments: BitrixWikiClientPaymentsUseCase,
+    @Inject(B24PORTS.LEADS.LEADS_DEFAULT)
+    private readonly bitrixLeads: BitrixLeadsPort,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -442,5 +463,125 @@ export class BitrixWikiUseCase {
       this.logger.error(error);
       throw error;
     }
+  }
+
+  /**
+   * Distribute lead from new stages on manager which push button on wiki if lead exists
+   *
+   * ---
+   *
+   * Распределяет лид из новых стадий на менеджера, который нажал кнопку на вики
+   * @param fields
+   */
+  public async distributeLeadOnWishManager(
+    fields: BitrixWikiDistributeLeadWishManager,
+  ) {
+    const { user_id: userId } = fields;
+
+    const userWasPushing =
+      (await this.redisService.get<string>(
+        REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
+      )) ?? '0';
+
+    if (Number(userWasPushing) >= 2)
+      throw new ConflictException({
+        status: false,
+        message: 'Не так быстро',
+      });
+
+    // Получаем лиды, которые находятся в новых стадиях
+    const {
+      result: {
+        result: {
+          get_leads: leads,
+          get_user: users,
+          get_user_leads: userLeads,
+        },
+      },
+    } = await this.bitrixService.callBatch<{
+      get_leads: B24Lead[];
+      get_user: B24User[];
+      get_user_leads: B24Lead[];
+    }>({
+      get_leads: {
+        method: 'crm.lead.list',
+        params: {
+          filter: {
+            '@STATUS_ID': B24LeadNewStages,
+          },
+          select: ['ID'],
+          start: 0,
+        },
+      },
+      get_user: {
+        method: 'user.get',
+        params: {
+          filter: {
+            ID: userId,
+          },
+        },
+      },
+      get_user_leads: {
+        method: 'crm.lead.list',
+        params: {
+          filter: {
+            ASSIGNED_BY_ID: userId,
+            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          },
+        },
+      },
+    });
+
+    if (users.length === 0)
+      throw new NotFoundException({
+        status: false,
+        message: 'Пользователь не найден',
+      });
+
+    if (!users[0].ACTIVE)
+      throw new UnprocessableEntityException({
+        status: false,
+        message: 'Пользователь уволен',
+      });
+
+    if (leads.length === 0)
+      throw new NotFoundException({
+        status: false,
+        message: 'Лидов не найдено',
+      });
+
+    if (userLeads.length > 10)
+      throw new UnprocessableEntityException({
+        status: false,
+        message: 'У тебя и так много лидов',
+      });
+
+    const [{ ID: leadId }] = leads;
+
+    const responseUpdateLead = await this.bitrixLeads.updateLead({
+      id: leadId,
+      fields: {
+        ASSIGNED_BY_ID: userId,
+      },
+    });
+
+    if (!responseUpdateLead)
+      throw new InternalServerErrorException({
+        status: false,
+        message: 'Произошла внутренняя ошибка, обратитесь к bitrix master',
+      });
+
+    this.redisService.set<string>(
+      REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
+      `${Number(userWasPushing) + 1}`,
+      3600, // 1 hour
+    );
+
+    return {
+      status: true,
+      message:
+        'Лид успешно распределен: ' +
+        this.bitrixService.generateLeadUrl(leadId),
+    };
   }
 }
