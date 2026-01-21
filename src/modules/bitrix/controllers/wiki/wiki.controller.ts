@@ -102,6 +102,42 @@ export class BitrixWikiController {
   }
 
   @ApiOperation({ summary: 'Распределение лидов на желающих' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Лид успешно распределен',
+    example: {
+      status: true,
+      message:
+        'Лид успешно распределен: https://grampus.bitrix24.ru/crm/lead/details/12345/',
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    description: 'У менеджера больше 10 лидов или пользователь уволен',
+    example: {
+      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      status: false,
+      message: 'Пользователь уволен',
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Лидов не найдено либо пользователь по user_id не найден',
+    example: {
+      statusCode: HttpStatus.NOT_FOUND,
+      status: false,
+      message: 'Пользователь не найден',
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Если пользователь нажал на кнопку более 2-х раз за час',
+    example: {
+      statusCode: HttpStatus.CONFLICT,
+      status: false,
+      message: 'Не так быстро',
+    },
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/leads/distribute_wish_manager')
   async distributeLeadOnWishManager(
