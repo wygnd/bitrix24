@@ -12,6 +12,10 @@ import { TelphinExternalPhone } from '@/modules/telphin/interfaces/telpin-extern
 import { WinstonLogger } from '@/config/winston.logger';
 import { TelphinInternalPhone } from '@/modules/telphin/interfaces/telphin-internal-phone.interface';
 import { TelphinExtensionGroup } from '@/modules/telphin/interfaces/telphin-extension-group.interface';
+import {
+  TelphinCallsResponse,
+  TelphinGetCallsFields,
+} from '@/modules/telphin/interfaces/telpgin-calls.interface';
 
 @Injectable()
 export class TelphinService {
@@ -35,7 +39,7 @@ export class TelphinService {
   public async getCurrentCalls() {
     const callList =
       await this.telphinApiService.get<TelphinGetCallListResponse>(
-        `/client/${this.CLIENT_ID}/current_calls/`,
+        `/client/@me/current_calls/`,
       );
 
     return callList?.call_list ? callList.call_list : [];
@@ -84,7 +88,7 @@ export class TelphinService {
     if (extensionsFromCache) return extensionsFromCache;
 
     const extensions = await this.telphinApiService.get<TelphinExtensionItem[]>(
-      `/client/${this.CLIENT_ID}/extension/`,
+      `/client/@me/extension/`,
     );
 
     if (!extensions) return [];
@@ -115,7 +119,7 @@ export class TelphinService {
     if (extensionFromCache) return extensionFromCache;
 
     const extension = await this.telphinApiService.get<TelphinExtensionItem>(
-      `/client/${this.CLIENT_ID}/extension/${extensionId}`,
+      `/client/@me/extension/${extensionId}`,
     );
 
     if (!extension) return null;
@@ -196,9 +200,10 @@ export class TelphinService {
         if (phoneListFromCache) return phoneListFromCache;
       }
 
-      const phoneList = await this.telphinApiService.get<
-        TelphinExternalPhone[]
-      >(`/client/${this.CLIENT_ID}/did`);
+      const phoneList =
+        await this.telphinApiService.get<TelphinExternalPhone[]>(
+          `/client/@me/did`,
+        );
 
       if (!phoneList) return [];
 
@@ -269,7 +274,7 @@ export class TelphinService {
     }
 
     const groupList = await this.telphinApiService.get<TelphinExtensionGroup[]>(
-      `/client/${this.CLIENT_ID}/extension_group/`,
+      `/client/@me/extension_group/`,
     );
 
     if (!groupList) return [];
@@ -344,7 +349,20 @@ export class TelphinService {
     });
   }
 
-  get CLIENT_ID() {
-    return this.telphinApiService.TELPHIN_APPLICATION_INFO?.client_id ?? 0;
+  /**
+   * Get call list
+   *
+   * ---
+   *
+   * Получить список звонков
+   * @param fields
+   */
+  public async getCallList(
+    fields: TelphinGetCallsFields,
+  ): Promise<TelphinCallsResponse | null> {
+    return this.telphinApiService.get<TelphinCallsResponse>(
+      `/client/@me/calls`,
+      fields,
+    );
   }
 }

@@ -152,10 +152,15 @@ export class TelphinApiService {
    * Реализация базового GET метода для запросов к telphin
    *
    * @param url
+   * @param params
    */
-  public async get<T = any>(url: string): Promise<T | null> {
+  public async get<
+    T = any,
+    U extends Record<string, any> = Record<string, any>,
+  >(url: string, params?: U): Promise<T | null> {
     try {
       const { data } = await this.telphinAPI.get<T>(url, {
+        params: params,
         headers: {
           Authorization: `Bearer ${await this.getAccessToken()}`,
         },
@@ -163,6 +168,7 @@ export class TelphinApiService {
 
       return data;
     } catch (e) {
+      this.logger.log(e);
       this.logger.error(e);
       return null;
     }

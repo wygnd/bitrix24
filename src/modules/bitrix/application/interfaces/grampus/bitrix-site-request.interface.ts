@@ -26,6 +26,15 @@ export interface BitrixGrampusSiteRequestReceiveExtraParamsCalculatorOptions {
   fields: any;
 }
 
+export interface BitrixGrampusSiteRequestReceiveExtraParamsFieldsVacancy {
+  vacancy: string;
+}
+
+export interface BitrixGrampusSiteRequestReceiveExtraParamsVacancyOptions {
+  type: 'vacancy';
+  fields: BitrixGrampusSiteRequestReceiveExtraParamsFieldsVacancy;
+}
+
 export type BitrixGrampusSiteRequestReceiveExtraParamsOptions =
   | BitrixGrampusSiteRequestReceiveExtraParamsDiscountOptions
   | BitrixGrampusSiteRequestReceiveExtraParamsCalculatorOptions;

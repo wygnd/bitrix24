@@ -33,4 +33,8 @@ export class BitrixDealsUseCase {
   async createDeal(fields: Partial<B24Deal>) {
     return this.deals.createDeal(fields);
   }
+
+  async getDuplicateDealsByPhone(phone: string) {
+    return this.deals.getDuplicateDealsByPhone(phone);
+  }
 }

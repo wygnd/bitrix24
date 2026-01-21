@@ -19,6 +19,9 @@ export const REDIS_KEYS = {
   BITRIX_DATA_LEAD_DUPLICATE_BY_PHONE: 'bitrix:lead:duplicate:phone:',
   BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_INIT: 'bitrix:webhook:voximplant:init:',
   BITRIX_DATA_WEBHOOK_VOXIMPLANT_CALL_START: 'bitrix:webhook:voximplant:start:',
+  BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL: 'bitrix:leads:observe:active:call:',
+  BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL_COUNTER:
+    'bitrix:leads:observe:active:call:counter',
 
   // BITRIX WIDGET
   BITRIX_WIDGET_CALL_CARD: 'bitrix:widget:call_card:',

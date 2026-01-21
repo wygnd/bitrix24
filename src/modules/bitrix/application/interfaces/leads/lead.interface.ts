@@ -9,6 +9,7 @@ export interface B24LeadDefault {
   DATE_CREATE: string;
   PHONE: Omit<B24CRMMultifield, 'ID' | 'TYPE_ID'>[];
   COMMENTS?: string;
+  MOVED_TIME: string;
 }
 
 export interface B24DuplicateFindByComm {

@@ -212,4 +212,47 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
       return false;
     }
   }
+
+  async getDuplicateDealsByPhone(phone: string): Promise<B24Deal[]> {
+    try {
+      let filterPhones = [
+        phone,
+        phone.replace(/[()]/gim, ''),
+        phone.replace(/-/gim, ' '),
+        phone.replace(/[-()]/gim, ''),
+        phone.replace(/[ \-()]/gim, ''),
+      ];
+
+      if (phone[0] == '8') {
+        filterPhones.push(
+          phone.replace('8 ', '+7 '),
+          phone.replace('8 ', '+7 ').replace(/[()]/gim, ''),
+          phone.replace('8 ', '+7 ').replace(/-/gim, ' '),
+          phone.replace('8 ', '+7 ').replace(/[-()]/gim, ''),
+          phone.replace('8 ', '+7 ').replace(/[ \-()]/gim, ''),
+        );
+      }
+
+      filterPhones = filterPhones.reduce<string[]>((acc, phone) => {
+        acc.push(` ${phone}`);
+        acc.push(`${phone} `);
+        acc.push(phone);
+        return acc;
+      }, []);
+
+      const response = await this.bitrixService.callMethod<
+        B24DealListParams,
+        B24Deal[]
+      >('crm.deal.list', {
+        filter: {
+          '@UF_CRM_1638524259': filterPhones,
+        },
+      });
+
+      return response.result ?? [];
+    } catch (error) {
+      this.logger.error(error);
+      return [];
+    }
+  }
 }

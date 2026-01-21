@@ -23,8 +23,9 @@ import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.p
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
+import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 
-const { LEADS, BITRIX, USERS, BOT } = B24PORTS;
+const { LEADS, BITRIX, USERS, BOT, DEALS } = B24PORTS;
 
 @Injectable()
 export class BitrixGrampusUseCase {
@@ -59,6 +60,8 @@ export class BitrixGrampusUseCase {
     @Inject(BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
     private readonly wikiService: WikiService,
+    @Inject(DEALS.DEALS_DEFAULT)
+    private readonly bitrixDeals: BitrixDealsPort,
   ) {}
 
   /**
@@ -74,47 +77,176 @@ export class BitrixGrampusUseCase {
   ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
     this.logger.debug(fields);
     try {
-      const {
-        phone,
-        url,
-        clientName = '',
-        comment = '',
-        extraParams = '',
-      } = fields;
-      const params = extraParams
-        ? (JSON.parse(
-            extraParams,
-          ) as BitrixGrampusSiteRequestReceiveExtraParamsOptions)
-        : null;
+      const { url } = fields;
 
-      // Ищем дубликаты по номеру клиента
-      const duplicateLeads =
-        await this.bitrixLeads.getDuplicateLeadsByPhone(phone);
-      const trafficsChatId =
-        this.bitrixService.getConstant('GRAMPUS').trafficsChatId;
-      const managerId = await this.getAssignedManagerId();
+      switch (true) {
+        // Если заявка со страницы вакансии
+        case /vacancy/gi.test(url):
+          return this.handleRequestFromSiteToHandleHRDeal(fields);
 
-      // Если не нашли дубликатов: создаем лид
-      if (duplicateLeads.length === 0) {
-        const createLeadFields: Partial<B24Lead> = {
-          NAME: clientName, // Имя
-          UF_CRM_1651577716: '11816', // Тип лида: Заявка с сайта
-          UF_CRM_1573459036: '70', // Откуда: С сайта
-          UF_CRM_1598441630: '4834', // С чем обратился: Разработка сайта
-          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-          COMMENTS: `Добавлен со страницы: ${url}\n`,
+        default:
+          return this.handleRequestFromSiteToHandleLead(fields);
+      }
+    } catch (error) {
+      console.log(error);
+      this.logger.error(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  /**
+   * Default handle request from grampus site
+   *
+   * ---
+   *
+   * Стандартный обработчик зявки с grampus-studio
+   * @param fields
+   * @private
+   */
+  private async handleRequestFromSiteToHandleLead(
+    fields: BitrixGrampusSiteRequestReceive,
+  ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
+    const {
+      phone,
+      url,
+      clientName = '',
+      comment = '',
+      extraParams = '',
+    } = fields;
+    const params = extraParams
+      ? (JSON.parse(
+          extraParams,
+        ) as BitrixGrampusSiteRequestReceiveExtraParamsOptions)
+      : null;
+
+    // Ищем дубликаты по номеру клиента
+    const duplicateLeads =
+      await this.bitrixLeads.getDuplicateLeadsByPhone(phone);
+    const trafficsChatId =
+      this.bitrixService.getConstant('GRAMPUS').trafficsChatId;
+    const managerId = await this.getAssignedManagerId();
+
+    // Если не нашли дубликатов: создаем лид
+    if (duplicateLeads.length === 0) {
+      const createLeadFields: Partial<B24Lead> = {
+        NAME: clientName, // Имя
+        UF_CRM_1651577716: '11816', // Тип лида: Заявка с сайта
+        UF_CRM_1573459036: '70', // Откуда: С сайта
+        UF_CRM_1598441630: '4834', // С чем обратился: Разработка сайта
+        STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+        COMMENTS: `Добавлен со страницы: ${url}\n`,
+        ASSIGNED_BY_ID: managerId,
+        PHONE: [
+          {
+            VALUE_TYPE: 'WORK',
+            VALUE: phone,
+          },
+        ],
+      };
+
+      switch (params && params?.type) {
+        case 'discount':
+          createLeadFields.COMMENTS +=
+            (params?.fields?.discount?.percent
+              ? `Процент скидки: ${params?.fields?.discount.percent}\nСо страницы ${url}\n`
+              : '') +
+            (params?.fields?.discount?.bonus
+              ? `\nБонус: ${params?.fields?.discount.bonus}`
+              : '') +
+            comment;
+          break;
+
+        default:
+          createLeadFields.COMMENTS += comment;
+          break;
+      }
+
+      if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
+        // Если со страницы "Разработка сайтов на битрикс"
+
+        createLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
+        createLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
+      }
+
+      const leadId = await this.bitrixLeads.createLead(createLeadFields);
+
+      let message: string;
+
+      if (leadId == 0) {
+        // Если по какой-то причине не удалось добавить лид
+        message = `${B24Emoji.REFUSAL} Не удалось добавить `;
+      } else {
+        // Если лид успешно создан
+        message = `Добавлен `;
+      }
+
+      message +=
+        `лид со страницы ${url}[br][br]` +
+        this.bitrixService.generateLeadUrl(leadId);
+
+      // Отправляем сообщение в чат и в личные сообщения ответственному менеджеру
+      this.bitrixService.callBatch({
+        notify_chat: {
+          method: 'imbot.message.add',
+          params: {
+            DIALOG_ID: trafficsChatId,
+            MESSAGE: message,
+            URL_PREVIEW: 'N',
+          },
+        },
+        notify_manager: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: managerId,
+            MESSAGE: message,
+            URL_PREVIEW: 'N',
+          },
+        },
+      });
+
+      return {
+        message: 'Successfully create lead',
+        status: true,
+      };
+    }
+
+    const lead = await this.bitrixLeads.getLeadById(`${duplicateLeads[0]}`);
+
+    if (!lead) {
+      this.bitrixBot.sendMessage({
+        DIALOG_ID: trafficsChatId,
+        MESSAGE: `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br][b]Не удалось обновить лид[/b]`,
+      });
+      return {
+        message: 'Failed to update lead',
+        status: false,
+      };
+    }
+
+    const BOT_ID = this.bitrixService.getConstant('BOT_ID');
+    const {
+      STATUS_ID: leadStatusId,
+      ID: leadId,
+      ASSIGNED_BY_ID: leadAssignedId,
+      COMMENTS: leadComments = '',
+    } = lead;
+
+    const batchCommands: B24BatchCommands = {};
+    let updatedMessage: string;
+
+    switch (true) {
+      case B24LeadRejectStages.includes(leadStatusId):
+        // Если лид в неактивной стадии: меняем ответственного и уведомляем об этом
+        const updateLeadFields: Partial<B24Lead> = {
           ASSIGNED_BY_ID: managerId,
-          PHONE: [
-            {
-              VALUE_TYPE: 'WORK',
-              VALUE: phone,
-            },
-          ],
+          STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+          NAME: clientName,
+          COMMENTS: leadComments,
         };
 
         switch (params && params?.type) {
           case 'discount':
-            createLeadFields.COMMENTS +=
+            updateLeadFields.COMMENTS +=
               (params?.fields?.discount?.percent
                 ? `Процент скидки: ${params?.fields?.discount.percent}\nСо страницы ${url}\n`
                 : '') +
@@ -125,210 +257,134 @@ export class BitrixGrampusUseCase {
             break;
 
           default:
-            createLeadFields.COMMENTS += comment;
+            updateLeadFields.COMMENTS += comment;
             break;
         }
 
-        if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
-          // Если со страницы "Разработка сайтов на битрикс"
-
-          createLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
-          createLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
-        }
-
-        const leadId = await this.bitrixLeads.createLead(createLeadFields);
-
-        let message: string;
-
-        if (leadId == 0) {
-          // Если по какой-то причине не удалось добавить лид
-          message = `${B24Emoji.REFUSAL} Не удалось добавить `;
-        } else {
-          // Если лид успешно создан
-          message = `Добавлен `;
-        }
-
-        message +=
-          `лид со страницы ${url}[br][br]` +
+        updatedMessage =
+          `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
           this.bitrixService.generateLeadUrl(leadId);
 
-        // Отправляем сообщение в чат и в личные сообщения ответственному менеджеру
-        this.bitrixService.callBatch({
-          notify_chat: {
-            method: 'imbot.message.add',
-            params: {
-              DIALOG_ID: trafficsChatId,
-              MESSAGE: message,
-              URL_PREVIEW: 'N',
-            },
+        if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
+          // Если со страницы "Разработка сайта на битркис"
+
+          updateLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
+          updateLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
+        }
+
+        batchCommands['update_lead'] = {
+          method: 'crm.lead.update',
+          params: {
+            id: leadId,
+            fields: updateLeadFields,
           },
-          notify_manager: {
-            method: 'im.message.add',
-            params: {
-              DIALOG_ID: managerId,
-              MESSAGE: message,
-              URL_PREVIEW: 'N',
-            },
+        };
+
+        batchCommands['notify_chat'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: BOT_ID,
+            DIALOG_ID: trafficsChatId,
+            MESSAGE: updatedMessage,
+            URL_PREVIEW: 'N',
           },
-        });
-
-        return {
-          message: 'Successfully create lead',
-          status: true,
         };
-      }
 
-      const lead = await this.bitrixLeads.getLeadById(`${duplicateLeads[0]}`);
-
-      if (!lead) {
-        this.bitrixBot.sendMessage({
-          DIALOG_ID: trafficsChatId,
-          MESSAGE: `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br][b]Не удалось обновить лид[/b]`,
-        });
-        return {
-          message: 'Failed to update lead',
-          status: false,
+        batchCommands['notify_manager'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: managerId,
+            MESSAGE: updatedMessage,
+            URL_PREVIEW: 'N',
+          },
         };
-      }
+        break;
 
-      const BOT_ID = this.bitrixService.getConstant('BOT_ID');
-      const {
-        STATUS_ID: leadStatusId,
-        ID: leadId,
-        ASSIGNED_BY_ID: leadAssignedId,
-        COMMENTS: leadComments = '',
-      } = lead;
+      case B24LeadNewStages.includes(leadStatusId):
+      case B24LeadActiveStages.includes(leadStatusId):
+      case B24LeadConvertedStages.includes(leadStatusId):
+        // Если лид в новых или активных или завершающих стадиях
+        // добавляем комментарий и отправляем сообщение в чат
+        updatedMessage =
+          `Клиент повторно обратился на сайт ${url}[br][br]` +
+          this.bitrixService.generateLeadUrl(leadId);
 
-      const batchCommands: B24BatchCommands = {};
-      let updatedMessage: string;
-
-      switch (true) {
-        case B24LeadRejectStages.includes(leadStatusId):
-          // Если лид в неактивной стадии: меняем ответственного и уведомляем об этом
-          const updateLeadFields: Partial<B24Lead> = {
-            ASSIGNED_BY_ID: managerId,
-            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-            NAME: clientName,
-            COMMENTS: leadComments,
-          };
-
-          switch (params && params?.type) {
-            case 'discount':
-              updateLeadFields.COMMENTS +=
-                (params?.fields?.discount?.percent
-                  ? `Процент скидки: ${params?.fields?.discount.percent}\nСо страницы ${url}\n`
-                  : '') +
-                (params?.fields?.discount?.bonus
-                  ? `\nБонус: ${params?.fields?.discount.bonus}`
-                  : '') +
-                comment;
-              break;
-
-            default:
-              updateLeadFields.COMMENTS += comment;
-              break;
-          }
+        if (B24LeadConvertedStages.includes(leadStatusId)) {
+          // Если лид в завершающих стадиях
 
           updatedMessage =
-            `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
+            `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
-
-          if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
-            // Если со страницы "Разработка сайта на битркис"
-
-            updateLeadFields.UF_CRM_1573459036 = '876'; // Откуда: Контекст трафика
-            updateLeadFields.UF_CRM_1598441630 = '11762'; // С чем обратился: Разработка сайта на 1С Битрикс
-          }
-
-          batchCommands['update_lead'] = {
-            method: 'crm.lead.update',
-            params: {
-              id: leadId,
-              fields: updateLeadFields,
+        }
+        batchCommands['add_comment'] = {
+          method: 'crm.timeline.comment.add',
+          params: {
+            fields: {
+              ENTITY_ID: leadId,
+              ENTITY_TYPE: 'lead',
+              AUTHOR_ID: leadAssignedId,
+              COMMENT: `Клиент обратился на сайт ${url}`,
             },
-          };
+          },
+        };
 
-          batchCommands['notify_chat'] = {
-            method: 'imbot.message.add',
-            params: {
-              BOT_ID: BOT_ID,
-              DIALOG_ID: trafficsChatId,
-              MESSAGE: updatedMessage,
-              URL_PREVIEW: 'N',
-            },
-          };
+        batchCommands['notify_chat'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: BOT_ID,
+            DIALOG_ID: trafficsChatId,
+            MESSAGE: updatedMessage,
+            URL_PREVIEW: 'N',
+          },
+        };
 
+        if (!B24LeadConvertedStages.includes(leadStatusId))
           batchCommands['notify_manager'] = {
             method: 'im.message.add',
             params: {
-              DIALOG_ID: managerId,
+              DIALOG_ID: leadAssignedId,
               MESSAGE: updatedMessage,
               URL_PREVIEW: 'N',
             },
           };
-          break;
-
-        case B24LeadNewStages.includes(leadStatusId):
-        case B24LeadActiveStages.includes(leadStatusId):
-        case B24LeadConvertedStages.includes(leadStatusId):
-          // Если лид в новых или активных или завершающих стадиях
-          // добавляем комментарий и отправляем сообщение в чат
-          updatedMessage =
-            `Клиент повторно обратился на сайт ${url}[br][br]` +
-            this.bitrixService.generateLeadUrl(leadId);
-
-          if (B24LeadConvertedStages.includes(leadStatusId)) {
-            // Если лид в завершающих стадиях
-
-            updatedMessage =
-              `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
-              this.bitrixService.generateLeadUrl(leadId);
-          }
-          batchCommands['add_comment'] = {
-            method: 'crm.timeline.comment.add',
-            params: {
-              fields: {
-                ENTITY_ID: leadId,
-                ENTITY_TYPE: 'lead',
-                AUTHOR_ID: leadAssignedId,
-                COMMENT: `Клиент обратился на сайт ${url}`,
-              },
-            },
-          };
-
-          batchCommands['notify_chat'] = {
-            method: 'imbot.message.add',
-            params: {
-              BOT_ID: BOT_ID,
-              DIALOG_ID: trafficsChatId,
-              MESSAGE: updatedMessage,
-              URL_PREVIEW: 'N',
-            },
-          };
-
-          if (!B24LeadConvertedStages.includes(leadStatusId))
-            batchCommands['notify_manager'] = {
-              method: 'im.message.add',
-              params: {
-                DIALOG_ID: leadAssignedId,
-                MESSAGE: updatedMessage,
-                URL_PREVIEW: 'N',
-              },
-            };
-          break;
-      }
-
-      this.bitrixService.callBatch(batchCommands);
-
-      return {
-        message: 'Successfully update lead',
-        status: true,
-      };
-    } catch (error) {
-      console.log(error);
-      this.logger.error(error);
-      throw new InternalServerErrorException(error.message);
+        break;
     }
+
+    this.bitrixService.callBatch(batchCommands);
+
+    return {
+      message: 'Successfully update lead',
+      status: true,
+    };
+  }
+
+  /**
+   * Handle request from vacancy page in grampus-studio
+   *
+   * ---
+   *
+   * Обработка завяки со страницы вакансии grampus-studio
+   * @param fields
+   * @private
+   */
+  private async handleRequestFromSiteToHandleHRDeal(
+    fields: BitrixGrampusSiteRequestReceive,
+  ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
+    const { phone } = fields;
+
+    const deals = await this.bitrixDeals.getDuplicateDealsByPhone(phone);
+
+    // Если не нашли дубликатов
+    if (deals.length === 0) {
+      // todo: create lead
+    }
+
+    // todo: update lead
+
+    return {
+      status: false,
+      message: 'Not implemented',
+    };
   }
 
   /**

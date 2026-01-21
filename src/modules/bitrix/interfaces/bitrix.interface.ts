@@ -56,7 +56,7 @@ export interface B24ListParams<
   TOrder extends Record<string, B24ListOrder> = Record<string, B24ListOrder>,
   TSelect = keyof TFilter,
 > {
-  filter?: TFilter;
+  filter?: Partial<TFilter>;
   order?: TOrder;
   select?: TSelect[];
   start?: number;

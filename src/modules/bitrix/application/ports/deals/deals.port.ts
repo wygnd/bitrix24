@@ -19,4 +19,5 @@ export interface BitrixDealsPort {
     fieldId: string,
   ): Promise<(B24DealField & B24DealUserField) | null>;
   updateDeal(dealId: string, fields: Partial<B24Deal>): Promise<boolean>;
+  getDuplicateDealsByPhone(phone: string): Promise<B24Deal[]>;
 }

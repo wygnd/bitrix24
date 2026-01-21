@@ -73,12 +73,22 @@ export class BitrixLeadController {
     type: LeadObserveManagerCallingResponseDto,
   })
   @HttpCode(HttpStatus.OK)
-  @Post('/observe-manager-calling')
+  @Post('/observe_manager_calling')
   async observeManagerCalling(@Body() fields: LeadManagerCallingDto) {
     throw new NotAcceptableException();
     // const result =
     //   await this.bitrixLeadService.handleObserveManagerCalling(fields);
     // this.logger.info({ message: 'Observe manager calling', data: result });
     // return result;
+  }
+
+  @ApiOperation({
+    summary:
+      'Остлеживание лидов, которые находятся в статусе Новый в работе и их звонков',
+  })
+  @HttpCode(HttpStatus.OK)
+  @Post('/observe_active_lead_calls')
+  async observeActiveLeadsCalls() {
+    return this.bitrixLeadService.handleObserveActiveLeadsCalls();
   }
 }
