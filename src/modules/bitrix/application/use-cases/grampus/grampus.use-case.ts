@@ -8,6 +8,7 @@ import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/l
 import {
   BitrixGrampusSiteRequestReceive,
   BitrixGrampusSiteRequestReceiveExtraParamsOptions,
+  BitrixGrampusSiteRequestReceiveExtraParamsVacancyOptions,
   BitrixGrampusSiteRequestReceiveResponse,
 } from '@/modules/bitrix/application/interfaces/grampus/bitrix-site-request.interface';
 import {
@@ -24,8 +25,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
+import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
+import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
 
-const { LEADS, BITRIX, USERS, BOT, DEALS } = B24PORTS;
+const { LEADS, BITRIX, USERS, BOT, DEALS, MESSAGES } = B24PORTS;
 
 @Injectable()
 export class BitrixGrampusUseCase {
@@ -62,6 +65,8 @@ export class BitrixGrampusUseCase {
     private readonly wikiService: WikiService,
     @Inject(DEALS.DEALS_DEFAULT)
     private readonly bitrixDeals: BitrixDealsPort,
+    @Inject(MESSAGES.MESSAGES_DEFAULT)
+    private readonly bitrixMessages: BitrixMessagesPort,
   ) {}
 
   /**
@@ -88,7 +93,6 @@ export class BitrixGrampusUseCase {
           return this.handleRequestFromSiteToHandleLead(fields);
       }
     } catch (error) {
-      console.log(error);
       this.logger.error(error);
       throw new InternalServerErrorException(error.message);
     }
@@ -370,20 +374,79 @@ export class BitrixGrampusUseCase {
   private async handleRequestFromSiteToHandleHRDeal(
     fields: BitrixGrampusSiteRequestReceive,
   ): Promise<BitrixGrampusSiteRequestReceiveResponse> {
-    const { phone } = fields;
+    const { phone, extraParams = '' } = fields;
 
     const deals = await this.bitrixDeals.getDuplicateDealsByPhone(phone);
+    let params: BitrixGrampusSiteRequestReceiveExtraParamsVacancyOptions | null =
+      null;
 
-    // Если не нашли дубликатов
-    if (deals.length === 0) {
-      // todo: create lead
+    try {
+      params = JSON.parse(
+        extraParams,
+      ) as BitrixGrampusSiteRequestReceiveExtraParamsVacancyOptions;
+    } catch (error) {
+      params = null;
+      console.log(error);
+      this.logger.error(error);
     }
 
-    // todo: update lead
+    const createOrUpdateDealFields: Partial<B24Deal> = {
+      UF_CRM_1638524259: phone, // Номер телефона
+      CATEGORY_ID: '14', // HR воронка
+      UF_CRM_1644922120: '8874', // Тип поиска: Заявка с сайта
+      STAGE_ID: 'C14:NEW', // Звонок
+      ASSIGNED_BY_ID: '190', // Екатерина Туркатова
+    };
+
+    const batchCommands: B24BatchCommands = {};
+    let message = '[b]Заявка с сайта![/b] ';
+
+    // Если не нашли дубликатов создаем сделку, иначе обновляем
+    if (deals.length === 0) {
+      batchCommands['create_deal'] = {
+        method: 'crm.deal.add',
+        params: {
+          fields: createOrUpdateDealFields,
+        },
+      };
+      message += 'Добавлена новая сделка';
+    } else {
+      batchCommands['update_deal'] = {
+        method: 'crm.deal.update',
+        params: {
+          id: deals[0].ID,
+          fields: createOrUpdateDealFields,
+        },
+      };
+
+      message += 'Сделка обновлена';
+    }
+
+    this.bitrixService.callBatch(batchCommands).then((res) => {
+      this.logger.debug({
+        request: batchCommands,
+        response: res,
+      });
+
+      this.logger.log(params);
+
+      this.bitrixMessages.sendPrivateMessage({
+        DIALOG_ID: '190', // Екатерина Туркатова
+        MESSAGE:
+          message +
+          '[br]' +
+          (params && params.fields && params.fields.vacancy
+            ? `[b]Вакансия: ${params.fields.vacancy}[/b][br]`
+            : '') + '[br]' +
+          this.bitrixService.generateDealUrl(
+            deals.length > 0 ? deals[0].ID : res.result.result.create_deal,
+          ),
+      });
+    });
 
     return {
-      status: false,
-      message: 'Not implemented',
+      status: true,
+      message: 'Successfully handle request',
     };
   }
 
