@@ -428,8 +428,6 @@ export class BitrixGrampusUseCase {
         response: res,
       });
 
-      this.logger.log(params);
-
       this.bitrixMessages.sendPrivateMessage({
         DIALOG_ID: '190', // Екатерина Туркатова
         MESSAGE:
