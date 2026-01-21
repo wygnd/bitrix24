@@ -435,9 +435,10 @@ export class BitrixGrampusUseCase {
         MESSAGE:
           message +
           '[br]' +
-          (params && params.fields && params.fields.vacancy
+          (params && params?.fields && params.fields?.vacancy
             ? `[b]Вакансия: ${params.fields.vacancy}[/b][br]`
-            : '') + '[br]' +
+            : '') +
+          '[br]' +
           this.bitrixService.generateDealUrl(
             deals.length > 0 ? deals[0].ID : res.result.result.create_deal,
           ),
