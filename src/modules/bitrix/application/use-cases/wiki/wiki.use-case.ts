@@ -17,6 +17,7 @@ import { B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG } from '@/modules/bitrix/application
 import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
+import { BitrixWikiPaymentsNoticeExpenseOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-expense.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -389,5 +390,57 @@ export class BitrixWikiUseCase {
     const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
 
     return { message_id: messageId };
+  }
+
+  /**
+   * Send message to G Credit chat
+   *
+   * ---
+   *
+   * Отправляет сообщение в G Credit
+   * @param fields
+   */
+  public async sendNoticeExpensePayment(
+    fields: BitrixWikiPaymentsNoticeExpenseOptions,
+  ) {
+    try {
+      const { message, extra_chat_id: extraChatId = '0' } = fields;
+
+      const batchCommands: B24BatchCommands = {
+        send_message_to_chat: {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: '',
+            MESSAGE: message,
+          },
+        },
+      };
+
+      if (extraChatId != '0') {
+        batchCommands['send_message_to_extra_chat'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: extraChatId,
+            MESSAGE: message,
+          },
+        };
+      }
+
+      this.bitrixService.callBatch(batchCommands).then((res) =>
+        this.logger.debug({
+          request: batchCommands,
+          response: res,
+        }),
+      );
+
+      return {
+        status: true,
+        message: 'Successfully sent message',
+      };
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }

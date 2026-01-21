@@ -18,6 +18,7 @@ import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki.use-case';
 import { B24WikiPaymentsNoticesResponseDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-response.dto';
+import { BitrixWikiPaymentsNoticeExpenseDto } from '@/modules/bitrix/application/dtos/wiki/wiki-payments-notice-expense.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiAuthHeader()
@@ -88,5 +89,14 @@ export class BitrixWikiController {
     });
 
     return response;
+  }
+
+  @ApiOperation({ summary: 'Отправить сообщение о расходах' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/payments/notices/expenses')
+  async sendNoticePaymentExpensed(
+    @Body() fields: BitrixWikiPaymentsNoticeExpenseDto,
+  ) {
+    return this.bitrixWiki.sendNoticeExpensePayment(fields);
   }
 }
