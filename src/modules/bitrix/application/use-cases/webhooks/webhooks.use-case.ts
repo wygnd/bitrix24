@@ -523,44 +523,52 @@ export class BitrixWebhooksUseCase {
       },
     ];
 
-    const { result: batchResponseCreateTask } =
+    const batchCommandsGetInfo: B24BatchCommands = {
+      get_deal: {
+        method: 'crm.deal.get',
+        params: {
+          id: dealId,
+        },
+      },
+      get_lead: {
+        method: 'crm.deal.list',
+        params: {
+          FILTER: {
+            UF_CRM_1731418991: '$result[get_deal][UF_CRM_1731418991]',
+            CATEGORY_ID: '1',
+          },
+          SELECT: ['ID'],
+        },
+      },
+      get_advert_deal: {
+        method: 'crm.deal.list',
+        params: {
+          FILTER: {
+            ID: '$result[get_lead][0][ID]',
+          },
+          SELECT: ['ID', 'UF_CRM_1716383143'],
+        },
+      },
+    };
+
+    const { result: batchResponseGetInfo } =
       await this.bitrixService.callBatch<{
         get_deal: B24Deal;
         get_lead: B24Lead[];
         get_advert_deal: B24Deal[];
-      }>({
-        get_deal: {
-          method: 'crm.deal.get',
-          params: {
-            id: dealId,
-          },
-        },
-        get_lead: {
-          method: 'crm.deal.list',
-          params: {
-            FILTER: {
-              UF_CRM_1731418991: '$result[get_deal][UF_CRM_1731418991]',
-              CATEGORY_ID: '1',
-            },
-            SELECT: ['ID'],
-          },
-        },
-        get_advert_deal: {
-          method: 'crm.deal.list',
-          params: {
-            FILTER: {
-              ID: '$result[get_lead][0][ID]',
-            },
-            SELECT: ['ID', 'UF_CRM_1716383143'],
-          },
-        },
-      });
+      }>(batchCommandsGetInfo);
 
-    if (Object.keys(batchResponseCreateTask.result_error).length !== 0)
-      throw new BadRequestException(batchResponseCreateTask.result_error);
+    this.logger.log({
+      message: 'check batch commands and result on approve site for advert',
+      batchCommandsGetInfo,
+      batchResponseGetInfo,
+    });
+
+    if (Object.keys(batchResponseGetInfo.result_error).length !== 0)
+      throw new BadRequestException(batchResponseGetInfo.result_error);
 
     const { get_deal: deal, get_advert_deal: advertDeal } =
-      batchResponseCreateTask.result;
+      batchResponseGetInfo.result;
 
     const task = await this.bitrixTasks.createTask({
       TITLE: 'Необходимо проверить сайт на дееспособность работы на РК.',
@@ -584,6 +592,11 @@ export class BitrixWebhooksUseCase {
       AUDITORS: [project_manager_id],
     });
 
+    this.logger.debug({
+      message: 'check create task on approve site for advert',
+      task,
+    });
+
     if (!task) {
       this.logger.debug({
         message: 'Invalid create task',
@@ -592,19 +605,24 @@ export class BitrixWebhooksUseCase {
       return false;
     }
 
-    this.bitrixBot.sendMessage({
-      DIALOG_ID: chat_id,
-      MESSAGE:
-        `[user=${advertDepartment.UF_HEAD}][/user][br]` +
-        '[b]Согласование наших сайтов перед передачей сделки на РК.[/b][br]' +
-        'Нужно согласовать и принять наш сайт в работу РК.[br]' +
-        this.bitrixService.generateTaskUrl(
-          advertDepartment.UF_HEAD,
-          task.taskId,
-          'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
-        ),
-      KEYBOARD: keyboard,
-    });
+    this.bitrixBot
+      .sendMessage({
+        DIALOG_ID: chat_id,
+        MESSAGE:
+          `[user=${advertDepartment.UF_HEAD}][/user][br]` +
+          '[b]Согласование наших сайтов перед передачей сделки на РК.[/b][br]' +
+          'Нужно согласовать и принять наш сайт в работу РК.[br]' +
+          this.bitrixService.generateTaskUrl(
+            advertDepartment.UF_HEAD,
+            task.taskId,
+            'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
+          ) +
+          '[br][br]Сделка: ' +
+          this.bitrixService.generateDealUrl(dealId),
+        KEYBOARD: keyboard,
+      })
+      .then((res) => this.logger.debug(res))
+      .catch((err) => this.logger.error(err));
     return true;
   }
 
