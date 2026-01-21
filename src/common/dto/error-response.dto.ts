@@ -86,16 +86,13 @@ export class UnAuthorizeErrorResponseDto implements ErrorResponseOptions {
   statusCode: number;
 }
 
-export class InternalServerErrorResponseDto implements ErrorResponseOptions<object> {
+export class InternalServerErrorResponseDto implements ErrorResponseOptions {
   @ApiProperty({
     type: Object,
     description: 'Error message',
-    example: {
-      message: 'property must be a string',
-      error: 'Exception error',
-    },
+    example: 'property must be a string',
   })
-  message: object;
+  message: string;
 
   @ApiProperty({
     type: String,
