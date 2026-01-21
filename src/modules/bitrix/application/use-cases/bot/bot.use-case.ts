@@ -1041,13 +1041,13 @@ export class BitrixBotUseCase {
       const [userName, action, price, contract] = message.split(' | ');
 
       // Собираем запрос для отправки сообщения руководителю
-      batchCommands['send_message_head'] = {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
-          MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
-        },
-      };
+      // batchCommands['send_message_head'] = {
+      //   method: 'im.message.add',
+      //   params: {
+      //     DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
+      //     MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
+      //   },
+      // };
 
       // Отправляем данные
       this.bitrixService.callBatch(batchCommands).then((response) =>
