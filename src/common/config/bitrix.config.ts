@@ -46,6 +46,10 @@ export default (): BitrixOptions => ({
     GRAMPUS: {
       trafficsChatId: process.env.BITRIX_DATA_GRAMPUS_TRAFICS_CHAT_ID ?? '',
       GPayChatId: process.env.BITRIX_DATA_GRAMPUS_GRAMPUS_PAY_CHAT_ID ?? '',
+      GCreditChatId: process.env.BITRIX_DATA_GRAMPUS_GCREDIT_CHAT_ID ?? '',
+    },
+    SALE: {
+      frodSaleChatId: process.env.BITRIX_DATA_SALES_FROD_SALE_CHAT_ID ?? '',
     },
   },
 });

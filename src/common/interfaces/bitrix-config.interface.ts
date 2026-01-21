@@ -16,6 +16,7 @@ export interface BitrixConstants {
   LEAD: BitrixLEADConstants;
   WEBHOOK: BitrixWebhookConstants;
   GRAMPUS: BitrixGrampusOptions;
+  SALE: BitrixSaleOptions;
 }
 
 export interface BitrixOptions {
@@ -63,4 +64,9 @@ export interface BitrixWebhookConstantsVoxImplantOptions {
 export interface BitrixGrampusOptions {
   trafficsChatId: string;
   GPayChatId: string;
+  GCreditChatId: string;
+}
+
+export interface BitrixSaleOptions {
+  frodSaleChatId: string;
 }

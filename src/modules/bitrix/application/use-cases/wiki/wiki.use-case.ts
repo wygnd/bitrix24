@@ -411,7 +411,7 @@ export class BitrixWikiUseCase {
           method: 'imbot.message.add',
           params: {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-            DIALOG_ID: '',
+            DIALOG_ID: this.bitrixService.getConstant('GRAMPUS').GCreditChatId,
             MESSAGE: message,
           },
         },
