@@ -915,20 +915,26 @@ export class BitrixLeadsUseCase {
       leads.forEach(
         ({
           ID: leadId,
-          PHONE: phones,
+          PHONE: leadPhones,
           ASSIGNED_BY_ID: leadAssignedById,
           MOVED_TIME: leadMovedTime,
         }) => {
-          const phone =
-            phones.length > 0 ? phones[0].VALUE.replaceAll(/[- ()]/gi, '') : '';
+          const phones =
+            leadPhones.length > 0
+              ? leadPhones.map((p) => p.VALUE.replaceAll(/[- ()]/gi, ''))
+              : [];
 
-          if (!phone) return;
+          if (phones.length === 0) return;
 
           // Пытаемся найти звонок по номеру телефона
           // Так как изначально список звонков отсортирован ищем первое вхождение
           const findCalls = calls.calls.reduce<string[]>((acc, call) => {
-            if (!Object.values(call).includes(phone)) return acc;
-            acc.push(call.init_time_gmt);
+            phones.forEach((phone) => {
+              if (!Object.values(call).includes(phone)) return;
+
+              acc.push(call.init_time_gmt);
+            });
+
             return acc;
           }, []);
 
@@ -948,14 +954,16 @@ export class BitrixLeadsUseCase {
           const callInitAt = dayjs(findCalls[0]).add(3, 'h');
           const leadMovedAt = dayjs(leadMovedTime);
 
-          // Надо отследить если звонок был в течение часа с момента перехода на стадию: выходим
+          // Если звонок был в течение часа с момента перехода на стадию
+          // Или после перехода был звонок: выходим
           if (
             callInitAt.isBetween(
               // дата перехода на стадию -15 минут
               leadMovedAt.subtract(15, 'm'),
               // дата перехода на стадию +1 час
               leadMovedAt.add(1, 'h'),
-            )
+            ) ||
+            callInitAt.isAfter(leadMovedAt.subtract(1, 'h'))
           )
             return;
 
@@ -1136,7 +1144,7 @@ export class BitrixLeadsUseCase {
 
       this.bitrixService.callBatch(batchCommandsNotifyHeads).then((res) =>
         this.logger.debug({
-          request: [batchCommandsNotifyHeads],
+          request: batchCommandsNotifyHeads,
           response: res,
         }),
       );
