@@ -476,112 +476,155 @@ export class BitrixWikiUseCase {
   public async distributeLeadOnWishManager(
     fields: BitrixWikiDistributeLeadWishManager,
   ) {
-    const { user_id: userId } = fields;
+    try {
+      const { user_id: userId } = fields;
 
-    const userWasPushing =
-      (await this.redisService.get<string>(
-        REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
-      )) ?? '0';
+      const userWasPushing =
+        (await this.redisService.get<string>(
+          REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
+        )) ?? '0';
 
-    if (Number(userWasPushing) >= 2)
-      throw new ConflictException({
-        status: false,
-        message: 'Не так быстро',
-      });
+      // Если пользователь отправил запрос после 2-х успешных
+      if (Number(userWasPushing) >= 2)
+        throw new ConflictException({
+          status: false,
+          message: 'Не так быстро',
+        });
 
-    // Получаем лиды, которые находятся в новых стадиях
-    const {
-      result: {
+      // Получаем лиды, которые находятся в новых стадиях
+      const {
         result: {
-          get_leads: leads,
-          get_user: users,
-          get_user_leads: userLeads,
-        },
-      },
-    } = await this.bitrixService.callBatch<{
-      get_leads: B24Lead[];
-      get_user: B24User[];
-      get_user_leads: B24Lead[];
-    }>({
-      get_leads: {
-        method: 'crm.lead.list',
-        params: {
-          filter: {
-            '@STATUS_ID': B24LeadNewStages,
-          },
-          select: ['ID'],
-          start: 0,
-        },
-      },
-      get_user: {
-        method: 'user.get',
-        params: {
-          filter: {
-            ID: userId,
+          result: {
+            get_leads: leads,
+            get_user: users,
+            get_user_leads: userLeads,
           },
         },
-      },
-      get_user_leads: {
-        method: 'crm.lead.list',
-        params: {
-          filter: {
-            ASSIGNED_BY_ID: userId,
-            STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+      } = await this.bitrixService.callBatch<{
+        get_leads: B24Lead[];
+        get_user: B24User[];
+        get_user_leads: B24Lead[];
+      }>({
+        get_leads: {
+          method: 'crm.lead.list',
+          params: {
+            filter: {
+              '@STATUS_ID': B24LeadNewStages,
+            },
+            select: ['ID'],
+            start: 0,
           },
         },
-      },
-    });
-
-    if (users.length === 0)
-      throw new NotFoundException({
-        status: false,
-        message: 'Пользователь не найден',
+        get_user: {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: userId,
+            },
+          },
+        },
+        get_user_leads: {
+          method: 'crm.lead.list',
+          params: {
+            filter: {
+              ASSIGNED_BY_ID: userId,
+              STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            },
+          },
+        },
       });
 
-    if (!users[0].ACTIVE)
-      throw new UnprocessableEntityException({
-        status: false,
-        message: 'Пользователь уволен',
+      // Если пользователь не найден
+      if (users.length === 0)
+        throw new NotFoundException({
+          status: false,
+          message: 'Пользователь не найден',
+        });
+
+      // Если пользователь уволен
+      if (!users[0].ACTIVE)
+        throw new UnprocessableEntityException({
+          status: false,
+          message: 'Пользователь уволен',
+        });
+
+      // Если лидов не найдено
+      if (leads.length === 0)
+        throw new NotFoundException({
+          status: false,
+          message: 'Лидов не найдено',
+        });
+
+      // Если у пользователя больше 10 активных лидов
+      if (userLeads.length > 10)
+        throw new UnprocessableEntityException({
+          status: false,
+          message: 'У тебя и так много лидов',
+        });
+
+      const [{ ID: leadId }] = leads;
+      const batchCommandsUpdateLead: B24BatchCommands = {
+        // Обновляем лид
+        update_lead: {
+          method: 'crm.lead.update',
+          params: {
+            id: leadId,
+            fields: {
+              ASSIGNED_BY_ID: userId,
+              STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            },
+          },
+        },
+        // Отправляем менеджеру сообщение с сылкой на лид
+        notify_about_update_lead: {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: userId,
+            MESSAGE:
+              'Вы взяли лид в работу ' +
+              this.bitrixService.generateLeadUrl(leadId) +
+              '[br]Набирайте клиенту сразу.',
+          },
+        },
+      };
+
+      const {
+        result: {
+          result: { update_lead: responseUpdateLead },
+        },
+      } = await this.bitrixService.callBatch<{
+        update_lead: boolean;
+      }>(batchCommandsUpdateLead);
+
+      if (!responseUpdateLead)
+        throw new InternalServerErrorException({
+          status: false,
+          message: 'Произошла внутренняя ошибка, обратитесь к bitrix master',
+        });
+
+      this.redisService.set<string>(
+        REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
+        `${Number(userWasPushing) + 1}`,
+        3600, // 1 hour
+      );
+
+      this.logger.debug({
+        body: fields,
+        response: leadId,
       });
 
-    if (leads.length === 0)
-      throw new NotFoundException({
-        status: false,
-        message: 'Лидов не найдено',
+      return {
+        status: true,
+        message:
+          'Лид успешно распределен: ' +
+          this.bitrixService.generateLeadUrl(leadId),
+      };
+    } catch (error) {
+      this.logger.error({
+        body: fields,
+        error,
       });
-
-    if (userLeads.length > 10)
-      throw new UnprocessableEntityException({
-        status: false,
-        message: 'У тебя и так много лидов',
-      });
-
-    const [{ ID: leadId }] = leads;
-
-    const responseUpdateLead = await this.bitrixLeads.updateLead({
-      id: leadId,
-      fields: {
-        ASSIGNED_BY_ID: userId,
-      },
-    });
-
-    if (!responseUpdateLead)
-      throw new InternalServerErrorException({
-        status: false,
-        message: 'Произошла внутренняя ошибка, обратитесь к bitrix master',
-      });
-
-    this.redisService.set<string>(
-      REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
-      `${Number(userWasPushing) + 1}`,
-      3600, // 1 hour
-    );
-
-    return {
-      status: true,
-      message:
-        'Лид успешно распределен: ' +
-        this.bitrixService.generateLeadUrl(leadId),
-    };
+      throw error;
+    }
   }
 }
