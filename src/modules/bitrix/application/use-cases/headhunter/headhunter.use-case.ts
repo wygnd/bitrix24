@@ -203,8 +203,6 @@ export class BitrixHeadhunterUseCase {
           payload,
         );
 
-        this.logger.log(`STATUS: ${payloadDto.to_state}`, 'warn');
-
         // В зависимости от того, на какую стадию перевели
         switch (payloadDto.to_state) {
           // Если стадия Вакансия закрыта

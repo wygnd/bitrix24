@@ -31,6 +31,7 @@ import type { BitrixUsersPort } from '@/modules/bitrix/application/ports/users/u
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import { WinstonLogger } from '@/config/winston.logger';
 import { WikiService } from '@/modules/wiki/wiki.service';
+import { B24Comment } from '@/modules/bitrix/application/interfaces/comments/comments.interface';
 
 @Injectable()
 export class BitrixAvitoUseCase {
@@ -257,7 +258,9 @@ export class BitrixAvitoUseCase {
             'STATUS_ID',
             'ASSIGNED_BY_ID',
             'DATE_CREATE',
-            'UF_CRM_1653291114976',
+            'UF_CRM_1653291114976', // Сообщение с авито
+            'UF_CRM_1712667568', // С какого авито обращение
+            'UF_CRM_1692711658572', // Файлы
           ],
           start: 0,
         },
@@ -274,6 +277,20 @@ export class BitrixAvitoUseCase {
         method: 'department.get',
         params: {
           ID: `$result[get_assigned_lead][0][UF_DEPARTMENT][0]`,
+        },
+      },
+      get_lead_comment_list: {
+        method: 'crm.timeline.comment.list',
+        params: {
+          filter: {
+            ENTITY_ID: leadId,
+            ENTITY_TYPE: 'lead',
+          },
+          select: ['ID'],
+          order: {
+            CREATED: 'DESC',
+          },
+          start: 0,
         },
       },
     };
@@ -306,9 +323,14 @@ export class BitrixAvitoUseCase {
       get_lead: B24Lead[];
       get_assigned_lead: B24User[];
       get_assigned_user_department: B24Department[];
+      get_lead_comment_list: B24Comment[];
     }>(batchCommands);
 
-    const { get_lead: lead, get_assigned_lead: user } = batchResponse.result;
+    const {
+      get_lead: lead,
+      get_assigned_lead: user,
+      get_lead_comment_list: leadComments = [],
+    } = batchResponse.result;
 
     const {
       STATUS_ID,
@@ -324,18 +346,29 @@ export class BitrixAvitoUseCase {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: leadComment + '\n\n\n' + leadMessage,
+      UF_CRM_1653291114976:
+        (leadComment ? leadComment + '\n\n\n' : '') + leadMessage, // Сообщение с авито
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
-      UF_CRM_1712667568: avito, // С какого авито обращение
-      UF_CRM_1713765220416: avito_number, // Подменный номер авито
-      UF_CRM_1580204442317: city, // Город
-      UF_CRM_1760173920: region, // Регион
       NAME: client_name,
       UF_CRM_1598441630: AvitoClientRequestsType[service_text], // С чем обратился
       UF_CRM_1715671150: new Date(), // дата последнего обращения
     };
+
+    // Если есть старые комментарии надо их открепить
+    if (leadComments.length > 0) {
+      leadComments.forEach(({ ID: commentId }) => {
+        batchCommandsUpdateLead[`unpin_comment=${commentId}`] = {
+          method: 'crm.timeline.item.unpin',
+          params: {
+            id: commentId,
+            ownerTypeId: '1',
+            ownerId: leadId,
+          },
+        };
+      });
+    }
 
     switch (true) {
       // Если лид не в активных стадиях
@@ -443,7 +476,12 @@ export class BitrixAvitoUseCase {
         fields: {
           ENTITY_ID: leadId,
           ENTITY_TYPE: 'lead',
-          COMMENT: `Клиент обращался на ${avito}\nИмя клиента: ${client_name}\n${message.join('\n')}`,
+          COMMENT:
+            `Клиент обращался на ${avito}: [${avito_number}]\n` +
+            `Имя клиента: ${client_name}\n` +
+            (region ? `Регион: ${region}` : '') +
+            (city ? `Город: ${city}` : '') +
+            `${message.join('\n')}`,
         },
       },
     };
@@ -465,7 +503,12 @@ export class BitrixAvitoUseCase {
       },
     };
 
-    this.bitrixService.callBatch(batchCommandsUpdateLead);
+    this.bitrixService.callBatch(batchCommandsUpdateLead).then((res) =>
+      this.logger.debug({
+        request: batchCommandsUpdateLead,
+        response: res,
+      }),
+    );
 
     if (
       now.toDateString() !== leadDateCreate.toDateString() &&

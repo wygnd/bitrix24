@@ -394,7 +394,8 @@ export class BitrixGrampusUseCase {
       UF_CRM_1638524259: phone, // Номер телефона
       CATEGORY_ID: '14', // HR воронка
       UF_CRM_1644922120: '8874', // Тип поиска: Заявка с сайта
-      STAGE_ID: 'C14:NEW', // Звонок
+      UF_CRM_1638524000: '', // Вакансия
+      STAGE_ID: 'C14:NEW', // Стадия: Звонок
       ASSIGNED_BY_ID: '190', // Екатерина Туркатова
     };
 
