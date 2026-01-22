@@ -190,7 +190,7 @@ export class BitrixAvitoUseCase {
                   ? minWorkflowUser
                   : '344',
               UF_CRM_1669804346: avito,
-              UF_CRM_1653291114976: leadMessage,
+              UF_CRM_1653291114976: leadMessage, // Сообщение с авито
               PHONE: [
                 {
                   VALUE: phone,
@@ -252,7 +252,13 @@ export class BitrixAvitoUseCase {
           FILTER: {
             ID: leadId,
           },
-          SELECT: ['ID', 'STATUS_ID', 'ASSIGNED_BY_ID', 'DATE_CREATE'],
+          SELECT: [
+            'ID',
+            'STATUS_ID',
+            'ASSIGNED_BY_ID',
+            'DATE_CREATE',
+            'UF_CRM_1653291114976',
+          ],
           start: 0,
         },
       },
@@ -318,7 +324,7 @@ export class BitrixAvitoUseCase {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976: leadComment + '\n' + leadMessage,
+      UF_CRM_1653291114976: leadComment + '\n\n\n' + leadMessage,
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
