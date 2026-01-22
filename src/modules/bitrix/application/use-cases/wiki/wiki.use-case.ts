@@ -609,6 +609,7 @@ export class BitrixWikiUseCase {
       );
 
       this.logger.debug({
+        method: 'distributeLeadOnWishManager',
         body: fields,
         response: leadId,
       });
@@ -621,6 +622,7 @@ export class BitrixWikiUseCase {
       };
     } catch (error) {
       this.logger.error({
+        method: 'distributeLeadOnWishManager',
         body: fields,
         error,
       });
