@@ -489,7 +489,7 @@ export class BitrixWikiUseCase {
       if (Number(userWasPushing) >= 2)
         throw new ConflictException({
           status: false,
-          message: 'Не так быстро',
+          message: 'За час можно взять только 2 лида',
         });
 
       // Получаем лиды, которые находятся в новых стадиях
