@@ -788,18 +788,18 @@ export class BitrixLeadsUseCase {
       // Проверяем если понедельник, то нужно выбрать с пт, если нет, то выбираем за вчерашний день
       const dateFilterStart =
         dateNow.get('d') == 1
-          ? dayjs().subtract(3, 'day').format('YYYY-MM-DD [18:00:00]')
-          : dayjs().subtract(1, 'day').format('YYYY-MM-DD [18:00:00]');
+          ? dayjs().subtract(3, 'day').format('YYYY-MM-DD [17:00:00]')
+          : dayjs().subtract(1, 'day').format('YYYY-MM-DD [17:00:00]');
       // Текущее время -1 час
       const dateNowSubtract1Hour = dateNow.subtract(1, 'hour');
       // Лимит запросов битрикс
       const limit = 50;
-      // Фильтруем лиды по статусу Новый в работе и дата переода в статус со вчера 18:00
+      // Фильтруем лиды по статусу Новый в работе и дата перехода в стадию со вчера 17:00
       const filterGetLeadList = {
         STATUS_ID: B24LeadActiveStages[0], // Новый в работе
         // Если текущий час 9 утра, то мы выбираем со вчерашнего дня иначе с сегодняшнего дня
         '>=MOVED_TIME':
-          dateNow.get('h') === 9
+          dateNow.get('h') <= 9
             ? dateFilterStart
             : dateNow.format('YYYY-MM-DD [00:00:00]'),
         // До текущего времени -1 час
@@ -948,20 +948,16 @@ export class BitrixLeadsUseCase {
           const callInitAt = dayjs(findCalls[0]).add(3, 'h');
           const leadMovedAt = dayjs(leadMovedTime);
 
-          // Если звонок был в течение часа или за 15 минут с момента перевода на стадию выходим
+          // Надо отследить если звонок был в течение часа с момента перехода на стадию: выходим
           if (
             callInitAt.isBetween(
               // дата перехода на стадию -15 минут
-              leadMovedAt.subtract(15, 'm').subtract(1, 'h'),
-              // Текущая дата -1 час
-              dateNowSubtract1Hour,
+              leadMovedAt.subtract(15, 'm'),
+              // дата перехода на стадию +1 час
+              leadMovedAt.add(1, 'h'),
             )
           )
             return;
-
-          // console.log(
-          //   `[${leadMovedAt.subtract(15, 'm').subtract(1, 'h').format()} : ${dateNowSubtract1Hour.format()}] | ${callInitAt.format()} => ${leadId}`,
-          // );
 
           // Если звонка не было
           leadsNeedNotifyAboutCall.set(leadId, {
