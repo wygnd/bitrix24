@@ -36,6 +36,7 @@ import {
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
+import { B24Activity } from '@/modules/bitrix/application/interfaces/activities/activities.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -498,12 +499,14 @@ export class BitrixWikiUseCase {
             get_leads: leads,
             get_user: users,
             get_user_leads: userLeads,
+            get_lead_activity: leadActivities,
           },
         },
       } = await this.bitrixService.callBatch<{
         get_leads: B24Lead[];
         get_user: B24User[];
         get_user_leads: B24Lead[];
+        get_lead_activity: B24Activity[];
       }>({
         get_leads: {
           method: 'crm.lead.list',
@@ -529,6 +532,15 @@ export class BitrixWikiUseCase {
             filter: {
               ASSIGNED_BY_ID: userId,
               STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            },
+          },
+        },
+        get_lead_activity: {
+          method: 'crm.activity.list',
+          params: {
+            filter: {
+              OWNER_ID: '$result[get_leads][0][ID]',
+              OWNER_TYPE_ID: '1',
             },
           },
         },
@@ -587,6 +599,23 @@ export class BitrixWikiUseCase {
           },
         },
       };
+
+      // Если есть звонки переводим ответственного
+      if (leadActivities.length > 0) {
+        leadActivities.forEach((activity) => {
+          batchCommandsUpdateLead[`update_lead_activity=${activity.ID}`] = {
+            method: 'crm.activity.update',
+            params: {
+              id: activity.ID,
+              fields: {
+                OWNER_TYPE_ID: '1',
+                OWNER_ID: leadId,
+                RESPONSIBLE_ID: userId,
+              },
+            },
+          };
+        });
+      }
 
       const {
         result: {
