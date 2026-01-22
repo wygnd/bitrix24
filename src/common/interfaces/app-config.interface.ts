@@ -1,5 +1,6 @@
 export interface AppConfig {
   apiKey: string;
+  helpersApiKey: string;
   apiOptions: AppConfigApiOptions;
 }
 

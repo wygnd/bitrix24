@@ -6,9 +6,7 @@ import {
 } from '@/modules/queue/interfaces/queue-consumer.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { HeadhunterWebhookCallDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-call.dto';
-import { LeadManagerCallingDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
 import { WinstonLogger } from '@/config/winston.logger';
-import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
 import { BitrixHeadhunterUseCase } from '@/modules/bitrix/application/use-cases/headhunter/headhunter.use-case';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_HEAVY, { concurrency: 1 })
@@ -18,10 +16,7 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
     'handle',
   ]);
 
-  constructor(
-    private readonly bitrixHeadhunter: BitrixHeadhunterUseCase,
-    private readonly bitrixLeadService: BitrixLeadsUseCase,
-  ) {
+  constructor(private readonly bitrixHeadhunter: BitrixHeadhunterUseCase) {
     super();
   }
 
@@ -42,14 +37,6 @@ export class QueueBitrixHeavyProcessor extends WorkerHost {
         response.data =
           await this.bitrixHeadhunter.handleNewResponseVacancyWebhook(
             data as HeadhunterWebhookCallDto,
-          );
-        break;
-
-      case QUEUE_TASKS.HEAVY.QUEUE_BX_HANDLE_OBSERVE_MANAGER_CALLING:
-        response.message = 'handle observe manager calling task';
-        response.data =
-          await this.bitrixLeadService.handleObserveManagerCalling(
-            data as LeadManagerCallingDto,
           );
         break;
 

@@ -20,7 +20,7 @@ export class BitrixDealsController {
     example: 49146,
     required: true,
   })
-  @Get('/deals/:deal_id')
+  @Get('/deal/:deal_id')
   async getDealById(@Param('deal_id') dealId: string) {
     return this.bitrixDeals.getDealById(dealId);
   }

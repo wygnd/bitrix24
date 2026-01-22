@@ -24,6 +24,8 @@ export const REDIS_KEYS = {
     'bitrix:leads:observe:active:call:counter',
   BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER:
     'bitrix:wiki:leads:distribute_wish_manager:',
+  BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS:
+    'bitrix:leads:observe:manager_calling:telphin_calls:two_weeks',
 
   // BITRIX WIDGET
   BITRIX_WIDGET_CALL_CARD: 'bitrix:widget:call_card:',

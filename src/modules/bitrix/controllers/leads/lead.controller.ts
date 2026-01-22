@@ -1,10 +1,8 @@
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
-  NotAcceptableException,
   ParseDatePipe,
   Post,
   Query,
@@ -14,17 +12,13 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { LeadAvitoStatusResponseDto } from '@/modules/bitrix/application/dtos/leads/lead-avito-status-response.dto';
-import {
-  LeadManagerCallingDto,
-  LeadObserveManagerCallingResponseDto,
-} from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
+import { LeadObserveManagerCallingResponseDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
+import { AuthHelpersGuard } from '@/common/guards/auth-helpers.guard';
 
 @ApiTags(B24ApiTags.LEADS)
-@ApiAuthHeader()
-@UseGuards(AuthGuard)
 @ApiExceptions()
 @Controller('leads')
 export class BitrixLeadController {
@@ -47,6 +41,8 @@ export class BitrixLeadController {
     status: HttpStatus.OK,
     description: 'Success',
   })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
   @Get('/avito/statuses')
   async getLeadsStatusesByDate(
     @Query(
@@ -72,23 +68,30 @@ export class BitrixLeadController {
     description: 'Успешный ответ',
     type: LeadObserveManagerCallingResponseDto,
   })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/observe_manager_calling')
-  async observeManagerCalling(@Body() fields: LeadManagerCallingDto) {
-    throw new NotAcceptableException();
-    // const result =
-    //   await this.bitrixLeadService.handleObserveManagerCalling(fields);
-    // this.logger.info({ message: 'Observe manager calling', data: result });
-    // return result;
+  async observeManagerCalling() {
+    return this.bitrixLeadService.handleObserveManagerCallingAtLastFiveDays();
   }
 
   @ApiOperation({
     summary:
       'Остлеживание лидов, которые находятся в статусе Новый в работе и их звонков',
   })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/observe_active_lead_calls')
   async observeActiveLeadsCalls() {
     return this.bitrixLeadService.handleObserveActiveLeadsCalls();
+  }
+
+  // @ApiExcludeEndpoint()
+  @UseGuards(AuthHelpersGuard)
+  @Get('/helpers/get_telphin_calls_at_last_two_week')
+  async handleHelperGetCallsAtLastTwoWeekFromTwoWeek() {
+    return this.bitrixLeadService.handleObserveManagerCallingGetCallsAtLast2WeeksHelper();
   }
 }

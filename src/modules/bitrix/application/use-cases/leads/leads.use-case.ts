@@ -1,4 +1,11 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import {
@@ -48,6 +55,7 @@ import utc from 'dayjs/plugin/utc';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { getNoun } from '@/common/functions/get-noun';
+import { TelphinCallOptions } from '@/modules/telphin/interfaces/telpgin-calls.interface';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -361,15 +369,9 @@ export class BitrixLeadsUseCase {
     };
   }
 
-  /**
-   * Check manager calling. If calling not exists at 5 days ago - alert
-   *
-   * ---
-   *
-   * Проверка звонков менеджеров. Если менеджер не звонил в течение 5 дней - сообщение руководителю
-   * @param calls
-   */
-  public async handleObserveManagerCalling({ calls }: LeadManagerCallingDto) {
+  public async handleObserveManagerCallingOld({
+    calls,
+  }: LeadManagerCallingDto) {
     const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
     const updatedLeads = new Set<string>();
     const missingLeads = new Set<string>();
@@ -737,6 +739,252 @@ export class BitrixLeadsUseCase {
   }
 
   /**
+   * Helper which get calls at last 2 weeks from telphin and save in cache
+   *
+   * ---
+   *
+   * Хелпер, который получает список звонков за последние две недели и сохраняет кеш
+   */
+  public async handleObserveManagerCallingGetCallsAtLast2WeeksHelper(): Promise<boolean> {
+    try {
+      const callsFromCache = await this.redisService.get<TelphinCallOptions[]>(
+        REDIS_KEYS.BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS,
+      );
+
+      if (callsFromCache) throw new ConflictException('Calls was loaded');
+
+      const dateNow = dayjs();
+
+      // Получаем список групп где в названии есть sale
+      // Получаем список внутренних номеров
+      const [extensionGroupList, extensionList] = await Promise.all([
+        this.telphinService.getFilteredExtensionsByGroupField('name', 'sale'),
+        this.telphinService.getClientExtensionList(),
+      ]);
+
+      // Выбираем только ID
+      const extensionGroupIds = extensionGroupList.map(
+        (extensionGroup) => extensionGroup.id,
+      );
+
+      // Фильтруем список внутренних номеров по ID группы
+      const extensionIds = extensionList.reduce<number[]>((acc, extension) => {
+        if (!extensionGroupIds.includes(extension.extension_group_id))
+          return acc;
+        acc.push(extension.id);
+        return acc;
+      }, []);
+
+      const calls = await this.telphinService.getCallList({
+        start_datetime: dateNow
+          .subtract(14, 'd')
+          .format('YYYY-MM-DD [00:00:00]'),
+        end_datetime: dateNow.format('YYYY-MM-DD HH:mm:ss'),
+        extension_id: extensionIds,
+      });
+
+      if (!calls) return false;
+
+      // Сохраняем результат в редис
+      await this.redisService.set<TelphinCallOptions[]>(
+        REDIS_KEYS.BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS,
+        calls.calls,
+      );
+
+      return true;
+    } catch (error) {
+      this.logger.error({
+        handler:
+          this.handleObserveManagerCallingGetCallsAtLast2WeeksHelper.name,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Check manager calling. If calling not exists at 5 days ago - alert
+   *
+   * ---
+   *
+   * Проверка звонков менеджеров. Если менеджер не звонил в течение 5 дней - сообщение руководителю
+   */
+  public async handleObserveManagerCallingAtLastFiveDays() {
+    // Получаем список групп где в названии есть sale
+    // Получаем список внутренних номеров
+    const [extensionGroupList, extensionList] = await Promise.all([
+      this.telphinService.getFilteredExtensionsByGroupField('name', 'sale'),
+      this.telphinService.getClientExtensionList(),
+    ]);
+    const dateNow = dayjs();
+
+    // Выбираем только ID
+    const extensionGroupIds = extensionGroupList.map(
+      (extensionGroup) => extensionGroup.id,
+    );
+
+    // Получаем список внутренних номеров по ID группы
+    const extensionPhoneList = extensionList.reduce<string[]>(
+      (acc, extension) => {
+        if (!extensionGroupIds.includes(extension.extension_group_id))
+          return acc;
+        acc.push(extension.ani);
+        return acc;
+      },
+      [],
+    );
+
+    // Получаем звонки из Telphin за последние 2 недели
+    // Фильтруем по списку внутренних номеров
+    const telphinCallsResponse =
+      (await this.redisService.get<TelphinCallOptions[]>(
+        REDIS_KEYS.BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS,
+      )) ?? [];
+
+    if (!telphinCallsResponse)
+      throw new NotFoundException('Звонков не найдено');
+
+    const managerCallsMap = new Map<string, string>();
+
+    // Проходимся по результату и собираем мапу, где
+    // ключ - ID внутреннего номера менеджера
+    // значение - Объект из номеров и даты звонков, где
+    // ключ - номер телефона
+    // значение - список дат звонков
+    telphinCallsResponse.forEach((call) => {
+      let phone: string;
+
+      if (!extensionPhoneList.includes(call.to_username)) {
+        phone = call.to_username;
+      } else if (call.bridged_username) {
+        phone = call.bridged_username;
+      } else if (!extensionPhoneList.includes(call.to_username)) {
+        phone = call.to_username;
+      } else if (!extensionPhoneList.includes(call.from_screen_name)) {
+        phone = call.from_screen_name;
+      } else {
+        phone = '';
+      }
+
+      if (!phone || phone.includes('*')) return;
+
+      phone = phone.replace('+', '');
+
+      const callInitAt = call.init_time_gmt;
+
+      // Если нет такого номера добавляем
+      // Если текущая дата позднее той, которая в объекте: перезаписываем
+      if (
+        !managerCallsMap.has(phone) ||
+        dayjs(callInitAt).isAfter(managerCallsMap.get(phone))
+      ) {
+        managerCallsMap.set(phone, callInitAt);
+      }
+    });
+
+    // Проходим по мапе с номерами и убираем номера, где дата больше -7 дней с текущего момента
+    managerCallsMap.forEach((callDate, phone) => {
+      if (dayjs(callDate).isBefore(dateNow.subtract(8, 'd'))) return;
+
+      // Удаляем номера, у которых был недавно звонок
+      managerCallsMap.delete(phone);
+    });
+
+    if (managerCallsMap.size === 0)
+      throw new UnprocessableEntityException('Не удалось сформировать звонки');
+
+    const batchCommandsMap = new Map<number, B24BatchCommands>();
+    let batchCommandsMapIndex = 0;
+
+    // Проходим по номерам, у которых не было звонков больше 5 дней и составляем запрос на поиск дубликатов в активных стадиях
+    managerCallsMap.forEach((callDate, phone) => {
+      let commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+
+      if (Object.keys(commands).length === 50) {
+        batchCommandsMapIndex++;
+        commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+      }
+
+      commands[`find_duplicate=${phone}`] = {
+        method: 'crm.duplicate.findbycomm',
+        params: {
+          type: 'PHONE',
+          values: [phone],
+          entity_type: 'LEAD',
+        },
+      };
+
+      if (Object.keys(commands).length === 50) {
+        batchCommandsMap.set(batchCommandsMapIndex, commands);
+        batchCommandsMapIndex++;
+        commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+      }
+
+      commands[`get_lead=${phone}`] = {
+        method: 'crm.lead.list',
+        params: {
+          filter: {
+            ID: `$result[find_duplicate=${phone}][LEAD][0]`,
+            '@STATUS_ID': [...B24LeadNewStages, ...B24LeadActiveStages],
+          },
+        },
+      };
+
+      batchCommandsMap.set(batchCommandsMapIndex, commands);
+    });
+
+    // todo: Удалить список звонков из кеша после удачной обработки
+
+    console.time('batch');
+    const batchResponses = await Promise.all<
+      Promise<
+        B24BatchResponseMap<Record<string, B24Lead[] | { LEAD: number[] }>>
+      >[]
+    >(
+      Array.from(batchCommandsMap.values()).map((commands) =>
+        this.bitrixService.callBatch(commands),
+      ),
+    );
+    console.timeLog('batch', 'End request batch commands to bitrix');
+
+    const filteredLeads = new Set<string>();
+
+    batchResponses.forEach(({ result: { result: response } }) => {
+      Object.entries(response).forEach(([command, response]) => {
+        const [commandName] = command.split('=');
+
+        if (commandName !== 'get_lead') return;
+
+        if (
+          !Array.isArray(response) ||
+          response.length === 0 ||
+          response.length > 1
+        )
+          return;
+
+        const [lead] = response;
+
+        // На всякий случай проверяем, если лид не в активных стадиях
+        if (
+          ![...B24LeadActiveStages, ...B24LeadNewStages].includes(
+            lead.STATUS_ID,
+          )
+        )
+          return;
+
+        filteredLeads.add(lead.ID);
+      });
+    });
+
+    return {
+      count: filteredLeads.size,
+      links: [...filteredLeads.values()].map((leadId) =>
+        this.bitrixService.generateLeadUrl(leadId),
+      ),
+    };
+  }
+
+  /**
    * Update or create new leads in DB
    *
    * ---
@@ -785,15 +1033,19 @@ export class BitrixLeadsUseCase {
     try {
       // Текущая дата и время
       const dateNow = dayjs();
+
       // Проверяем если понедельник, то нужно выбрать с пт, если нет, то выбираем за вчерашний день
       const dateFilterStart =
         dateNow.get('d') == 1
           ? dayjs().subtract(3, 'day').format('YYYY-MM-DD [17:00:00]')
           : dayjs().subtract(1, 'day').format('YYYY-MM-DD [17:00:00]');
+
       // Текущее время -1 час
       const dateNowSubtract1Hour = dateNow.subtract(1, 'hour');
+
       // Лимит запросов битрикс
       const limit = 50;
+
       // Фильтруем лиды по статусу Новый в работе и дата перехода в стадию со вчера 17:00
       const filterGetLeadList = {
         STATUS_ID: B24LeadActiveStages[0], // Новый в работе
