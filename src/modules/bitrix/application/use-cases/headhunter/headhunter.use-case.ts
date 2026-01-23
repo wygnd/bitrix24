@@ -183,54 +183,81 @@ export class BitrixHeadhunterUseCase {
     action_type,
     payload,
   }: HeadhunterWebhookCallDto): Promise<HeadhunterWebhookCallResponse> {
-    switch (action_type) {
-      case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
-        const dto = await validateField(
-          HeadHunterWebhookNegotiationOrRequestPayloadDto,
-          payload,
-        );
+    try {
+      let response: Promise<HeadhunterWebhookCallResponse>;
+      switch (action_type) {
+        case HH_WEBHOOK_EVENTS.NEW_RESPONSE_OR_INVITATION_VACANCY:
+          const dto = await validateField(
+            HeadHunterWebhookNegotiationOrRequestPayloadDto,
+            payload,
+          );
 
-        return this.handleDealHRFromHeadhunterRequest({
-          resumeId: dto.resume_id,
-          vacancyId: dto.vacancy_id,
-          topicId: dto.topic_id,
-          messageType: 'manager',
+          response = this.handleDealHRFromHeadhunterRequest({
+            resumeId: dto.resume_id,
+            vacancyId: dto.vacancy_id,
+            topicId: dto.topic_id,
+            messageType: 'manager',
+          });
+          break;
+
+        case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
+          const payloadDto = await validateField(
+            HeadhunterWebhookNegotiationEmployerStateChangePayloadDto,
+            payload,
+          );
+
+          // В зависимости от того, на какую стадию перевели
+          switch (payloadDto.to_state) {
+            // Если стадия Вакансия закрыта
+            case 'discard_vacancy_closed':
+              response = this.handleRejectStatusFromHeadhunterRequest(
+                payloadDto.resume_id,
+                payloadDto.vacancy_id,
+              );
+              break;
+
+            // В остальных случаях идем по стандартному пути
+            default:
+              response = this.handleDealHRFromHeadhunterRequest({
+                resumeId: payloadDto.resume_id,
+                vacancyId: payloadDto.vacancy_id,
+                topicId: payloadDto.topic_id,
+                messageType:
+                  payloadDto.from_state === 'consider' &&
+                  payloadDto.to_state === 'phone_interview'
+                    ? 'bot'
+                    : 'manager',
+              });
+              break;
+          }
+          break;
+
+        default:
+          response = Promise.resolve({
+            status: false,
+            message: 'Unhandled event',
+          });
+          break;
+      }
+
+      response.then((res) => {
+        this.logger.debug({
+          fields: {
+            action_type,
+            payload,
+          },
+          response: res,
         });
+      });
 
-      case HH_WEBHOOK_EVENTS.NEGOTIATION_EMPLOYER_STATE_CHANGE:
-        const payloadDto = await validateField(
-          HeadhunterWebhookNegotiationEmployerStateChangePayloadDto,
-          payload,
-        );
-
-        // В зависимости от того, на какую стадию перевели
-        switch (payloadDto.to_state) {
-          // Если стадия Вакансия закрыта
-          case 'discard_vacancy_closed':
-            return this.handleRejectStatusFromHeadhunterRequest(
-              payloadDto.resume_id,
-              payloadDto.vacancy_id,
-            );
-
-          // В остальных случаях идем по стандартному пути
-          default:
-            return this.handleDealHRFromHeadhunterRequest({
-              resumeId: payloadDto.resume_id,
-              vacancyId: payloadDto.vacancy_id,
-              topicId: payloadDto.topic_id,
-              messageType:
-                payloadDto.from_state === 'consider' &&
-                payloadDto.to_state === 'phone_interview'
-                  ? 'bot'
-                  : 'manager',
-            });
-        }
-
-      default:
-        return {
-          status: false,
-          message: 'Unhandled event',
-        };
+      return response;
+    } catch (error) {
+      this.logger.error({
+        handler: this.handleNewResponseVacancyWebhook.name,
+        fields: { action_type, payload },
+        error,
+      });
+      throw error;
     }
   }
 
@@ -363,8 +390,7 @@ export class BitrixHeadhunterUseCase {
         // Если нашли совпадения по телефону
         case 'phone':
           message =
-            'Совпадение со сделкой: [b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' +
-            message;
+            'Совпадение со сделкой: [b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' + message;
 
           deals.forEach(({ ID, STAGE_ID }) => {
             // Если сделка в неактивной стадии выходим
@@ -925,7 +951,7 @@ export class BitrixHeadhunterUseCase {
     this.redisService.set<HHBitrixVacancyDto>(
       REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY,
       findVacancy,
-      300, // 5 minute
+      600, // 10 minutes
     );
 
     return findVacancy;

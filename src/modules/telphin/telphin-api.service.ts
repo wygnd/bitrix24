@@ -168,7 +168,6 @@ export class TelphinApiService {
 
       return data;
     } catch (e) {
-      this.logger.log(e);
       this.logger.error(e);
       return null;
     }

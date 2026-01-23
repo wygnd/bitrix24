@@ -16,7 +16,6 @@ import {
   TelphinCallsResponse,
   TelphinGetCallsFields,
 } from '@/modules/telphin/interfaces/telpgin-calls.interface';
-import dayjs from 'dayjs';
 
 @Injectable()
 export class TelphinService {
@@ -361,16 +360,24 @@ export class TelphinService {
   public async getCallList(
     fields: TelphinGetCallsFields,
   ): Promise<TelphinCallsResponse | null> {
-    return this.telphinApiService.get<TelphinCallsResponse>(
-      `/client/@me/calls`,
-      fields,
-    );
-  }
-
-  public async getCallsStats() {
-    return this.telphinApiService.get('/extension/1146314/cdr', {
-      start_datetime: dayjs().subtract(3, 'd').format('YYYY-MM-DD HH:mm:ss'),
-      end_datetime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-    });
+    try {
+      const response = await this.telphinApiService.get<TelphinCallsResponse>(
+        `/client/@me/calls`,
+        fields,
+      );
+      this.logger.debug({
+        handler: this.getCallList.name,
+        fields,
+        response,
+      });
+      return response;
+    } catch (error) {
+      this.logger.error({
+        handler: this.getCallList.name,
+        fields,
+        error,
+      });
+      throw error;
+    }
   }
 }
