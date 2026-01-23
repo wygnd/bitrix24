@@ -4,6 +4,7 @@ import { AuthGuard } from '@/common/guards/auth.guard';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
+import { B24DealDTO } from '@/modules/bitrix/application/dtos/deals/deal.dto';
 
 @ApiTags('Deals')
 @ApiExceptions()
@@ -13,6 +14,7 @@ import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals
 export class BitrixDealsController {
   constructor(private readonly bitrixDeals: BitrixDealsUseCase) {}
 
+  @ApiOperation({ summary: 'Получить сделку по ID' })
   @ApiQuery({
     type: Number,
     name: 'deal_id',
@@ -26,7 +28,7 @@ export class BitrixDealsController {
   }
 
   @ApiOperation({
-    summary: 'get deals fields',
+    summary: 'Получить поля сделки',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -70,7 +72,7 @@ export class BitrixDealsController {
   }
 
   @ApiOperation({
-    summary: 'get deals field',
+    summary: 'Получить конкретное поле сделки',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -95,6 +97,11 @@ export class BitrixDealsController {
   }
 
   @ApiOperation({ summary: 'Получить список сделок' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: B24DealDTO,
+    isArray: true,
+  })
   @Get('/')
   async getDealList() {
     return this.bitrixDeals.getDeals({
