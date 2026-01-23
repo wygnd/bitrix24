@@ -808,11 +808,16 @@ export class BitrixLeadsUpsellUseCase {
       .then((result) => {
         this.logger.debug({
           message: 'Final upsell steps',
-          data: result,
+          request: batchCommandsNotify,
+          response: result,
         });
       })
       .catch((error) => {
-        this.logger.error({ message: 'Invalid on final upsell steps', error });
+        this.logger.error({
+          message: 'Invalid on final upsell steps',
+          request: batchCommandsNotify,
+          error,
+        });
       });
 
     return { status: true, message: `Was successfully sending: ${dealId}` };
