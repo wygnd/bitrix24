@@ -1037,8 +1037,8 @@ export class BitrixLeadsUseCase {
       // Проверяем если понедельник, то нужно выбрать с пт, если нет, то выбираем за вчерашний день
       const dateFilterStart =
         dateNow.get('d') == 1
-          ? dayjs().subtract(3, 'day').format('YYYY-MM-DD [17:00:00]')
-          : dayjs().subtract(1, 'day').format('YYYY-MM-DD [17:00:00]');
+          ? dayjs().subtract(3, 'day')
+          : dayjs().subtract(1, 'day');
 
       // Текущее время -1 час
       const dateNowSubtract1Hour = dateNow.subtract(1, 'hour');
@@ -1052,7 +1052,7 @@ export class BitrixLeadsUseCase {
         // Если текущий час 9 утра, то мы выбираем со вчерашнего дня иначе с сегодняшнего дня
         '>=MOVED_TIME':
           dateNow.get('h') <= 9
-            ? dateFilterStart
+            ? dateFilterStart.format('YYYY-MM-DD [17:00:00]')
             : dateNow.format('YYYY-MM-DD [00:00:00]'),
         // До текущего времени -1 час
         '<=MOVED_TIME': dateNowSubtract1Hour.format('YYYY-MM-DD HH:mm:ss'),
@@ -1076,7 +1076,7 @@ export class BitrixLeadsUseCase {
 
         // Получение списка звонков с Telphin
         this.telphinService.getCallList({
-          start_datetime: dateFilterStart,
+          start_datetime: dateFilterStart.format('YYYY-MM-DD [14:00:00]'),
           end_datetime: dateNow.format('YYYY-MM-DD HH:mm:ss'),
         }),
       ]);
