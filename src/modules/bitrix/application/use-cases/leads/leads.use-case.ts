@@ -1225,7 +1225,7 @@ export class BitrixLeadsUseCase {
         // Если текущий час 9 утра, то мы выбираем со вчерашнего дня иначе с сегодняшнего дня
         '>=MOVED_TIME':
           dateNow.get('h') <= 9
-            ? dateFilterStart.format('YYYY-MM-DD [17:00:00]')
+            ? dateFilterStart.format('YYYY-MM-DD [15:00:00]')
             : dateNow.format('YYYY-MM-DD [00:00:00]'),
         // До текущего времени -1 час
         '<=MOVED_TIME': dateNowSubtract1Hour.format('YYYY-MM-DD HH:mm:ss'),
@@ -1375,7 +1375,6 @@ export class BitrixLeadsUseCase {
             return;
           }
 
-          // Если звонок был найден пытаемся
           const callInitAt = dayjs(findCalls[0]).add(3, 'h');
           const leadMovedAt = dayjs(leadMovedTime);
 
@@ -1387,8 +1386,9 @@ export class BitrixLeadsUseCase {
               leadMovedAt.subtract(15, 'm'),
               // дата перехода на стадию +1 час
               leadMovedAt.add(1, 'h'),
+              'm',
             ) ||
-            callInitAt.isAfter(leadMovedAt.subtract(1, 'h'))
+            callInitAt.isSameOrAfter(leadMovedAt.add(1, 'h'), 'h')
           )
             return;
 
