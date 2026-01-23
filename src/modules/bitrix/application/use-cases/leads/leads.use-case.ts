@@ -116,257 +116,274 @@ export class BitrixLeadsUseCase {
   public async getLeadsStatusesByDate(
     date: Date,
   ): Promise<LeadAvitoStatusResponse> {
-    const filterLeadsByDate = {
-      '!UF_CRM_1713765220416': '',
-      '>=DATE_CREATE': `${date.toLocaleDateString()}T00:00:00`, // Дата создания
-      '<=DATE_CREATE': `${date.toLocaleDateString()}T23:59:59`, // Дата создания
-    };
-    const filterLeadsByDateRequest = {
-      '!UF_CRM_1713765220416': '',
-      '>=UF_CRM_1715671150': `${date.toLocaleDateString()}T00:00:00`, // Дата последнего обращения
-      '<=UF_CRM_1715671150': `${date.toLocaleDateString()}T23:59:59`, // Дата последнего обращения
-    };
-    const selectLeadFields = [
-      'ID',
-      'UF_CRM_1712667568', // С какого авито обащение
-      'UF_CRM_1713765220416', // Номер авито
-      'DATE_CREATE', // Дата создания лида
-      'UF_CRM_1715671150', // Дата последнего обращения
-      'STATUS_ID', // Стадия
-    ];
+    try {
+      const filterLeadsByDate = {
+        '!UF_CRM_1713765220416': '', // Подменный номер авито
+        '>=DATE_CREATE': `${date.toLocaleDateString()}T00:00:00`, // Дата создания
+        '<=DATE_CREATE': `${date.toLocaleDateString()}T23:59:59`, // Дата создания
+      };
+      const filterLeadsByDateRequest = {
+        '!UF_CRM_1713765220416': '', // Подменный номер авито
+        '>=UF_CRM_1715671150': `${date.toLocaleDateString()}T00:00:00`, // Дата последнего обращения
+        '<=UF_CRM_1715671150': `${date.toLocaleDateString()}T23:59:59`, // Дата последнего обращения
+      };
+      const selectLeadFields = [
+        'ID',
+        'UF_CRM_1712667568', // С какого авито обащение
+        'UF_CRM_1713765220416', // Подменный номер авито
+        'DATE_CREATE', // Дата создания лида
+        'UF_CRM_1715671150', // Дата последнего обращения
+        'STATUS_ID', // Стадия
+      ];
 
-    const { result: batchResponseGetTotalLeads } =
-      await this.bitrixService.callBatch<{
-        get_leads_by_date: B24Lead[];
-        get_leads_by_date_request: B24Lead[];
-      }>({
-        get_leads_by_date: {
+      const { result: batchResponseGetTotalLeads } =
+        await this.bitrixService.callBatch<{
+          get_leads_by_date: B24Lead[];
+          get_leads_by_date_request: B24Lead[];
+        }>({
+          get_leads_by_date: {
+            method: 'crm.lead.list',
+            params: {
+              filter: filterLeadsByDate,
+              select: selectLeadFields,
+              start: 0,
+            },
+          },
+          get_leads_by_date_request: {
+            method: 'crm.lead.list',
+            params: {
+              filter: filterLeadsByDateRequest,
+              select: selectLeadFields,
+              start: 0,
+            },
+          },
+        });
+
+      const {
+        get_leads_by_date: totalLeadsByDate,
+        get_leads_by_date_request: totalLeadsByDateRequest,
+      } = batchResponseGetTotalLeads.result_total;
+
+      const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
+      const batchQueriesByDate = Math.ceil(totalLeadsByDate / 50);
+      const batchQueriesByDateRequest = Math.ceil(totalLeadsByDateRequest / 50);
+      let index = 0;
+
+      for (let i = 1; i <= batchQueriesByDate; i++) {
+        let cmds = batchCommandsGetLeads.get(index) ?? {};
+
+        if (Object.keys(cmds).length === 50) {
+          index++;
+          cmds = batchCommandsGetLeads.get(index) ?? {};
+        }
+        cmds[`get_leads_by_date-${i}`] = {
           method: 'crm.lead.list',
           params: {
             filter: filterLeadsByDate,
             select: selectLeadFields,
-            start: 0,
+            start: (i - 1) * 50,
           },
-        },
-        get_leads_by_date_request: {
+        };
+
+        batchCommandsGetLeads.set(index, cmds);
+      }
+
+      for (let i = 1; i <= batchQueriesByDateRequest; i++) {
+        let cmds = batchCommandsGetLeads.get(index) ?? {};
+
+        if (Object.keys(cmds).length === 50) {
+          index++;
+          cmds = batchCommandsGetLeads.get(index) ?? {};
+        }
+
+        cmds[`get_leads_by_date_request-${i}`] = {
           method: 'crm.lead.list',
           params: {
             filter: filterLeadsByDateRequest,
             select: selectLeadFields,
-            start: 0,
+            start: (i - 1) * 50,
           },
-        },
+        };
+
+        batchCommandsGetLeads.set(index, cmds);
+      }
+
+      const leadsMap = new Map<string, LeadAvitoStatus>();
+      const batchCommandsGetLeadStageHistory = new Map<
+        number,
+        B24BatchCommands
+      >();
+      const responses = await Promise.all<
+        Promise<B24BatchResponseMap<Record<string, B24Lead[]>>>[]
+      >(
+        Array.from(batchCommandsGetLeads.values()).map((cmds) =>
+          this.bitrixService.callBatch(cmds),
+        ),
+      );
+
+      if (
+        responses.length === 0 ||
+        Object.keys(responses[0].result.result).length === 0
+      ) {
+        return {
+          count_leads: 0,
+          leads: {},
+        };
+      }
+
+      index = 0;
+      responses.map(({ result }) => {
+        Object.entries(result.result).forEach(([_, leads]) => {
+          leads.forEach(
+            ({
+              ID: leadId,
+              DATE_CREATE,
+              STATUS_ID: statusId,
+              UF_CRM_1713765220416: avitoPhone = '',
+              UF_CRM_1712667568: avitoName = '',
+              UF_CRM_1715671150: dateLastRequest = '',
+            }) => {
+              if (leadsMap.has(leadId)) return;
+              let leadStatus = B24LeadStatus.UNKNOWN;
+
+              const dateCreate = new Date(DATE_CREATE);
+
+              switch (true) {
+                // Если лид в активных стадиях
+                case B24LeadActiveStages.includes(statusId) &&
+                  dateCreate.toLocaleDateString() !== date.toLocaleDateString():
+                  leadStatus = B24LeadStatus.ACTIVE;
+                  break;
+
+                // Если лид в неактивных стадиях
+                case B24LeadRejectStages.includes(statusId) &&
+                  dateCreate.toLocaleDateString() !== date.toLocaleDateString():
+                  leadStatus = B24LeadStatus.NONACTIVE;
+                  break;
+
+                // Если лид в новых стадиях
+                case dateCreate.toLocaleDateString() ===
+                  date.toLocaleDateString() ||
+                  (B24LeadNewStages.includes(statusId) &&
+                    dateCreate.toLocaleDateString() !==
+                      date.toLocaleDateString()):
+                  leadStatus = B24LeadStatus.NEW;
+                  break;
+
+                // Если лид в завершающих стадиях
+                case B24LeadConvertedStages.includes(statusId):
+                  leadStatus = B24LeadStatus.FINISH;
+                  break;
+              }
+
+              leadsMap.set(leadId, {
+                avito_name: avitoName,
+                date_cerate: dateCreate.toISOString(),
+                avito_number: avitoPhone,
+                date_last_request: dateLastRequest,
+                status: leadStatus,
+              });
+
+              let cmds = batchCommandsGetLeadStageHistory.get(index) ?? {};
+              if (Object.keys(cmds).length === 50) {
+                index++;
+                cmds = batchCommandsGetLeadStageHistory.get(index) ?? {};
+              }
+
+              cmds[`get_lead_history-${leadId}`] = {
+                method: 'crm.stagehistory.list',
+                params: {
+                  entityTypeId: 1,
+                  filter: {
+                    OWNER_ID: leadId,
+                  },
+                  order: {
+                    CREATED_TIME: 'DESC',
+                  },
+                  select: ['CREATED_TIME', 'OWNER_ID', 'STATUS_ID'],
+                },
+              };
+
+              batchCommandsGetLeadStageHistory.set(index, cmds);
+            },
+          );
+        });
       });
 
-    const {
-      get_leads_by_date: totalLeadsByDate,
-      get_leads_by_date_request: totalLeadsByDateRequest,
-    } = batchResponseGetTotalLeads.result_total;
+      const batchResponseGetLeadHistory = await Promise.all<
+        Promise<
+          B24BatchResponseMap<
+            Record<
+              string,
+              {
+                items: Pick<
+                  B24StageHistoryItem,
+                  'CREATED_TIME' | 'OWNER_ID' | 'STATUS_ID'
+                >[];
+              }
+            >
+          >
+        >[]
+      >(
+        Array.from(batchCommandsGetLeadStageHistory.values()).map((cmds) =>
+          this.bitrixService.callBatch(cmds),
+        ),
+      );
 
-    const batchCommandsGetLeads = new Map<number, B24BatchCommands>();
-    const batchQueriesByDate = Math.ceil(totalLeadsByDate / 50);
-    const batchQueriesByDateRequest = Math.ceil(totalLeadsByDateRequest / 50);
-    let index = 0;
+      batchResponseGetLeadHistory.forEach((batchResponse) => {
+        Object.entries(batchResponse.result.result).forEach(
+          ([commandName, { items: leadStageHistory }]) => {
+            const leadId = commandName.split('-')[1];
+            const lead = leadsMap.get(leadId);
 
-    for (let i = 1; i <= batchQueriesByDate; i++) {
-      let cmds = batchCommandsGetLeads.get(index) ?? {};
-
-      if (Object.keys(cmds).length === 50) {
-        index++;
-        cmds = batchCommandsGetLeads.get(index) ?? {};
-      }
-      cmds[`get_leads_by_date-${i}`] = {
-        method: 'crm.lead.list',
-        params: {
-          filter: filterLeadsByDate,
-          select: selectLeadFields,
-          start: (i - 1) * 50,
-        },
-      };
-
-      batchCommandsGetLeads.set(index, cmds);
-    }
-
-    for (let i = 1; i <= batchQueriesByDateRequest; i++) {
-      let cmds = batchCommandsGetLeads.get(index) ?? {};
-
-      if (Object.keys(cmds).length === 50) {
-        index++;
-        cmds = batchCommandsGetLeads.get(index) ?? {};
-      }
-
-      cmds[`get_leads_by_date_request-${i}`] = {
-        method: 'crm.lead.list',
-        params: {
-          filter: filterLeadsByDateRequest,
-          select: selectLeadFields,
-          start: (i - 1) * 50,
-        },
-      };
-
-      batchCommandsGetLeads.set(index, cmds);
-    }
-
-    const leadsMap = new Map<string, LeadAvitoStatus>();
-    const batchCommandsGetLeadStageHistory = new Map<
-      number,
-      B24BatchCommands
-    >();
-    const responses = await Promise.all<
-      Promise<B24BatchResponseMap<Record<string, B24Lead[]>>>[]
-    >(
-      Array.from(batchCommandsGetLeads.values()).map((cmds) =>
-        this.bitrixService.callBatch(cmds),
-      ),
-    );
-
-    if (
-      responses.length === 0 ||
-      Object.keys(responses[0].result.result).length === 0
-    ) {
-      return {
-        count_leads: 0,
-        leads: {},
-      };
-    }
-
-    index = 0;
-    responses.map(({ result }) => {
-      Object.entries(result.result).forEach(([_, leads]) => {
-        leads.forEach(
-          ({
-            ID: leadId,
-            DATE_CREATE,
-            STATUS_ID: statusId,
-            UF_CRM_1713765220416: avitoPhone = '',
-            UF_CRM_1712667568: avitoName = '',
-            UF_CRM_1715671150: dateLastRequest = '',
-          }) => {
-            if (leadsMap.has(leadId)) return;
-            let leadStatus = B24LeadStatus.UNKNOWN;
-
-            const dateCreate = new Date(DATE_CREATE);
+            if (
+              !lead ||
+              new Date(lead.date_cerate).toISOString() === date.toISOString() ||
+              leadStageHistory.length < 2
+            )
+              return;
 
             switch (true) {
-              // Если лид в активных стадиях
-              case B24LeadActiveStages.includes(statusId) &&
-                dateCreate.toLocaleDateString() !== date.toLocaleDateString():
-                leadStatus = B24LeadStatus.ACTIVE;
+              case B24LeadRejectStages.includes(leadStageHistory[1].STATUS_ID):
+                lead.status = B24LeadStatus.NONACTIVE;
                 break;
 
-              // Если лид в неактивных стадиях
-              case B24LeadRejectStages.includes(statusId) &&
-                dateCreate.toLocaleDateString() !== date.toLocaleDateString():
-                leadStatus = B24LeadStatus.NONACTIVE;
-                break;
-
-              // Если лид в новых стадиях
-              case dateCreate.toLocaleDateString() ===
-                date.toLocaleDateString() ||
-                (B24LeadNewStages.includes(statusId) &&
-                  dateCreate.toLocaleDateString() !==
-                    date.toLocaleDateString()):
-                leadStatus = B24LeadStatus.NEW;
-                break;
-
-              // Если лид в завершающих стадиях
-              case B24LeadConvertedStages.includes(statusId):
-                leadStatus = B24LeadStatus.FINISH;
+              case B24LeadNewStages.includes(leadStageHistory[1].STATUS_ID):
+                lead.status = B24LeadStatus.ACTIVE;
                 break;
             }
 
-            leadsMap.set(leadId, {
-              avito_name: avitoName,
-              date_cerate: dateCreate.toISOString(),
-              avito_number: avitoPhone,
-              date_last_request: dateLastRequest,
-              status: leadStatus,
-            });
-
-            let cmds = batchCommandsGetLeadStageHistory.get(index) ?? {};
-            if (Object.keys(cmds).length === 50) {
-              index++;
-              cmds = batchCommandsGetLeadStageHistory.get(index) ?? {};
-            }
-
-            cmds[`get_lead_history-${leadId}`] = {
-              method: 'crm.stagehistory.list',
-              params: {
-                entityTypeId: 1,
-                filter: {
-                  OWNER_ID: leadId,
-                },
-                order: {
-                  CREATED_TIME: 'DESC',
-                },
-                select: ['CREATED_TIME', 'OWNER_ID', 'STATUS_ID'],
-              },
-            };
-
-            batchCommandsGetLeadStageHistory.set(index, cmds);
+            leadsMap.set(leadId, lead);
           },
         );
       });
-    });
 
-    const batchResponseGetLeadHistory = await Promise.all<
-      Promise<
-        B24BatchResponseMap<
-          Record<
-            string,
-            {
-              items: Pick<
-                B24StageHistoryItem,
-                'CREATED_TIME' | 'OWNER_ID' | 'STATUS_ID'
-              >[];
-            }
-          >
-        >
-      >[]
-    >(
-      Array.from(batchCommandsGetLeadStageHistory.values()).map((cmds) =>
-        this.bitrixService.callBatch(cmds),
-      ),
-    );
+      const response = {
+        count_leads: leadsMap.size,
+        leads: Array.from(leadsMap.entries()).reduce(
+          (acc, [leadId, leadData]) => {
+            acc[leadId] = leadData;
+            return acc;
+          },
+          {},
+        ),
+      };
 
-    batchResponseGetLeadHistory.forEach((batchResponse) => {
-      Object.entries(batchResponse.result.result).forEach(
-        ([commandName, { items: leadStageHistory }]) => {
-          const leadId = commandName.split('-')[1];
-          const lead = leadsMap.get(leadId);
+      this.logger.debug({
+        handler: this.getLeadsStatusesByDate.name,
+        fields: date,
+        response,
+      });
 
-          if (
-            !lead ||
-            new Date(lead.date_cerate).toISOString() === date.toISOString() ||
-            leadStageHistory.length < 2
-          )
-            return;
-
-          switch (true) {
-            case B24LeadRejectStages.includes(leadStageHistory[1].STATUS_ID):
-              lead.status = B24LeadStatus.NONACTIVE;
-              break;
-
-            case B24LeadNewStages.includes(leadStageHistory[1].STATUS_ID):
-              lead.status = B24LeadStatus.ACTIVE;
-              break;
-          }
-
-          leadsMap.set(leadId, lead);
-        },
-      );
-    });
-
-    return {
-      count_leads: leadsMap.size,
-      leads: Array.from(leadsMap.entries()).reduce(
-        (acc, [leadId, leadData]) => {
-          acc[leadId] = leadData;
-          return acc;
-        },
-        {},
-      ),
-    };
+      return response;
+    } catch (error) {
+      this.logger.error({
+        handler: this.getLeadsStatusesByDate.name,
+        fields: date,
+        error,
+      });
+      throw error;
+    }
   }
 
   public async handleObserveManagerCallingOld({

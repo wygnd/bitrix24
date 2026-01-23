@@ -36,13 +36,33 @@ export class WikiService {
     >('/advertising-department/destribute-deal/', data);
   }
 
+  /**
+   * Send to avito service information about canceled lead by AI
+   *
+   * ---
+   *
+   * Отправляет в сервис авито информацию об отклоненном лиде от ИИ
+   * @param data
+   */
   public async sendRejectDistributeNewDeal(
     data: DistributeAdvertDealWikiResponse,
   ) {
-    return this.wikiApiServiceNew.post<DistributeAdvertDealWikiResponse>(
-      '/advertising-department/rollback-counter',
-      data,
-    );
+    try {
+      const response =
+        await this.wikiApiServiceNew.post<DistributeAdvertDealWikiResponse>(
+          '/advertising-department/rollback-counter',
+          data,
+        );
+      this.logger.debug({
+        handler: this.sendRejectDistributeNewDeal.name,
+        fields: data,
+        response,
+      });
+      return response;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 
   /**
@@ -54,42 +74,61 @@ export class WikiService {
    * @param force
    */
   public async getWorkingSales(force: boolean = false) {
-    if (!force) {
-      const salesFromCache = await this.redisService.get<string[]>(
+    try {
+      if (!force) {
+        const salesFromCache = await this.redisService.get<string[]>(
+          REDIS_KEYS.WIKI_WORKING_SALES,
+        );
+
+        if (salesFromCache) return salesFromCache;
+      }
+
+      const { sales, status } =
+        await this.wikiApiServiceOld.get<GetWorkingSalesInterface>(
+          '?action=get_working_sales',
+        );
+
+      if (!status) return [];
+
+      this.redisService.set<string[]>(
         REDIS_KEYS.WIKI_WORKING_SALES,
+        sales,
+        300, // 5 minutes
       );
 
-      if (salesFromCache) return salesFromCache;
+      return sales;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
     }
-
-    const { sales, status } =
-      await this.wikiApiServiceOld.get<GetWorkingSalesInterface>(
-        '?action=get_working_sales',
-      );
-
-    if (!status) return [];
-
-    this.redisService.set<string[]>(
-      REDIS_KEYS.WIKI_WORKING_SALES,
-      sales,
-      300, // 5 minutes
-    );
-
-    return sales;
   }
 
+  /**
+   * Send request about new bitrix lead to wiki
+   *
+   * ---
+   *
+   * Отправляет запрос о новой лиде в wiki
+   * @param fields
+   */
   public async sendResultReceiveClientRequestFromAvitoToWiki(
     fields: WikiUpdateLeadRequest,
   ): Promise<WikIUpdateLeadResponse> {
     try {
-      return await this.wikiApiServiceNew.patch<
+      const response = await this.wikiApiServiceNew.patch<
         Omit<WikiUpdateLeadRequest, 'wiki_lead_id'>,
         WikIUpdateLeadResponse
       >(`/avito/leads/${fields.wiki_lead_id}`, {
         lead_id: fields.lead_id,
         status: fields.status,
       });
+      this.logger.debug({
+        fields,
+        response,
+      });
+      return response;
     } catch (e) {
+      this.logger.error(e);
       return {
         wiki_lead_id: 0,
         lead_id: 0,

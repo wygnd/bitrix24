@@ -258,9 +258,10 @@ export class BitrixAvitoUseCase {
             'STATUS_ID',
             'ASSIGNED_BY_ID',
             'DATE_CREATE',
-            'UF_CRM_1653291114976', // Сообщение с авито
             'UF_CRM_1712667568', // С какого авито обращение
-            'UF_CRM_1692711658572', // Файлы
+            'UF_CRM_1713765220416', // Подменный номер авито
+            'UF_CRM_1653291114976', // Сообщение с авито
+            'NAME',
           ],
           start: 0,
         },
@@ -336,7 +337,10 @@ export class BitrixAvitoUseCase {
       STATUS_ID,
       ASSIGNED_BY_ID,
       DATE_CREATE,
+      UF_CRM_1712667568: leadAvito = '',
+      UF_CRM_1713765220416: leadAvitoNumber = '',
       UF_CRM_1653291114976: leadComment = '',
+      NAME: leadAvitoClientName = '',
     } = lead[0];
 
     const leadDateCreate = new Date(DATE_CREATE);
@@ -346,8 +350,9 @@ export class BitrixAvitoUseCase {
     const batchCommandsUpdateLead: B24BatchCommands = {};
     const updateLeadFields = {
       ASSIGNED_BY_ID: ASSIGNED_BY_ID,
-      UF_CRM_1653291114976:
-        (leadComment ? leadComment + '\n\n\n' : '') + leadMessage, // Сообщение с авито
+      UF_CRM_1712667568: avito, // С какого авито обращение
+      UF_CRM_1713765220416: avito_number, // Подменный номер авито
+      UF_CRM_1653291114976: leadMessage, // Сообщение с авито
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
@@ -368,6 +373,21 @@ export class BitrixAvitoUseCase {
           },
         };
       });
+    } else {
+      // Добавляем комментарий с прошлого авито
+      batchCommandsUpdateLead['add_comment_old_avito'] = {
+        method: 'crm.timeline.comment.add',
+        params: {
+          fields: {
+            ENTITY_ID: leadId,
+            ENTITY_TYPE: 'lead',
+            COMMENT:
+              `Клиент обращался на ${leadAvito}: [${leadAvitoNumber}]\n` +
+              `Имя клиента: ${leadAvitoClientName}\n\n` +
+              leadComment,
+          },
+        },
+      };
     }
 
     switch (true) {

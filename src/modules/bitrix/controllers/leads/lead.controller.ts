@@ -9,7 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { LeadAvitoStatusResponseDto } from '@/modules/bitrix/application/dtos/leads/lead-avito-status-response.dto';
 import { LeadObserveManagerCallingResponseDto } from '@/modules/bitrix/application/dtos/leads/lead-manager-calling.dto';
@@ -88,7 +94,7 @@ export class BitrixLeadController {
     return this.bitrixLeadService.handleObserveActiveLeadsCalls();
   }
 
-  // @ApiExcludeEndpoint()
+  @ApiExcludeEndpoint()
   @UseGuards(AuthHelpersGuard)
   @Get('/helpers/get_telphin_calls_at_last_two_week')
   async handleHelperGetCallsAtLastTwoWeekFromTwoWeek() {
