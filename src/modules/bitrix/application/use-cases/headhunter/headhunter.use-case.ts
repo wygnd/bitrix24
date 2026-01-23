@@ -363,12 +363,7 @@ export class BitrixHeadhunterUseCase {
         // Если нашли совпадения по телефону
         case 'phone':
           message =
-            'Совпадение со сделкой: ' +
-            deals.reduce((acc, { ID: dealId }) => {
-              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
-              return acc;
-            }, '') +
-            '[b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' +
+            'Совпадение со сделкой: [b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' +
             message;
 
           deals.forEach(({ ID, STAGE_ID }) => {
