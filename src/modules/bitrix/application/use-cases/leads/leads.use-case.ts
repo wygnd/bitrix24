@@ -3,7 +3,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
@@ -56,6 +55,8 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { getNoun } from '@/common/functions/get-noun';
 import { TelphinCallOptions } from '@/modules/telphin/interfaces/telpgin-calls.interface';
+import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
+import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -827,178 +828,333 @@ export class BitrixLeadsUseCase {
    * Проверка звонков менеджеров. Если менеджер не звонил в течение 5 дней - сообщение руководителю
    */
   public async handleObserveManagerCallingAtLastFiveDays() {
-    // Получаем список групп где в названии есть sale
-    // Получаем список внутренних номеров
-    const [extensionGroupList, extensionList] = await Promise.all([
-      this.telphinService.getFilteredExtensionsByGroupField('name', 'sale'),
-      this.telphinService.getClientExtensionList(),
-    ]);
-    const dateNow = dayjs();
+    try {
+      // Получаем звонки из Telphin за последние 2 недели
+      const telphinCallsResponse =
+        (await this.redisService.get<TelphinCallOptions[]>(
+          REDIS_KEYS.BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS,
+        )) ?? [];
 
-    // Выбираем только ID
-    const extensionGroupIds = extensionGroupList.map(
-      (extensionGroup) => extensionGroup.id,
-    );
+      if (telphinCallsResponse.length === 0)
+        throw new UnprocessableEntityException('Звонков не найдено');
 
-    // Получаем список внутренних номеров по ID группы
-    const extensionPhoneList = extensionList.reduce<string[]>(
-      (acc, extension) => {
-        if (!extensionGroupIds.includes(extension.extension_group_id))
+      // Получаем список групп где в названии есть sale
+      // Получаем список внутренних номеров
+      const [extensionGroupList, extensionList] = await Promise.all([
+        this.telphinService.getFilteredExtensionsByGroupField('name', 'sale'),
+        this.telphinService.getClientExtensionList(),
+      ]);
+      const dateNow = dayjs();
+
+      // Выбираем только ID
+      const extensionGroupIds = extensionGroupList.map(
+        (extensionGroup) => extensionGroup.id,
+      );
+
+      // Получаем список внутренних номеров по ID группы
+      const extensionPhoneList = extensionList.reduce<string[]>(
+        (acc, extension) => {
+          if (!extensionGroupIds.includes(extension.extension_group_id))
+            return acc;
+          acc.push(extension.ani);
           return acc;
-        acc.push(extension.ani);
-        return acc;
-      },
-      [],
-    );
-
-    // Получаем звонки из Telphin за последние 2 недели
-    // Фильтруем по списку внутренних номеров
-    const telphinCallsResponse =
-      (await this.redisService.get<TelphinCallOptions[]>(
-        REDIS_KEYS.BITRIX_DATA_LEADS_OBSERVE_MANAGER_CALLING_TELPHIN_CALLS_TWO_WEEKS,
-      )) ?? [];
-
-    if (!telphinCallsResponse)
-      throw new NotFoundException('Звонков не найдено');
-
-    const managerCallsMap = new Map<string, string>();
-
-    // Проходимся по результату и собираем мапу, где
-    // ключ - ID внутреннего номера менеджера
-    // значение - Объект из номеров и даты звонков, где
-    // ключ - номер телефона
-    // значение - список дат звонков
-    telphinCallsResponse.forEach((call) => {
-      let phone: string;
-
-      if (!extensionPhoneList.includes(call.to_username)) {
-        phone = call.to_username;
-      } else if (call.bridged_username) {
-        phone = call.bridged_username;
-      } else if (!extensionPhoneList.includes(call.to_username)) {
-        phone = call.to_username;
-      } else if (!extensionPhoneList.includes(call.from_screen_name)) {
-        phone = call.from_screen_name;
-      } else {
-        phone = '';
-      }
-
-      if (!phone || phone.includes('*')) return;
-
-      phone = phone.replace('+', '');
-
-      const callInitAt = call.init_time_gmt;
-
-      // Если нет такого номера добавляем
-      // Если текущая дата позднее той, которая в объекте: перезаписываем
-      if (
-        !managerCallsMap.has(phone) ||
-        dayjs(callInitAt).isAfter(managerCallsMap.get(phone))
-      ) {
-        managerCallsMap.set(phone, callInitAt);
-      }
-    });
-
-    // Проходим по мапе с номерами и убираем номера, где дата больше -7 дней с текущего момента
-    managerCallsMap.forEach((callDate, phone) => {
-      if (dayjs(callDate).isBefore(dateNow.subtract(8, 'd'))) return;
-
-      // Удаляем номера, у которых был недавно звонок
-      managerCallsMap.delete(phone);
-    });
-
-    if (managerCallsMap.size === 0)
-      throw new UnprocessableEntityException('Не удалось сформировать звонки');
-
-    const batchCommandsMap = new Map<number, B24BatchCommands>();
-    let batchCommandsMapIndex = 0;
-
-    // Проходим по номерам, у которых не было звонков больше 5 дней и составляем запрос на поиск дубликатов в активных стадиях
-    managerCallsMap.forEach((callDate, phone) => {
-      let commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
-
-      if (Object.keys(commands).length === 50) {
-        batchCommandsMapIndex++;
-        commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
-      }
-
-      commands[`find_duplicate=${phone}`] = {
-        method: 'crm.duplicate.findbycomm',
-        params: {
-          type: 'PHONE',
-          values: [phone],
-          entity_type: 'LEAD',
         },
-      };
+        [],
+      );
 
-      if (Object.keys(commands).length === 50) {
-        batchCommandsMap.set(batchCommandsMapIndex, commands);
-        batchCommandsMapIndex++;
-        commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
-      }
+      const managerCallsMap = new Map<string, string>();
 
-      commands[`get_lead=${phone}`] = {
-        method: 'crm.lead.list',
-        params: {
-          filter: {
-            ID: `$result[find_duplicate=${phone}][LEAD][0]`,
-            '@STATUS_ID': [...B24LeadNewStages, ...B24LeadActiveStages],
-          },
-        },
-      };
+      // Проходимся по результату и собираем мапу, где
+      // ключ - ID внутреннего номера менеджера
+      // значение - Объект из номеров и даты звонков, где
+      // ключ - номер телефона
+      // значение - список дат звонков
+      telphinCallsResponse.forEach((call) => {
+        let phone: string;
 
-      batchCommandsMap.set(batchCommandsMapIndex, commands);
-    });
+        if (!extensionPhoneList.includes(call.to_username)) {
+          phone = call.to_username;
+        } else if (call.bridged_username) {
+          phone = call.bridged_username;
+        } else if (!extensionPhoneList.includes(call.to_username)) {
+          phone = call.to_username;
+        } else if (!extensionPhoneList.includes(call.from_screen_name)) {
+          phone = call.from_screen_name;
+        } else {
+          phone = '';
+        }
 
-    // todo: Удалить список звонков из кеша после удачной обработки
+        if (!phone || phone.includes('*')) return;
 
-    console.time('batch');
-    const batchResponses = await Promise.all<
-      Promise<
-        B24BatchResponseMap<Record<string, B24Lead[] | { LEAD: number[] }>>
-      >[]
-    >(
-      Array.from(batchCommandsMap.values()).map((commands) =>
-        this.bitrixService.callBatch(commands),
-      ),
-    );
-    console.timeLog('batch', 'End request batch commands to bitrix');
+        phone = phone.replace('+', '');
 
-    const filteredLeads = new Set<string>();
+        const callInitAt = call.init_time_gmt;
 
-    batchResponses.forEach(({ result: { result: response } }) => {
-      Object.entries(response).forEach(([command, response]) => {
-        const [commandName] = command.split('=');
-
-        if (commandName !== 'get_lead') return;
-
+        // Если нет такого номера добавляем
+        // Если текущая дата позднее той, которая в объекте: перезаписываем
         if (
-          !Array.isArray(response) ||
-          response.length === 0 ||
-          response.length > 1
-        )
-          return;
-
-        const [lead] = response;
-
-        // На всякий случай проверяем, если лид не в активных стадиях
-        if (
-          ![...B24LeadActiveStages, ...B24LeadNewStages].includes(
-            lead.STATUS_ID,
-          )
-        )
-          return;
-
-        filteredLeads.add(lead.ID);
+          !managerCallsMap.has(phone) ||
+          dayjs(callInitAt).isAfter(managerCallsMap.get(phone))
+        ) {
+          managerCallsMap.set(phone, callInitAt);
+        }
       });
-    });
 
-    return {
-      count: filteredLeads.size,
-      links: [...filteredLeads.values()].map((leadId) =>
-        this.bitrixService.generateLeadUrl(leadId),
-      ),
-    };
+      // Проходим по мапе с номерами и убираем номера, где дата больше -7 дней с текущего момента
+      managerCallsMap.forEach((callDate, phone) => {
+        if (dayjs(callDate).isBefore(dateNow.subtract(8, 'd'))) return;
+
+        // Удаляем номера, у которых был недавно звонок
+        managerCallsMap.delete(phone);
+      });
+
+      if (managerCallsMap.size === 0)
+        throw new UnprocessableEntityException(
+          'Не удалось сформировать звонки',
+        );
+
+      let batchErrors: string[];
+      const batchCommandsMap = new Map<number, B24BatchCommands>();
+      let batchCommandsMapIndex = 0;
+
+      // Проходим по номерам, у которых не было звонков больше 5 дней и составляем запрос на поиск дубликатов в активных стадиях
+      managerCallsMap.forEach((callDate, phone) => {
+        let commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+
+        if (Object.keys(commands).length === 50) {
+          batchCommandsMapIndex++;
+          commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+        }
+
+        commands[`find_duplicate=${phone}`] = {
+          method: 'crm.duplicate.findbycomm',
+          params: {
+            type: 'PHONE',
+            values: [phone],
+            entity_type: 'LEAD',
+          },
+        };
+
+        if (Object.keys(commands).length === 50) {
+          batchCommandsMap.set(batchCommandsMapIndex, commands);
+          batchCommandsMapIndex++;
+          commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+        }
+
+        commands[`get_lead=${phone}`] = {
+          method: 'crm.lead.list',
+          params: {
+            filter: {
+              ID: `$result[find_duplicate=${phone}][LEAD][0]`,
+              '@STATUS_ID': [...B24LeadNewStages, ...B24LeadActiveStages],
+            },
+          },
+        };
+
+        batchCommandsMap.set(batchCommandsMapIndex, commands);
+      });
+
+      const batchResponses = await Promise.all<
+        Promise<
+          B24BatchResponseMap<Record<string, B24Lead[] | { LEAD: number[] }>>
+        >[]
+      >(
+        Array.from(batchCommandsMap.values()).map((commands) =>
+          this.bitrixService.callBatch(commands),
+        ),
+      );
+
+      // Проверяем есть ли ошибки в ответе от битрикс
+      batchErrors = batchResponses.reduce<string[]>(
+        (acc, { result: { result_error } }) => {
+          const errors = Object.values(result_error);
+          if (errors.length === 0) return acc;
+          errors.forEach((err) => acc.push(err.error));
+          return acc;
+        },
+        [],
+      );
+
+      if (batchErrors.length !== 0)
+        throw new UnprocessableEntityException(batchResponses);
+
+      const filteredLeads = new Set<string>();
+
+      // Отчищаем предыдущие пакеты запросов
+      batchCommandsMap.clear();
+      batchCommandsMapIndex = 0;
+
+      // Проходим по результатам и формируем запросы на получение пользователей
+      batchResponses.forEach(({ result: { result: response } }) => {
+        Object.entries(response).forEach(([command, response]) => {
+          const [commandName] = command.split('=');
+
+          if (commandName !== 'get_lead') return;
+
+          if (
+            !Array.isArray(response) ||
+            response.length === 0 ||
+            response.length > 1
+          )
+            return;
+
+          const [lead] = response;
+
+          // На всякий случай проверяем, если лид не в активных стадиях
+          if (
+            ![...B24LeadActiveStages, ...B24LeadNewStages].includes(
+              lead.STATUS_ID,
+            ) ||
+            filteredLeads.has(lead.ID)
+          )
+            return;
+
+          const { ID: leadId, ASSIGNED_BY_ID: leadAssignedId } = lead;
+
+          let commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+
+          if (Object.keys(commands).length === 50) {
+            batchCommandsMapIndex++;
+            commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+          }
+
+          // Составляем запрос для получения полей пользователя
+          // чтобы получить ID подразделения
+          commands[`get_assigned_user=${leadId}=${leadAssignedId}`] = {
+            method: 'user.get',
+            params: {
+              filter: {
+                ID: leadAssignedId,
+              },
+            },
+          };
+
+          if (Object.keys(commands).length === 50) {
+            batchCommandsMap.set(batchCommandsMapIndex, commands);
+            batchCommandsMapIndex++;
+            commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+          }
+
+          commands[`get_assigned_user_department=${leadId}=${leadAssignedId}`] =
+            {
+              method: 'department.get',
+              params: {
+                ID: `$result[get_assigned_user=${leadId}=${leadAssignedId}][0][UF_DEPARTMENT][0]`,
+              },
+            };
+
+          // Добавляем запрос в общему числу запросов
+          batchCommandsMap.set(batchCommandsMapIndex, commands);
+
+          filteredLeads.add(lead.ID);
+        });
+      });
+
+      // Отправляем запрос на полуение пользователей
+      const responsesGetLeadInfo = await Promise.all(
+        [...batchCommandsMap.values()].map((commands) =>
+          this.bitrixService.callBatch<
+            Record<string, B24User[] | B24Department[]>
+          >(commands),
+        ),
+      );
+
+      // Проверяем на ошибки
+      batchErrors = responsesGetLeadInfo.reduce<string[]>(
+        (acc, { result: { result_error } }) => {
+          const errors = Object.values(result_error);
+          if (errors.length === 0) return acc;
+          errors.forEach((err) => acc.push(err.error));
+          return acc;
+        },
+        [],
+      );
+
+      if (batchErrors.length !== 0)
+        throw new UnprocessableEntityException(batchErrors);
+
+      // Последняя мапа, где ключ - id руководителя в битрикс, значение: список лидов
+      const headLeadsMap = new Map<string, string[]>();
+
+      // Проходим по результату и формируем мапу
+      responsesGetLeadInfo.forEach(({ result: { result: response } }) => {
+        Object.entries(response).forEach(([command, res]) => {
+          const [commandName, leadId] = command.split('=');
+
+          // Так мы убираем запросы на получение пользователей, пустые ответы и говорим TS, что в res у нас лежит B24Department[]
+          if (
+            commandName !== 'get_assigned_user_department' ||
+            res.length === 0 ||
+            'ACTIVE' in res[0]
+          )
+            return;
+
+          const [{ UF_HEAD: headUserId }] = res;
+
+          const leads = headLeadsMap.get(headUserId) ?? [];
+          headLeadsMap.set(headUserId, [...leads, leadId]);
+        });
+      });
+
+      // Отчищаем предыдущие пакеты запросов
+      batchCommandsMap.clear();
+      batchCommandsMapIndex = 0;
+
+      // Проходим по мапе с руководителями и лидами и формируем батч запросы для отправки уведомлений
+      Array.from(headLeadsMap.entries()).forEach(([headId, leadIds]) => {
+        if (leadIds.length === 0) return;
+
+        let commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+
+        if (Object.keys(commands).length === 50) {
+          batchCommandsMapIndex++;
+          commands = batchCommandsMap.get(batchCommandsMapIndex) ?? {};
+        }
+
+        commands[`notify_head=${headId}`] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: this.bitrixService.getConstant('SALE').frodSaleChatId,
+            MESSAGE:
+              `[user=${headId}][/user][br]` +
+              (leadIds.length > 1
+                ? 'Найдены лиды, по которым '
+                : 'Найден лид, по которому ') +
+              'менеджер не звонил за последние 5 дней[br][br]' +
+              leadIds
+                .map((leadId) => this.bitrixService.generateLeadUrl(leadId))
+                .join('[br]'),
+          },
+        };
+
+        batchCommandsMap.set(batchCommandsMapIndex, commands);
+      });
+
+      Promise.all(
+        Array.from(batchCommandsMap.values()).map((commands) =>
+          this.bitrixService.callBatch(commands),
+        ),
+      ).then((response) =>
+        this.logger.debug({
+          handler: this.handleObserveManagerCallingAtLastFiveDays.name,
+          response,
+        }),
+      );
+
+      return {
+        status: true,
+        message:
+          "Successfully handle leads which calls wasn't found at last 5 days",
+      };
+    } catch (error) {
+      this.logger.error({
+        handler: this.handleObserveManagerCallingAtLastFiveDays.name,
+        error,
+      });
+
+      throw error;
+    }
   }
 
   /**

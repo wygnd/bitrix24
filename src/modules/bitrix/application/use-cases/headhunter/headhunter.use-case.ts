@@ -390,7 +390,13 @@ export class BitrixHeadhunterUseCase {
         // Если нашли совпадения по телефону
         case 'phone':
           message =
-            'Совпадение со сделкой: [b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' + message;
+            'Совпадение со сделкой:[br]' +
+            deals.reduce((acc, { ID: dealId }) => {
+              acc += this.bitrixService.generateDealUrl(dealId) + '[br]';
+              return acc;
+            }, '') +
+            '[b]ЗАПЛАНИРУЙ ЗВОНОК[/b][br][br]' +
+            message;
 
           deals.forEach(({ ID, STAGE_ID }) => {
             // Если сделка в неактивной стадии выходим

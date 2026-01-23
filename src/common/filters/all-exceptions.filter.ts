@@ -15,12 +15,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    let status: number;
+    let statusCode: number;
     let message: string | object;
 
     switch (true) {
       case exception instanceof HttpException:
-        status = exception.getStatus();
+        statusCode = exception.getStatus();
         message =
           typeof exception.getResponse() === 'object'
             ? exception.getResponse()
@@ -28,27 +28,27 @@ export class AllExceptionsFilter implements ExceptionFilter {
         break;
 
       case exception instanceof Error:
-        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
         message = exception.message;
         break;
 
       default:
-        status = HttpStatus.INTERNAL_SERVER_ERROR;
-        message = 'Internal server error';
+        statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+        message = 'Internal Server error';
     }
 
     this.logger.error(
-      `[${status}]: Exception error: ${safeJSONStringify(message)}`,
+      `[${statusCode}]: Exception error: ${safeJSONStringify(message)}`,
     );
 
     if (typeof message === 'string') {
-      response.status(status).json({
-        statusCode: status,
+      response.status(statusCode).json({
+        statusCode: statusCode,
         message: message,
       });
     } else {
-      response.status(status).json({
-        statusCode: status,
+      response.status(statusCode).json({
+        statusCode: statusCode,
         ...message,
       });
     }
