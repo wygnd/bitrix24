@@ -1,8 +1,10 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  NotAcceptableException,
   ParseDatePipe,
   Post,
   Query,
@@ -23,6 +25,7 @@ import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixLeadsUseCase } from '@/modules/bitrix/application/use-cases/leads/leads.use-case';
 import { AuthHelpersGuard } from '@/common/guards/auth-helpers.guard';
+import { BitrixLeadsSyncCallsDTO } from '@/modules/bitrix/application/dtos/leads/lead-sync-calls.dto';
 
 @ApiTags(B24ApiTags.LEADS)
 @ApiExceptions()
@@ -77,7 +80,7 @@ export class BitrixLeadController {
   @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Post('/observe_manager_calling')
+  @Post('/calls/observe_five_days')
   async observeManagerCalling() {
     return this.bitrixLeadService.handleObserveManagerCallingAtLastFiveDays();
   }
@@ -89,15 +92,25 @@ export class BitrixLeadController {
   @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Post('/observe_active_lead_calls')
+  @Post('/calls/observe_active')
   async observeActiveLeadsCalls() {
     return this.bitrixLeadService.handleObserveActiveLeadsCalls();
   }
 
   @ApiExcludeEndpoint()
   @UseGuards(AuthHelpersGuard)
-  @Get('/helpers/get_telphin_calls_at_last_two_week')
+  @Get('/calls/helpers/get_telphin_calls_at_last_two_week')
   async handleHelperGetCallsAtLastTwoWeekFromTwoWeek() {
     return this.bitrixLeadService.handleObserveManagerCallingGetCallsAtLast2WeeksHelper();
+  }
+
+  @ApiExcludeEndpoint()
+  @ApiOperation({ summary: 'Выгрузка звонков из телфина' })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('/calls/sync')
+  async handleSyncCallsLeads(@Body() fields: BitrixLeadsSyncCallsDTO) {
+    throw new NotAcceptableException();
   }
 }

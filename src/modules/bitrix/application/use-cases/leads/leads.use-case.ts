@@ -57,6 +57,7 @@ import { getNoun } from '@/common/functions/get-noun';
 import { TelphinCallOptions } from '@/modules/telphin/interfaces/telpgin-calls.interface';
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
+import { BitrixSyncCalls } from '@/modules/bitrix/application/interfaces/leads/lead-sync-calls.interface';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -1585,5 +1586,65 @@ export class BitrixLeadsUseCase {
         message: 'Execution error',
       };
     }
+  }
+
+  /**
+   * Handle data from sync telphin calls
+   *
+   * ---
+   *
+   * Обрабатывает данные с выгрузки телфина
+   */
+  public async handleSyncCallsToLeads(fields: BitrixSyncCalls) {
+    const { only_new: onlyNew, calls } = fields;
+
+    let batchErrors: string[];
+    let batchCommandsIndex = 0;
+    const batchCommandsMap = new Map<number, B24BatchCommands>();
+
+    // Проходим по данным и составляем запрос на получение дубликатов по номеру телефона
+    calls.forEach(({ phone, avito_number, avito_name }) => {
+      let commands = batchCommandsMap.get(batchCommandsIndex) ?? {};
+
+      if (Object.keys(commands).length === 50) {
+        batchCommandsIndex++;
+        commands = batchCommandsMap.get(batchCommandsIndex) ?? {};
+      }
+
+      commands[`get_duplicate=${phone}=${avito_number}=${avito_name}`] = {
+        method: 'crm.duplicate.findbycomm',
+        params: {
+          type: 'PHONE',
+          entity_type: 'lead',
+          values: [phone],
+        },
+      };
+
+      batchCommandsMap.set(batchCommandsIndex, commands);
+    });
+
+    const batchResponses = await Promise.all(
+      Array.from(batchCommandsMap.values()).map((commands) =>
+        this.bitrixService.callBatch(commands),
+      ),
+    );
+
+    batchErrors = batchResponses.reduce<string[]>(
+      (acc, { result: { result_error: errorResponses } }) => {
+        const errors = Object.values(errorResponses);
+
+        if (errors.length === 0) return acc;
+
+        acc.push(...errors.map((err) => err.error));
+
+        return acc;
+      },
+      [],
+    );
+
+    if (batchErrors.length > 0)
+      throw new UnprocessableEntityException(batchErrors);
+
+    return batchResponses;
   }
 }
