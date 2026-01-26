@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HeadhunterRestService } from '@/modules/headhunter/headhunter-rest.service';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
@@ -24,5 +24,10 @@ export class HeadHunterController {
   @Get('vacancies/active')
   async getActiveVacancies() {
     return this.headHunterRestService.getActiveVacancies();
+  }
+
+  @Get('/resumes/:resume_id')
+  async getResumeById(@Param('resume_id') resume_id: string) {
+    return this.headHunterRestService.getResumeById(resume_id);
   }
 }
