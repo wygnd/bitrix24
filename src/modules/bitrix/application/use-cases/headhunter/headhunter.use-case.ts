@@ -534,11 +534,24 @@ export class BitrixHeadhunterUseCase {
         params: {
           BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           DIALOG_ID: 'chat68032',
-          KEYBOARD: messageKeyboardItems,
           MESSAGE: message,
           URL_PREVIEW: 'N',
         },
       };
+
+      if (bitrixUser && bitrixUser.ID) {
+        batchCommandsUpdateDealAndSendMessage[
+          'send_private_message_to_assigned_vacancy'
+        ] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: bitrixUser.ID,
+            KEYBOARD: messageKeyboardItems,
+            MESSAGE: message,
+            URL_PREVIEW: 'N',
+          },
+        };
+      }
 
       this.bitrixService.callBatch(batchCommandsUpdateDealAndSendMessage);
       return {
