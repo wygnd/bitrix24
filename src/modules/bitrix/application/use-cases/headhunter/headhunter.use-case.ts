@@ -499,6 +499,21 @@ export class BitrixHeadhunterUseCase {
               },
             };
           });
+
+          if (bitrixUser && bitrixUser.ID) {
+            batchCommandsUpdateDealAndSendMessage[
+              'send_private_message_to_assigned_vacancy'
+            ] = {
+              method: 'im.message.add',
+              params: {
+                DIALOG_ID: bitrixUser.ID,
+                KEYBOARD: messageKeyboardItems,
+                MESSAGE: message,
+                URL_PREVIEW: 'N',
+              },
+            };
+          }
+
           break;
 
         // Если вообще не нашли дублей - создаем новую сделку
@@ -538,20 +553,6 @@ export class BitrixHeadhunterUseCase {
           URL_PREVIEW: 'N',
         },
       };
-
-      if (bitrixUser && bitrixUser.ID) {
-        batchCommandsUpdateDealAndSendMessage[
-          'send_private_message_to_assigned_vacancy'
-        ] = {
-          method: 'im.message.add',
-          params: {
-            DIALOG_ID: bitrixUser.ID,
-            KEYBOARD: messageKeyboardItems,
-            MESSAGE: message,
-            URL_PREVIEW: 'N',
-          },
-        };
-      }
 
       this.bitrixService.callBatch(batchCommandsUpdateDealAndSendMessage);
       return {
