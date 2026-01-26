@@ -98,6 +98,7 @@ export class WikiService {
 
       return sales;
     } catch (error) {
+      console.log(error);
       this.logger.error(error);
       throw error;
     }

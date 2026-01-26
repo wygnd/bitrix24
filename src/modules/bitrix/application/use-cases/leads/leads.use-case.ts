@@ -1647,4 +1647,119 @@ export class BitrixLeadsUseCase {
 
     return batchResponses;
   }
+
+  /**
+   * Distribute new leads on managers
+   *
+   * ---
+   *
+   * Распределяет новые лиды на менеджеров
+   * @param userId {string} - ID пользователя битрикс, с которого распределять лиды
+   */
+  public async handleDistributeNewLeads(userId: string) {
+    const getActiveLeadsFilter = {
+      '@STATUS_ID': B24LeadNewStages,
+      ASSIGNED_BY_ID: '$result[get_user][0][ID]',
+    };
+    const getActiveLeadsSelect = ['ID'];
+
+    const {
+      result: {
+        result: {
+          get_user: [user],
+        },
+        result_total: { get_active_leads: leadsTotal },
+      },
+    } = await this.bitrixService.callBatch<{
+      get_user: B24User[];
+      get_active_leads: B24Lead[];
+    }>({
+      get_user: {
+        method: 'user.get',
+        params: {
+          filter: {
+            ID: userId,
+          },
+        },
+      },
+      get_active_leads: {
+        method: 'crm.lead.list',
+        params: {
+          filter: getActiveLeadsFilter,
+          select: getActiveLeadsSelect,
+          start: 0,
+        },
+      },
+    });
+
+    if (!user)
+      throw new UnprocessableEntityException('Пользователя не существует');
+
+    if (leadsTotal === 0)
+      return {
+        status: true,
+        message: 'Leads not found',
+      };
+
+    let batchIndex = 0;
+    const batchCommandsMap = new Map<number, B24BatchCommands>();
+
+    for (let i = 1; i <= leadsTotal; ++i) {
+      let commands = batchCommandsMap.get(batchIndex) ?? {};
+
+      if (Object.keys(commands).length === 50) {
+        batchIndex++;
+        commands = batchCommandsMap.get(batchIndex) ?? {};
+      }
+
+      const page = (i - 1) * 50;
+
+      commands[`get_active_leads=${page}`] = {
+        method: 'crm.lead.list',
+        params: {
+          filter: getActiveLeadsSelect,
+          select: getActiveLeadsSelect,
+          start: page,
+        },
+      };
+    }
+
+    const batchGetLeadsResponses = await Promise.all(
+      Array.from(batchCommandsMap.values()).map((commands) =>
+        this.bitrixService.callBatch<Record<string, B24Lead[]>>(commands),
+      ),
+    );
+
+    let batchErrors = batchGetLeadsResponses.reduce<string[]>(
+      (acc, { result: { result_error } }) => {
+        const errors = Object.values(result_error);
+
+        if (errors.length === 0) return acc;
+
+        acc.push(...errors.map((err) => err.error));
+
+        return acc;
+      },
+      [],
+    );
+
+    if (batchErrors.length > 0)
+      throw new UnprocessableEntityException(batchErrors);
+
+    const leadsSet = new Set<string>();
+
+    batchGetLeadsResponses.forEach(({ result: { result } }) => {
+      const response = Object.values(result);
+
+      if (response.length === 0) return;
+
+      response.forEach((leads) => {
+        leads.forEach((lead) => {
+          leadsSet.add(lead.ID);
+        });
+      });
+    });
+
+    return [...batchCommandsMap.values()];
+  }
 }

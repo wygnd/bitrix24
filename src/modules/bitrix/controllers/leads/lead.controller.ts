@@ -113,4 +113,11 @@ export class BitrixLeadController {
   async handleSyncCallsLeads(@Body() fields: BitrixLeadsSyncCallsDTO) {
     throw new NotAcceptableException();
   }
+
+  @ApiOperation({ summary: 'Распределение активных лидов' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/distribute/active')
+  async distributeLeadsFromZlataZimina(@Query('user_id') user_id: string) {
+    return this.bitrixLeadService.handleDistributeNewLeads(user_id);
+  }
 }
