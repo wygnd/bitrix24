@@ -557,7 +557,7 @@ export class BitrixHeadhunterUseCase {
         .callBatch(batchCommandsUpdateDealAndSendMessage)
         .then((res) =>
           this.logger.debug({
-            fields: body,
+            fields: { ...body, ...batchCommandsUpdateDealAndSendMessage },
             response: res,
           }),
         );
