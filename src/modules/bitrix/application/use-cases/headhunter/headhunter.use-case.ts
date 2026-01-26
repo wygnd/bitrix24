@@ -554,7 +554,14 @@ export class BitrixHeadhunterUseCase {
         },
       };
 
-      this.bitrixService.callBatch(batchCommandsUpdateDealAndSendMessage);
+      this.bitrixService
+        .callBatch(batchCommandsUpdateDealAndSendMessage)
+        .then((res) =>
+          this.logger.debug({
+            fields: body,
+            response: res,
+          }),
+        );
       return {
         status: true,
         message: 'Successfully run script',
