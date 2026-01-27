@@ -145,4 +145,13 @@ export class BitrixWikiController {
   ) {
     return this.bitrixWiki.distributeLeadOnWishManager(fields);
   }
+
+  @ApiOperation({
+    summary:
+      'Уведомление руководителей о сотрудниках, которые не начали рабочий день',
+  })
+  @Post('/staff/check-in')
+  async noticeUsersWhichDontStartWorkDay() {
+    return this.bitrixWiki.noticeUsersWhichDontStartWorkDay();
+  }
 }

@@ -2,6 +2,7 @@ export interface TelphinGetCallsFields {
   start_datetime: string;
   end_datetime: string;
   extension_id?: number[];
+  flow?: string[];
 }
 
 export interface TelphinCallsResponse {

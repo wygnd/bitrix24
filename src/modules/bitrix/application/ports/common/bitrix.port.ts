@@ -35,4 +35,7 @@ export interface BitrixPort {
   clearNumber(str: string): string;
   getRandomElement<T>(items: T[]): T;
   isAvailableToDistributeOnManager(): boolean;
+  checkBatchErrors<T extends Record<string, any> = Record<string, any>>(
+    responses: B24BatchResponseMap<T>[],
+  ): string[];
 }

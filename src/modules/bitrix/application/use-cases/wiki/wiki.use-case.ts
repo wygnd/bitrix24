@@ -7,7 +7,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 import { WikiService } from '@/modules/wiki/wiki.service';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
 import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
@@ -27,8 +26,6 @@ import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/appli
 import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
 import { BitrixWikiPaymentsNoticeExpenseOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-expense.interface';
 import { BitrixWikiDistributeLeadWishManager } from '@/modules/bitrix/application/interfaces/wiki/wiki-distribute-lead-wish-manager.interface';
-import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
-import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import {
   B24LeadActiveStages,
   B24LeadNewStages,
@@ -37,6 +34,8 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 import { B24Activity } from '@/modules/bitrix/application/interfaces/activities/activities.interface';
+import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
+import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -46,13 +45,12 @@ export class BitrixWikiUseCase {
   );
 
   constructor(
-    private readonly bitrixService: BitrixUseCase,
+    @Inject(B24PORTS.BITRIX)
+    private readonly bitrixService: BitrixPort,
     private readonly wikiService: WikiService,
     private readonly bitrixDeals: BitrixDealsUseCase,
     private readonly bitrixBot: BitrixBotUseCase,
     private readonly bitrixWikiClientPayments: BitrixWikiClientPaymentsUseCase,
-    @Inject(B24PORTS.LEADS.LEADS_DEFAULT)
-    private readonly bitrixLeads: BitrixLeadsPort,
     private readonly redisService: RedisService,
   ) {}
 
@@ -653,6 +651,147 @@ export class BitrixWikiUseCase {
       this.logger.error({
         method: 'distributeLeadOnWishManager',
         body: fields,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  public async noticeUsersWhichDontStartWorkDay() {
+    try {
+      const userIds =
+        await this.wikiService.getSalesWhichNotWorkingAtThreeDays();
+
+      if (userIds.length === 0)
+        throw new UnprocessableEntityException('Пользователей не найдено');
+
+      let batchIndex = 0;
+      const batchCommandsMap = new Map<number, B24BatchCommands>();
+
+      userIds.forEach((userId) => {
+        let commands = batchCommandsMap.get(batchIndex) ?? {};
+
+        if (Object.keys(commands).length === 50) {
+          batchIndex++;
+          commands = batchCommandsMap.get(batchIndex) ?? {};
+        }
+
+        commands[`get_user=${userId}`] = {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: userId,
+            },
+          },
+        };
+
+        if (Object.keys(commands).length === 50) {
+          batchCommandsMap.set(batchIndex, commands);
+          batchIndex++;
+          commands = batchCommandsMap.get(batchIndex) ?? {};
+        }
+
+        commands[`get_user_department=${userId}`] = {
+          method: 'department.get',
+          params: {
+            ID: `$result[get_user=${userId}][0][UF_DEPARTMENT][0]`,
+          },
+        };
+
+        batchCommandsMap.set(batchIndex, commands);
+      });
+
+      const batchResponses = await Promise.all(
+        Array.from(batchCommandsMap.values()).map((commands) =>
+          this.bitrixService.callBatch<
+            Record<string, B24User[] | B24Department[]>
+          >(commands),
+        ),
+      );
+
+      let batchErrors = this.bitrixService.checkBatchErrors(batchResponses);
+
+      if (batchErrors.length > 0)
+        throw new UnprocessableEntityException(batchErrors);
+
+      const headManagerNotWorkingMap = new Map<string, string[]>();
+
+      batchResponses.forEach(({ result: { result } }) => {
+        Object.entries(result).forEach(([command, response]) => {
+          const [commandName, userId] = command.split('=');
+
+          if (
+            commandName !== 'get_user_department' ||
+            response.length == 0 ||
+            'ACTIVE' in response[0]
+          )
+            return;
+
+          const [{ UF_HEAD: headUserId }] = response;
+
+          const userIds = headManagerNotWorkingMap.get(headUserId) ?? [];
+          userIds.push(userId);
+          headManagerNotWorkingMap.set(headUserId, userIds);
+        });
+      });
+
+      if (headManagerNotWorkingMap.size === 0)
+        throw new NotFoundException('Пользователи не найдены');
+
+      batchIndex = 0;
+      batchCommandsMap.clear();
+
+      headManagerNotWorkingMap.forEach((userIds, headUserId) => {
+        if (userIds.length === 0) return;
+
+        let commands = batchCommandsMap.get(batchIndex) ?? {};
+
+        if (Object.keys(commands).length === 50) {
+          batchIndex++;
+          commands = batchCommandsMap.get(batchIndex) ?? {};
+        }
+
+        let message = '';
+
+        userIds.forEach((userId) => {
+          message +=
+            `Менеджер [user=${userId}][/user] не начинал рабочий день более 2х дней.[br]` +
+            `Ответственному руководителю [user=${headUserId}][/user] или замещающему, необходимо:[br]` +
+            '- Переназначить лиды добавленные за последние 2 недели на других менеджеров[br]' +
+            '- Проверить все горячие лиды и ожидания и при необходимости прозвонить клиентам самим[br][br]';
+        });
+
+        commands[`notify_head=${headUserId}`] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
+            MESSAGE: message,
+          },
+        };
+
+        batchCommandsMap.set(batchIndex, commands);
+      });
+
+      Promise.all(
+        Array.from(batchCommandsMap.values()).map((commands) =>
+          this.bitrixService.callBatch(commands),
+        ),
+      ).then((res) =>
+        this.logger.debug({
+          handler: this.noticeUsersWhichDontStartWorkDay.name,
+          request: [...batchCommandsMap.values()],
+          response: res,
+        }),
+      );
+
+      return {
+        status: true,
+        message: 'Messages was sending to head users',
+      };
+    } catch (error) {
+      this.logger.error({
+        handler: this.noticeUsersWhichDontStartWorkDay.name,
         error,
       });
       throw error;

@@ -1226,7 +1226,7 @@ export class BitrixLeadsUseCase {
         // Если текущий час 9 утра, то мы выбираем со вчерашнего дня иначе с сегодняшнего дня
         '>=MOVED_TIME':
           dateNow.get('h') <= 9
-            ? dateFilterStart.format('YYYY-MM-DD [15:00:00]')
+            ? dateFilterStart.format('YYYY-MM-DD [17:00:00]')
             : dateNow.format('YYYY-MM-DD [00:00:00]'),
         // До текущего времени -1 час
         '<=MOVED_TIME': dateNowSubtract1Hour.format('YYYY-MM-DD HH:mm:ss'),

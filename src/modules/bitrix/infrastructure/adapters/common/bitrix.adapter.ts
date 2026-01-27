@@ -215,4 +215,18 @@ export class BitrixAdapter implements BitrixPort {
   public async updateTokens() {
     return this.bitrixApiService.updateTokens();
   }
+
+  public checkBatchErrors<T extends Record<string, any> = Record<string, any>>(
+    responses: B24BatchResponseMap<T>[],
+  ): string[] {
+    return responses.reduce<string[]>((acc, { result: { result_error } }) => {
+      const errors = Object.values(result_error);
+
+      if (errors.length === 0) return acc;
+
+      acc.push(...errors.map((err) => err.error));
+
+      return acc;
+    }, []);
+  }
 }

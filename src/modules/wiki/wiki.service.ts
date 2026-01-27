@@ -197,4 +197,23 @@ export class WikiService {
       return false;
     }
   }
+
+  /**
+   * Get sale manager ids which don't start work day at last three days
+   *
+   * ---
+   *
+   * Получает массив id менеджеров по продажам, которые не начинали рабочий день 3 дня подряд
+   */
+  public async getSalesWhichNotWorkingAtThreeDays(): Promise<string[]> {
+    try {
+      return ['114', '522', '544'];
+    } catch (error) {
+      this.logger.error({
+        handler: this.getSalesWhichNotWorkingAtThreeDays.name,
+        error,
+      });
+      return [];
+    }
+  }
 }
