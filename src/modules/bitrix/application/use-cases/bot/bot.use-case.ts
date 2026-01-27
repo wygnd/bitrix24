@@ -266,16 +266,6 @@ export class BitrixBotUseCase {
 
         // Подтвердить создание сделки от
         case '/approveCreateHRDeal':
-          if (
-            !this.checkCanAccessToPushButton(pushButtonUserId, ['894', '460'])
-          ) {
-            status = false;
-            response = Promise.resolve(
-              `Forbidden to push button: ${pushButtonUserId}`,
-            );
-            break;
-          }
-
           status = true;
           response = this.handleApproveCreateHRDealByRequestCandidate(
             commandParamsDecoded as ImbotKeyboardApproveCreateHrDealByRequestCandidate,
