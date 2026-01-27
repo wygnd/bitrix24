@@ -61,7 +61,10 @@ export class WikiService {
       });
       return response;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.sendRejectDistributeNewDeal.name,
+        error,
+      });
       throw error;
     }
   }
@@ -99,8 +102,7 @@ export class WikiService {
 
       return sales;
     } catch (error) {
-      console.log(error);
-      this.logger.error(error);
+      this.logger.error({ handler: this.getWorkingSales.name, error });
       throw error;
     }
   }
@@ -125,12 +127,16 @@ export class WikiService {
         status: fields.status,
       });
       this.logger.debug({
+        handler: this.sendResultReceiveClientRequestFromAvitoToWiki.name,
         fields,
         response,
       });
       return response;
     } catch (e) {
-      this.logger.error(e);
+      this.logger.error({
+        handler: this.sendResultReceiveClientRequestFromAvitoToWiki.name,
+        error: e,
+      });
       return {
         wiki_lead_id: 0,
         lead_id: 0,
@@ -139,12 +145,29 @@ export class WikiService {
     }
   }
 
+  /**
+   * Send request to new wiki about delete lead in bitrix
+   *
+   * ---
+   *
+   * Отправляем запрос в new wiki о том, что лид был удален
+   * @param leadId
+   */
   public async sendNotifyAboutDeleteLead(leadId: string) {
     try {
-      return await this.wikiApiServiceNew.delete<WikiDeleteLead>(
+      const response = await this.wikiApiServiceNew.delete<WikiDeleteLead>(
         `/avito/leads/${leadId}`,
       );
+      this.logger.debug({
+        handler: this.sendNotifyAboutDeleteLead.name,
+        response,
+      });
+      return response;
     } catch (e) {
+      this.logger.error({
+        handler: this.sendNotifyAboutDeleteLead.name,
+        errors: e,
+      });
       return {
         message: e.response.data.message ?? 'Invalid remove lead',
         deleted: 0,
@@ -153,6 +176,14 @@ export class WikiService {
     }
   }
 
+  /**
+   * Send request to old wiki about receive payment
+   *
+   * ---
+   *
+   * Отправляем запрос в wiki о том, что получили платеж
+   * @param data
+   */
   public async notifyWikiAboutReceivePayment(
     data: WikiNotifyReceivePaymentOptions,
   ) {
@@ -162,14 +193,28 @@ export class WikiService {
         qs.stringify(data),
       );
 
-      this.logger.debug(response);
+      this.logger.debug({
+        handler: this.notifyWikiAboutReceivePayment.name,
+        response,
+      });
       return true;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.notifyWikiAboutReceivePayment.name,
+        error,
+      });
       return false;
     }
   }
 
+  /**
+   * Send request to old wiki to define payment group
+   *
+   * ---
+   *
+   * Отправляем запрос в wiki, для установления группы платежа
+   * @param fields
+   */
   public async sendRequestDefinePaymentGroup(
     fields: WikiSendDefinPaymentGroupInterface,
   ) {
@@ -181,7 +226,10 @@ export class WikiService {
           ...fields,
         }),
       );
-      this.logger.debug(response);
+      this.logger.debug({
+        handler: this.sendRequestDefinePaymentGroup.name,
+        response,
+      });
       return true;
     } catch (error) {
       this.logger.error(error);
@@ -208,7 +256,7 @@ export class WikiService {
         }),
       );
 
-      this.logger.debug(response);
+      this.logger.debug({ handler: this.getMissDaysWorkers.name, response });
 
       if (!response.status)
         throw new UnprocessableEntityException(
