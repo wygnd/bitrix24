@@ -471,8 +471,9 @@ export class BitrixHeadhunterUseCase {
             batchCommandsUpdateDealAndSendMessage[
               'send_private_message_to_assigned_vacancy'
             ] = {
-              method: 'im.message.add',
+              method: 'imbot.message.add',
               params: {
+                BOT_ID: this.bitrixService.getConstant('BOT_ID'),
                 DIALOG_ID: bitrixUser.ID,
                 KEYBOARD: messageKeyboardItems,
                 MESSAGE: message,
