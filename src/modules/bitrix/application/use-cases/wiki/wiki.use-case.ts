@@ -659,8 +659,8 @@ export class BitrixWikiUseCase {
 
   public async noticeUsersWhichDontStartWorkDay() {
     try {
-      const userIds =
-        await this.wikiService.getSalesWhichNotWorkingAtThreeDays();
+      // Получаем список bitrix_id менеджеров
+      const userIds = await this.wikiService.getMissDaysWorkers();
 
       if (userIds.length === 0)
         throw new UnprocessableEntityException('Пользователей не найдено');
@@ -668,6 +668,7 @@ export class BitrixWikiUseCase {
       let batchIndex = 0;
       const batchCommandsMap = new Map<number, B24BatchCommands>();
 
+      // Проходим по списку пользователей и формируем запросы на получения пользователя и его руководителя
       userIds.forEach((userId) => {
         let commands = batchCommandsMap.get(batchIndex) ?? {};
 
@@ -701,6 +702,7 @@ export class BitrixWikiUseCase {
         batchCommandsMap.set(batchIndex, commands);
       });
 
+      // Выполняем запрос
       const batchResponses = await Promise.all(
         Array.from(batchCommandsMap.values()).map((commands) =>
           this.bitrixService.callBatch<
@@ -709,6 +711,7 @@ export class BitrixWikiUseCase {
         ),
       );
 
+      // Проверяем запрос на ошибки, если есть возвращаем ошибки
       let batchErrors = this.bitrixService.checkBatchErrors(batchResponses);
 
       if (batchErrors.length > 0)
@@ -716,6 +719,7 @@ export class BitrixWikiUseCase {
 
       const headManagerNotWorkingMap = new Map<string, string[]>();
 
+      // Проходим по ответу от битрикса и формируем мапу руководитель - менеджеры
       batchResponses.forEach(({ result: { result } }) => {
         Object.entries(result).forEach(([command, response]) => {
           const [commandName, userId] = command.split('=');
@@ -741,6 +745,7 @@ export class BitrixWikiUseCase {
       batchIndex = 0;
       batchCommandsMap.clear();
 
+      // Проходим по сформированной мапе и формируем запросы на отправку сообщений в чат
       headManagerNotWorkingMap.forEach((userIds, headUserId) => {
         if (userIds.length === 0) return;
 
@@ -773,6 +778,7 @@ export class BitrixWikiUseCase {
         batchCommandsMap.set(batchIndex, commands);
       });
 
+      // Выополняем запросы
       Promise.all(
         Array.from(batchCommandsMap.values()).map((commands) =>
           this.bitrixService.callBatch(commands),

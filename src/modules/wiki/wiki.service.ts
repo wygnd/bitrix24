@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/wiki-api-new.service';
 import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
@@ -15,6 +15,7 @@ import { WikiNotifyReceivePaymentOptions } from '@/modules/wiki/interfaces/wiki-
 import { WinstonLogger } from '@/config/winston.logger';
 import qs from 'qs';
 import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wiki-send-defin-payment-group.interface';
+import { WikiCheckMissDays } from '@/modules/wiki/interfaces/wiki-check-miss-days.interface';
 
 @Injectable()
 export class WikiService {
@@ -159,11 +160,6 @@ export class WikiService {
       const response = await this.wikiApiServiceOld.post(
         '',
         qs.stringify(data),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        },
       );
 
       this.logger.debug(response);
@@ -184,11 +180,6 @@ export class WikiService {
           action: 'gft_setup_payment_group',
           ...fields,
         }),
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        },
       );
       this.logger.debug(response);
       return true;
@@ -205,12 +196,29 @@ export class WikiService {
    *
    * Получает массив id менеджеров по продажам, которые не начинали рабочий день 3 дня подряд
    */
-  public async getSalesWhichNotWorkingAtThreeDays(): Promise<string[]> {
+  public async getMissDaysWorkers(): Promise<string[]> {
     try {
-      return ['114', '522', '544'];
+      const response = await this.wikiApiServiceOld.post<
+        string,
+        WikiCheckMissDays
+      >(
+        '',
+        qs.stringify({
+          action: 'gtc_check_miss_days_workers',
+        }),
+      );
+
+      this.logger.debug(response);
+
+      if (!response.status)
+        throw new UnprocessableEntityException(
+          'Ошибка получения данных с wiki',
+        );
+
+      return response.bitrix_ids;
     } catch (error) {
       this.logger.error({
-        handler: this.getSalesWhichNotWorkingAtThreeDays.name,
+        handler: this.getMissDaysWorkers.name,
         error,
       });
       return [];

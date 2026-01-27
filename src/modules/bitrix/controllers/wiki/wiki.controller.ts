@@ -150,7 +150,7 @@ export class BitrixWikiController {
     summary:
       'Уведомление руководителей о сотрудниках, которые не начали рабочий день',
   })
-  @Post('/staff/check-in')
+  @Post('/staff/check')
   async noticeUsersWhichDontStartWorkDay() {
     return this.bitrixWiki.noticeUsersWhichDontStartWorkDay();
   }
