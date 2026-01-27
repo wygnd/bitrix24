@@ -960,7 +960,7 @@ export class BitrixBotUseCase {
       // Или есть счет на ведение и сумма до 15к включительно
       if (
         (/спец/gi.test(message) && /тариф/gi.test(message)) ||
-        (/ведение/.test(message) && Number(clearPrice) <= 15000)
+        (/ведение/gi.test(message) && Number(clearPrice) <= 15000)
       ) {
         batchCommands['send_duplicate_message_to_alexandra_sergushova'] = {
           method: 'im.message.add',
