@@ -785,7 +785,7 @@ export class BitrixBotUseCase {
 
     // Формируем монетки для отправки в old wiki
     const data: WikiNotifyReceivePaymentOptions = {
-      action: 'gft_log_user_money',
+      action: fields.isBudget ? 'gft_log_budget_money' : 'gft_log_user_money',
       money: this.bitrixService.clearNumber(price),
       deal_number: this.bitrixService.clearBBCode(contract),
       bitrix_user_id: fields.userId,
@@ -1025,29 +1025,6 @@ export class BitrixBotUseCase {
           },
         },
       };
-
-      /**
-       * @Example
-       * Виталий Баймурзаев - userName
-       * Ожидание; Продление хостинга; Продление домена - action
-       * Общая сумма: 6400 - price
-       * 6462 - contract
-       * АО "АГРОСКОН-ЖБИ" - organization
-       * Продление доменного имени на 1 год и Размещение сайта на хостинге на 1 год #id:11779# - direction
-       * 3525418065 - inn
-       * unknown
-       * date
-       */
-      const [userName, action, price, contract] = message.split(' | ');
-
-      // Собираем запрос для отправки сообщения руководителю
-      // batchCommands['send_message_head'] = {
-      //   method: 'im.message.add',
-      //   params: {
-      //     DIALOG_ID: '$result[get_user_department][0][UF_HEAD]',
-      //     MESSAGE: `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | ${action}`,
-      //   },
-      // };
 
       // Отправляем данные
       this.bitrixService.callBatch(batchCommands).then((response) =>
