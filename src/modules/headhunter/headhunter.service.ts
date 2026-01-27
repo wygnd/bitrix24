@@ -11,6 +11,7 @@ import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.inte
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
 import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class HeadHunterService {
@@ -57,8 +58,7 @@ export class HeadHunterService {
     // Check auth data.
     // Send message about update credentials If not exists
     this.tokensService.getToken(TokensServices.HH).then(async (tokens) => {
-      if (!tokens) {
-        this.logger.log(tokens, 'warn');
+      if (!tokens || dayjs(tokens.expires).isSameOrAfter(dayjs(), 'day')) {
         this.notifyAboutInvalidCredentials();
         this.logger.error('Invalid headhunter authorization');
         return;
