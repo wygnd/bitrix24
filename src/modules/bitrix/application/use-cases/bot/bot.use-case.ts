@@ -941,13 +941,13 @@ export class BitrixBotUseCase {
             this.bitrixService.generateTaskUrl(userId, taskId)
           : `Поступила оплата за ведение/допродажу.[br]Нужно внести в табель![br]${userName} | ${contract} | ${price} | месяц ведения: ${action}`;
 
-        batchCommands['send_message_to_head'] = {
-          method: 'im.message.add',
-          params: {
-            DIALOG_ID: '$result[get_assigned_department][0][UF_HEAD]',
-            MESSAGE: notifyAddTaskMessage,
-          },
-        };
+        // batchCommands['send_message_to_head'] = {
+        //   method: 'im.message.add',
+        //   params: {
+        //     DIALOG_ID: '$result[get_assigned_department][0][UF_HEAD]',
+        //     MESSAGE: notifyAddTaskMessage,
+        //   },
+        // };
 
         batchCommands['send_message_to_responsible_task'] = {
           method: 'imbot.message.add',
