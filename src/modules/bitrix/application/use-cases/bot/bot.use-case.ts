@@ -908,8 +908,8 @@ export class BitrixBotUseCase {
         },
       };
 
-      // Если нет "Введение": ставится задача
-      if (!/ведение/gi.test(message)) {
+      // Если есть "бюджет": ставится задача
+      if (/бюджет/gi.test(message)) {
         const task = await this.bitrixTasks.createTask(createTaskFields);
 
         if (!task)
