@@ -875,9 +875,9 @@ export class BitrixBotUseCase {
           'Перейдите по ссылке и заполните поля:\n' +
           '[list]\n[*]Счет из Яндекса[*]Загрузить документ сам счет\n[/list]\n\n' +
           `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${clearPrice}&type=${paymentType}`,
-        RESPONSIBLE_ID: '444', // Екатерина Огрохина
+        RESPONSIBLE_ID: '634', // Александра Сергушова
         DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
-        ACCOMPLICES: ['216'], // Анна Теленкова
+        ACCOMPLICES: ['560'], // Анна Теленкова
         UF_CRM_TASK: ['D_' + dealId],
       };
 
