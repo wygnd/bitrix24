@@ -877,7 +877,7 @@ export class BitrixBotUseCase {
           `https://wiki.grampus-studio.ru/lk/?screen=send-budget&deal_number=${clearContract}&amount=${clearPrice}&type=${paymentType}`,
         RESPONSIBLE_ID: '634', // Александра Сергушова
         DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
-        ACCOMPLICES: ['560'], // Анна Теленкова
+        ACCOMPLICES: ['560'], // Любовь Боровикова
         UF_CRM_TASK: ['D_' + dealId],
       };
 
@@ -888,7 +888,7 @@ export class BitrixBotUseCase {
         createTaskFields.DESCRIPTION =
           '[b]Прикрепи выставленный счет из Яндекс и более ничего по задаче делать не нужно.[/b]\n' +
           createTaskFields.DESCRIPTION;
-        createTaskFields.RESPONSIBLE_ID = '560'; // Любовь Боровикова
+        // createTaskFields.RESPONSIBLE_ID = '634'; // Любовь Боровикова
       }
 
       const batchCommands: B24BatchCommands = {
