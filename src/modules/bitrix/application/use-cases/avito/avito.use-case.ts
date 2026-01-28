@@ -472,17 +472,28 @@ export class BitrixAvitoUseCase {
       // Если лид успешный или в стадии Ожидаем подписанный договор
       // отправить сообщение Злате Зиминой
       case B24LeadConvertedStages.includes(STATUS_ID):
+        const notifyMessage =
+          `${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
+          'Необходимо посмотреть действующие сделки ' +
+          'и, при необходимости, распределить лид в работу[/b][br]' +
+          this.bitrixService.generateLeadUrl(leadId) +
+          `[br]С авито: ${avito}` +
+          `[br]Сообщение:[br]>>${message.join('[br]>>')}`;
+
         batchCommandsUpdateLead['send_message_converted'] = {
           method: 'im.message.add',
           params: {
             DIALOG_ID: this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'),
-            MESSAGE:
-              `${B24Emoji.SUCCESS} [b]Действующий клиент обратился через Авито. ` +
-              'Необходимо посмотреть действующие сделки ' +
-              'и, при необходимости, распределить лид в работу[/b][br]' +
-              this.bitrixService.generateLeadUrl(leadId) +
-              `[br]С авито: ${avito}` +
-              `[br]Сообщение:[br]>>${message.join('[br]>>')}`,
+            MESSAGE: notifyMessage,
+          },
+        };
+
+        // Отправляем сообщение Ксении Чешковой
+        batchCommandsUpdateLead['send_message_to_kesina_cheshkova'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: '464',
+            MESSAGE: notifyMessage,
           },
         };
 
