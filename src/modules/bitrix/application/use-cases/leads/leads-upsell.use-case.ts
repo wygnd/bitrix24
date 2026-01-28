@@ -685,7 +685,7 @@ export class BitrixLeadsUpsellUseCase {
       throw new BadRequestException(`Invalid category: ${dealId}`);
 
     let leadComment = '';
-    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment.UF_HEAD}][/user][br][br]`;
+    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment?.UF_HEAD ? managerDepartment.UF_HEAD : 344}][/user][br][br]`;
 
     // формируем комментарий для лида
     this.upsellQuestionFields[category.toUpperCase()]?.fields.forEach(
