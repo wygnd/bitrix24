@@ -388,6 +388,7 @@ export class BitrixWikiUseCase {
     const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
       DIALOG_ID: chatId,
       MESSAGE: message + clientDepartmentHistory,
+      KEYBOARD: [],
     };
 
     if (group == '0')
@@ -416,6 +417,13 @@ export class BitrixWikiUseCase {
     }
 
     const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
+
+    this.logger.debug({
+      handler: this.sendNoticeReceivePayment.name,
+      body: fields,
+      commands: sendMessageOptions,
+      response: messageId,
+    });
 
     return { message_id: messageId };
   }
@@ -665,6 +673,9 @@ export class BitrixWikiUseCase {
     }
   }
 
+  /**
+   * Notice about users which don start work days
+   */
   public async noticeUsersWhichDontStartWorkDay() {
     try {
       // Получаем список bitrix_id менеджеров
