@@ -40,6 +40,7 @@ export class BitrixLeadsUpsellUseCase {
     BitrixLeadsUpsellUseCase.name,
     'bitrix:leads'.split(':'),
   );
+  private readonly saleDepartmentIds = ['3', '42', '48', '74'];
   private readonly upsellQuestionFields: B24LeadUpsellQuestionsFields = {
     SITE: {
       fields: [
@@ -693,7 +694,7 @@ export class BitrixLeadsUpsellUseCase {
       throw new BadRequestException(`Invalid category: ${dealId}:${leadId}`);
 
     let leadComment = '';
-    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment?.UF_HEAD && ['3', '42', '48', '74'].includes(managerDepartment.UF_HEAD) ? managerDepartment.UF_HEAD : 344}][/user][br][br]`;
+    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment?.UF_HEAD && this.saleDepartmentIds.includes(managerDepartment.UF_HEAD) ? managerDepartment.UF_HEAD : 344}][/user][br][br]`;
 
     // формируем комментарий для лида
     this.upsellQuestionFields[category.toUpperCase()]?.fields.forEach(
@@ -760,23 +761,33 @@ export class BitrixLeadsUpsellUseCase {
         '[br]' +
         this.bitrixService.generateDealUrl(dealId);
 
-      batchCommandsNotify['upsell_notify_manager'] = {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: manager.ID,
-          MESSAGE: notifyManagerMessage,
-        },
-      };
+      let notifyMessageUpsellLog = notifyMessage;
+
+      // Если менеджер из отдела продаж
+      if (
+        this.saleDepartmentIds.includes(manager.UF_DEPARTMENT[0].toString())
+      ) {
+        // Отправляем сообщение менеджеру
+        batchCommandsNotify['upsell_notify_manager'] = {
+          method: 'im.message.add',
+          params: {
+            DIALOG_ID: manager.ID,
+            MESSAGE: notifyManagerMessage,
+          },
+        };
+
+        // Добавляем к сообщению, которое пойдет руководителю в чат
+        notifyMessageUpsellLog +=
+          '[i]Менеджеру отправлено сообщение по допродаже:[/i][br][br]' +
+          notifyManagerMessage;
+      }
 
       batchCommandsNotify['upsell_log'] = {
         method: 'imbot.message.add',
         params: {
           BOT_ID: this.bitrixService.getConstant('BOT_ID'),
           DIALOG_ID: this.bitrixService.getConstant('LEAD').upsellChatId,
-          MESSAGE:
-            notifyMessage +
-            '[i]Менеджеру отправлено сообщение по допродаже:[/i][br][br]' +
-            notifyManagerMessage,
+          MESSAGE: notifyMessageUpsellLog,
         },
       };
     }
