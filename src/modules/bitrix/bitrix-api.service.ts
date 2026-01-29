@@ -121,11 +121,19 @@ export class BitrixApiService {
     return response as B24BatchResponseMap<T>;
   }
 
-  // todo: callBatchV2 which form batches packages from items
-  async callBatches<T extends object>(
+  /**
+   * Form batch batches request and return form response of object result
+   *
+   * ---
+   *
+   * Формирует пакет с пакетами запросов и возвращает отформатированный объект результата
+   * @param commands
+   * @param halt
+   */
+  async callBatches<T extends Record<string, any> = Record<string, any>>(
     commands: B24BatchCommands,
     halt = false,
-  ) {
+  ): Promise<Record<string, T[keyof T]>> {
     let index = 0;
     let errors: string[] = [];
     const batchCommandsMap = new Map<number, B24BatchCommands>();
@@ -145,20 +153,21 @@ export class BitrixApiService {
     });
 
     const batchResponses = await Promise.all(
-      Array.from(batchCommandsMap.values()).map((bcmds) =>
-        this.callBatch<B24BatchResponseMap>(bcmds, halt),
-      ),
+      Array.from(batchCommandsMap.values()).map((commands) => {
+        console.log(commands);
+        return this.callBatch<Record<keyof T, T[keyof T]>>(commands, halt);
+      }),
     );
 
-    batchResponses.forEach((bres) => {
+    batchResponses.forEach((response) => {
       if (
-        (Array.isArray(bres.result.result_error) &&
-          bres.result.result_error.length === 0) ||
-        Object.keys(bres.result.result_error).length === 0
+        (Array.isArray(response.result.result_error) &&
+          response.result.result_error.length === 0) ||
+        Object.keys(response.result.result_error).length === 0
       )
         return;
 
-      Object.entries(bres.result.result_error).forEach(
+      Object.entries(response.result.result_error).forEach(
         ([cmdName, { error }]) => {
           errors.push(`${cmdName}: ${error}`);
         },
@@ -167,7 +176,16 @@ export class BitrixApiService {
 
     if (errors.length > 0) throw new BadRequestException(errors);
 
-    return batchResponses;
+    return batchResponses.reduce<Record<string, T[keyof T]>>(
+      (acc, { result: { result } }) => {
+        Object.entries(result).forEach(([commandName, response]) => {
+          acc[commandName] = response;
+        });
+
+        return acc;
+      },
+      {},
+    );
   }
 
   /**

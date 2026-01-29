@@ -76,4 +76,10 @@ export class BitrixUseCase {
   updateTokens() {
     return this.bitrix.updateTokens();
   }
+
+  async callBatches<T extends Record<string, any> = Record<string, any>>(
+    commands: B24BatchCommands,
+  ) {
+    return this.bitrix.callBatches<T>(commands);
+  }
 }

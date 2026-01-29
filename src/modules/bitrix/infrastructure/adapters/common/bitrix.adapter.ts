@@ -104,6 +104,7 @@ export class BitrixAdapter implements BitrixPort {
    * ---
    *
    * Формирует html ссылку на лид
+   * @example <a href="https://bitrix.com">https://bitrix.com</a>
    * @param leadId
    * @param label
    */
@@ -214,6 +215,12 @@ export class BitrixAdapter implements BitrixPort {
 
   public async updateTokens() {
     return this.bitrixApiService.updateTokens();
+  }
+
+  public async callBatches<T extends Record<string, any> = Record<string, any>>(
+    commands: B24BatchCommands,
+  ) {
+    return this.bitrixApiService.callBatches<T>(commands);
   }
 
   public checkBatchErrors<T extends Record<string, any> = Record<string, any>>(
