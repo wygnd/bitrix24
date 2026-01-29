@@ -1,12 +1,16 @@
 import {
-  BitrixAddyPaymentsSendMessageOptions,
+  BitrixAddyPaymentsSendMessageNoticeOptions,
+  BitrixAddyPaymentsSendMessagePaymentOptions,
+  BitrixAddyPaymentsSendMessageQuery,
   BitrixAddyPaymentsSendMessageResponse,
 } from '@/modules/bitrix/application/interfaces/addy/addy-payments-send-message.interface';
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import type { BitrixAddyPaymentsSendMessageType } from '@/modules/bitrix/application/interfaces/addy/addy-payments-send-message.interface';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { BITRIX_ADDY_PAYMENT_MESSAGE_TYPE } from '@/modules/bitrix/application/constants/addy/addy-payments.dto';
 
-export class BitrixAddyPaymentsSendMessageDto implements BitrixAddyPaymentsSendMessageOptions {
+export class BitrixAddyPaymentsSendMessagePaymentDto implements BitrixAddyPaymentsSendMessagePaymentOptions {
   @ApiProperty({
     type: String,
     description: 'ID пользователя addy',
@@ -72,5 +76,20 @@ export class BitrixAddyPaymentsSendMessageResponseDto implements BitrixAddyPayme
     description: 'Результат отправки сообщения',
     example: '12376784',
   })
+  message: string;
+}
+
+export class BitrixAddyPaymentsSendMessageQueryDTO implements BitrixAddyPaymentsSendMessageQuery {
+  @IsOptional()
+  @IsString()
+  @IsIn(BITRIX_ADDY_PAYMENT_MESSAGE_TYPE, {
+    message: 'type is not valid property',
+  })
+  type: BitrixAddyPaymentsSendMessageType = 'payment';
+}
+
+export class BitrixAddyPaymentsSendMessageNoticeDTO implements BitrixAddyPaymentsSendMessageNoticeOptions {
+  @IsNotEmpty()
+  @IsString()
   message: string;
 }

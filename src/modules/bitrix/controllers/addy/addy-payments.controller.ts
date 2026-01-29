@@ -1,16 +1,16 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { BitrixAddyPaymentsSendMessageDto } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
+import { BitrixAddyPaymentsSendMessageQueryDTO } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { B24AddyPaymentsSendMessageResponseDto } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message-response.dto';
@@ -23,9 +23,7 @@ import { BitrixAddyPaymentsUseCase } from '@/modules/bitrix/application/use-case
   version: '1',
 })
 export class BitrixAddyPaymentsControllerV1 {
-  constructor(
-    private readonly bitrixAddyPayments: BitrixAddyPaymentsUseCase,
-  ) {}
+  constructor(private readonly bitrixAddyPayments: BitrixAddyPaymentsUseCase) {}
 
   @ApiOperation({
     summary: 'Отправить сообщение в чат ADDY счета на оплату',
@@ -39,11 +37,10 @@ export class BitrixAddyPaymentsControllerV1 {
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/messages/add')
-  async sendMessage(@Body() fields: BitrixAddyPaymentsSendMessageDto) {
-    const response = await this.bitrixAddyPayments.sendMessage(fields);
-
-    if (!response.status) throw new BadRequestException(response);
-
-    return response;
+  async sendMessage(
+    @Query() query: BitrixAddyPaymentsSendMessageQueryDTO,
+    @Body() body: unknown,
+  ) {
+    return this.bitrixAddyPayments.sendMessageByType(query, body);
   }
 }
