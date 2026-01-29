@@ -32,6 +32,7 @@ import { B24User } from '@/modules/bitrix/application/interfaces/users/user.inte
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
+import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 
 @Injectable()
 export class BitrixLeadsUpsellUseCase {
@@ -645,11 +646,18 @@ export class BitrixLeadsUpsellUseCase {
         },
       },
     } = await this.bitrixService.callBatch<{
+      get_lead: B24Lead;
       get_deal: B24Deal;
       get_assigned: B24User[];
       get_assigned_head: B24Department[];
       get_deal_fields: B24DealFields;
     }>({
+      get_lead: {
+        method: 'crm.lead.get',
+        params: {
+          id: leadId,
+        },
+      },
       get_deal: {
         method: 'crm.deal.get',
         params: {
@@ -660,7 +668,7 @@ export class BitrixLeadsUpsellUseCase {
         method: 'user.get',
         params: {
           filter: {
-            ID: '$result[get_deal][ASSIGNED_BY_ID]',
+            ID: '$result[get_lead][ASSIGNED_BY_ID]',
           },
         },
       },
@@ -678,14 +686,14 @@ export class BitrixLeadsUpsellUseCase {
 
     if (!deal || !managerDepartment)
       throw new BadRequestException(
-        `Invalid get deal and head user info: ${dealId}`,
+        `Invalid get deal and head user info: ${dealId}:${leadId}`,
       );
 
     if (!(category.toUpperCase() in this.upsellQuestionFields))
-      throw new BadRequestException(`Invalid category: ${dealId}`);
+      throw new BadRequestException(`Invalid category: ${dealId}:${leadId}`);
 
     let leadComment = '';
-    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment?.UF_HEAD ? managerDepartment.UF_HEAD : 344}][/user][br][br]`;
+    let notifyMessage = `[b]Допродажа[/b][br][user=${managerDepartment?.UF_HEAD && ['3', '42', '48', '74'].includes(managerDepartment.UF_HEAD) ? managerDepartment.UF_HEAD : 344}][/user][br][br]`;
 
     // формируем комментарий для лида
     this.upsellQuestionFields[category.toUpperCase()]?.fields.forEach(
