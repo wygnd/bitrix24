@@ -390,7 +390,15 @@ export class BitrixWikiUseCase {
       MESSAGE: message + clientDepartmentHistory,
     };
 
-    if (group == '0') {
+    if (group == '0')
+      sendMessageOptions.MESSAGE +=
+        '[br][br][b]Данные клиента находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+
+    if (group == '-1')
+      sendMessageOptions.MESSAGE +=
+        '[br][br][b]Данные клиента НЕ находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+
+    if (['-1', '0'].includes(group)) {
       sendMessageOptions.KEYBOARD = [
         {
           TEXT: 'Определить платеж',
