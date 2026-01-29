@@ -7,8 +7,12 @@ export class AppController {
   constructor() {}
 
   @Get()
-  @Redirect('/api', 301)
-  async main() {}
+  @Redirect('/docs', 301)
+  main() {}
+
+  @Get('/api')
+  @Redirect('/docs', 301)
+  api() {}
 
   @Get('/health')
   async getStatus() {

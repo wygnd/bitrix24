@@ -80,6 +80,13 @@ export class BitrixAddyPaymentsSendMessageResponseDto implements BitrixAddyPayme
 }
 
 export class BitrixAddyPaymentsSendMessageQueryDTO implements BitrixAddyPaymentsSendMessageQuery {
+  @ApiProperty({
+    type: String,
+    description: 'Тип сообщения',
+    required: true,
+    enum: BITRIX_ADDY_PAYMENT_MESSAGE_TYPE,
+    example: 'payment',
+  })
   @IsOptional()
   @IsString()
   @IsIn(BITRIX_ADDY_PAYMENT_MESSAGE_TYPE, {

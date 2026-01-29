@@ -60,7 +60,7 @@ async function bootstrap() {
     throw new Error('Invalid swagger options config');
 
   app.use(
-    ['/api', '/api-json'],
+    ['/docs', '/docs-json'],
     basicAuth({
       challenge: true,
       users: {
@@ -70,7 +70,7 @@ async function bootstrap() {
   );
 
   SwaggerModule.setup(
-    'api',
+    'docs',
     app,
     () => SwaggerModule.createDocument(app, swaggerConfig),
     {
