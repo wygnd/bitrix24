@@ -352,80 +352,89 @@ export class BitrixWikiUseCase {
   public async sendNoticeReceivePayment(
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ): Promise<B24WikiNPaymentsNoticesResponse> {
-    const { message, group, payment_id } = fields;
-    const chatId =
-      group in B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG
-        ? B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[group]
-        : B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[0];
+    try {
+      const { message, group, payment_id } = fields;
+      const chatId =
+        group in B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG
+          ? B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[group]
+          : B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[0];
 
-    const [, , , , inn] = message.split(' | ');
-    let clientDepartmentHistory = '';
+      const [, , , , inn] = message.split(' | ');
+      let clientDepartmentHistory = '';
 
-    // Если есть ИНН нужно в сообщение добавлять названия отделов, с которыми работал клиент
-    if (/инн/gi.test(inn)) {
-      const paymentsSet = new Set<number>();
-      const payments = await this.bitrixWikiClientPayments.getPaymentList({
-        where: {
-          inn: this.bitrixService.clearNumber(inn),
-        },
-        attributes: ['id', 'departmentName', 'departmentId'],
+      // Если есть ИНН нужно в сообщение добавлять названия отделов, с которыми работал клиент
+      if (/инн/gi.test(inn)) {
+        const paymentsSet = new Set<number>();
+        const payments = await this.bitrixWikiClientPayments.getPaymentList({
+          where: {
+            inn: this.bitrixService.clearNumber(inn),
+          },
+          attributes: ['id', 'departmentName', 'departmentId'],
+        });
+
+        if (payments.length > 0) {
+          clientDepartmentHistory +=
+            `[br][br]` +
+            payments
+              .map(({ departmentName, departmentId }) => {
+                if (paymentsSet.has(departmentId)) return null;
+                paymentsSet.add(departmentId);
+                return departmentName;
+              })
+              .filter((p) => p)
+              .join(', ');
+        }
+      }
+
+      const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
+        DIALOG_ID: chatId,
+        MESSAGE: message + clientDepartmentHistory,
+        KEYBOARD: [],
+      };
+
+      if (group == '0')
+        sendMessageOptions.MESSAGE +=
+          '[br][br][b]Данные клиента находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+
+      if (group == '-1')
+        sendMessageOptions.MESSAGE +=
+          '[br][br][b]Данные клиента НЕ находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+
+      if (['-1', '0'].includes(group)) {
+        sendMessageOptions.KEYBOARD = [
+          {
+            TEXT: 'Определить платеж',
+            COMMAND: 'defineUnknownPayment',
+            COMMAND_PARAMS: JSON.stringify({
+              group: group,
+              paymentId: payment_id,
+              message: this.bitrixBot.encodeText(message),
+            } as ImbotKeyboardDefineUnknownPaymentOptions),
+            DISPLAY: 'BLOCK',
+            BLOCK: 'Y',
+            BG_COLOR_TOKEN: 'primary',
+          },
+        ];
+      }
+
+      const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
+
+      this.logger.debug({
+        handler: this.sendNoticeReceivePayment.name,
+        body: fields,
+        commands: sendMessageOptions,
+        response: messageId,
       });
 
-      if (payments.length > 0) {
-        clientDepartmentHistory +=
-          `[br][br]` +
-          payments
-            .map(({ departmentName, departmentId }) => {
-              if (paymentsSet.has(departmentId)) return null;
-              paymentsSet.add(departmentId);
-              return departmentName;
-            })
-            .filter((p) => p)
-            .join(', ');
-      }
+      return { message_id: messageId };
+    } catch (error) {
+      this.logger.error({
+        handler: this.sendNoticeReceivePayment.name,
+        fields,
+        error,
+      });
+      throw error;
     }
-
-    const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
-      DIALOG_ID: chatId,
-      MESSAGE: message + clientDepartmentHistory,
-      KEYBOARD: [],
-    };
-
-    if (group == '0')
-      sendMessageOptions.MESSAGE +=
-        '[br][br][b]Данные клиента находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
-
-    if (group == '-1')
-      sendMessageOptions.MESSAGE +=
-        '[br][br][b]Данные клиента НЕ находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
-
-    if (['-1', '0'].includes(group)) {
-      sendMessageOptions.KEYBOARD = [
-        {
-          TEXT: 'Определить платеж',
-          COMMAND: 'defineUnknownPayment',
-          COMMAND_PARAMS: JSON.stringify({
-            group: group,
-            paymentId: payment_id,
-            message: this.bitrixBot.encodeText(message),
-          } as ImbotKeyboardDefineUnknownPaymentOptions),
-          DISPLAY: 'BLOCK',
-          BLOCK: 'Y',
-          BG_COLOR_TOKEN: 'primary',
-        },
-      ];
-    }
-
-    const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
-
-    this.logger.debug({
-      handler: this.sendNoticeReceivePayment.name,
-      body: fields,
-      commands: sendMessageOptions,
-      response: messageId,
-    });
-
-    return { message_id: messageId };
   }
 
   /**
