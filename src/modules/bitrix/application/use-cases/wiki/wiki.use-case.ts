@@ -265,15 +265,18 @@ export class BitrixWikiUseCase {
 
       // Получаем информацию о сделке
       if (!dealId) {
-        const deals = await this.bitrixDeals.getDeals({
-          filter: {
-            UF_CRM_1731418991: leadId, // Лид айди
+        const deals = await this.bitrixDeals.getDeals(
+          {
+            filter: {
+              UF_CRM_1731418991: leadId, // Лид айди
+            },
+            select: ['ID'],
+            start: 0,
           },
-          select: ['ID'],
-          start: 0,
-        });
+          'force',
+        );
 
-        if (deals.length !== 0) dealId = deals[0]?.ID;
+        if (deals.length > 0) dealId = deals[0]?.ID;
       }
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {

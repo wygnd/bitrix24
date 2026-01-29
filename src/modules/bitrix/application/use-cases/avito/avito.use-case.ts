@@ -417,12 +417,24 @@ export class BitrixAvitoUseCase {
           updateLeadFields.ASSIGNED_BY_ID !==
           this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID')
         ) {
+          batchCommandsUpdateLead['get_manager_fields'] = {
+            method: 'user.get',
+            params: {
+              ID: updateLeadFields.ASSIGNED_BY_ID,
+            },
+          };
+
+          batchCommandsUpdateLead['get_manager_department'] = {
+            method: 'department.get',
+            params: {
+              ID: '$result[get_manager_fields][0][UF_DEPARTMENT][0]',
+            },
+          };
+
           batchCommandsUpdateLead['send_message_head'] = {
             method: 'im.message.add',
             params: {
-              DIALOG_ID: this.bitrixService.getConstant(
-                'ZLATA_ZIMINA_BITRIX_ID',
-              ),
+              DIALOG_ID: '$result[get_manager_department][0][UF_HEAD]',
               MESSAGE:
                 '[b]ПРИОРИТЕТ ПО РАБОТЕ С ЛИДОМ! КЛИЕНТ ВАШЕГО МЕНЕДЖЕРА ИЩЕТ ДАЛЬШЕ! ' +
                 'ВАМ НЕОБХОДИМО ПРОКОНТРОЛИРОВАТЬ ЧТОБЫ МЕНЕДЖЕР НАБРАЛ КЛИЕНТУ В ТЕЧЕНИЕ 10 МИНУТ![/b][br][br]' +
@@ -451,6 +463,7 @@ export class BitrixAvitoUseCase {
               'предлагаем скидку или переориентируемКлиента с индивидуальной разработки на готовый сайт.',
           },
         };
+
         batchCommandsUpdateLead['add_calling'] = {
           method: 'crm.activity.add',
           params: {

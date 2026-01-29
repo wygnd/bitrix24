@@ -12,7 +12,10 @@ export interface BitrixDealsPort {
     dealId: number | string,
     action?: B24ActionType,
   ): Promise<B24Deal | null>;
-  getDeals(fields?: B24DealListParams): Promise<B24Deal[]>;
+  getDeals(
+    fields?: B24DealListParams,
+    action?: B24ActionType,
+  ): Promise<B24Deal[]>;
   createDeal(fields: Partial<B24Deal>, options?: object): Promise<number>;
   getDealFields(): Promise<B24DealFields | null>;
   getDealField(

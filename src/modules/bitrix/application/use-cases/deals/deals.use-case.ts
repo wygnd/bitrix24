@@ -14,8 +14,8 @@ export class BitrixDealsUseCase {
     private readonly deals: BitrixDealsPort,
   ) {}
 
-  async getDeals(fields?: B24DealListParams) {
-    return this.deals.getDeals(fields);
+  async getDeals(fields?: B24DealListParams, action: B24ActionType = 'cache') {
+    return this.deals.getDeals(fields, action);
   }
 
   async getDealById(dealId: string, action: B24ActionType = 'cache') {

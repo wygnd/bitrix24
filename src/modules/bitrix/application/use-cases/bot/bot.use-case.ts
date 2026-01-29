@@ -846,8 +846,10 @@ export class BitrixBotUseCase {
       if (!dealId) {
         this.bitrixBot.sendMessage({
           MESSAGE:
-            'Не удалось обработать платеж: в лиде не было указан id сделки',
+            'Не удалось обработать платеж: в лиде не было указан id сделки[br]' +
+            message,
           DIALOG_ID: dialogId,
+          SYSTEM: 'Y',
         });
         this.logger.error({
           message: 'Invalid deal id',
