@@ -1250,7 +1250,10 @@ export class BitrixLeadsUseCase {
 
         // Получение списка звонков с Telphin
         this.telphinService.getCallList({
-          start_datetime: dateFilterStart.format('YYYY-MM-DD [14:00:00]'),
+          start_datetime:
+            dateNow.get('h') <= 9
+              ? dateFilterStart.format('YYYY-MM-DD [14:00:00]')
+              : dateNow.format('YYYY-MM-DD [00:00:00]'),
           end_datetime: dateNow.format('YYYY-MM-DD HH:mm:ss'),
         }),
       ]);
