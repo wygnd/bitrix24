@@ -26,7 +26,10 @@ import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/applic
 import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-payments-notice-waiting.interface';
 import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-addy-payments-approve.interface';
 import { B24EventParams } from '@/modules/bitrix/application/interfaces/bot/imbot-events.interface';
-import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
+import {
+  B24Department,
+  B24DepartmentTypeId,
+} from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { B24BatchResponseMap } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
@@ -42,6 +45,8 @@ import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 import { ImbotKeyboardApproveCreateHrDealByRequestCandidate } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-create-hr-deal-by-request-candidate.interface';
+import { BitrixWikiClientPaymentsUseCase } from '@/modules/bitrix/application/use-cases/wiki/wiki-client-payments.use-case';
+import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 
 @Injectable()
 export class BitrixBotUseCase {
@@ -61,6 +66,7 @@ export class BitrixBotUseCase {
     private readonly wikiService: WikiService,
     private readonly avitoService: AvitoService,
     private readonly bitrixAvito: BitrixAvitoUseCase,
+    private readonly bitrixWikiClientPayments: BitrixWikiClientPaymentsUseCase,
   ) {}
 
   async addCommand(fields: B24ImbotRegisterCommand) {
@@ -768,10 +774,11 @@ export class BitrixBotUseCase {
     messageId: number,
     dialogId: string,
   ) {
-    const { message, dialogId: toChatId } = fields;
+    const { message, dialogId: toChatId, userId } = fields;
     const messageDecoded = this.decodeText(message);
     const [userName, , price, contract, organization, direction, inn, , date] =
       messageDecoded.split(' | ');
+    const clearInn = inn.trim();
 
     // Формируем монетки для отправки в old wiki
     const data: WikiNotifyReceivePaymentOptions = {
@@ -813,6 +820,56 @@ export class BitrixBotUseCase {
       // Отправляем запрос в Old wiki
       this.wikiService.notifyWikiAboutReceivePayment(data),
     ]);
+
+    // Добавляем в базу ИНН клиента и его отдел, если он есть
+    if (clearInn.length > 0) {
+      const {
+        result: {
+          result: { get_user_department: departmentInfo },
+        },
+      } = await this.bitrixService.callBatch<{
+        get_user: B24User[];
+        get_user_department: B24Department[];
+      }>({
+        get_user: {
+          method: 'user.get',
+          params: {
+            filter: {
+              ID: userId,
+            },
+          },
+        },
+        get_user_department: {
+          method: 'department.get',
+          params: {
+            ID: '$result[get_user][0][UF_DEPARTMENT][0]',
+          },
+        },
+      });
+
+      if (departmentInfo.length > 0) {
+        this.bitrixWikiClientPayments
+          .addPayment({
+            inn: clearInn,
+            departmentId: Number(departmentInfo[0].ID),
+            departmentName: departmentInfo[0].NAME,
+          })
+          .then((res) =>
+            this.logger.debug({
+              handler: this.handleApprovePayment.name,
+              message: 'Success add inn in database',
+              response: res,
+            }),
+          )
+          .catch((err) =>
+            this.logger.error({
+              handler: this.handleApprovePayment.name,
+              message: 'Invalid add inn in database',
+              error: err,
+            }),
+          );
+      }
+    }
 
     switch (toChatId) {
       // Чат: Отдел контекстной рекламы

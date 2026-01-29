@@ -258,7 +258,6 @@ export class BitrixWikiUseCase {
       let leadId = lead_id;
       let dealId = deal_id;
       const isBudget = /бюджет/gi.test(message);
-      const [, , , , , , inn = ''] = message.split(' | ');
 
       if (!deal_id && !leadId)
         throw new BadRequestException('Invalid lead and deals ids');
@@ -287,40 +286,6 @@ export class BitrixWikiUseCase {
         isBudget: isBudget,
         userId: userId,
       };
-
-      if (inn.length > 0) {
-        const {
-          result: {
-            result: { get_user_department: departmentInfo },
-          },
-        } = await this.bitrixService.callBatch<{
-          get_user: B24User[];
-          get_user_department: B24Department[];
-        }>({
-          get_user: {
-            method: 'user.get',
-            params: {
-              filter: {
-                ID: userId,
-              },
-            },
-          },
-          get_user_department: {
-            method: 'department.get',
-            params: {
-              ID: '$result[get_user][0][UF_DEPARTMENT][0][ID]',
-            },
-          },
-        });
-
-        if (departmentInfo.length > 0) {
-          this.bitrixWikiClientPayments.addPayment({
-            inn: inn,
-            departmentId: Number(departmentInfo[0].ID),
-            departmentName: departmentInfo[0].NAME,
-          });
-        }
-      }
 
       // Отправляем сообщение
       const messageId = await this.bitrixBot.sendMessage({

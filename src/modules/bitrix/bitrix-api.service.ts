@@ -195,7 +195,7 @@ export class BitrixApiService {
     if (
       this.tokens &&
       this.tokens?.access_token &&
-      Date.now() < this.tokens?.expires
+      Date.now() <= this.tokens.expires
     )
       return this.tokens;
 
@@ -208,7 +208,7 @@ export class BitrixApiService {
 
     const { accessToken, refreshToken, expires } = tokens;
 
-    if (expires && Date.now() < expires) {
+    if (expires && Date.now() <= expires) {
       this.tokens = {
         access_token: accessToken,
         refresh_token: refreshToken,

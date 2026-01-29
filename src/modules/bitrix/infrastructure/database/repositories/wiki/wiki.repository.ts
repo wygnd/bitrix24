@@ -36,7 +36,11 @@ export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPayme
       const payment = await this.wikiClientPaymentsRepository.create(fields);
       return this.dto(payment);
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.addPayment.name,
+        fields,
+        error,
+      });
       return null;
     }
   }
@@ -52,9 +56,17 @@ export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPayme
   public async getPaymentList(
     options?: FindOptions<B24WikiClientPaymentsAttributes>,
   ) {
-    return (await this.wikiClientPaymentsRepository.findAll(options)).map((p) =>
-      this.dto(p),
-    );
+    try {
+      return (await this.wikiClientPaymentsRepository.findAll(options)).map(
+        (p) => this.dto(p),
+      );
+    } catch (error) {
+      this.logger.error({
+        handler: this.getPaymentList.name,
+        error,
+      });
+      return [];
+    }
   }
 
   /**
