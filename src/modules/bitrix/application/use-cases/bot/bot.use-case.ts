@@ -785,6 +785,7 @@ export class BitrixBotUseCase {
       budget: fields.isBudget,
       payment_type: /сбп/gi.test(organization) ? 'СБП' : 'РС',
       date: date ? date.replaceAll(/([\[\]\/b])/gi, '') : '',
+      recalculate: /ПЕРЕРАСЧЁТ/g.test(messageDecoded),
     };
 
     Promise.all([

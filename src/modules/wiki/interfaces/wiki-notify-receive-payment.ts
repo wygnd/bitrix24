@@ -11,4 +11,5 @@ export interface WikiNotifyReceivePaymentOptions {
   budget: boolean;
   payment_type: string;
   date: string;
+  recalculate: boolean;
 }
