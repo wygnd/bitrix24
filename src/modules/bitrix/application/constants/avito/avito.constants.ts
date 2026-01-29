@@ -34,6 +34,7 @@ export const AvitoPhoneList = {
 
 export const ProfiRUPhoneList = {
   '79300369453': 'Николаев К. А.',
+  '79664458602': 'Соловьева',
 };
 
 export const FLPhoneList = {

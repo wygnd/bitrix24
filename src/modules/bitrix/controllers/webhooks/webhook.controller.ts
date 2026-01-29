@@ -3,7 +3,6 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
-  NotAcceptableException,
   Post,
   Query,
   UseGuards,
@@ -15,13 +14,9 @@ import { BitrixWebhookGuard } from '@/modules/bitrix/guards/bitrix-webhook.guard
 import { IncomingWebhookDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook.dto';
 import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-case.dto';
-import {
-  BitrixVoxImplantFinishCallEventGuard,
-  BitrixVoxImplantInitCallEventGuard,
-} from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
+import { BitrixVoxImplantInitCallEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-init.dto';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24EventVoxImplantCallEndDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-end.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
 
@@ -113,21 +108,5 @@ export class BitrixWebhookController {
       body,
     });
     return this.bitrixWebhooks.handleVoxImplantCallInitTask(body);
-  }
-
-  @ApiOperation({ summary: 'Обработка начала звонка' })
-  @UseGuards(BitrixVoxImplantFinishCallEventGuard)
-  @HttpCode(HttpStatus.OK)
-  @Post('/bitrix/voximplant/call/end')
-  async handleWebhookVoxImplantEndCallingFromBitrix(
-    @Body() body: B24EventVoxImplantCallEndDto,
-  ) {
-    this.logger.debug({
-      message: 'start call',
-      body,
-    });
-
-    throw new NotAcceptableException();
-    // return this.bitrixWebhooks.handleVoxImplantCallEnd(body);
   }
 }

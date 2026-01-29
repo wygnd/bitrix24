@@ -851,6 +851,7 @@ export class BitrixWebhooksUseCase {
       calls,
       group: { id: extensionGroupId },
     } = fields;
+
     // Ищем лид по номеру телефона
     // Получаем список внутренних номеров все sale отделов
     const [leadIds, saleExtensionList] = await Promise.all([
