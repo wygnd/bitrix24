@@ -17,6 +17,7 @@ import {
   BitrixAddyPaymentsSendMessageNoticeDTO,
   BitrixAddyPaymentsSendMessagePaymentDto,
 } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
+import { NDS_PERCENT } from '@/modules/bitrix/application/constants/common/bitrix.constants';
 
 @Injectable()
 export class BitrixAddyPaymentsUseCase {
@@ -109,9 +110,10 @@ export class BitrixAddyPaymentsUseCase {
     fields: BitrixAddyPaymentsSendMessagePaymentOptions,
   ): Promise<BitrixAddyPaymentsSendMessageResponse> {
     const { user_id, contract, price, client, link } = fields;
+    const priceInRubbles = price / 100;
     const message =
       `Счет на оплату[br]${link}[br]${user_id} ${contract}[br]` +
-      `${this.bitrixService.formatPrice(price / 100)}[br]${client}`;
+      `${this.bitrixService.formatPrice(priceInRubbles)}[br]${client}`;
 
     const messageId = await this.bitrixBot.sendMessage({
       DIALOG_ID: this.paymentOptions.bitrixChatId,
@@ -123,6 +125,16 @@ export class BitrixAddyPaymentsUseCase {
           DISPLAY: 'LINE',
           ACTION: 'COPY',
           ACTION_VALUE: link,
+        },
+        {
+          TEXT: 'Копировать шаблон',
+          BG_COLOR_TOKEN: 'base',
+          DISPLAY: 'LINE',
+          ACTION: 'COPY',
+          ACTION_VALUE: `№ , ${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100))}`,
+        },
+        {
+          TYPE: 'NEWLINE',
         },
         {
           TEXT: 'Подтвердить платеж',
@@ -147,7 +159,7 @@ export class BitrixAddyPaymentsUseCase {
 
     return {
       status: true,
-      message: message.toString(),
+      message: messageId.toString(),
     };
   }
 

@@ -29,7 +29,7 @@ export interface BitrixPort {
   getConfig<T extends keyof BitrixConfig>(key: T): BitrixConfig[T];
   getConstant<T extends keyof BitrixConstants>(key: T): BitrixConstants[T];
   removeEmoji(message: string): string;
-  formatPrice(price: number, locale?: string, currency?: string): string;
+  formatPrice(price: number, locale?: string, currency?: string, display?: string): string;
   sortItemsByField<T>(items: T[], field: keyof T): T[];
   clearBBCode(str: string): string;
   clearNumber(str: string): string;

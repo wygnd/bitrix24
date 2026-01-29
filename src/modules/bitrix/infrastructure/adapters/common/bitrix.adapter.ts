@@ -91,10 +91,12 @@ export class BitrixAdapter implements BitrixPort {
     price: number,
     locale: string = 'ru-RU',
     currency: string = 'RUB',
+    currencyDisplay: 'name' | 'symbol' | 'code' = 'symbol',
   ) {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currency,
+      currencyDisplay: currencyDisplay,
     }).format(price);
   }
 
