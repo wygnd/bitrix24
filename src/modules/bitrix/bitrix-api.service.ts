@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -19,11 +18,12 @@ import {
   B24BatchCommands,
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24UserCurrent } from '@/modules/bitrix/application/interfaces/users/user-current.interface';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class BitrixApiService {
@@ -33,37 +33,26 @@ export class BitrixApiService {
   );
   private tokens: BitrixTokens;
   private readonly bitrixOauthUrl = 'https://oauth.bitrix24.tech/oauth/token/';
-  private readonly bitrixDomain: string;
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject('BitrixApiService')
-    private readonly http: AxiosInstance,
+    private readonly http: HttpService,
     private readonly tokensService: TokensService,
   ) {
     const bitrixConfig = configService.get<BitrixConfig>('bitrixConfig');
 
     if (!bitrixConfig) throw new Error('Invalid bitrix config');
 
-    this.bitrixDomain = bitrixConfig.bitrixDomain;
     this.bitrixClientId = bitrixConfig.bitrixClientId;
     this.bitrixClientSecret = bitrixConfig.bitrixClientSecret;
-
-    if (!this.bitrixClientId) throw new Error('Invalid bitrix client id');
-    if (!this.bitrixClientSecret)
-      throw new Error('Invalid bitrix client secret');
 
     this.tokens = {
       access_token: '',
       refresh_token: '',
       expires: 0,
     };
-
-    this.http.defaults.baseURL = this.bitrixDomain;
-    this.http.defaults.headers['Content-Type'] = 'application/json';
-    this.http.defaults.headers.common['Accept'] = 'application/json';
   }
 
   /**
@@ -288,7 +277,7 @@ export class BitrixApiService {
     body: T,
     config?: AxiosRequestConfig<T>,
   ) {
-    const response = await this.http.post<T, AxiosResponse<U>>(
+    const response = await this.http.axiosRef.post<T, AxiosResponse<U>>(
       url,
       body,
       config,

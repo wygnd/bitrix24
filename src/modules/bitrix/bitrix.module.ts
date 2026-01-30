@@ -63,10 +63,26 @@ import { BitrixHeadhunterVacancyModel } from '@/modules/bitrix/infrastructure/da
 import { BitrixGrampusUseCase } from '@/modules/bitrix/application/use-cases/grampus/grampus.use-case';
 import { BitrixGrampusController } from '@/modules/bitrix/controllers/grampus/grampus.controller';
 import { BitrixBotCommandsModel } from '@/modules/bitrix/infrastructure/database/entities/bot/bot-commands.entity';
+import { ConfigService } from '@nestjs/config';
+import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 
 @Module({
   imports: [
-    HttpModule,
+    HttpModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const bitrixConfig =
+          configService.getOrThrow<BitrixConfig>('bitrixConfig');
+
+        return {
+          baseURL: bitrixConfig.bitrixDomain,
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        };
+      },
+    }),
     RedisModule,
     forwardRef(() => HeadHunterModule),
     WikiModule,
