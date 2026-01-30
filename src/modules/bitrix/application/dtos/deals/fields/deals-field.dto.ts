@@ -7,7 +7,7 @@ export class BitrixDealsFieldOptionsDTO implements BitrixDealsFieldOptions {
     type: String,
     description: 'ID чата, куда будет отправляться сообщение о ',
     required: false,
-    example: 'NEW',
+    example: '123',
   })
   @IsNotEmpty()
   @IsString()

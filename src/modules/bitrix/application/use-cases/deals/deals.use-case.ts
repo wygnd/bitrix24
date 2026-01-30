@@ -74,6 +74,7 @@ export class BitrixDealsUseCase {
       ];
       const dealsListFilter: Partial<Record<keyof B24Deal, any>> = {
         STAGE_ID: '38', // 2. Ожидаем бриф
+        CATEGORY_ID: '0', // Воронка
         '@UF_CRM_1657086374': ['', '7260'], // Есть подписанный договор
       };
       const deals: B24Deal[] = [];
