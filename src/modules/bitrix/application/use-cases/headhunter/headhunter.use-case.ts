@@ -367,11 +367,6 @@ export class BitrixHeadhunterUseCase {
       try {
         const vacancy = await this.getRatioVacancy(vacancyId);
 
-        this.logger.log(
-          `check vacancy (${vacancyId}) [${vacancy} => ${bitrixVacancy}]`,
-          'warn',
-        );
-
         if (vacancy.bitrixField) bitrixVacancy = vacancy.bitrixField.id;
       } catch (e) {
         bitrixVacancy = '';
