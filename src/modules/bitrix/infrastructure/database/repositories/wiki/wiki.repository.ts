@@ -34,6 +34,12 @@ export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPayme
   public async addPayment(fields: B24WikiClientPaymentsCreationalAttributes) {
     try {
       const payment = await this.wikiClientPaymentsRepository.create(fields);
+      this.logger.debug({
+        message: 'Add new payment',
+        handler: this.addPayment.name,
+        body: fields,
+        response: payment,
+      });
       return this.dto(payment);
     } catch (error) {
       this.logger.error({
