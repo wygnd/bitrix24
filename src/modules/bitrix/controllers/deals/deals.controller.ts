@@ -1,10 +1,19 @@
-import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@/common/guards/auth.guard';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixDealsUseCase } from '@/modules/bitrix/application/use-cases/deals/deals.use-case';
-import { B24DealDTO } from '@/modules/bitrix/application/dtos/deals/deal.dto';
+import { BitrixDealsFieldOptionsDTO } from '@/modules/bitrix/application/dtos/deals/fields/deals-field.dto';
 
 @ApiTags('Deals')
 @ApiExceptions()
@@ -96,18 +105,14 @@ export class BitrixDealsController {
     return this.bitrixDeals.getDealField(fieldId);
   }
 
-  @ApiOperation({ summary: 'Получить список сделок' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: B24DealDTO,
-    isArray: true,
+  @ApiOperation({
+    summary: 'Проверяет сделки на наличие заполненного договора',
+    description:
+      'Выполняет поиск по сделкам в стадии <b>2. Ожидаем бриф</b> и отправляет сообщение в чат, который был указан при запросе',
   })
-  @Get('/')
-  async getDealList() {
-    return this.bitrixDeals.getDeals({
-      filter: {
-        ID: '55352',
-      },
-    });
+  @HttpCode(HttpStatus.OK)
+  @Post('/check/contract')
+  async checkDealsContract(@Body() body: BitrixDealsFieldOptionsDTO) {
+    return this.bitrixDeals.handleCheckDealsField(body);
   }
 }

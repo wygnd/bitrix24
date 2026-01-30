@@ -33,7 +33,7 @@ import { validateField } from '@/common/validators/validate-field.validator';
 import { HeadHunterWebhookNegotiationOrRequestPayloadDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-negotiation-or-request.dto';
 import { HeadhunterWebhookNegotiationEmployerStateChangePayloadDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-webhook-negotiation-employer-state-change.dto';
 import { HeadhunterWebhookCallResponse } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-webhook-call.interface';
-import { B24DealHRRejectedStages } from '@/modules/bitrix/application/constants/deal/deal-hr.constants';
+import { B24DealHRRejectedStages } from '@/modules/bitrix/application/constants/deal/deal-hr.constant';
 import { B24Emoji, B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-redirect.dto';

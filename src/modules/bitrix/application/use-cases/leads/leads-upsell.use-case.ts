@@ -133,7 +133,10 @@ export class BitrixLeadsUpsellUseCase {
     notified,
   }: B24LeadUpsellAddInQueueOptions) {
     try {
-      const deals = await this.bitrixDeals.getDeals({
+      const {
+        data: [deal],
+        total,
+      } = await this.bitrixDeals.getDeals({
         filter: {
           ID: dealId,
         },
@@ -147,13 +150,11 @@ export class BitrixLeadsUpsellUseCase {
         start: 0,
       });
 
-      if (deals.length === 0 || !deals[0].UF_CRM_1731418991)
+      if (total === 0 || !deal.UF_CRM_1731418991)
         return {
           message: 'Invalid add deals in upsell',
           status: false,
         };
-
-      const [deal] = deals;
 
       let category: B24DealCategories = B24DealCategories.UNKNOWN;
 

@@ -229,11 +229,15 @@ export class BitrixAdapter implements BitrixPort {
     responses: B24BatchResponseMap<T>[],
   ): string[] {
     return responses.reduce<string[]>((acc, { result: { result_error } }) => {
-      const errors = Object.values(result_error);
+      const errors = Object.entries(result_error);
 
       if (errors.length === 0) return acc;
 
-      acc.push(...errors.map((err) => err.error));
+      acc.push(
+        ...errors.map(
+          ([commandName, err]) => `${commandName}: ${err.error_description}`,
+        ),
+      );
 
       return acc;
     }, []);

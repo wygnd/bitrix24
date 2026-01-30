@@ -49,7 +49,8 @@ export type B24AvailableMethods =
   | 'crm.item.list'
   | 'crm.company.list'
   | 'crm.activity.list'
-  | 'crm.activity.update';
+  | 'crm.activity.update'
+  | 'crm.category.list';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 
@@ -112,4 +113,9 @@ export enum B24DealCategories {
   ADVERT = 'advert',
   SEO = 'seo',
   UNKNOWN = 'unknown',
+}
+
+export interface B24Response<T> {
+  data: T;
+  total: number;
 }

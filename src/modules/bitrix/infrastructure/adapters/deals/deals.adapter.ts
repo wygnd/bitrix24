@@ -85,10 +85,20 @@ export class BitrixDealsAdapter implements BitrixDealsPort {
         B24Deal[]
       >('crm.deal.list', fields);
 
-      return response.result ? response.result : [];
+      return {
+        data: response.result ? response.result : [],
+        total: response.total ? response.total : 0,
+      };
     } catch (error) {
-      this.logger.error(error);
-      return [];
+      this.logger.error({
+        handler: this.getDeals.name,
+        request: fields,
+        response: error,
+      });
+      return {
+        data: [],
+        total: 0,
+      };
     }
   }
 

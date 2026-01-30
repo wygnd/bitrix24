@@ -264,7 +264,10 @@ export class BitrixWikiUseCase {
 
       // Получаем информацию о сделке
       if (!dealId) {
-        const deals = await this.bitrixDeals.getDeals(
+        const {
+          data: [deal],
+          total,
+        } = await this.bitrixDeals.getDeals(
           {
             filter: {
               UF_CRM_1731418991: leadId, // Лид айди
@@ -275,7 +278,7 @@ export class BitrixWikiUseCase {
           'force',
         );
 
-        if (deals.length > 0) dealId = deals[0]?.ID;
+        if (total > 0 && deal) dealId = deal?.ID;
       }
 
       const keyboardParams: ImbotKeyboardPaymentsNoticeWaiting = {
