@@ -556,7 +556,7 @@ export class BitrixWikiUseCase {
 
       // Если лидов не найдено
       if (leads.length === 0)
-        throw new NotFoundException({
+        throw new UnprocessableEntityException({
           status: false,
           message: 'Лидов не найдено',
         });
