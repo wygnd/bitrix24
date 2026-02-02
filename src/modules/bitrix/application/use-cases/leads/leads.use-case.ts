@@ -1489,8 +1489,6 @@ export class BitrixLeadsUseCase {
 
             const assignedHeadId = commandResponse[0].UF_HEAD;
 
-            // leadFields.assignedHeadId = assignedHeadId;
-
             if (assignedHeadId in headLeads) {
               headLeads[assignedHeadId].push(leadId);
             } else {
@@ -1547,7 +1545,8 @@ export class BitrixLeadsUseCase {
                   DIALOG_ID:
                     this.bitrixService.getConstant('SALE').frodSaleChatId,
                   MESSAGE:
-                    `[user=${assignedHeadId}][/user][br]` + notifyMessage,
+                    `[user=${assignedHeadId || this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID')}][/user][br]` +
+                    notifyMessage,
                 },
               };
 
