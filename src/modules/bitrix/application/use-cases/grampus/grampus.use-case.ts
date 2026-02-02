@@ -27,6 +27,7 @@ import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.inte
 import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/deals.port';
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
+import { GrampusService } from '@/modules/grampus/grampus.service';
 
 const { LEADS, BITRIX, USERS, BOT, DEALS, MESSAGES } = B24PORTS;
 
@@ -67,6 +68,7 @@ export class BitrixGrampusUseCase {
     private readonly bitrixDeals: BitrixDealsPort,
     @Inject(MESSAGES.MESSAGES_DEFAULT)
     private readonly bitrixMessages: BitrixMessagesPort,
+    private readonly grampusService: GrampusService,
   ) {}
 
   /**
@@ -83,6 +85,17 @@ export class BitrixGrampusUseCase {
     this.logger.debug(fields);
     try {
       const { url } = fields;
+
+      if (!/grampus/gi.test(url)) {
+        this.grampusService.notifyBadLink({
+          url: url,
+          datetime: new Date().toLocaleString(),
+        });
+        return {
+          status: true,
+          message: 'Successfully handle request',
+        };
+      }
 
       switch (true) {
         // Если заявка со страницы вакансии

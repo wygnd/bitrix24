@@ -6,6 +6,7 @@ import headHunterConfig from './headhunter.config';
 import wikiConfig from './wiki.config';
 import avitoConfig from './avito.config';
 import telphinConfig from './telphin.config';
+import grampusConfig from './grampus.config';
 
 export const configList = [
   bitrixConfig,
@@ -16,4 +17,5 @@ export const configList = [
   wikiConfig,
   avitoConfig,
   telphinConfig,
+  grampusConfig,
 ];

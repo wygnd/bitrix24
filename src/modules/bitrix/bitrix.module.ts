@@ -65,6 +65,7 @@ import { BitrixGrampusController } from '@/modules/bitrix/controllers/grampus/gr
 import { BitrixBotCommandsModel } from '@/modules/bitrix/infrastructure/database/entities/bot/bot-commands.entity';
 import { ConfigService } from '@nestjs/config';
 import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
+import { GrampusModule } from '@/modules/grampus/grampus.module';
 
 @Module({
   imports: [
@@ -96,6 +97,7 @@ import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
       BitrixHeadhunterVacancyModel,
       BitrixBotCommandsModel,
     ]),
+    GrampusModule,
   ],
   controllers: [
     BitrixController,
