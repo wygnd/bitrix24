@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { Injectable } from '@nestjs/common';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { HeadHunterConfig } from '@/common/interfaces/headhunter-config.interface';
 import { RedisService } from '@/modules/redis/redis.service';
@@ -12,6 +12,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
 import { BitrixUseCase } from '@/modules/bitrix/application/use-cases/common/bitrix.use-case';
 import dayjs from 'dayjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class HeadHunterService {
@@ -28,8 +29,7 @@ export class HeadHunterService {
   constructor(
     private readonly redisService: RedisService,
     private readonly configService: ConfigService,
-    @Inject('HeadHunterApiService')
-    private readonly http: AxiosInstance,
+    private readonly http: HttpService,
     private readonly bitrixMessages: BitrixMessagesUseCase,
     private readonly bitrixService: BitrixUseCase,
     private readonly tokensService: TokensService,
@@ -49,11 +49,7 @@ export class HeadHunterService {
         `Invalid head hunter fields: ${checkEmptyValues.map(([name]) => name).join(', ')}`,
       );
 
-    const { clientId, clientSecret, baseUrl, redirectUri } = headHunterConfig;
-
-    this.http.defaults.baseURL = baseUrl;
-    this.http.defaults.headers.common['Content-Type'] = 'application/json';
-    this.http.defaults.headers.common['Accept'] = 'application/json';
+    const { clientId, clientSecret, redirectUri } = headHunterConfig;
 
     // Check auth data.
     // Send message about update credentials If not exists
@@ -64,7 +60,7 @@ export class HeadHunterService {
         return;
       }
 
-      this.http.defaults.headers.common['Authorization'] =
+      this.http.axiosRef.defaults.headers.common['Authorization'] =
         `Bearer ${tokens.accessToken}`;
 
       this.get<object, HHMeInterface>('/me')
@@ -82,12 +78,15 @@ export class HeadHunterService {
   }
 
   async get<T = any, U = any>(url: string, config?: AxiosRequestConfig<T>) {
-    const { data } = await this.http.get<T, AxiosResponse<U>>(url, config);
+    const { data } = await this.http.axiosRef.get<T, AxiosResponse<U>>(
+      url,
+      config,
+    );
     return data as U;
   }
 
   async post<T, U = any>(url: string, body: T, config?: AxiosRequestConfig<T>) {
-    const { data } = await this.http.post<T, AxiosResponse<U>>(
+    const { data } = await this.http.axiosRef.post<T, AxiosResponse<U>>(
       url,
       body,
       config,
@@ -143,7 +142,7 @@ export class HeadHunterService {
 
     if (!tokens) return false;
 
-    this.http.defaults.headers['Authorization'] =
+    this.http.axiosRef.defaults.headers['Authorization'] =
       `Bearer ${tokens.access_token}`;
 
     // Temporary

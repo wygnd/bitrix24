@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-import type { AxiosInstance, AxiosResponse } from 'axios';
+import { Injectable } from '@nestjs/common';
+import type { AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { TelphinConfig } from '@/common/interfaces/telphin-config.interface';
 import { TelphinTokenOptions } from '@/modules/telphin/interfaces/telphin-api.interface';
@@ -7,6 +7,7 @@ import { TokensService } from '@/modules/tokens/tokens.service';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { TelphinUserInfo } from '@/modules/tokens/interfaces/telphin-user.interface';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class TelphinApiService {
@@ -20,8 +21,7 @@ export class TelphinApiService {
 
   constructor(
     private readonly configService: ConfigService,
-    @Inject('TelphinApiProvider')
-    private readonly telphinAPI: AxiosInstance,
+    private readonly telphinAPI: HttpService,
     private readonly tokensService: TokensService,
   ) {
     const telphinConfig =
@@ -35,13 +35,10 @@ export class TelphinApiService {
         `${TelphinApiService.name.toUpperCase()}: Invalid config`,
       );
 
-    const { baseUrl, clientId, clientSecret } = telphinConfig;
+    const { clientId, clientSecret } = telphinConfig;
 
     this.telphinClientId = clientId;
     this.telphinClientSecret = clientSecret;
-    this.telphinAPI.defaults.baseURL = baseUrl;
-    this.telphinAPI.defaults.headers['Content-Type'] = 'application/json';
-    this.telphinAPI.defaults.headers['Accept-Encoding'] = 'gzip';
 
     // Get application info from telphin
     this.get<TelphinUserInfo>('/user')
@@ -119,7 +116,7 @@ export class TelphinApiService {
    * @private
    */
   private async sendRequestOnUpdateTokens() {
-    const { data } = await this.telphinAPI.post<
+    const { data } = await this.telphinAPI.axiosRef.post<
       URLSearchParams,
       AxiosResponse<TelphinTokenOptions>
     >(
@@ -159,7 +156,7 @@ export class TelphinApiService {
     U extends Record<string, any> = Record<string, any>,
   >(url: string, params?: U): Promise<T | null> {
     try {
-      const { data } = await this.telphinAPI.get<T>(url, {
+      const { data } = await this.telphinAPI.axiosRef.get<T>(url, {
         params: params,
         headers: {
           Authorization: `Bearer ${await this.getAccessToken()}`,
