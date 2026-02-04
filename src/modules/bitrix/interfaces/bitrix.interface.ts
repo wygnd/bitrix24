@@ -50,7 +50,8 @@ export type B24AvailableMethods =
   | 'crm.company.list'
   | 'crm.activity.list'
   | 'crm.activity.update'
-  | 'crm.category.list';
+  | 'crm.category.list'
+  | 'crm.dealcategory.stage.list';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

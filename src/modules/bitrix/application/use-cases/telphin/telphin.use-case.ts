@@ -12,8 +12,7 @@ import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import {
   B24LeadActiveStages,
   B24LeadNewStages,
-  B24LeadRejectStages,
-} from '@/modules/bitrix/application/constants/leads/lead.constants';
+  } from '@/modules/bitrix/application/constants/leads/lead.constants';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
@@ -170,7 +169,6 @@ export class BitrixTelphinUseCase {
 
       switch (true) {
         case B24LeadNewStages.includes(leadStatusId): // Лид в новых стадиях
-        case B24LeadRejectStages.includes(leadStatusId): // Лид в Неактивных стадиях
           batchCommands['update_lead'] = {
             method: 'crm.lead.update',
             params: {
