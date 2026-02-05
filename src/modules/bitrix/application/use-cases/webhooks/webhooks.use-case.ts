@@ -861,7 +861,7 @@ export class BitrixWebhooksUseCase {
         extensionGroupId,
       ]),
       calledDid && calledDid in Bitrix1CPhoneList
-        ? this.bitrixService.callMethod('imbot.message.add', {
+        ? this.bitrixService.callMethod('im.message.add', {
             DIALOG_ID: '114', // Дмитрий Андреев,
             MESSAGE: `Звонок по 1С с номера: [b]${clientPhone}[/b]`,
           })
