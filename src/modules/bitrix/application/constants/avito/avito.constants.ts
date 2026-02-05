@@ -40,3 +40,7 @@ export const ProfiRUPhoneList = {
 export const FLPhoneList = {
   '79310091090': 'Николаев К. А.',
 };
+
+export const Bitrix1CPhoneList = {
+  '79837005363': 'Звонок по 1С',
+};

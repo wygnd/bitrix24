@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixAddySupportOptions } from '@/common/interfaces/bitrix-config.interface';
 import { ConfigService } from '@nestjs/config';

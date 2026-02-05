@@ -53,6 +53,7 @@ import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.p
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import {
   AvitoPhoneList,
+  Bitrix1CPhoneList,
   FLPhoneList,
   ProfiRUPhoneList,
 } from '@/modules/bitrix/application/constants/avito/avito.constants';
@@ -755,11 +756,11 @@ export class BitrixWebhooksUseCase {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
-    this.logger.debug({
-      message: 'check current calls',
-      phone: clientPhone,
-      currentCalls,
-    });
+    // this.logger.debug({
+    //   message: 'check current calls',
+    //   phone: clientPhone,
+    //   currentCalls,
+    // });
 
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
@@ -768,11 +769,11 @@ export class BitrixWebhooksUseCase {
         [caller_id_name, caller_id_number].includes(clientPhone),
     );
 
-    this.logger.debug({
-      message: 'check current calls and finded target call by client phone',
-      currentCalls,
-      targetCalls,
-    });
+    // this.logger.debug({
+    //   message: 'check current calls and finded target call by client phone',
+    //   currentCalls,
+    //   targetCalls,
+    // });
 
     // Если не нашли текущий звонок по номеру клиента: выходим
     if (targetCalls.length === 0)
@@ -790,10 +791,10 @@ export class BitrixWebhooksUseCase {
       ),
     ]);
 
-    this.logger.debug({
-      message: 'check extension group',
-      extensionGroup,
-    });
+    // this.logger.debug({
+    //   message: 'check extension group',
+    //   extensionGroup,
+    // });
 
     if (!extensionGroup)
       throw new NotFoundException('Extension group was not found');
@@ -913,6 +914,9 @@ export class BitrixWebhooksUseCase {
         }
       }
 
+      if (calledDid && calledDid in Bitrix1CPhoneList)
+        notifyManagerMessage = 'Звонок по 1С ' + notifyManagerMessage;
+
       // Уведомляем пользователя
       callManagerCommands['notify_manager'] = {
         method: 'im.notify.system.add',
@@ -936,15 +940,29 @@ export class BitrixWebhooksUseCase {
       };
     }
 
-    let source = calledDid
-      ? calledDid in AvitoPhoneList
-        ? ` с авито [${AvitoPhoneList[calledDid]}] `
-        : calledDid in FLPhoneList
-          ? ` c FL [${FLPhoneList[calledDid]}] `
-          : calledDid in ProfiRUPhoneList
-            ? ` с ПРОФИ.РУ [${ProfiRUPhoneList[calledDid]}] `
-            : ''
-      : '';
+    let source: string;
+
+    switch (true) {
+      case calledDid && calledDid in AvitoPhoneList:
+        source = ` с авито [${AvitoPhoneList[calledDid]}] `;
+        break;
+
+      case calledDid && calledDid in FLPhoneList:
+        source = ` c FL [${FLPhoneList[calledDid]}] `;
+        break;
+
+      case calledDid && calledDid in ProfiRUPhoneList:
+        source = ` с ПРОФИ.РУ [${ProfiRUPhoneList[calledDid]}] `;
+        break;
+
+      case calledDid && calledDid in Bitrix1CPhoneList:
+        source = ` [${Bitrix1CPhoneList[calledDid]}] `;
+        break;
+
+      default:
+        source = '';
+        break;
+    }
 
     const callAvitoCommands: B24BatchCommands = {};
 
