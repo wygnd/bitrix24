@@ -860,6 +860,12 @@ export class BitrixWebhooksUseCase {
       this.telphinService.getExtensionGroupExtensionListByGroupIds([
         extensionGroupId,
       ]),
+      calledDid && calledDid in Bitrix1CPhoneList
+        ? this.bitrixService.callMethod('imbot.message.add', {
+            DIALOG_ID: '114', // Дмитрий Андреев,
+            MESSAGE: `Звонок по 1С с номера: [b]${clientPhone}[/b]`,
+          })
+        : null,
     ]);
 
     if (saleExtensionList.length === 0)
@@ -940,6 +946,7 @@ export class BitrixWebhooksUseCase {
       };
     }
 
+    const callAvitoCommands: B24BatchCommands = {};
     let source: string;
 
     switch (true) {
@@ -963,8 +970,6 @@ export class BitrixWebhooksUseCase {
         source = '';
         break;
     }
-
-    const callAvitoCommands: B24BatchCommands = {};
 
     this.logger.debug({
       fields,
