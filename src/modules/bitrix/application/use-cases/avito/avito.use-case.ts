@@ -496,16 +496,7 @@ export class BitrixAvitoUseCase {
         batchCommandsUpdateLead['send_message_converted'] = {
           method: 'im.message.add',
           params: {
-            DIALOG_ID: this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'),
-            MESSAGE: notifyMessage,
-          },
-        };
-
-        // Отправляем сообщение Ксении Чешковой
-        batchCommandsUpdateLead['send_message_to_kesina_cheshkova'] = {
-          method: 'im.message.add',
-          params: {
-            DIALOG_ID: '464',
+            DIALOG_ID: 'chat170426', // Чат: Действующий клиент обратился
             MESSAGE: notifyMessage,
           },
         };

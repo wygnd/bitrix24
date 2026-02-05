@@ -232,7 +232,7 @@ export class BitrixGrampusUseCase {
     if (!lead) {
       this.bitrixBot.sendMessage({
         DIALOG_ID: trafficsChatId,
-        MESSAGE: `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br][b]Не удалось обновить лид[/b]`,
+        MESSAGE: `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br]Номер: ${phone}[br][br][b]Не удалось обновить лид[/b]`,
       });
       return {
         message: 'Failed to update lead',
@@ -322,6 +322,7 @@ export class BitrixGrampusUseCase {
       case B24LeadConvertedStages.includes(leadStatusId):
         // Если лид в новых или активных или завершающих стадиях
         // добавляем комментарий и отправляем сообщение в чат
+        let chatId = trafficsChatId;
         updatedMessage =
           `Клиент повторно обратился на сайт ${url}[br][br]` +
           this.bitrixService.generateLeadUrl(leadId);
@@ -332,6 +333,8 @@ export class BitrixGrampusUseCase {
           updatedMessage =
             `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
             this.bitrixService.generateLeadUrl(leadId);
+
+          chatId = 'chat170426'; // Чат: Действующий клиент обратился
         }
         batchCommands['add_comment'] = {
           method: 'crm.timeline.comment.add',
@@ -349,7 +352,7 @@ export class BitrixGrampusUseCase {
           method: 'imbot.message.add',
           params: {
             BOT_ID: BOT_ID,
-            DIALOG_ID: trafficsChatId,
+            DIALOG_ID: chatId,
             MESSAGE: updatedMessage,
             URL_PREVIEW: 'N',
           },
