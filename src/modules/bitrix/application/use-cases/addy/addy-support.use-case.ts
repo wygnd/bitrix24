@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { WinstonLogger } from '@/config/winston.logger';
 import { BitrixAddySupportOptions } from '@/common/interfaces/bitrix-config.interface';
 import { ConfigService } from '@nestjs/config';
@@ -50,9 +50,14 @@ export class BitrixAddySupportUseCase {
       status: false,
       message: 'Not handle',
     };
-
     try {
       const { user_id, message } = fields;
+
+      if (user_id == '1') {
+        responseData.status = true;
+        responseData.message = 'Hide handle';
+        return responseData;
+      }
 
       const messageId = await this.bitrixBot.sendMessage({
         DIALOG_ID: this.supportOptions.bitrixChatId,
@@ -72,9 +77,7 @@ export class BitrixAddySupportUseCase {
       return responseData;
     } catch (e) {
       this.logger.error(e);
-      responseData.message = e;
-
-      return responseData;
+      throw e;
     }
   }
 }
