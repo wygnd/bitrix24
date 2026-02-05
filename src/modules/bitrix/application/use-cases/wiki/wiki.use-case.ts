@@ -3,7 +3,6 @@ import {
   ConflictException,
   Inject,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -611,18 +610,27 @@ export class BitrixWikiUseCase {
         });
       }
 
-      const {
-        result: {
-          result: { update_lead: responseUpdateLead },
-        },
-      } = await this.bitrixService.callBatch<{
-        update_lead: boolean;
-      }>(batchCommandsUpdateLead);
+      this.bitrixService
+        .callBatch(batchCommandsUpdateLead)
+        .then((response) => {
+          this.logger.debug({
+            method: this.distributeLeadOnWishManager.name,
+            body: fields,
+            response: response,
+          });
+        })
+        .catch((err) => {
+          this.logger.error({
+            method: this.distributeLeadOnWishManager.name,
+            body: fields,
+            error: err,
+          });
 
-      if (!responseUpdateLead)
-        throw new InternalServerErrorException({
-          status: false,
-          message: 'Произошла внутренняя ошибка, обратитесь к bitrix master',
+          this.redisService.set<string>(
+            REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
+            `${Number(this.redisService.get<string>(REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId)) - 1}`,
+            3600, // 1 hour
+          );
         });
 
       this.redisService.set<string>(
@@ -631,16 +639,10 @@ export class BitrixWikiUseCase {
         3600, // 1 hour
       );
 
-      this.logger.debug({
-        method: 'distributeLeadOnWishManager',
-        body: fields,
-        response: leadId,
-      });
-
       return {
         status: true,
         message:
-          'Лид успешно распределен: ' +
+          'Лид в очереди на распределение: ' +
           this.bitrixService.generateLeadUrl(leadId),
       };
     } catch (error) {
