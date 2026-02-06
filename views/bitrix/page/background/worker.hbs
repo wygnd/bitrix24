@@ -1,16 +1,31 @@
 <script src="//api.bitrix24.com/api/v1/"></script>
 <script>
-  console.log(BX24);
-
   BX24.ready(function() {
+    const setTitle = (text) => {
+      BX24.placement.call('CallCardSetStatusText', { statusText: text }, () => {
+      });
+    };
+
     BX24.init(function() {
-      console.log('from node', BX24);
 
-      BX24.placement.bindEvent('BackgroundCallCard::initialized', event => {
-        console.log('from node event', event);
+      BX24.placement.bindEvent('BackgroundCallCard::initialized', async () => {
 
+        // Отключаем авто закрытие виджета после прерывания/окончания звонка
         BX24.placement.call('disableAutoClose', {}, function(result) {
         });
+
+        // Ставим в карточку текст
+        setTitle('Поиск...');
+
+
+        const { data } = await fetch('https://bitrix-grampus.ru/page/background/worker/data').then(res => res.json()).catch(err => {
+          console.log(err);
+          setTitle('Ошибка получения данных');
+          return null;
+        });
+
+        if (data?.status && data?.message) setTitle(data.message);
+
       });
 
     });

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Render,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -34,6 +36,12 @@ export class BitrixWidgetController {
       handler: this.handlePageBackgroundWorker.name,
       request: body,
     });
+  }
+
+  @ApiOperation({ summary: 'Получить данные звонка по номеру' })
+  @Get('/page/background/worker/data')
+  async handleGetDataPageBackgroundWorder(@Query('phone') phone: string) {
+    return phone;
   }
 
   @ApiOperation({ summary: 'Обработка ошибок для PAGE_BACKGROUND_WORKER' })
