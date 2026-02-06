@@ -18,7 +18,7 @@
         setTitle('Поиск...');
 
 
-        const { data } = await fetch('https://bitrix-grampus.ru/widget/page/background/worker/data').then(res => res.json()).catch(err => {
+        const { data } = await fetch('https://bitrix-grampus.ru/v1/widget/page/background/worker/data').then(res => res.json()).catch(err => {
           console.log(err);
           setTitle('Ошибка получения данных');
           return null;
