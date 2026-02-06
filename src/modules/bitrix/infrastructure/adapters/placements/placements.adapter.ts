@@ -37,6 +37,12 @@ export class BitrixPlacementsAdapter implements BitrixPlacementsPort {
         boolean
       >('placement.bind', params);
 
+      console.log(response);
+
+      this.logger.debug({
+        handler: this.bind.name,
+        response,
+      });
       return response?.result ?? false;
     } catch (error) {
       this.logger.error(error);
