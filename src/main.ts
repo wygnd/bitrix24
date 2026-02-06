@@ -52,11 +52,21 @@ async function bootstrap() {
           imgSrc: [
             `'self'`,
             'data:',
-            config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN'),
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
           ],
           scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-          manifestSrc: [`'self'`, config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN')],
-          frameSrc: [`'self'`, config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN')],
+          manifestSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          frameSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          'frame-ancestors': [
+            `'self'`,
+            config.getOrThrow('bitrixConfig.bitrixDomain'),
+          ],
         },
       },
     }),
