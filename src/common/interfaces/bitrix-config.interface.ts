@@ -17,6 +17,7 @@ export interface BitrixConstants {
   WEBHOOK: BitrixWebhookConstants;
   GRAMPUS: BitrixGrampusOptions;
   SALE: BitrixSaleOptions;
+  BITRIX_DOMAIN: string;
 }
 
 export interface BitrixOptions {

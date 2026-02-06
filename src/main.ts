@@ -10,6 +10,7 @@ import { AllExceptionsFilter } from '@/common/filters/all-exceptions.filter';
 import basicAuth from 'express-basic-auth';
 import EventEmitter from 'node:events';
 import { join } from 'path';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {});
@@ -42,6 +43,24 @@ async function bootstrap() {
       'http://localhost:5173',
     ],
   });
+
+  // policy
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          imgSrc: [
+            `'self'`,
+            'data:',
+            config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN'),
+          ],
+          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+          manifestSrc: [`'self'`, config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN')],
+          frameSrc: [`'self'`, config.getOrThrow<string>('bitrixConstants.BITRIX_DOMAIN')],
+        },
+      },
+    }),
+  );
 
   // use compression
   app.use(compression());

@@ -46,8 +46,8 @@ export class BitrixPlacementController {
   @UseGuards(AuthGuard)
   @Post('/bind')
   async bindWidget(@Body() fields: PlacementBindDto) {
-    // return false;
-    return this.bitrixPlacements.addPlacement(fields);
+    return false;
+    // return this.bitrixPlacements.addPlacement(fields);
   }
 
   @ApiAuthHeader()
