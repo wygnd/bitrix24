@@ -66,6 +66,7 @@ import { BitrixBotCommandsModel } from '@/modules/bitrix/infrastructure/database
 import { ConfigService } from '@nestjs/config';
 import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 import { GrampusModule } from '@/modules/grampus/grampus.module';
+import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/widgets.controller';
 
 @Module({
   imports: [
@@ -130,6 +131,7 @@ import { GrampusModule } from '@/modules/grampus/grampus.module';
 
     // PLACEMENT
     BitrixPlacementController,
+    BitrixWidgetController,
 
     // ADDY
     BitrixAddySupportControllerV1,

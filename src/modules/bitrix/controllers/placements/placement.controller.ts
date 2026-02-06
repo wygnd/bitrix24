@@ -28,7 +28,6 @@ import { BitrixPlacementsUseCase } from '@/modules/bitrix/application/use-cases/
 @Controller('placement')
 export class BitrixPlacementController {
   constructor(private readonly bitrixPlacements: BitrixPlacementsUseCase) {}
-
   @UseGuards(BitrixPlacementGuard)
   @Post('/crm/deal/detail-tab')
   async handleCrmDealDetailTab(

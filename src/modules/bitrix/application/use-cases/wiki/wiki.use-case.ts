@@ -611,6 +611,7 @@ export class BitrixWikiUseCase {
           'Ошибка получения лида. Обратитесь к $bitrix master$',
         );
 
+      // Счетчик кликов
       this.redisService.set<string>(
         REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
         `${Number(userWasPushing) + 1}`,
