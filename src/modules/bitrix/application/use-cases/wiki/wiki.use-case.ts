@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -491,8 +492,7 @@ export class BitrixWikiUseCase {
           result: {
             get_leads: leads,
             get_user: users,
-            get_user_leads: userLeads,
-            get_lead_activity: leadActivities,
+            get_user_leads: userLeadIds,
           },
         },
       } = await this.bitrixService.callBatch<{
@@ -526,15 +526,7 @@ export class BitrixWikiUseCase {
               ASSIGNED_BY_ID: userId,
               STATUS_ID: B24LeadActiveStages[0], // Новый в работе
             },
-          },
-        },
-        get_lead_activity: {
-          method: 'crm.activity.list',
-          params: {
-            filter: {
-              OWNER_ID: '$result[get_leads][0][ID]',
-              OWNER_TYPE_ID: '1',
-            },
+            select: ['ID'],
           },
         },
       });
@@ -561,7 +553,7 @@ export class BitrixWikiUseCase {
         });
 
       // Если у пользователя больше 10 активных лидов
-      if (userLeads.length > 10)
+      if (userLeadIds.length > 10)
         throw new UnprocessableEntityException({
           status: false,
           message: 'У тебя и так много лидов',
@@ -580,6 +572,15 @@ export class BitrixWikiUseCase {
             },
           },
         },
+        // Получаем звонки лида
+        get_lead_activities: {
+          method: 'crm.activity.list',
+          params: {
+            OWNER_ID: leadId,
+            OWNER_TYPE_ID: '1',
+            COMPLETED: 'N',
+          },
+        },
         // Отправляем менеджеру сообщение с сылкой на лид
         notify_about_update_lead: {
           method: 'im.message.add',
@@ -593,45 +594,22 @@ export class BitrixWikiUseCase {
         },
       };
 
-      // Если есть звонки переводим ответственного
-      if (leadActivities.length > 0) {
-        leadActivities.forEach((activity) => {
-          batchCommandsUpdateLead[`update_lead_activity=${activity.ID}`] = {
-            method: 'crm.activity.update',
-            params: {
-              id: activity.ID,
-              fields: {
-                OWNER_TYPE_ID: '1',
-                OWNER_ID: leadId,
-                RESPONSIBLE_ID: userId,
-              },
-            },
-          };
-        });
-      }
+      const {
+        result: {
+          result: {
+            update_lead: resultUpdateLead,
+            get_lead_activities: leadActivities,
+          },
+        },
+      } = await this.bitrixService.callBatch<{
+        update_lead: boolean;
+        get_lead_activities: B24Activity[];
+      }>(batchCommandsUpdateLead);
 
-      this.bitrixService
-        .callBatch(batchCommandsUpdateLead)
-        .then((response) => {
-          this.logger.debug({
-            method: this.distributeLeadOnWishManager.name,
-            body: fields,
-            response: response,
-          });
-        })
-        .catch((err) => {
-          this.logger.error({
-            method: this.distributeLeadOnWishManager.name,
-            body: fields,
-            error: err,
-          });
-
-          this.redisService.set<string>(
-            REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
-            `${Number(this.redisService.get<string>(REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId)) - 1}`,
-            3600, // 1 hour
-          );
-        });
+      if (!resultUpdateLead)
+        throw new InternalServerErrorException(
+          'Ошибка получения лида. Обратитесь к $bitrix master$',
+        );
 
       this.redisService.set<string>(
         REDIS_KEYS.BITRIX_DATA_WIKI_DISTRIBUTE_LEAD_WISH_MANAGER + userId,
@@ -639,11 +617,40 @@ export class BitrixWikiUseCase {
         3600, // 1 hour
       );
 
+      // Если есть звонки: меняем ответственного
+      if (leadActivities.length > 0) {
+        this.bitrixService
+          .callBatch(
+            leadActivities.reduce<B24BatchCommands>((acc, leadActivity) => {
+              acc[`update_activity=${leadActivity.ID}`] = {
+                method: 'crm.activity.update',
+                params: {
+                  id: leadActivity.ID,
+                  fields: {
+                    RESPONSIBLE_ID: userId,
+                  },
+                },
+              };
+              return acc;
+            }, {}),
+          )
+          .then((res) =>
+            this.logger.debug({
+              handler: this.distributeLeadOnWishManager.name,
+              response: res,
+            }),
+          )
+          .catch((err) =>
+            this.logger.error({
+              handler: this.distributeLeadOnWishManager.name,
+              error: err,
+            }),
+          );
+      }
+
       return {
         status: true,
-        message:
-          'Лид в очереди на распределение: ' +
-          this.bitrixService.generateLeadUrl(leadId),
+        message: 'Получен лид: ' + this.bitrixService.generateLeadUrl(leadId),
       };
     } catch (error) {
       this.logger.error({
