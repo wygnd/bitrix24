@@ -7,10 +7,10 @@
       console.log('from node', BX24);
 
       BX24.placement.bindEvent('BackgroundCallCard::initialized', event => {
-        console.log(event);
-        // BX24.placement.call('disableAutoClose', {}, function(result) {
-        //   console.log(result);
-        // });
+        console.log('from node event', event);
+
+        BX24.placement.call('disableAutoClose', {}, function(result) {
+        });
       });
 
     });
