@@ -41,7 +41,10 @@ export class BitrixWidgetController {
   @ApiOperation({ summary: 'Получить данные звонка по номеру' })
   @Get('/page/background/worker/data')
   async handleGetDataPageBackgroundWorder(@Query('phone') phone: string) {
-    return phone;
+    return {
+      status: true,
+      message: 'Hi there',
+    };
   }
 
   @ApiOperation({ summary: 'Обработка ошибок для PAGE_BACKGROUND_WORKER' })

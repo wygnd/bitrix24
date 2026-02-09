@@ -1,12 +1,11 @@
 <script src="//api.bitrix24.com/api/v1/"></script>
 <script>
   BX24.ready(function() {
-    const setTitle = (text) => {
-      BX24.placement.call('CallCardSetStatusText', { statusText: text }, () => {
-      });
-    };
-
     BX24.init(function() {
+      const setTitle = (text) => {
+        BX24.placement.call('CallCardSetStatusText', { statusText: text }, () => {
+        });
+      };
 
       BX24.placement.bindEvent('BackgroundCallCard::initialized', async () => {
 
@@ -17,12 +16,15 @@
         // Ставим в карточку текст
         setTitle('Поиск...');
 
+        const { data } = await fetch('https://bitrix-grampus.ru/v1/widget/page/background/worker/data')
+          .then(res => res.json())
+          .catch(err => {
+            console.log(err);
+            setTitle('Ошибка получения данных');
+            return null;
+          });
 
-        const { data } = await fetch('https://bitrix-grampus.ru/v1/widget/page/background/worker/data').then(res => res.json()).catch(err => {
-          console.log(err);
-          setTitle('Ошибка получения данных');
-          return null;
-        });
+        console.log(data);
 
         if (data?.status && data?.message) setTitle(data.message);
 
