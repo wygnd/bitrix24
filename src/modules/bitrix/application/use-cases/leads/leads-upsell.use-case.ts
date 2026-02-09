@@ -814,7 +814,11 @@ export class BitrixLeadsUpsellUseCase {
         method: 'im.message.add',
         params: {
           DIALOG_ID: messages.additionalMessage.dialogId,
-          MESSAGE: messages.additionalMessage.message,
+          MESSAGE:
+            messages.additionalMessage.message +
+            this.bitrixService.generateLeadUrl(leadId) +
+            '[br]' +
+            this.bitrixService.generateDealUrl(dealId),
         },
       };
     }

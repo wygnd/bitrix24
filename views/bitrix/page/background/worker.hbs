@@ -2,8 +2,9 @@
 <script>
   BX24.ready(function() {
     BX24.init(function() {
-      BX24.placement.bindEvent('BackgroundCallCard::initialized', async (phone) => {
-        const response = await fetch(`https://bitrix-grampus.ru/v1/widget/page/background/worker/data?phone=${phone}`)
+      BX24.placement.bindEvent('BackgroundCallCard::initialized', async (data) => {
+        console.log(data);
+        const response = await fetch(`https://bitrix-grampus.ru/v1/widget/page/background/worker/data?phone=${data.phone}`)
           .then(res => res.json())
           .catch(err => {
             console.log(err);
