@@ -22,6 +22,9 @@
         BX24.placement.call('CallCardSetStatusText', { statusText: response.message }, () => {
         });
 
+        BX24.placement.call('getStatus', {}, function(result) {
+          console.log('Check call status', result);
+        });
       });
 
       // Событие перед закрытием карточки
