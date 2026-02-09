@@ -45,12 +45,20 @@ export class BitrixWidgetUseCase {
   async getDataForCallOnBackgroundWorker(phone: string) {
     if (!phone) throw new BadRequestException('Invalid phone number');
 
+    const clientPhone =
+      phone[0] === '8'
+        ? phone.replace('8', '+7')
+        : !phone.includes('+')
+          ? `+${phone}`
+          : phone;
+
+
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
     this.logger.debug({
       handler: this.getDataForCallOnBackgroundWorker.name,
-      message: `Find phone: ${phone} in current calls`,
+      message: `Find phone: ${clientPhone} in current calls`,
       calls: currentCalls,
     });
 
@@ -58,12 +66,12 @@ export class BitrixWidgetUseCase {
     const targetCalls = currentCalls.filter(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
         call_flow === 'IN' &&
-        [caller_id_name, caller_id_number, called_number].includes(phone),
+        [caller_id_name, caller_id_number, called_number].includes(clientPhone),
     );
 
     // Если не нашли текущий звонок по номеру клиента: выходим
     if (targetCalls.length === 0)
-      throw new NotFoundException('Call in call list was not found');
+      throw new NotFoundException('Звонок не найден');
 
     // Получаем группу
     const [extensionGroup, extension] = await Promise.all([
@@ -82,9 +90,9 @@ export class BitrixWidgetUseCase {
     });
 
     if (!extensionGroup)
-      throw new NotFoundException('Extension group was not found');
+      throw new NotFoundException('Группа внтуреннего номера не найдена');
 
-    if (!extension) throw new NotFoundException('Extension was not found');
+    if (!extension) throw new NotFoundException('Внутренний номер не найден');
 
     // Вытаскиваем имя группы
     const { name: extensionGroupName } = extensionGroup;
@@ -94,7 +102,7 @@ export class BitrixWidgetUseCase {
       // Отдел продаж
       case /sale/gi.test(extensionGroupName):
         return this.handleGetDataForCallOnBackgroundWorker({
-          phone: phone,
+          phone: clientPhone,
           extension: extension,
           group: extensionGroup,
           calls: targetCalls,
@@ -137,7 +145,7 @@ export class BitrixWidgetUseCase {
     ]);
 
     if (saleExtensionList.length === 0)
-      throw new NotFoundException('Extension list is empty');
+      throw new NotFoundException('Список внутренних номеров не найден');
 
     this.logger.debug({
       message: 'check extension phone and saleList from telphin',
@@ -157,7 +165,7 @@ export class BitrixWidgetUseCase {
 
       if (!extensionExtraParamsDecoded)
         throw new BadRequestException(
-          'Invalid get assigned bitrix id by extension',
+          `Ошибка получения bitrix_id из данных внутреннего номера: ${extensionPhone}`,
         );
 
       // Если лид не найден
@@ -170,7 +178,7 @@ export class BitrixWidgetUseCase {
         const leadId = leadIds[0].toString();
         const lead = await this.bitrixLeads.getLeadById(leadId);
 
-        if (!lead) throw new BadRequestException('Lead was not found');
+        if (!lead) throw new BadRequestException(`Лид [${leadId}] не найден`);
 
         const { STATUS_ID: leadStatusId } = lead;
 
@@ -230,7 +238,7 @@ export class BitrixWidgetUseCase {
       );
 
       if (!leadInfo)
-        throw new NotFoundException(`Lead [${leadIds[0]}] was not found`);
+        throw new NotFoundException(`Лид [${leadIds[0]}] не найден`);
 
       const { STATUS_ID: leadStatusId } = leadInfo;
 

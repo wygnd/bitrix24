@@ -40,7 +40,7 @@ export class BitrixWidgetController {
   }
 
   @ApiOperation({ summary: 'Получить данные звонка по номеру' })
-  @Get('/page/background/worker/data')
+  @Get('/page/background/worker/data/call/initialized')
   async handleGetDataPageBackgroundWorder(@Query('phone') phone: string) {
     return this.widgetService.getDataForCallOnBackgroundWorker(phone);
   }
