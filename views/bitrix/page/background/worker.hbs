@@ -3,10 +3,6 @@
   BX24.ready(function() {
     BX24.init(function() {
       BX24.placement.bindEvent('BackgroundCallCard::initialized', async () => {
-        // Ставим в карточку текст
-        BX24.placement.call('CallCardSetStatusText', { statusText: 'Поиск...' }, () => {
-        });
-
         const { data } = await fetch('https://bitrix-grampus.ru/v1/widget/page/background/worker/data')
           .then(res => res.json())
           .catch(err => {
