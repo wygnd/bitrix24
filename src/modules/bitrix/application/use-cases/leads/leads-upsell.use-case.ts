@@ -480,7 +480,7 @@ export class BitrixLeadsUpsellUseCase {
 
     const {
       UF_CRM_1759745238148: site,
-      UF_CRM_1623766928: assignedSeoSpecialist,
+      UF_CRM_1703764564: assignedSeoSpecialist, // Ответсвенный ПМ
     } = deal;
 
     const body: B24HandleUpsellOptions = {
@@ -503,7 +503,7 @@ export class BitrixLeadsUpsellUseCase {
           body.messages.fired =
             'Менеджер уволен. SEO в паузе, необходимо распределить сделку на допродажу РК[br]';
           body.messages.additionalMessage = {
-            dialogId: assignedSeoSpecialist, // Ответственный SEO специалист
+            dialogId: assignedSeoSpecialist, // Ответственный ПМ
             message:
               'Сделка в работе по Базовой SEO ушла в паузу. Лид передан на допродажу РК, учитывай в работе[br]',
           };
