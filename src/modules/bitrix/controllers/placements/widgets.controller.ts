@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Render,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -40,7 +41,7 @@ export class BitrixWidgetController {
 
   @ApiOperation({ summary: 'Получить данные звонка по номеру' })
   @Get('/page/background/worker/data')
-  async handleGetDataPageBackgroundWorder(@Body('phone') phone: string) {
+  async handleGetDataPageBackgroundWorder(@Query('phone') phone: string) {
     return this.widgetService.getDataForCallOnBackgroundWorker(phone);
   }
 
