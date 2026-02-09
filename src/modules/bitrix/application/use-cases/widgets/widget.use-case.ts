@@ -45,13 +45,14 @@ export class BitrixWidgetUseCase {
   async getDataForCallOnBackgroundWorker(phone: string) {
     if (!phone) throw new BadRequestException('Invalid phone number');
 
+    phone = phone.trim();
+
     const clientPhone =
       phone[0] === '8'
         ? phone.replace('8', '+7')
         : !phone.includes('+')
           ? `+${phone}`
           : phone;
-
 
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
