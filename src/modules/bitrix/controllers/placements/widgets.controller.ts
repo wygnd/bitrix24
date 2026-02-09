@@ -12,6 +12,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { WinstonLogger } from '@/config/winston.logger';
+import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widgets/widget.use-case';
 
 @ApiTags(B24ApiTags.PLACEMENT)
 @ApiExceptions()
@@ -25,7 +26,7 @@ export class BitrixWidgetController {
     'bitrix:widgets'.split(':'),
   );
 
-  constructor() {}
+  constructor(private readonly widgetService: BitrixWidgetUseCase) {}
 
   @ApiOperation({ summary: 'Обработка PAGE_BACKGROUND_WORKER' })
   @HttpCode(HttpStatus.OK)
@@ -41,10 +42,7 @@ export class BitrixWidgetController {
   @ApiOperation({ summary: 'Получить данные звонка по номеру' })
   @Get('/page/background/worker/data')
   async handleGetDataPageBackgroundWorder(@Query('phone') phone: string) {
-    return {
-      status: true,
-      message: 'Hi there',
-    };
+    return this.widgetService.getDataForCallOnBackgroundWorker(phone);
   }
 
   @ApiOperation({ summary: 'Обработка ошибок для PAGE_BACKGROUND_WORKER' })

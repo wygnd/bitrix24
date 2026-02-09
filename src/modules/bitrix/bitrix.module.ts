@@ -67,6 +67,7 @@ import { ConfigService } from '@nestjs/config';
 import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 import { GrampusModule } from '@/modules/grampus/grampus.module';
 import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/widgets.controller';
+import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widgets/widget.use-case';
 
 @Module({
   imports: [
@@ -131,6 +132,8 @@ import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/
 
     // PLACEMENT
     BitrixPlacementController,
+
+    // WIDGET
     BitrixWidgetController,
 
     // ADDY
@@ -196,6 +199,9 @@ import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/
     // PLACEMENTS
     ...placementProviders,
     BitrixPlacementsUseCase,
+
+    // WIDGET
+    BitrixWidgetUseCase,
 
     // ADDY
     BitrixAddySupportUseCase,
