@@ -5,8 +5,8 @@
       BX24.placement.bindEvent('BackgroundCallCard::initialized', async (data) => {
         console.log(data);
         console.log(data.PHONE_NUMBER);
-        phone = encodeURIComponent(data.PHONE_NUMBER);
 
+        const phone = encodeURIComponent(data.PHONE_NUMBER);
         const response = await fetch(`https://bitrix-grampus.ru/v1/widget/page/background/worker/data/call/initialized?phone=${phone}`)
           .then(res => res.json())
           .catch(err => {
