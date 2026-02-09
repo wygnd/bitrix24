@@ -2,32 +2,36 @@
 <script>
   BX24.ready(function() {
     BX24.init(function() {
-      const setTitle = (text) => {
-        BX24.placement.call('CallCardSetStatusText', { statusText: text }, () => {
-        });
-      };
-
       BX24.placement.bindEvent('BackgroundCallCard::initialized', async () => {
-
-        // Отключаем авто закрытие виджета после прерывания/окончания звонка
-        BX24.placement.call('disableAutoClose', {}, function(result) {
-        });
-
         // Ставим в карточку текст
-        setTitle('Поиск...');
+        BX24.placement.call('CallCardSetStatusText', { statusText: 'Поиск...' }, () => {
+        });
 
         const { data } = await fetch('https://bitrix-grampus.ru/v1/widget/page/background/worker/data')
           .then(res => res.json())
           .catch(err => {
             console.log(err);
-            setTitle('Ошибка получения данных');
-            return null;
+            return {
+              status: false,
+              message: 'Ошибка получения данных',
+            };
           });
 
         console.log(data);
 
-        if (data?.status && data?.message) setTitle(data.message);
+        BX24.placement.call('CallCardSetStatusText', { statusText: data.message }, () => {
+        });
 
+      });
+
+      // Событие перед закрытием карточки
+      BX24.placement.bindEvent('CallCard::BeforeClose', function(callState) {
+        console.log('Check call state, call card', callState);
+
+        // Отключаем авто закрытие виджета после прерывания/окончания звонка
+        BX24.placement.call('disableAutoClose', {}, function(result) {
+          console.log('Check result disableAutoClose', result);
+        });
       });
 
     });
