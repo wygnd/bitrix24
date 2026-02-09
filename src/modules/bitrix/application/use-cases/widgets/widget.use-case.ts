@@ -45,8 +45,6 @@ export class BitrixWidgetUseCase {
   async getDataForCallOnBackgroundWorker(phone: string) {
     if (!phone) throw new BadRequestException('Invalid phone number');
 
-    this.logger.log(`Check phone: ${phone}`)
-
     const clientPhone =
       phone[0] === '8'
         ? phone.replace('8', '+7')
