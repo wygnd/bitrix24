@@ -4,6 +4,8 @@
     BX24.init(function() {
       BX24.placement.bindEvent('BackgroundCallCard::initialized', async (data) => {
 
+        console.log(data);
+
         if (data.CALL_DIRECTION !== 'incoming') return;
 
         const phone = encodeURIComponent(data.PHONE_NUMBER);
