@@ -48,11 +48,17 @@ export class BitrixWidgetUseCase {
     // Получаем текущие звонки
     const currentCalls = await this.telphinService.getCurrentCalls();
 
+    this.logger.debug({
+      handler: this.getDataForCallOnBackgroundWorker.name,
+      message: `Find phone: ${phone} in current calls`,
+      calls: currentCalls,
+    });
+
     // Ищем текущий звонок по номеру телефона
     const targetCalls = currentCalls.filter(
       ({ call_flow, called_number, caller_id_name, caller_id_number }) =>
         call_flow === 'IN' &&
-        [caller_id_name, caller_id_number].includes(phone),
+        [caller_id_name, caller_id_number, called_number].includes(phone),
     );
 
     // Если не нашли текущий звонок по номеру клиента: выходим
