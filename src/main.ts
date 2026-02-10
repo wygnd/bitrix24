@@ -52,17 +52,15 @@ async function bootstrap() {
           defaultSrc: [`'self'`],
           styleSrc: [`'self'`, `'unsafe-inline'`],
           imgSrc: [`'self'`, 'data:', 'https:'],
-          scriptSrc: [
-            `'self'`,
+          scriptSrc: [`'self'`],
+          frameAncestors: [
+            `'self`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
           ],
         },
       },
       xssFilter: true,
       hidePoweredBy: true,
-      frameguard: {
-        action: 'deny',
-      },
       hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
