@@ -4,6 +4,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  MethodNotAllowedException,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -143,7 +144,8 @@ export class BitrixWikiController {
   async distributeLeadOnWishManager(
     @Body() fields: BitrixDistributeLeadWishManagerDTO,
   ) {
-    return this.bitrixWiki.distributeLeadOnWishManager(fields);
+    throw new MethodNotAllowedException('Временно недоступно');
+    // return this.bitrixWiki.distributeLeadOnWishManager(fields);
   }
 
   @ApiOperation({
