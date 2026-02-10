@@ -45,44 +45,47 @@ async function bootstrap() {
   });
 
   // policy
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: [
-            `'self'`,
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          styleSrc: [
-            `'self'`,
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          imgSrc: [
-            `'self'`,
-            'data:',
-            'https:',
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          scriptSrc: [
-            `'self'`,
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          frameAncestors: [
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-        },
-      },
-      xssFilter: true,
-      hidePoweredBy: true,
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-      },
-      referrerPolicy: {
-        policy: 'strict-origin-when-cross-origin',
-      },
-    }),
-  );
+  // todo
+  // app.use(
+  //   helmet({
+  //     contentSecurityPolicy: {
+  //       directives: {
+  //         defaultSrc: [
+  //           `'self'`,
+  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+  //         ],
+  //         styleSrc: [
+  //           `'self'`,
+  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+  //         ],
+  //         imgSrc: [
+  //           `'self'`,
+  //           'data:',
+  //           'https:',
+  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+  //         ],
+  //         scriptSrc: [
+  //           `'self'`,
+  //           `'unsafe-inline'`,
+  //           'script-src',
+  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+  //         ],
+  //         frameAncestors: [
+  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+  //         ],
+  //       },
+  //     },
+  //     xssFilter: true,
+  //     hidePoweredBy: true,
+  //     hsts: {
+  //       maxAge: 31536000,
+  //       includeSubDomains: true,
+  //     },
+  //     referrerPolicy: {
+  //       policy: 'strict-origin-when-cross-origin',
+  //     },
+  //   }),
+  // );
 
   // use compression
   app.use(compression());
