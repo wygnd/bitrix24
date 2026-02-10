@@ -38,54 +38,48 @@ async function bootstrap() {
 
   // enable cors
   app.enableCors({
-    origin: [
-      'https://bitrix-hr-app-production.up.railway.app',
-      'http://localhost:5173',
-    ],
+    origin: ['http://localhost:5173'],
   });
 
   // policy
-  // todo
-  // app.use(
-  //   helmet({
-  //     contentSecurityPolicy: {
-  //       directives: {
-  //         defaultSrc: [
-  //           `'self'`,
-  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-  //         ],
-  //         styleSrc: [
-  //           `'self'`,
-  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-  //         ],
-  //         imgSrc: [
-  //           `'self'`,
-  //           'data:',
-  //           'https:',
-  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-  //         ],
-  //         scriptSrc: [
-  //           `'self'`,
-  //           `'unsafe-inline'`,
-  //           'script-src',
-  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-  //         ],
-  //         frameAncestors: [
-  //           config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-  //         ],
-  //       },
-  //     },
-  //     xssFilter: true,
-  //     hidePoweredBy: true,
-  //     hsts: {
-  //       maxAge: 31536000,
-  //       includeSubDomains: true,
-  //     },
-  //     referrerPolicy: {
-  //       policy: 'strict-origin-when-cross-origin',
-  //     },
-  //   }),
-  // );
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          imgSrc: [
+            `'self'`,
+            'data:',
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
+          manifestSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          frameSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          'frame-ancestors': [
+            `'self'`,
+            config.getOrThrow('bitrixConfig.bitrixDomain'),
+          ],
+        },
+      },
+      xssFilter: true,
+      hidePoweredBy: true,
+      frameguard: {
+        action: 'deny',
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+      },
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
+      },
+    }),
+  );
 
   // use compression
   app.use(compression());
