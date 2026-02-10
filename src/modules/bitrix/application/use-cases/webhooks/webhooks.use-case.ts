@@ -4,7 +4,6 @@ import {
   Inject,
   Injectable,
   NotFoundException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-distribute-deal.dto';
 import { IncomingWebhookApproveSiteDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-deal.dto';
@@ -61,8 +60,6 @@ import {
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 import dayjs from 'dayjs';
-import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
-import { B24Task } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 
 @Injectable()
 export class BitrixWebhooksUseCase {
@@ -485,7 +482,11 @@ export class BitrixWebhooksUseCase {
     fields: IncomingWebhookApproveSiteDealDto,
     dealId: string,
   ) {
-    const { project_manager_id: projectManagerId, chat_id: chatId, category } = fields;
+    const {
+      project_manager_id: projectManagerId,
+      chat_id: chatId,
+      category,
+    } = fields;
 
     // Определяем префикс РК|SEO
     const departmentPrefix =
