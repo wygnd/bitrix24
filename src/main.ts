@@ -52,7 +52,10 @@ async function bootstrap() {
           defaultSrc: [`'self'`],
           styleSrc: [`'self'`, `'unsafe-inline'`],
           imgSrc: [`'self'`, 'data:', 'https:'],
-          scriptSrc: [`'self'`],
+          scriptSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
           frameAncestors: [
             `'self`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
