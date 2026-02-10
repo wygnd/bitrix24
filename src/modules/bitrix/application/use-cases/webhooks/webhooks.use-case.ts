@@ -4,9 +4,10 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-distribute-deal.dto';
-import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-deal.dto';
+import { IncomingWebhookApproveSiteDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-case.dto';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-init.dto';
 import {
@@ -35,7 +36,7 @@ import { B24Emoji, B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 import { WebhookDepartmentInfo } from '@/modules/bitrix/application/interfaces/webhooks/webhook-department-info.interface';
 import {
-  ImbotHandleApproveSiteForAdvert,
+  ImbotHandleApproveSiteDealOptions,
   ImbotHandleDistributeNewDeal,
 } from '@/modules/bitrix/application/interfaces/bot/imbot-handle.interface';
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
@@ -61,6 +62,7 @@ import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases
 import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 import dayjs from 'dayjs';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
+import { B24Task } from '@/modules/bitrix/application/interfaces/tasks/tasks.interface';
 
 @Injectable()
 export class BitrixWebhooksUseCase {
@@ -68,7 +70,11 @@ export class BitrixWebhooksUseCase {
     BitrixWebhooksUseCase.name,
     'bitrix:webhooks'.split(':'),
   );
-  private lastSelectedDepartmentId: string = '';
+  private readonly departmentPrefix = {
+    advert: 'РК',
+    seo: 'SEO',
+  };
+  private lastSelectedDepartmentId: Record<string, string> = {};
   private readonly departmentInfo: Record<
     B24DepartmentTypeId,
     WebhookDepartmentInfo
@@ -475,37 +481,78 @@ export class BitrixWebhooksUseCase {
     return true;
   }
 
-  async handleIncomingWebhookToApproveSiteForAdvert(
-    fields: IncomingWebhookApproveSiteForDealDto,
+  async handleIncomingWebhookToApproveSiteDeal(
+    fields: IncomingWebhookApproveSiteDealDto,
     dealId: string,
   ) {
-    const { project_manager_id, chat_id } = fields;
-    const advertDepartments = await this.bitrixDepartments.getDepartmentById([
-      '36',
-      '54',
-      '124',
-      '128',
-    ]);
-    let advertDepartment =
-      this.bitrixService.getRandomElement<B24Department>(advertDepartments);
+    const { project_manager_id: projectManagerId, chat_id: chatId, category } = fields;
 
-    if (this.lastSelectedDepartmentId === advertDepartment.ID) {
-      advertDepartment =
-        this.bitrixService.getRandomElement<B24Department>(advertDepartments);
+    // Определяем префикс РК|SEO
+    const departmentPrefix =
+      category in this.departmentPrefix ? this.departmentPrefix[category] : '';
+
+    let departments: B24Department[];
+
+    // В зависимости от категории получаем подразделения
+    switch (category) {
+      case 'advert':
+        departments = await this.bitrixDepartments.getDepartmentById([
+          '36', // КР 1
+          '54', // КР 2
+          '124', // КР 3
+          '128', // КР 4
+        ]);
+        break;
+
+      case 'seo':
+        departments = await this.bitrixDepartments.getDepartmentById(['92']); // Отдел тех. SEO исполнения
+        break;
+
+      default:
+        this.logger.error({
+          handler: this.handleIncomingWebhookToApproveSiteDeal.name,
+          message: 'Поле [category] не передано',
+          fields,
+        });
+        return false;
     }
 
-    this.lastSelectedDepartmentId = advertDepartment.ID;
+    if (departments.length === 0) {
+      this.logger.error({
+        handler: this.handleIncomingWebhookToApproveSiteDeal.name,
+        message: 'Ошибка получения списка подразделений',
+        fields,
+      });
+      return false;
+    }
 
-    const keyboardItemParams: ImbotHandleApproveSiteForAdvert = {
+    // Получаем отдел в случайном порядке
+    let department =
+      this.bitrixService.getRandomElement<B24Department>(departments);
+
+    if (
+      category in this.lastSelectedDepartmentId &&
+      this.lastSelectedDepartmentId[category] === department.ID
+    ) {
+      department =
+        this.bitrixService.getRandomElement<B24Department>(departments);
+    }
+
+    this.lastSelectedDepartmentId[category] = department.ID;
+
+    // Собираем данные кнопок
+    const keyboardItemParams: ImbotHandleApproveSiteDealOptions = {
       dealId: dealId,
       isApprove: true,
-      managerId: project_manager_id,
+      managerId: projectManagerId,
+      category: category,
     };
 
+    // Собираем кнопки
     const keyboard: B24ImKeyboardOptions[] = [
       {
         TEXT: 'Согласованно',
-        COMMAND: 'approveSiteDealForAdvert',
+        COMMAND: 'approveSiteDealFor',
         COMMAND_PARAMS: JSON.stringify(keyboardItemParams),
         BG_COLOR_TOKEN: 'primary',
         DISPLAY: 'LINE',
@@ -513,7 +560,7 @@ export class BitrixWebhooksUseCase {
       },
       {
         TEXT: 'Не согласованно',
-        COMMAND: 'approveSiteDealForAdvert',
+        COMMAND: 'approveSiteDealFor',
         COMMAND_PARAMS: JSON.stringify({
           ...keyboardItemParams,
           isApprove: false,
@@ -531,36 +578,43 @@ export class BitrixWebhooksUseCase {
           id: dealId,
         },
       },
-      get_lead: {
-        method: 'crm.deal.list',
-        params: {
-          FILTER: {
-            UF_CRM_1731418991: '$result[get_deal][UF_CRM_1731418991]',
-            CATEGORY_ID: '1',
-          },
-          SELECT: ['ID'],
+    };
+
+    let relatedDealCategory: string[];
+    let selectRelatedDealCategory: (keyof B24Deal)[] = ['ID'];
+
+    // В зависимости от категории получаем либо сделку РК, либо SEO, а также комментарий
+    switch (category) {
+      case 'advert':
+        relatedDealCategory = ['1']; // Воронка: Настройка РК
+        selectRelatedDealCategory.push('UF_CRM_1716383143'); // Комментарий к сделке РК
+        break;
+
+      case 'seo':
+        relatedDealCategory = ['7', '16', '34']; // Воронки: внутренняя, внешняя, базовая оптимизация
+        selectRelatedDealCategory.push('UF_CRM_1760519929'); // Комментарий к сделке SEO
+        break;
+    }
+
+    batchCommandsGetInfo['get_related_deal'] = {
+      method: 'crm.deal.list',
+      params: {
+        FILTER: {
+          UF_CRM_1731418991: '$result[get_deal][UF_CRM_1731418991]', // Лид айди
+          '@CATEGORY': relatedDealCategory,
         },
-      },
-      get_advert_deal: {
-        method: 'crm.deal.list',
-        params: {
-          FILTER: {
-            ID: '$result[get_lead][0][ID]',
-          },
-          SELECT: ['ID', 'UF_CRM_1716383143'],
-        },
+        SELECT: selectRelatedDealCategory,
       },
     };
 
     const { result: batchResponseGetInfo } =
       await this.bitrixService.callBatch<{
         get_deal: B24Deal;
-        get_lead: B24Lead[];
-        get_advert_deal: B24Deal[];
+        get_related_deal: B24Deal[];
       }>(batchCommandsGetInfo);
 
     this.logger.debug({
-      message: 'check batch commands and result on approve site for advert',
+      message: 'check batch commands and result on approve site',
       batchCommandsGetInfo,
       batchResponseGetInfo,
     });
@@ -568,11 +622,30 @@ export class BitrixWebhooksUseCase {
     if (Object.keys(batchResponseGetInfo.result_error).length !== 0)
       throw new BadRequestException(batchResponseGetInfo.result_error);
 
-    const { get_deal: deal, get_advert_deal: advertDeal } =
+    const { get_deal: deal, get_related_deal: relatedDeal } =
       batchResponseGetInfo.result;
 
+    let taskDealComment: string;
+
+    // В зависимости от категории собираем комментарий из сделки
+    switch (category) {
+      case 'advert':
+        taskDealComment =
+          relatedDeal.length > 0 && relatedDeal[0]?.UF_CRM_1716383143
+            ? `${relatedDeal[0]?.UF_CRM_1716383143}`
+            : '';
+        break;
+
+      case 'seo':
+        taskDealComment =
+          relatedDeal.length > 0 && relatedDeal[0]?.UF_CRM_1760519929
+            ? `${relatedDeal[0]?.UF_CRM_1760519929}`
+            : '';
+        break;
+    }
+
     const task = await this.bitrixTasks.createTask({
-      TITLE: 'Необходимо проверить сайт на дееспособность работы на РК.',
+      TITLE: `Необходимо проверить сайт на дееспособность работы на ${departmentPrefix}.`,
       DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
       DESCRIPTION:
         (deal?.UF_CRM_1600184739 ? `${deal.UF_CRM_1600184739}\n` : '') +
@@ -580,21 +653,19 @@ export class BitrixWebhooksUseCase {
         'Если есть правки, то:\n- НЕ завершай задачу\n' +
         '- Пропиши в комментариях задачи список правок\n' +
         '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
-        'Комментарий сделки РК:\n' +
-        (advertDeal.length > 0 && advertDeal[0]?.UF_CRM_1716383143
-          ? `${advertDeal[0]?.UF_CRM_1716383143}`
-          : ''),
+        `Комментарий сделки ${departmentPrefix}:` +
+        taskDealComment,
       CREATED_BY: '460',
-      RESPONSIBLE_ID: advertDepartment.UF_HEAD,
+      RESPONSIBLE_ID: department.UF_HEAD,
       UF_CRM_TASK: [`D_${dealId}`],
-      ACCOMPLICES: advertDepartments
-        .filter((d) => d.ID !== advertDepartment.ID)
+      ACCOMPLICES: departments
+        .filter((d) => d.ID !== department.ID)
         .map((d) => d.UF_HEAD),
-      AUDITORS: [project_manager_id],
+      AUDITORS: [projectManagerId],
     });
 
     this.logger.debug({
-      message: 'check create task on approve site for advert',
+      message: 'check create task on approve site',
       task,
     });
 
@@ -608,15 +679,15 @@ export class BitrixWebhooksUseCase {
 
     this.bitrixBot
       .sendMessage({
-        DIALOG_ID: chat_id,
+        DIALOG_ID: chatId,
         MESSAGE:
-          `[user=${advertDepartment.UF_HEAD}][/user][br]` +
-          '[b]Согласование наших сайтов перед передачей сделки на РК.[/b][br]' +
-          'Нужно согласовать и принять наш сайт в работу РК.[br]' +
+          `[user=${department.UF_HEAD}][/user][br]` +
+          `[b]Согласование наших сайтов перед передачей сделки на ${departmentPrefix}.[/b][br]` +
+          `Нужно согласовать и принять наш сайт в работу ${departmentPrefix}.[br]` +
           this.bitrixService.generateTaskUrl(
-            advertDepartment.UF_HEAD,
+            department.UF_HEAD,
             task.id,
-            'Согласование нашего сайта отделу сопровождения для передачи сделки на РК',
+            `Согласование нашего сайта отделу сопровождения для передачи сделки на ${departmentPrefix}`,
           ) +
           '[br][br]Сделка: ' +
           this.bitrixService.generateDealUrl(dealId),
@@ -625,6 +696,10 @@ export class BitrixWebhooksUseCase {
       .then((res) => this.logger.debug(res))
       .catch((err) => this.logger.error(err));
     return true;
+  }
+
+  async testHook() {
+    return this.bitrixDepartments.getDepartmentList();
   }
 
   /**

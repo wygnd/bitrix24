@@ -1,8 +1,8 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
-export class IncomingWebhookApproveSiteForDealDto {
+export class IncomingWebhookApproveSiteDealDto {
   @ApiProperty({
     type: String,
     description: 'ID Проект менеджера',
@@ -23,4 +23,14 @@ export class IncomingWebhookApproveSiteForDealDto {
   @IsNotEmpty()
   @IsString()
   chat_id: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Тип сделки',
+    required: true,
+    example: 'advert',
+  })
+  @IsNotEmpty()
+  @IsIn(['advert', 'seo'])
+  category: 'advert' | 'seo';
 }

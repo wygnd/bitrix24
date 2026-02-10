@@ -12,7 +12,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { BitrixWebhookGuard } from '@/modules/bitrix/guards/bitrix-webhook.guard';
 import { IncomingWebhookDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook.dto';
-import { IncomingWebhookApproveSiteForDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-deal.dto';
+import { IncomingWebhookApproveSiteDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-deal.dto';
 import { IncomingWebhookApproveSiteForCase } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-for-case.dto';
 import { BitrixVoxImplantInitCallEventGuard } from '@/modules/bitrix/guards/bitrix-webhook-voximplant.guard';
 import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos/events/event-voximplant-call-init.dto';
@@ -48,23 +48,23 @@ export class BitrixWebhookController {
   }
 
   @ApiOperation({
-    summary: 'Вебхук из битрикса для согласования сайта для РК',
+    summary: 'Вебхук из битрикса для согласования сайта для РК/SEO',
     description:
-      'Битрикс отправляет исходящий вебхук.<br>Сервис отправляет сообщение в указанный чат и обрабатывает нажатие кнопок<br>Обработка кнопок в одном едтпоинте: <strong>/bot/onimcommandadd</strong>',
+      'Битрикс отправляет исходящий вебхук.<br>Сервис отправляет сообщение в указанный чат и обрабатывает нажатие кнопок<br>Обработка кнопок в одном ендпоинте: <strong>/bot/onimcommandadd</strong>',
   })
   @UseGuards(BitrixWebhookGuard)
-  @Post('/bitrix/approve/site/advert')
+  @Post('/bitrix/approve/site')
   @HttpCode(HttpStatus.ACCEPTED)
-  async approveSiteDealForAdvert(
+  async approveSiteDeal(
     @Body() body: IncomingWebhookDto,
-    @Query() query: IncomingWebhookApproveSiteForDealDto,
+    @Query() query: IncomingWebhookApproveSiteDealDto,
   ) {
     this.logger.debug({
-      message: 'approve site for advert',
+      message: 'approve site',
       body,
       query,
     });
-    this.bitrixWebhooks.handleIncomingWebhookToApproveSiteForAdvert(
+    this.bitrixWebhooks.handleIncomingWebhookToApproveSiteDeal(
       query,
       body.document_id[2],
     );

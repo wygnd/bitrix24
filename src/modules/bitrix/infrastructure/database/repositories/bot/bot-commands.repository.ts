@@ -127,7 +127,7 @@ export class BitrixBotCommandsRepository implements BitrixBotCommandsRepositoryP
     try {
       const response = await this.botCommandsRepository.destroy({
         where: {
-          id: commandId,
+          commandId: commandId,
         },
       });
       this.logger.debug(response);

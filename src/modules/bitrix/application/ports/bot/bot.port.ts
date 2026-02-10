@@ -12,6 +12,7 @@ export interface BitrixBotPort {
   ): Promise<BitrixBotCommandsDTO | null>;
   getBotCommands(): Promise<BitrixBotCommandsDTO[]>;
   getBotCommandById(commandId: string): Promise<BitrixBotCommandsDTO | null>;
+  removeCommand(commandId: string): Promise<{ status: boolean, message: string }>;
   sendMessage(
     fields: Omit<B24ImbotSendMessageOptions, 'BOT_ID'>,
   ): Promise<number>;

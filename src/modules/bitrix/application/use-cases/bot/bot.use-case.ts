@@ -15,7 +15,7 @@ import {
 } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
 import { OnImCommandKeyboardDto } from '@/modules/bitrix/application/dtos/bot/imbot-events.dto';
 import {
-  ImbotHandleApproveSiteForAdvert,
+  ImbotHandleApproveSiteDealOptions,
   ImbotHandleApproveSmmAdvertLayout,
   ImbotHandleDistributeNewDeal,
   ImbotHandleDistributeNewDealReject,
@@ -97,6 +97,10 @@ export class BitrixBotUseCase {
     return this.bitrixBot.updateMessage(fields);
   }
 
+  async removeCommand(commandId: string) {
+    return this.bitrixBot.removeCommand(commandId)
+  }
+
   private checkCanAccessToPushButton(userId: string, userIds: string[]) {
     return this.bitrixBot.limitAccessByPushButton(userId, userIds);
   }
@@ -168,9 +172,9 @@ export class BitrixBotUseCase {
           break;
 
         // Солгласование сайта для РК
-        case '/approveSiteDealForAdvert':
-          response = this.handleApproveSiteForAdvert(
-            commandParamsDecoded as ImbotHandleApproveSiteForAdvert,
+        case '/approveSiteDealFor':
+          response = this.handleApproveSiteDeal(
+            commandParamsDecoded as ImbotHandleApproveSiteDealOptions,
             MESSAGE_ID,
           );
           status = true;
@@ -589,25 +593,43 @@ export class BitrixBotUseCase {
    * Функция обновляет старое сообщение и отправляет сообщения проект-менеджеру и
    * его руководителю.
    *
-   * @param dealId
-   * @param isApprove
-   * @param managerId
+   * @param fields
    * @param messageId
    */
-  async handleApproveSiteForAdvert(
-    { dealId, isApprove, managerId }: ImbotHandleApproveSiteForAdvert,
+  async handleApproveSiteDeal(
+    fields: ImbotHandleApproveSiteDealOptions,
     messageId: number,
   ) {
+    const { dealId, isApprove, managerId, category } = fields;
     try {
-      let managerMessage = isApprove
-        ? 'Ваш проект [u]согласован[/u] отделом рекламы[br]' +
-          this.bitrixService.generateDealUrl(dealId) +
-          '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
-          'Вам необходимо зайти в сделку РК и отправить её в распределение.'
-        : 'Ваш проект [u]НЕ согласован[/u] отделом рекламы.[br]' +
-          this.bitrixService.generateDealUrl(dealId) +
-          '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
-          ' и заходите в сделку РК и отправляйте её в распределение.';
+      let managerMessage: string;
+
+      // В зависимости от категории формируем сообщение ПМ
+      switch (category) {
+        case 'advert':
+          managerMessage = isApprove
+            ? 'Ваш проект [u]согласован[/u] отделом рекламы[br]' +
+              this.bitrixService.generateDealUrl(dealId) +
+              '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
+              'Вам необходимо зайти в сделку РК и отправить её в распределение.'
+            : 'Ваш проект [u]НЕ согласован[/u] отделом рекламы.[br]' +
+              this.bitrixService.generateDealUrl(dealId) +
+              '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
+              ' и заходите в сделку РК и отправляйте её в распределение.';
+          break;
+
+        case 'seo':
+          managerMessage = isApprove
+            ? 'Ваш проект [u]согласован[/u] отделом SEO[br]' +
+              this.bitrixService.generateDealUrl(dealId) +
+              '[br][br]После перевода сделки в стадию [b]Сделка успешна[/b], ' +
+              'Вам необходимо зайти в сделку SEO и отправить её в распределение.'
+            : 'Ваш проект [u]НЕ согласован[/u] отделом SEO.[br]' +
+              this.bitrixService.generateDealUrl(dealId) +
+              '[br][br]После выполнения всех пунктов по правкам и готовности сайта, переводите сделку в стадию [b]Сделка успешна[/b]' +
+              ' и заходите в сделку SEO и отправляйте её в распределение.';
+          break;
+      }
 
       let changeMessage =
         '[b]Сообщение обработано: ' +
@@ -615,11 +637,13 @@ export class BitrixBotUseCase {
         `[/b][br][br]` +
         this.bitrixService.generateDealUrl(dealId);
 
+      // Получаем ID руководителя ПМ сайтов
       const siteDepartmentHeadId =
         (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ??
         '';
 
       this.bitrixService.callBatch({
+        // Отправляем руководителю ПМ сообщение
         send_message_head_sites_category: {
           method: 'im.message.add',
           params: {
@@ -628,6 +652,8 @@ export class BitrixBotUseCase {
             SYSTEM: 'Y',
           },
         },
+
+        // Отправляем менеджеру сообщение
         send_message_manager_deal: {
           method: 'im.message.add',
           params: {
@@ -636,6 +662,8 @@ export class BitrixBotUseCase {
             SYSTEM: 'Y',
           },
         },
+
+        // Обновляем сообщение: удаляем кнопки
         update_message: {
           method: 'imbot.message.update',
           params: {

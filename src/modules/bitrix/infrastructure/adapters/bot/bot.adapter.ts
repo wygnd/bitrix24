@@ -134,6 +134,49 @@ export class BitrixBotAdapter implements BitrixBotPort {
   }
 
   /**
+   * Remove command handler
+   *
+   * ---
+   *
+   * Удалить обработчик команды
+   */
+  async removeCommand(commandId: string) {
+    try {
+      const [deletedBitrix, { result: deletedDB }] = await Promise.all([
+        this.bitrixBotCommandsRepository.removeCommand(Number(commandId)),
+        this.bitrixService.callMethod('imbot.command.unregister'),
+      ]);
+
+      if (!deletedDB)
+        return {
+          status: false,
+          message: 'Error delete from DB',
+        };
+
+      if (!deletedBitrix)
+        return {
+          status: false,
+          message: 'Error delete from bitrix',
+        };
+
+      return {
+        status: true,
+        message: 'Successfully removed command',
+      };
+    } catch (error) {
+      this.logger.debug({
+        handler: this.removeCommand.name,
+        body: commandId,
+        error: error,
+      });
+      return {
+        status: false,
+        message: 'Execute error',
+      };
+    }
+  }
+
+  /**
    * Send message in chat via bot
    *
    * ---

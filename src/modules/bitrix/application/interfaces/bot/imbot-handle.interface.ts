@@ -37,8 +37,9 @@ export interface ImbotHandleDistributeNewDealReject {
   dealTitle: string;
 }
 
-export interface ImbotHandleApproveSiteForAdvert {
+export interface ImbotHandleApproveSiteDealOptions {
   dealId: string;
   isApprove: boolean;
   managerId: string;
+  category: 'advert' | 'seo';
 }

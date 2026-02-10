@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -59,6 +60,16 @@ export class BitrixBotController {
   @Get('/commands/:id')
   async getBotCommandById(@Param('id') commandId: string) {
     return this.bitrixBotService.getCommandById(commandId);
+  }
+
+  @ApiOperation({
+    summary: 'Удалить обработку команды',
+  })
+  @ApiAuthHeader()
+  @UseGuards(AuthGuard)
+  @Delete('/commands/:id')
+  async removeCommand(@Param('id') commandId: string) {
+    return this.bitrixBotService.removeCommand(commandId);
   }
 
   @ApiOperation({
