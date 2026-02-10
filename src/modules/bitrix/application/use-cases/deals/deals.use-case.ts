@@ -64,7 +64,7 @@ export class BitrixDealsUseCase {
    * Проверяет сделки на стадии **2. Ожидаем бриф** на наличие подписанного контракта
    * @param fields
    */
-  public async handleCheckDealsField(fields: BitrixDealsFieldOptions) {
+  public async handleCheckSiteDealsField(fields: BitrixDealsFieldOptions) {
     try {
       const { chat_id: chatId } = fields;
       const dealsListSelect: (keyof B24Deal)[] = [
@@ -73,8 +73,8 @@ export class BitrixDealsUseCase {
         'UF_CRM_1589349464',
       ];
       const dealsListFilter: Partial<Record<keyof B24Deal, any>> = {
-        STAGE_ID: '38', // 2. Ожидаем бриф
-        CATEGORY_ID: '0', // Воронка
+        '!STAGE_ID': 'WON', // На всех этапах, кроме Сделка завершена
+        CATEGORY_ID: '0', // Воронка: Разработка сайтов
         '@UF_CRM_1657086374': ['', '7260'], // Есть подписанный договор
       };
       const deals: B24Deal[] = [];
@@ -179,7 +179,7 @@ export class BitrixDealsUseCase {
 
       this.bitrixService.callBatches(batchCommands).then((response) =>
         this.logger.debug({
-          handler: this.handleCheckDealsField.name,
+          handler: this.handleCheckSiteDealsField.name,
           request: { fields, batchCommands },
           response: response,
         }),
@@ -191,7 +191,7 @@ export class BitrixDealsUseCase {
       };
     } catch (error) {
       this.logger.error({
-        handler: this.handleCheckDealsField.name,
+        handler: this.handleCheckSiteDealsField.name,
         request: fields,
         response: error,
       });

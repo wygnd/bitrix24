@@ -53,7 +53,7 @@ export class BitrixWebhookController {
       'Битрикс отправляет исходящий вебхук.<br>Сервис отправляет сообщение в указанный чат и обрабатывает нажатие кнопок<br>Обработка кнопок в одном едтпоинте: <strong>/bot/onimcommandadd</strong>',
   })
   @UseGuards(BitrixWebhookGuard)
-  @Post('/bitrix/approve-site-for-advert')
+  @Post('/bitrix/approve/site/advert')
   @HttpCode(HttpStatus.ACCEPTED)
   async approveSiteDealForAdvert(
     @Body() body: IncomingWebhookDto,
@@ -78,7 +78,7 @@ export class BitrixWebhookController {
       'Битрикс отправляет исходящий вебхук.<br>Сервис отправляет сообщение в указанный чат и обрабатывает нажатие кнопок<br>Обработка кнопок в одном едтпоинте: <strong>/bot/onimcommandadd</strong>',
   })
   @UseGuards(BitrixWebhookGuard)
-  @Post('/bitrix/approve-site-for-case')
+  @Post('/bitrix/approve/site/case')
   @HttpCode(HttpStatus.ACCEPTED)
   async approveConvertedSiteDealForCase(
     @Body() body: IncomingWebhookDto,

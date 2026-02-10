@@ -111,8 +111,8 @@ export class BitrixDealsController {
       'Выполняет поиск по сделкам в стадии <b>2. Ожидаем бриф</b> и отправляет сообщение в чат, который был указан при запросе',
   })
   @HttpCode(HttpStatus.OK)
-  @Post('/check/contract')
+  @Post('/sites/check/contract')
   async checkDealsContract(@Body() body: BitrixDealsFieldOptionsDTO) {
-    return this.bitrixDeals.handleCheckDealsField(body);
+    return this.bitrixDeals.handleCheckSiteDealsField(body);
   }
 }
