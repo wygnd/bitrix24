@@ -33,7 +33,6 @@ import {
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
-import { B24Activity } from '@/modules/bitrix/application/interfaces/activities/activities.interface';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 
@@ -490,27 +489,30 @@ export class BitrixWikiUseCase {
       const {
         result: {
           result: {
-            get_leads: leads,
+            get_leads: { items: leads },
             get_user: users,
-            get_user_leads: userLeadIds,
+            get_user_leads: { items: userLeadIds },
           },
         },
       } = await this.bitrixService.callBatch<{
-        get_leads: B24Lead[];
+        get_leads: { items: B24Lead[] };
         get_user: B24User[];
-        get_user_leads: B24Lead[];
-        get_lead_activity: B24Activity[];
+        get_user_leads: { items: B24Lead[] };
       }>({
+        // Получаем все лиды, которые можно распределять
         get_leads: {
-          method: 'crm.lead.list',
+          method: 'crm.item.list',
           params: {
+            entityTypeId: 1, // LEAD
             filter: {
-              '@STATUS_ID': B24LeadNewStages,
+              '@stageId': B24LeadNewStages, // Новые стадии
             },
-            select: ['ID'],
+            select: ['id'],
             start: 0,
           },
         },
+
+        // Получаем данные по сотруднику
         get_user: {
           method: 'user.get',
           params: {
@@ -519,14 +521,18 @@ export class BitrixWikiUseCase {
             },
           },
         },
+
+        // Получаем лиды сотрудника
         get_user_leads: {
-          method: 'crm.lead.list',
+          method: 'crm.item.list',
           params: {
+            entityTypeId: 1, // LEAD
             filter: {
-              ASSIGNED_BY_ID: userId,
-              STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+              assignedById: userId,
+              stageId: B24LeadActiveStages[0], // Новый в работе
             },
-            select: ['ID'],
+            select: ['id'],
+            start: 0,
           },
         },
       });
@@ -559,52 +565,57 @@ export class BitrixWikiUseCase {
           message: 'У тебя и так много лидов',
         });
 
-      const [{ ID: leadId }] = leads;
-      const batchCommandsUpdateLead: B24BatchCommands = {
-        // Обновляем лид
-        update_lead: {
-          method: 'crm.lead.update',
-          params: {
-            id: leadId,
-            fields: {
-              ASSIGNED_BY_ID: userId,
-              STATUS_ID: B24LeadActiveStages[0], // Новый в работе
-            },
-          },
-        },
-        // Получаем звонки лида
-        get_lead_activities: {
-          method: 'crm.activity.list',
-          params: {
-            OWNER_ID: leadId,
-            OWNER_TYPE_ID: '1',
-            COMPLETED: 'N',
-          },
-        },
-        // Отправляем менеджеру сообщение с сылкой на лид
-        notify_about_update_lead: {
-          method: 'im.message.add',
-          params: {
-            DIALOG_ID: userId,
-            MESSAGE:
-              'Вы взяли лид в работу ' +
-              this.bitrixService.generateLeadUrl(leadId) +
-              '[br]Набирайте клиенту сразу.',
-          },
-        },
-      };
+      const [{ id: leadId }] = leads;
 
       const {
         result: {
-          result: {
-            update_lead: resultUpdateLead,
-            get_lead_activities: leadActivities,
-          },
+          result: { update_lead: resultUpdateLead },
         },
-      } = await this.bitrixService.callBatch<{
-        update_lead: boolean;
-        get_lead_activities: B24Activity[];
-      }>(batchCommandsUpdateLead);
+      } = await this.bitrixService
+        .callBatch<{
+          update_lead: boolean;
+        }>({
+          // Обновляем лид
+          update_lead: {
+            method: 'crm.lead.update',
+            params: {
+              id: leadId,
+              fields: {
+                ASSIGNED_BY_ID: userId,
+                STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+              },
+            },
+          },
+
+          // Отправляем менеджеру сообщение с ссылкой на лид
+          notify_about_update_lead: {
+            method: 'im.message.add',
+            params: {
+              DIALOG_ID: userId,
+              MESSAGE:
+                'Вы взяли лид в работу ' +
+                this.bitrixService.generateLeadUrl(leadId) +
+                '[br]Набирайте клиенту сразу.',
+            },
+          },
+        })
+        .then((res) => {
+          this.logger.debug({
+            handler: this.distributeLeadOnWishManager.name,
+            message: 'Отправка запроса на обновление лида',
+            response: res,
+          });
+
+          return res;
+        })
+        .catch((e) => {
+          this.logger.debug({
+            handler: this.distributeLeadOnWishManager.name,
+            message: 'Отправка запроса на обновление лида',
+            response: e,
+          });
+          return e;
+        });
 
       if (!resultUpdateLead)
         throw new InternalServerErrorException(
@@ -617,37 +628,6 @@ export class BitrixWikiUseCase {
         `${Number(userWasPushing) + 1}`,
         3600, // 1 hour
       );
-
-      // Если есть звонки: меняем ответственного
-      if (leadActivities.length > 0) {
-        this.bitrixService
-          .callBatch(
-            leadActivities.reduce<B24BatchCommands>((acc, leadActivity) => {
-              acc[`update_activity=${leadActivity.ID}`] = {
-                method: 'crm.activity.update',
-                params: {
-                  id: leadActivity.ID,
-                  fields: {
-                    RESPONSIBLE_ID: userId,
-                  },
-                },
-              };
-              return acc;
-            }, {}),
-          )
-          .then((res) =>
-            this.logger.debug({
-              handler: this.distributeLeadOnWishManager.name,
-              response: res,
-            }),
-          )
-          .catch((err) =>
-            this.logger.error({
-              handler: this.distributeLeadOnWishManager.name,
-              error: err,
-            }),
-          );
-      }
 
       return {
         status: true,
