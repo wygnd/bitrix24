@@ -46,4 +46,10 @@ export interface BitrixPort {
   checkBatchErrors<T extends Record<string, any> = Record<string, any>>(
     responses: B24BatchResponseMap<T>[],
   ): string[];
+
+  // rest 3.0
+  callMethodV2<T extends Record<string, any> = Record<string, any>, U = any>(
+    method: B24AvailableMethods,
+    params?: Partial<T>,
+  ): any;
 }

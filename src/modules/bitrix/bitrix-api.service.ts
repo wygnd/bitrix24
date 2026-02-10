@@ -72,6 +72,17 @@ export class BitrixApiService {
     });
   }
 
+  async callMethodV2<
+    T extends Record<string, any> = Record<string, any>,
+    U = any,
+  >(method: B24AvailableMethods, params: Partial<T> = {}) {
+    const { access_token } = await this.getTokens();
+    return this.post<Partial<T>, B24SuccessResponse<U>>(`/rest/api/${method}`, {
+      ...params,
+      auth: access_token,
+    });
+  }
+
   /**
    * Send batch request to bitrix
    * @param commands - object of list commands where key is unique id command and value is command object

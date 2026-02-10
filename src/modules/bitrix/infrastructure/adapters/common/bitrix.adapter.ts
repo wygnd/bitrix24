@@ -242,4 +242,11 @@ export class BitrixAdapter implements BitrixPort {
       return acc;
     }, []);
   }
+
+  public async callMethodV2<
+    T extends Record<string, any> = Record<string, any>,
+    U = any,
+  >(method: B24AvailableMethods, params?: Partial<T>) {
+    return this.bitrixApiService.callMethodV2(method, params);
+  }
 }

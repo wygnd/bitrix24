@@ -7,6 +7,6 @@ import {
 export interface BitrixUsersPort {
   getUserById(userId: string): Promise<B24User | null>;
   getUsers(params: B24UserListParams): Promise<B24User[]>;
-  getMinWorkflowUser(users: string[]): Promise<string | null>;
-  getMinWorkflowUsers(users: string[]): Promise<B24MinWorkflowUserOptions[]>;
+  getMinWorkFlowUser(users: string[]): Promise<string | null>;
+  getMinWorkFlowUsers(users: string[]): Promise<B24MinWorkflowUserOptions[]>;
 }

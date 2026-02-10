@@ -141,6 +141,14 @@ export class BitrixAvitoUseCase {
     return true;
   }
 
+  /**
+   * Handle data from avito
+   *
+   * ---
+   *
+   * Обрабатывает данные с авито
+   * @param fields
+   */
   public async distributeClientRequestFromAvito(
     fields: AvitoCreateLeadDto,
   ): Promise<IntegrationAvitoDistributeLeadFromAvito> {
@@ -161,7 +169,7 @@ export class BitrixAvitoUseCase {
     const users = await this.wikiService.getWorkingSales();
     const minWorkflowUser =
       this.bitrixService.isAvailableToDistributeOnManager()
-        ? ((await this.bitrixUsers.getMinWorkflowUser(users)) ??
+        ? ((await this.bitrixUsers.getMinWorkFlowUser(users)) ??
           this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'))
         : this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID');
 

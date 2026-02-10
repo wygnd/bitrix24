@@ -13,6 +13,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
+import {
+  B24LeadActiveStages,
+  B24LeadNewStages,
+} from '@/modules/bitrix/application/constants/leads/lead.constants';
 
 @Injectable()
 export class BitrixUsersAdapter implements BitrixUsersPort {
@@ -82,22 +86,35 @@ export class BitrixUsersAdapter implements BitrixUsersPort {
    *
    * @param users
    */
-  public async getMinWorkflowUser(users: string[]) {
-    const minWorkflowUsers = await this.getMinWorkflowUsers(users);
+  public async getMinWorkFlowUser(users: string[]) {
+    const minWorkflowUsers = await this.getMinWorkFlowUsers(users);
+
+    this.logger.debug({
+      handler: this.getMinWorkFlowUser.name,
+      users,
+      minWorkflowUsers,
+    });
 
     return minWorkflowUsers.length === 0 ? null : minWorkflowUsers[0].userId;
   }
 
-  public async getMinWorkflowUsers(users: string[] = []) {
+  public async getMinWorkFlowUsers(users: string[] = []) {
+    const dateNow = new Date();
     const commands = users.reduce((acc, userId) => {
       acc[`get_user-${userId}`] = {
-        method: 'crm.lead.list',
+        method: 'crm.item.list',
         params: {
+          entityTypeId: 1, // Тип сущности: Лид
           filter: {
-            ASSIGNED_BY_ID: userId,
-            '>=DATE_CREATE': new Date().toLocaleDateString(),
+            assignedById: userId,
+            '0': {
+              logic: 'OR',
+              '>=createdTime': dateNow.toLocaleDateString(),
+              '>=movedTime': dateNow.toLocaleDateString(),
+            },
+            '@stageId': [...B24LeadNewStages, B24LeadActiveStages[0]], // Новые стадии
           },
-          select: ['ID'],
+          select: ['id', 'createdTime', 'movedTime'],
           start: 0,
         },
       };
@@ -107,6 +124,12 @@ export class BitrixUsersAdapter implements BitrixUsersPort {
 
     const { result: batchResponse } =
       await this.bitrixService.callBatch<Record<string, B24Lead[]>>(commands);
+
+    this.logger.debug({
+      handler: this.getMinWorkFlowUsers.name,
+      request: commands,
+      response: batchResponse,
+    });
 
     return Object.entries(batchResponse.result_total)
       .reduce<B24MinWorkflowUserOptions[]>(

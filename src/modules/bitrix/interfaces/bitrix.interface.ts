@@ -51,7 +51,10 @@ export type B24AvailableMethods =
   | 'crm.activity.list'
   | 'crm.activity.update'
   | 'crm.category.list'
-  | 'crm.dealcategory.stage.list';
+  | 'crm.dealcategory.stage.list'
+  // REST 3.0
+  | 'main.eventlog.list'
+  | 'main.eventlog.tail';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

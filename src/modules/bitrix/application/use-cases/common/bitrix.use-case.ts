@@ -82,4 +82,11 @@ export class BitrixUseCase {
   ) {
     return this.bitrix.callBatches<T>(commands);
   }
+
+  async callMethodV2<
+    T extends Record<string, any> = Record<string, any>,
+    U = any,
+  >(method: B24AvailableMethods, params?: Partial<T>) {
+    return this.bitrix.callMethodV2(method, params);
+  }
 }
