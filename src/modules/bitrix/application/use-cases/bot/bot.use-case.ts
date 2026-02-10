@@ -584,12 +584,12 @@ export class BitrixBotUseCase {
   }
 
   /**
-   * Handle button with **approveSiteDealForAdvert** command.
+   * Handle button with **approveSiteDealFor** command.
    * Function update existsing message and send messages to project manager and
    * his supervisor
    *
    * ---
-   * Обработка кнопки с коммандой **approveSiteDealForAdvert**.
+   * Обработка кнопки с коммандой **approveSiteDealFor**.
    * Функция обновляет старое сообщение и отправляет сообщения проект-менеджеру и
    * его руководителю.
    *
