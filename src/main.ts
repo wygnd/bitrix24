@@ -49,15 +49,26 @@ async function bootstrap() {
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: [`'self'`],
-          styleSrc: [`'self'`, `'unsafe-inline'`],
-          imgSrc: [`'self'`, 'data:', 'https:'],
+          defaultSrc: [
+            `'self'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          styleSrc: [
+            `'self'`,
+            `'unsafe-inline'`,
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
+          imgSrc: [
+            `'self'`,
+            'data:',
+            'https:',
+            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
+          ],
           scriptSrc: [
             `'self'`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
           ],
           frameAncestors: [
-            `'self`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
           ],
         },
