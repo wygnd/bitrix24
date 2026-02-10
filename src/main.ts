@@ -49,25 +49,26 @@ async function bootstrap() {
     helmet({
       contentSecurityPolicy: {
         directives: {
-          imgSrc: [
-            `'self'`,
-            'data:',
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-          manifestSrc: [
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`],
+          imgSrc: [`'self'`, 'data:', 'https:'],
+          scriptSrc: [
             `'self'`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          frameSrc: [
-            `'self'`,
-            config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
-          ],
-          'frame-ancestors': [
-            `'self'`,
-            config.getOrThrow('bitrixConfig.bitrixDomain'),
           ],
         },
+      },
+      xssFilter: true,
+      hidePoweredBy: true,
+      frameguard: {
+        action: 'deny',
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+      },
+      referrerPolicy: {
+        policy: 'strict-origin-when-cross-origin',
       },
     }),
   );
