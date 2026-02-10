@@ -55,7 +55,6 @@ async function bootstrap() {
           ],
           styleSrc: [
             `'self'`,
-            `'unsafe-inline'`,
             config.getOrThrow<string>('bitrixConfig.bitrixDomain'),
           ],
           imgSrc: [
