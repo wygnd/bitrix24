@@ -13,7 +13,10 @@ import { IntegrationAvitoDistributeLeadFromAvito } from '@/modules/bitrix/applic
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/application/interfaces/bot/imbot-approve-distribute-lead-from-avito-by-ai.interface';
 import { B24FileData } from '@/modules/bitrix/interfaces/bitrix-files.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
-import { AvitoClientRequestsType } from '@/modules/bitrix/application/constants/avito/avito.constants';
+import {
+  AvitoClientRequestsType,
+  Bitrix1CPhoneList,
+} from '@/modules/bitrix/application/constants/avito/avito.constants';
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import {
@@ -168,10 +171,12 @@ export class BitrixAvitoUseCase {
     } = fields;
     const users = await this.wikiService.getWorkingSales();
     const minWorkflowUser =
-      this.bitrixService.isAvailableToDistributeOnManager()
-        ? ((await this.bitrixUsers.getMinWorkFlowUser(users)) ??
-          this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'))
-        : this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID');
+      phone in Bitrix1CPhoneList
+        ? '144' // Дмитрий Андреев
+        : this.bitrixService.isAvailableToDistributeOnManager()
+          ? ((await this.bitrixUsers.getMinWorkFlowUser(users)) ??
+            this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID'))
+          : this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID');
 
     const leadMessage = this.bitrixService.removeEmoji(message.join('\n\n'));
     const handledFiles = files.reduce<B24FileData[]>(
@@ -405,7 +410,9 @@ export class BitrixAvitoUseCase {
         updateLeadFields.STATUS_ID = 'UC_GEWKFD'; // Лид сообщение
 
         // Если менеджер уволен - меняем ответственного на менее занятого
-        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+        // Или звонок по 1С
+        if (!user[0].ACTIVE || phone in Bitrix1CPhoneList)
+          updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
         break;
 
       // Если лид в новых стадиях меняем стадию на новый в работе
@@ -413,13 +420,17 @@ export class BitrixAvitoUseCase {
         updateLeadFields.STATUS_ID = 'UC_GEWKFD';
 
         // Если менеджер уволен - меняем ответственного на менее занятого
-        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+        // Или звонок по 1С
+        if (!user[0].ACTIVE || phone in Bitrix1CPhoneList)
+          updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
         break;
 
       // Если лид в активных стадиях - уведомляем менеджера и его руководителя
       case B24LeadActiveStages.includes(STATUS_ID):
         // Если менеджер уволен - меняем ответственного на менее занятого
-        if (!user[0].ACTIVE) updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
+        // Или звонок по 1С
+        if (!user[0].ACTIVE || phone in Bitrix1CPhoneList)
+          updateLeadFields.ASSIGNED_BY_ID = minWorkflowUser;
 
         if (
           updateLeadFields.ASSIGNED_BY_ID !==
