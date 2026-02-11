@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Post,
   UseGuards,
@@ -20,6 +21,8 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixBotUseCase } from '@/modules/bitrix/application/use-cases/bot/bot.use-case';
+import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import type { BitrixBotCommandsRepositoryPort } from '@/modules/bitrix/application/ports/bot/bot-commands-repository.port';
 
 @ApiTags(B24ApiTags.IMBOT)
 @ApiExceptions()
@@ -30,7 +33,11 @@ export class BitrixBotController {
     'bitrix:bot'.split(':'),
   );
 
-  constructor(private readonly bitrixBotService: BitrixBotUseCase) {}
+  constructor(
+    private readonly bitrixBotService: BitrixBotUseCase,
+    @Inject(B24PORTS.BOT.BOT_COMMANDS_REPOSITORY)
+    private readonly bitrixBotCommandsRepository: BitrixBotCommandsRepositoryPort,
+  ) {}
 
   @ApiAuthHeader()
   @ApiOperation({
@@ -98,5 +105,65 @@ export class BitrixBotController {
   async handleCommand(@Body() body: OnImCommandKeyboardDto) {
     this.logger.debug(body);
     return this.bitrixBotService.handleOnImCommandAdd(body);
+  }
+
+  @Post('/database/add')
+  async addCommandsToDB() {
+    const botId = 1338;
+    const handler = 'https://bitrix-grampus.ru/bot/onimcommandadd';
+    const items = [
+      {
+        command_id: 96,
+        command: 'distributeNewDeal',
+        description: 'Распределить новые сделки',
+      },
+      {
+        command_id: 98,
+        command: 'approveSmmAdvertLayouts',
+        description: 'Согласовать рекламные макеты',
+      },
+      {
+        command_id: 120,
+        command: 'approveSiteDealFor',
+        description: 'Согласовать сайт для доп. услуг',
+      },
+      {
+        command_id: 102,
+        command: 'approveSiteForCase',
+        description: 'Солгасовать сайт для кейса',
+      },
+      {
+        command_id: 108,
+        command: 'approveDistributeDealFromAvitoByAI',
+        description: 'Подтвердить обработку лида нейронкой',
+      },
+      {
+        command_id: 110,
+        command: 'approveReceivedPayment',
+        description: 'Подтвердить платеж',
+      },
+      {
+        command_id: 112,
+        command: 'approveAddyPaymentOnPay',
+        description: 'Подтвердить платеж addy на оплату',
+      },
+      {
+        command_id: 116,
+        command: 'defineUnknownPayment',
+        description: 'Определить платеж',
+      },
+    ];
+
+    return Promise.all(
+      items.map((item) =>
+        this.bitrixBotCommandsRepository.createCommand({
+          command: item.command,
+          commandId: item.command_id,
+          description: item.description,
+          botId: botId,
+          handler: handler,
+        }),
+      ),
+    );
   }
 }

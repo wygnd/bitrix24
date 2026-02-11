@@ -98,7 +98,12 @@ export class BitrixBotUseCase {
   }
 
   async removeCommand(commandId: string) {
-    return this.bitrixBot.removeCommand(commandId)
+    const response = await this.bitrixBot.removeCommand(commandId);
+
+    if (!response.status)
+      return new InternalServerErrorException(response.message);
+
+    return response;
   }
 
   private checkCanAccessToPushButton(userId: string, userIds: string[]) {
