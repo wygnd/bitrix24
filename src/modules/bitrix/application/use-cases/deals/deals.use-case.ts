@@ -165,7 +165,9 @@ export class BitrixDealsUseCase {
             },
           };
 
-          notifyZagoskinaMessage += message + '[br][br]';
+          notifyZagoskinaMessage +=
+            message +
+            `[br]Ответственный: [user=${dealProjectManager}][/user][br][br]`;
         },
       );
 
