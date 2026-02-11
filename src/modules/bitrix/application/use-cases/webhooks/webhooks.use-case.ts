@@ -541,37 +541,6 @@ export class BitrixWebhooksUseCase {
 
     this.lastSelectedDepartmentId[category] = department.ID;
 
-    // Собираем данные кнопок
-    const keyboardItemParams: ImbotHandleApproveSiteDealOptions = {
-      dealId: dealId,
-      isApprove: true,
-      managerId: projectManagerId,
-      category: category,
-    };
-
-    // Собираем кнопки
-    const keyboard: B24ImKeyboardOptions[] = [
-      {
-        TEXT: 'Согласованно',
-        COMMAND: 'approveSiteDealFor',
-        COMMAND_PARAMS: JSON.stringify(keyboardItemParams),
-        BG_COLOR_TOKEN: 'primary',
-        DISPLAY: 'LINE',
-        BLOCK: 'Y',
-      },
-      {
-        TEXT: 'Не согласованно',
-        COMMAND: 'approveSiteDealFor',
-        COMMAND_PARAMS: JSON.stringify({
-          ...keyboardItemParams,
-          isApprove: false,
-        }),
-        BG_COLOR_TOKEN: 'alert',
-        DISPLAY: 'LINE',
-        BLOCK: 'Y',
-      },
-    ];
-
     const batchCommandsGetInfo: B24BatchCommands = {
       get_deal: {
         method: 'crm.deal.get',
@@ -654,8 +623,9 @@ export class BitrixWebhooksUseCase {
         'Если есть правки, то:\n- НЕ завершай задачу\n' +
         '- Пропиши в комментариях задачи список правок\n' +
         '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
-        `Комментарий сделки ${departmentPrefix}:` +
-        taskDealComment,
+        (taskDealComment
+          ? `Комментарий сделки ${departmentPrefix}:` + taskDealComment
+          : ''),
       CREATED_BY: '460',
       RESPONSIBLE_ID: department.UF_HEAD,
       UF_CRM_TASK: [`D_${dealId}`],
@@ -677,6 +647,38 @@ export class BitrixWebhooksUseCase {
       });
       return false;
     }
+
+    // Собираем данные кнопок
+    const keyboardItemParams: ImbotHandleApproveSiteDealOptions = {
+      dealId: dealId,
+      isApprove: true,
+      managerId: projectManagerId,
+      category: category,
+      taskId: task.id,
+    };
+
+    // Собираем кнопки
+    const keyboard: B24ImKeyboardOptions[] = [
+      {
+        TEXT: 'Согласованно',
+        COMMAND: 'approveSiteDealFor',
+        COMMAND_PARAMS: JSON.stringify(keyboardItemParams),
+        BG_COLOR_TOKEN: 'primary',
+        DISPLAY: 'LINE',
+        BLOCK: 'Y',
+      },
+      {
+        TEXT: 'Не согласованно',
+        COMMAND: 'approveSiteDealFor',
+        COMMAND_PARAMS: JSON.stringify({
+          ...keyboardItemParams,
+          isApprove: false,
+        }),
+        BG_COLOR_TOKEN: 'alert',
+        DISPLAY: 'LINE',
+        BLOCK: 'Y',
+      },
+    ];
 
     this.bitrixBot
       .sendMessage({

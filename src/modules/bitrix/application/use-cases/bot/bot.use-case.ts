@@ -176,7 +176,7 @@ export class BitrixBotUseCase {
           status = true;
           break;
 
-        // Солгласование сайта для РК
+        // Солгласование сайта для РК/SEO
         case '/approveSiteDealFor':
           response = this.handleApproveSiteDeal(
             commandParamsDecoded as ImbotHandleApproveSiteDealOptions,
@@ -605,7 +605,7 @@ export class BitrixBotUseCase {
     fields: ImbotHandleApproveSiteDealOptions,
     messageId: number,
   ) {
-    const { dealId, isApprove, managerId, category } = fields;
+    const { dealId, isApprove, managerId, category, taskId } = fields;
     try {
       let managerMessage: string;
 
@@ -647,7 +647,7 @@ export class BitrixBotUseCase {
         (await this.bitrixDepartments.getDepartmentById(['98']))[0].UF_HEAD ??
         '';
 
-      this.bitrixService.callBatch({
+      const commands: B24BatchCommands = {
         // Отправляем руководителю ПМ сообщение
         send_message_head_sites_category: {
           method: 'im.message.add',
@@ -678,7 +678,18 @@ export class BitrixBotUseCase {
             KEYBOARD: '',
           },
         },
-      });
+      };
+
+      // Закрываем задачу если было согласованно
+      if (isApprove)
+        commands['set_complete_task'] = {
+          method: 'tasks.task.complete',
+          params: {
+            taskId: taskId,
+          },
+        };
+
+      this.bitrixService.callBatch(commands);
       return true;
     } catch (error) {
       this.logger.error(error);

@@ -42,4 +42,5 @@ export interface ImbotHandleApproveSiteDealOptions {
   isApprove: boolean;
   managerId: string;
   category: 'advert' | 'seo';
+  taskId: string;
 }
