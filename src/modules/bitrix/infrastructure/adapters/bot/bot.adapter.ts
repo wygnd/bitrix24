@@ -142,12 +142,21 @@ export class BitrixBotAdapter implements BitrixBotPort {
    */
   async removeCommand(commandId: string) {
     try {
-      const [deletedBitrix, { result: deletedDB }] = await Promise.all([
+      const [deletedBitrix, deletedDB] = await Promise.all([
         this.bitrixBotCommandsRepository.removeCommand(Number(commandId)),
         this.bitrixService.callMethod('imbot.command.unregister', {
           COMMAND_ID: commandId,
         }),
       ]);
+
+      this.logger.debug({
+        handler: this.removeCommand.name,
+        commandId,
+        response: {
+          deletedBitrix,
+          deletedDB,
+        },
+      });
 
       if (!deletedDB)
         return {
