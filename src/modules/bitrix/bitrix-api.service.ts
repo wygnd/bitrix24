@@ -154,7 +154,6 @@ export class BitrixApiService {
 
     const batchResponses = await Promise.all(
       Array.from(batchCommandsMap.values()).map((commands) => {
-        console.log(commands);
         return this.callBatch<Record<keyof T, T[keyof T]>>(commands, halt);
       }),
     );
@@ -168,8 +167,8 @@ export class BitrixApiService {
         return;
 
       Object.entries(response.result.result_error).forEach(
-        ([cmdName, { error }]) => {
-          errors.push(`${cmdName}: ${error}`);
+        ([cmdName, { error, error_description }]) => {
+          errors.push(`${cmdName}: ${error}, ${error_description}`);
         },
       );
     });

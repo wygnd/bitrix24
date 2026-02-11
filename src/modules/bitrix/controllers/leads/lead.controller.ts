@@ -114,10 +114,13 @@ export class BitrixLeadController {
     throw new NotAcceptableException();
   }
 
-  @ApiOperation({ summary: 'Распределение активных лидов' })
+  @ApiOperation({
+    summary: 'Распределение активных лидов с указанного user_id',
+  })
+  @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('/distribute/active')
-  async distributeLeadsFromZlataZimina(@Query('user_id') user_id: string) {
+  async distributeLeadsFromUser(@Query('user_id') user_id: string) {
     return this.bitrixLeadService.handleDistributeNewLeads(user_id);
   }
 }

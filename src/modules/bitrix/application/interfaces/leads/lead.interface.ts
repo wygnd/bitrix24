@@ -1,4 +1,5 @@
 import { B24CRMMultifield } from '@/modules/bitrix/interfaces/bitrix-types.interface';
+import { B24Activity } from '@/modules/bitrix/application/interfaces/activities/activities.interface';
 
 export type B24Lead = B24LeadDefault & Record<string, any>;
 
@@ -27,4 +28,8 @@ export enum B24LeadStatus {
   LOST = 'lost',
   FINISH = 'finish',
   UNKNOWN = 'unknown',
+}
+
+export interface B24LeadActivities extends B24Lead {
+  activities: B24Activity[];
 }

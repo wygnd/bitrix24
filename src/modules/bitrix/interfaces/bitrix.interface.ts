@@ -47,9 +47,12 @@ export type B24AvailableMethods =
   | 'im.notify.system.add'
   | 'crm.contact.list'
   | 'crm.item.list'
+  | 'crm.item.update'
   | 'crm.company.list'
   | 'crm.activity.list'
   | 'crm.activity.update'
+  | 'crm.activity.todo.update'
+  | 'crm.activity.todo.updateResponsibleUser'
   | 'crm.category.list'
   | 'crm.dealcategory.stage.list'
   // REST 3.0

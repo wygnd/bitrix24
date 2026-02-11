@@ -724,7 +724,7 @@ export class BitrixBotUseCase {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
             MESSAGE_ID: messageId,
             MESSAGE:
-              `[b]Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
+              `[b]${approved ? B24Emoji.SUCCESS : B24Emoji.REFUSAL} Обработано: ${approved ? 'Сайт подходит' : 'Сайт не подходит'}[/b][br][br]` +
               this.decodeText(oldMessage),
             KEYBOARD: '',
           },
