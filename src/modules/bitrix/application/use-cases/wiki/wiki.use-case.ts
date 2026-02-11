@@ -20,7 +20,10 @@ import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/applicatio
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { WinstonLogger } from '@/config/winston.logger';
-import { B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
+import {
+  B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG,
+  B24_WIKI_PAYMENTS_ROLES_CHAT_IDS,
+} from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
 import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
 import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
 import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
@@ -251,9 +254,16 @@ export class BitrixWikiUseCase {
     message,
     deal_id,
     lead_id,
-    user_role: chatId,
+    user_role,
   }: B24WikiPaymentsNoticeWaitingOptions): Promise<B24WikiNPaymentsNoticesResponse> {
     try {
+      const chatId: string | null =
+        user_role in B24_WIKI_PAYMENTS_ROLES_CHAT_IDS
+          ? B24_WIKI_PAYMENTS_ROLES_CHAT_IDS[user_role]
+          : null;
+
+      if (!chatId) throw new UnprocessableEntityException('Invalid user_role');
+
       let leadId = lead_id;
       let dealId = deal_id;
       const isBudget = /бюджет/gi.test(message);
@@ -287,6 +297,7 @@ export class BitrixWikiUseCase {
         dealId: dealId,
         isBudget: isBudget,
         userId: userId,
+        userRole: user_role as keyof typeof B24_WIKI_PAYMENTS_ROLES_CHAT_IDS,
       };
 
       // Отправляем сообщение

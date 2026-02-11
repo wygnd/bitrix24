@@ -2,7 +2,6 @@ import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/applicatio
 import { ApiProperty } from '@nestjs/swagger';
 import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { B24_WIKI_PAYMENTS_ROLES_CHAT_IDS } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
-import { Transform } from 'class-transformer';
 
 export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWaitingOptions {
   @ApiProperty({
@@ -53,13 +52,8 @@ export class B24WikiPaymentsNoticeWaitingDto implements B24WikiPaymentsNoticeWai
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(
-    ({ value }) => B24_WIKI_PAYMENTS_ROLES_CHAT_IDS[value] ?? 'unknown',
-  )
   @IsString()
-  @IsIn(Object.values(B24_WIKI_PAYMENTS_ROLES_CHAT_IDS), {
-    message: `user_role must be one of the following values: ${Object.keys(B24_WIKI_PAYMENTS_ROLES_CHAT_IDS).join(', ')}`,
-  })
+  @IsIn(Object.keys(B24_WIKI_PAYMENTS_ROLES_CHAT_IDS))
   user_role: string;
 
   @ApiProperty({

@@ -818,7 +818,7 @@ export class BitrixBotUseCase {
     messageId: number,
     dialogId: string,
   ) {
-    const { message, dialogId: toChatId, userId } = fields;
+    const { message, dialogId: toChatId, userId, userRole = '' } = fields;
     const messageDecoded = this.decodeText(message);
     const [userName, , price, contract, organization, direction, inn, , date] =
       messageDecoded.split(' | ');
@@ -856,7 +856,10 @@ export class BitrixBotUseCase {
           params: {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
             DIALOG_ID: dialogId,
-            MESSAGE: messageDecoded + '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
+            MESSAGE:
+              (userRole == 'project_manager' && !['1314', '906'].includes(userId) ? `${B24Emoji.SUCCESS}` : '') +
+              messageDecoded +
+              '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
           },
         },
       }),
