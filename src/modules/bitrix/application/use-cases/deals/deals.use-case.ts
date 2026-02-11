@@ -73,7 +73,7 @@ export class BitrixDealsUseCase {
         'UF_CRM_1589349464',
       ];
       const dealsListFilter: Partial<Record<keyof B24Deal, any>> = {
-        '!STAGE_ID': 'WON', // На всех этапах, кроме Сделка завершена
+        '!STAGE_ID': ['WON', 'LOSE', '16'], // На всех этапах, кроме Сделка завершена, Сделка провалена, Заморозка
         CATEGORY_ID: '0', // Воронка: Разработка сайтов
         '@UF_CRM_1657086374': ['', '7260'], // Есть подписанный договор
       };
