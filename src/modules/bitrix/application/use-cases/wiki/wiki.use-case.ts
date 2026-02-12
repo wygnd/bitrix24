@@ -38,6 +38,8 @@ import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import { B24Lead } from '@/modules/bitrix/application/interfaces/leads/lead.interface';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
+import { BitrixWikiMessage } from '@/modules/bitrix/application/interfaces/wiki/wiki-message.inferface';
+import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -54,6 +56,8 @@ export class BitrixWikiUseCase {
     private readonly bitrixBot: BitrixBotUseCase,
     private readonly bitrixWikiClientPayments: BitrixWikiClientPaymentsUseCase,
     private readonly redisService: RedisService,
+    @Inject(B24PORTS.MESSAGES.MESSAGES_DEFAULT)
+    private readonly bitrixMessages: BitrixMessagesPort,
   ) {}
 
   /**
@@ -800,6 +804,36 @@ export class BitrixWikiUseCase {
         handler: this.noticeUsersWhichDontStartWorkDay.name,
         error,
       });
+      throw error;
+    }
+  }
+
+  public async sendWikiMessage(fields: BitrixWikiMessage) {
+    try {
+      const messageId = await this.bitrixMessages.sendPrivateMessage({
+        DIALOG_ID: fields.chat_id,
+        MESSAGE: fields.message,
+      });
+
+      if (!messageId) throw new BadRequestException('Сообщение не отправлено');
+
+      this.logger.debug({
+        handler: this.sendWikiMessage.name,
+        fields,
+        response: messageId,
+      });
+      return {
+        status: true,
+        message_id: messageId,
+        message: 'Сообщение успешно отправлено',
+      };
+    } catch (error) {
+      this.logger.error({
+        handler: this.sendWikiMessage.name,
+        fields,
+        error,
+      });
+
       throw error;
     }
   }

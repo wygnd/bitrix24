@@ -20,6 +20,7 @@ import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/w
 import { B24WikiPaymentsNoticesResponseDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-response.dto';
 import { BitrixWikiPaymentsNoticeExpenseDto } from '@/modules/bitrix/application/dtos/wiki/wiki-payments-notice-expense.dto';
 import { BitrixDistributeLeadWishManagerDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-distribute-lead-wish-manager.dto';
+import { BitrixWikiMessageDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-message.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiAuthHeader()
@@ -153,5 +154,12 @@ export class BitrixWikiController {
   @Post('/staff/check')
   async noticeUsersWhichDontStartWorkDay() {
     return this.bitrixWiki.noticeUsersWhichDontStartWorkDay();
+  }
+
+  @ApiOperation({ summary: 'Отправить сообщение в чат/личные сообщения' })
+  @HttpCode(HttpStatus.OK)
+  @Post('/messages/add')
+  async sendWikiMessage(@Body() body: BitrixWikiMessageDTO) {
+    return this.bitrixWiki.sendWikiMessage(body);
   }
 }
