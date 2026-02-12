@@ -4,6 +4,7 @@ import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitri
 import { BitrixConstants } from '@/common/interfaces/bitrix-config.interface';
 import {
   B24AvailableMethods,
+  B24AvailableMethodsV2,
   B24BatchCommands,
 } from '@/modules/bitrix/interfaces/bitrix.interface';
 
@@ -86,7 +87,7 @@ export class BitrixUseCase {
   async callMethodV2<
     T extends Record<string, any> = Record<string, any>,
     U = any,
-  >(method: B24AvailableMethods, params?: Partial<T>) {
+  >(method: B24AvailableMethodsV2, params?: Partial<T>) {
     return this.bitrix.callMethodV2(method, params);
   }
 }

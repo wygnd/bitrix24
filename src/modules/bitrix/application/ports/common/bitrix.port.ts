@@ -4,6 +4,7 @@ import {
 } from '@/common/interfaces/bitrix-config.interface';
 import {
   B24AvailableMethods,
+  B24AvailableMethodsV2,
   B24BatchCommands,
 } from '@/modules/bitrix/interfaces/bitrix.interface';
 import {
@@ -49,7 +50,7 @@ export interface BitrixPort {
 
   // rest 3.0
   callMethodV2<T extends Record<string, any> = Record<string, any>, U = any>(
-    method: B24AvailableMethods,
+    method: B24AvailableMethodsV2,
     params?: Partial<T>,
   ): any;
 }

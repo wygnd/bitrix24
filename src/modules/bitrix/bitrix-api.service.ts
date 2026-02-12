@@ -15,6 +15,7 @@ import {
 } from './interfaces/bitrix-api.interface';
 import {
   B24AvailableMethods,
+  B24AvailableMethodsV2,
   B24BatchCommands,
 } from './interfaces/bitrix.interface';
 import qs from 'qs';
@@ -75,7 +76,7 @@ export class BitrixApiService {
   async callMethodV2<
     T extends Record<string, any> = Record<string, any>,
     U = any,
-  >(method: B24AvailableMethods, params: Partial<T> = {}) {
+  >(method: B24AvailableMethodsV2, params: Partial<T> = {}) {
     const { access_token } = await this.getTokens();
     return this.post<Partial<T>, B24SuccessResponse<U>>(`/rest/api/${method}`, {
       ...params,

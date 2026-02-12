@@ -54,10 +54,10 @@ export type B24AvailableMethods =
   | 'crm.activity.todo.update'
   | 'crm.activity.todo.updateResponsibleUser'
   | 'crm.category.list'
-  | 'crm.dealcategory.stage.list'
-  // REST 3.0
-  | 'main.eventlog.list'
-  | 'main.eventlog.tail';
+  | 'crm.dealcategory.stage.list';
+
+// REST 3.0
+export type B24AvailableMethodsV2 = 'tasks.task.get' | 'main.eventlog.list' | 'main.eventlog.tail';
 
 export type B24ListOrder = 'ASC' | 'DESC';
 

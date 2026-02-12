@@ -8,6 +8,7 @@ import emojiStrip from 'emoji-strip';
 import { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
 import {
   B24AvailableMethods,
+  B24AvailableMethodsV2,
   B24BatchCommands,
 } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { BitrixApiService } from '@/modules/bitrix/bitrix-api.service';
@@ -246,7 +247,7 @@ export class BitrixAdapter implements BitrixPort {
   public async callMethodV2<
     T extends Record<string, any> = Record<string, any>,
     U = any,
-  >(method: B24AvailableMethods, params?: Partial<T>) {
+  >(method: B24AvailableMethodsV2, params?: Partial<T>) {
     return this.bitrixApiService.callMethodV2(method, params);
   }
 }
