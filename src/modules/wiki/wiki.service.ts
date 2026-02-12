@@ -16,6 +16,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import qs from 'qs';
 import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wiki-send-defin-payment-group.interface';
 import { WikiCheckMissDays } from '@/modules/wiki/interfaces/wiki-check-miss-days.interface';
+import { isAxiosError } from 'axios';
 
 @Injectable()
 export class WikiService {
@@ -61,9 +62,20 @@ export class WikiService {
       });
       return response;
     } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
       this.logger.error({
         handler: this.sendRejectDistributeNewDeal.name,
-        error,
+        error: errorData,
+        body: data,
       });
       throw error;
     }
@@ -102,7 +114,20 @@ export class WikiService {
 
       return sales;
     } catch (error) {
-      this.logger.error({ handler: this.getWorkingSales.name, error });
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
+      this.logger.error({
+        handler: this.getWorkingSales.name,
+        error: errorData,
+      });
       throw error;
     }
   }
@@ -132,15 +157,25 @@ export class WikiService {
         response,
       });
       return response;
-    } catch (e) {
+    } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
       this.logger.error({
         handler: this.sendResultReceiveClientRequestFromAvitoToWiki.name,
-        error: e,
+        error: errorData,
       });
       return {
         wiki_lead_id: 0,
         lead_id: 0,
-        message: e.response.statusText ?? 'Invalid update lead',
+        message: error.response.statusText ?? 'Invalid update lead',
       };
     }
   }
@@ -163,13 +198,22 @@ export class WikiService {
         response,
       });
       return response;
-    } catch (e) {
+    } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
       this.logger.error({
         handler: this.sendNotifyAboutDeleteLead.name,
-        errors: e,
+        errors: errorData,
       });
       return {
-        message: e.response.data.message ?? 'Invalid remove lead',
+        message: 'Invalid remove lead',
         deleted: 0,
         lead_id: 0,
       };
@@ -195,15 +239,25 @@ export class WikiService {
 
       this.logger.debug({
         handler: this.notifyWikiAboutReceivePayment.name,
-        data,
         response,
+        data,
       });
       return true;
     } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
       this.logger.error({
         handler: this.notifyWikiAboutReceivePayment.name,
+        error: errorData,
         data,
-        error,
       });
       return false;
     }
@@ -235,10 +289,20 @@ export class WikiService {
       });
       return true;
     } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
       this.logger.error({
         handler: this.sendRequestDefinePaymentGroup.name,
         data: fields,
-        error,
+        error: errorData,
       });
       return false;
     }
@@ -272,9 +336,19 @@ export class WikiService {
 
       return response.bitrix_ids;
     } catch (error) {
+      let errorData: any;
+
+      if (isAxiosError(error)) {
+        errorData = error.response?.data;
+      } else if (error instanceof Error) {
+        errorData = error.message;
+      } else {
+        errorData = error;
+      }
+
       this.logger.error({
         handler: this.getMissDaysWorkers.name,
-        error,
+        error: errorData,
       });
       return [];
     }
