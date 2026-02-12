@@ -614,7 +614,7 @@ export class BitrixWebhooksUseCase {
       case 'seo':
         taskDescription =
           '[b]Задачу не завершать![/b]\n\n' +
-          `Если нет замечаний, то написать комментарий "Согласованно" и отправить задачу в ЛС [user=${department.UF_HEAD}]Степану Комягину[/user]` +
+          `Если нет замечаний, то написать комментарий "Согласованно" и отправить задачу в ЛС [user=${department.UF_HEAD}]Степану Комягину[/user]\n` +
           'Если есть правки, то:\n' +
           '- Пропиши в комментариях задачи список правок\n' +
           `- Отправь задачу в ЛС [user=${department.UF_HEAD}]Степану Комягину[/user]`;
@@ -694,6 +694,7 @@ export class BitrixWebhooksUseCase {
           '[br][br]Сделка: ' +
           this.bitrixService.generateDealUrl(dealId),
         KEYBOARD: keyboard,
+        URL_PREVIEW: 'N',
       })
       .then((res) => this.logger.debug(res))
       .catch((err) => this.logger.error(err));
