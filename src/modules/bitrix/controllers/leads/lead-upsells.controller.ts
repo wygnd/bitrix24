@@ -77,7 +77,6 @@ export class BitrixLeadUpsellController {
           message: 'Check handle upsells response',
           response,
         },
-        true,
       );
       return response;
     } catch (error) {

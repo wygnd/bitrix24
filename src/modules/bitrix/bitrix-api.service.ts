@@ -32,7 +32,6 @@ export class BitrixApiService {
     BitrixApiService.name,
     'bitrix'.split(':'),
   );
-  private tokens: BitrixTokens;
   private readonly bitrixOauthUrl = 'https://oauth.bitrix24.tech/oauth/token/';
   private readonly bitrixClientId: string;
   private readonly bitrixClientSecret: string;
@@ -48,12 +47,6 @@ export class BitrixApiService {
 
     this.bitrixClientId = bitrixConfig.bitrixClientId;
     this.bitrixClientSecret = bitrixConfig.bitrixClientSecret;
-
-    this.tokens = {
-      access_token: '',
-      refresh_token: '',
-      expires: 0,
-    };
   }
 
   /**
@@ -192,13 +185,6 @@ export class BitrixApiService {
    * Get bitrix tokens
    */
   public async getTokens(): Promise<BitrixTokens> {
-    if (
-      this.tokens &&
-      this.tokens?.access_token &&
-      Date.now() <= this.tokens.expires
-    )
-      return this.tokens;
-
     const tokens = await this.tokensService.getToken(TokensServices.BITRIX_APP);
 
     if (!tokens || !tokens.refreshToken) {
@@ -206,18 +192,21 @@ export class BitrixApiService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
+    const datetimeNow = new Date();
+    datetimeNow.setMinutes(datetimeNow.getMinutes() + 10); // К текущему времени прибавляем 10 минут
+
     const { accessToken, refreshToken, expires } = tokens;
 
-    if (expires && Date.now() <= expires) {
-      this.tokens = {
+    // Если время действия токена больше 10 минут: возвращаем токены
+    if (tokens.expires <= datetimeNow.getTime()) {
+      return {
         access_token: accessToken,
         refresh_token: refreshToken,
         expires: expires,
       };
-
-      return this.tokens;
     }
 
+    // Обновляем токен
     return this.updateAccessToken(tokens.refreshToken);
   }
 
@@ -229,13 +218,11 @@ export class BitrixApiService {
 
     if (!tokens) throw new UnauthorizedException('Invalid update tokens');
 
-    this.tokens = {
+    return {
       access_token: tokens.accessToken,
       expires: tokens.expires,
       refresh_token: tokens.refreshToken ?? '',
     };
-
-    return this.tokens;
   }
 
   /**
@@ -261,19 +248,17 @@ export class BitrixApiService {
       },
     );
 
-    this.tokens = {
-      access_token: access_token,
-      expires: expires,
-      refresh_token: refresh_token,
-    };
-
     this.tokensService.updateOrCreateToken(TokensServices.BITRIX_APP, {
       accessToken: access_token,
       refreshToken: refresh_token,
       expires: expires * 1000,
     });
 
-    return this.tokens;
+    return {
+      access_token: access_token,
+      expires: expires,
+      refresh_token: refresh_token,
+    };
   }
 
   /**
