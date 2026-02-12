@@ -33,7 +33,26 @@ export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPayme
    */
   public async addPayment(fields: B24WikiClientPaymentsCreationalAttributes) {
     try {
-      const payment = await this.wikiClientPaymentsRepository.create(fields);
+      const [payment, isCreated] =
+        await this.wikiClientPaymentsRepository.findOrCreate({
+          where: {
+            inn: fields.inn,
+            departmentId: fields.departmentId,
+          },
+          defaults: fields,
+        });
+
+      if (!isCreated) {
+        this.logger.debug({
+          handler: this.addPayment.name,
+          message: 'payment already exists',
+          body: fields,
+          response: [payment, isCreated],
+        });
+
+        return null;
+      }
+
       this.logger.debug({
         message: 'Add new payment',
         handler: this.addPayment.name,
@@ -43,6 +62,7 @@ export class BitrixWikiClientPaymentsRepository implements BitrixWikiClientPayme
       return this.dto(payment);
     } catch (error) {
       this.logger.error({
+        message: 'Error',
         handler: this.addPayment.name,
         fields,
         error,
