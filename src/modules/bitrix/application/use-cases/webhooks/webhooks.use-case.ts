@@ -595,37 +595,36 @@ export class BitrixWebhooksUseCase {
     const { get_deal: deal, get_related_deal: relatedDeal } =
       batchResponseGetInfo.result;
 
-    let taskDealComment: string;
+    let taskDescription: string;
 
     // В зависимости от категории собираем комментарий из сделки
     switch (category) {
       case 'advert':
-        taskDealComment =
-          relatedDeal.length > 0 && relatedDeal[0]?.UF_CRM_1716383143
-            ? `${relatedDeal[0]?.UF_CRM_1716383143}`
-            : '';
+        taskDescription =
+          (deal?.UF_CRM_1600184739 ? `${deal.UF_CRM_1600184739}\n` : '') +
+          'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
+          'Если есть правки, то:\n- НЕ завершай задачу\n' +
+          '- Пропиши в комментариях задачи список правок\n' +
+          '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
+          (relatedDeal.length > 0 && relatedDeal[0]?.UF_CRM_1716383143
+            ? `Комментарий сделки ${departmentPrefix}:\n${relatedDeal[0]?.UF_CRM_1716383143}`
+            : '');
         break;
 
       case 'seo':
-        taskDealComment =
-          relatedDeal.length > 0 && relatedDeal[0]?.UF_CRM_1760519929
-            ? `${relatedDeal[0]?.UF_CRM_1760519929}`
-            : '';
+        taskDescription =
+          '[b]Задачу не завершать![/b]\n\n' +
+          `Если нет замечаний, то написать комментарий "Согласованно" и отправить задачу в ЛС [user=${department.UF_HEAD}][/user]` +
+          'Если есть правки, то:\n' +
+          '- Пропиши в комментариях задачи список правок\n' +
+          `- Отправь задачу в ЛС [user=${department.UF_HEAD}][/user]`;
         break;
     }
 
     const task = await this.bitrixTasks.createTask({
       TITLE: `Необходимо проверить сайт на дееспособность работы на ${departmentPrefix}.`,
       DEADLINE: dayjs().format('YYYY-MM-DD') + 'T18:00:00',
-      DESCRIPTION:
-        (deal?.UF_CRM_1600184739 ? `${deal.UF_CRM_1600184739}\n` : '') +
-        'Если нет замечаний, то завершай задачу и в сообщении нажми на кнопку [b]Согласованно[/b]\n\n' +
-        'Если есть правки, то:\n- НЕ завершай задачу\n' +
-        '- Пропиши в комментариях задачи список правок\n' +
-        '- Нажми в сообщении кнопку [b]Не согласованно[/b]\n\n' +
-        (taskDealComment
-          ? `Комментарий сделки ${departmentPrefix}:` + taskDealComment
-          : ''),
+      DESCRIPTION: taskDescription,
       CREATED_BY: '460',
       RESPONSIBLE_ID: department.UF_HEAD,
       UF_CRM_TASK: [`D_${dealId}`],

@@ -638,7 +638,9 @@ export class BitrixBotUseCase {
 
       let changeMessage =
         '[b]Сообщение обработано: ' +
-        (isApprove ? 'Сайт согласован' : 'Сайт не согласован') +
+        (isApprove
+          ? `${B24Emoji.SUCCESS} Сайт согласован`
+          : `${B24Emoji.REFUSAL} Сайт не согласован`) +
         `[/b][br][br]` +
         this.bitrixService.generateDealUrl(dealId);
 
