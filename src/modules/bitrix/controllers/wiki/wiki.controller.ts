@@ -20,7 +20,10 @@ import { BitrixWikiUseCase } from '@/modules/bitrix/application/use-cases/wiki/w
 import { B24WikiPaymentsNoticesResponseDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-response.dto';
 import { BitrixWikiPaymentsNoticeExpenseDto } from '@/modules/bitrix/application/dtos/wiki/wiki-payments-notice-expense.dto';
 import { BitrixDistributeLeadWishManagerDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-distribute-lead-wish-manager.dto';
-import { BitrixWikiMessageDTO } from '@/modules/bitrix/application/dtos/wiki/wiki-message.dto';
+import {
+  BitrixWikiMessageDTO,
+  BitrixWikiMessageResponseDTO,
+} from '@/modules/bitrix/application/dtos/wiki/wiki-message.dto';
 
 @ApiTags(B24ApiTags.WIKI)
 @ApiAuthHeader()
@@ -157,6 +160,11 @@ export class BitrixWikiController {
   }
 
   @ApiOperation({ summary: 'Отправить сообщение в чат/личные сообщения' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: BitrixWikiMessageResponseDTO,
+    description: 'Успешная отправка сообщения',
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/messages/add')
   async sendWikiMessage(@Body() body: BitrixWikiMessageDTO) {

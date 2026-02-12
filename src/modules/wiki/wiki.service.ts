@@ -195,12 +195,14 @@ export class WikiService {
 
       this.logger.debug({
         handler: this.notifyWikiAboutReceivePayment.name,
+        data,
         response,
       });
       return true;
     } catch (error) {
       this.logger.error({
         handler: this.notifyWikiAboutReceivePayment.name,
+        data,
         error,
       });
       return false;
@@ -228,11 +230,16 @@ export class WikiService {
       );
       this.logger.debug({
         handler: this.sendRequestDefinePaymentGroup.name,
+        data: fields,
         response,
       });
       return true;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.sendRequestDefinePaymentGroup.name,
+        data: fields,
+        error,
+      });
       return false;
     }
   }

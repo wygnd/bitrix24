@@ -678,18 +678,32 @@ export class BitrixBotUseCase {
             KEYBOARD: '',
           },
         },
-      };
 
-      // Закрываем задачу если было согласованно
-      if (isApprove)
-        commands['set_complete_task'] = {
+        // Закрываем задачу
+        complete_task: {
           method: 'tasks.task.complete',
           params: {
             taskId: taskId,
           },
-        };
+        },
+      };
 
-      this.bitrixService.callBatch(commands);
+      this.bitrixService
+        .callBatch(commands)
+        .then((res) =>
+          this.logger.debug({
+            handler: this.handleApproveSiteDeal.name,
+            request: commands,
+            response: res,
+          }),
+        )
+        .catch((err) =>
+          this.logger.error({
+            handler: this.handleApproveSiteDeal.name,
+            request: commands,
+            error: err,
+          }),
+        );
       return true;
     } catch (error) {
       this.logger.error(error);
@@ -857,7 +871,10 @@ export class BitrixBotUseCase {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
             DIALOG_ID: dialogId,
             MESSAGE:
-              (userRole == 'project_manager' && !['1314', '906'].includes(userId) ? `${B24Emoji.SUCCESS}` : '') +
+              (userRole == 'project_manager' &&
+              !['1314', '906'].includes(userId)
+                ? `${B24Emoji.SUCCESS}`
+                : '') +
               messageDecoded +
               '[br][br][b]ПЛАТЕЖ ПОСТУПИЛ[/b]',
           },
@@ -866,7 +883,19 @@ export class BitrixBotUseCase {
 
       // Отправляем запрос в Old wiki
       this.wikiService.notifyWikiAboutReceivePayment(data),
-    ]);
+    ])
+      .then((response) =>
+        this.logger.debug({
+          handler: this.handleApprovePayment.name,
+          response,
+        }),
+      )
+      .catch((err) =>
+        this.logger.error({
+          handler: this.handleApprovePayment.name,
+          error: err,
+        }),
+      );
 
     // Добавляем в базу ИНН клиента и его отдел, если он есть
     if (clearInn.length > 0) {
