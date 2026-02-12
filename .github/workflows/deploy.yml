@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            cd /home/projects/bitrix24
+            cd /srv/bitrix24
             
             git fetch origin master
             
