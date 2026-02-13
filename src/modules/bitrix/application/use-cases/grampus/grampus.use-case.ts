@@ -496,10 +496,7 @@ export class BitrixGrampusUseCase {
       [],
     );
 
-    // Получаем менеджера, у которого меньше всего лидов
-    const assignedId = await this.bitrixUsers.getMinWorkFlowUser(users);
-
     // Если по какой-то причине не получили id менеджера возвращаем id Златы Зиминой
-    return assignedId ?? ZLATA_ZIMINA_BITRIX_ID;
+    return this.bitrixService.getRandomElement(users) ?? ZLATA_ZIMINA_BITRIX_ID;
   }
 }
