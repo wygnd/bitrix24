@@ -12,7 +12,7 @@ export const B24_WIKI_PAYMENTS_ROLES_CHAT_IDS = {
 };
 
 export const B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG = {
-  0: 'chat48362', // G pay
-  1: 'chat48362', // G pay
-  2: 'chat79814', // Addy pay
+  '0': 'chat48362', // G pay
+  '1': 'chat48362', // G pay
+  '2': 'chat79814', // Addy pay
 };

@@ -40,6 +40,7 @@ import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitri
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import { BitrixWikiMessage } from '@/modules/bitrix/application/interfaces/wiki/wiki-message.inferface';
 import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
+import { B24ImKeyboardOptions } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 
 @Injectable()
 export class BitrixWikiUseCase {
@@ -339,16 +340,30 @@ export class BitrixWikiUseCase {
   ): Promise<B24WikiNPaymentsNoticesResponse> {
     try {
       const { message, group, payment_id } = fields;
+      const [, , , , inn] = message.split(' | ');
+      const messageKeyboard: B24ImKeyboardOptions[] = [];
+      let resultMessage = '';
+      let clientDepartmentHistory = '';
       const chatId =
         group in B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG
           ? B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[group]
-          : B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG[0];
+          : B24_WIKI_PAYMENTS_CHAT_IDS_BY_FLAG['0'];
 
-      const [, , , , inn] = message.split(' | ');
-      let clientDepartmentHistory = '';
+      // В зависимости от группы формируем конечное сообщение
+      switch (group) {
+        case '-1':
+          resultMessage =
+            '[br][br][b]Данные клиента НЕ находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+          break;
+
+        case '0':
+          resultMessage =
+            '[br][br][b]Данные клиента находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
+          break;
+      }
 
       // Если есть ИНН нужно в сообщение добавлять названия отделов, с которыми работал клиент
-      if (/инн/gi.test(inn)) {
+      if (group !== '2' && /инн/gi.test(inn)) {
         const paymentsSet = new Set<number>();
         const payments = await this.bitrixWikiClientPayments.getPaymentList({
           where: {
@@ -368,39 +383,47 @@ export class BitrixWikiUseCase {
               })
               .filter((p) => p)
               .join(', ');
+
+          resultMessage = clientDepartmentHistory + resultMessage;
         }
+      }
+
+      // Складываем пришедшее сообщение со сформированным
+      resultMessage = message + resultMessage;
+
+      const keyboardParams: ImbotKeyboardDefineUnknownPaymentOptions = {
+        group: group,
+        paymentId: payment_id,
+        message: this.bitrixBot.encodeText(resultMessage),
+        type: 'grampus',
+      };
+
+      // Если платеж не определен добавляем кнопки для определения платежа
+      if (['-1', '0'].includes(group)) {
+        messageKeyboard.push({
+          TEXT: 'Grampus',
+          COMMAND: 'defineUnknownPayment',
+          COMMAND_PARAMS: JSON.stringify(keyboardParams),
+          DISPLAY: 'BLOCK',
+          BLOCK: 'Y',
+          BG_COLOR_TOKEN: 'primary',
+        });
+
+        messageKeyboard.push({
+          TEXT: 'Addy',
+          COMMAND: 'defineUnknownPayment',
+          COMMAND_PARAMS: JSON.stringify({ ...keyboardParams, type: 'addy' }),
+          DISPLAY: 'BLOCK',
+          BLOCK: 'Y',
+          BG_COLOR_TOKEN: 'primary',
+        });
       }
 
       const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
         DIALOG_ID: chatId,
-        MESSAGE: message + clientDepartmentHistory,
-        KEYBOARD: [],
+        MESSAGE: resultMessage,
+        KEYBOARD: messageKeyboard,
       };
-
-      if (group == '0')
-        sendMessageOptions.MESSAGE +=
-          '[br][br][b]Данные клиента находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
-
-      if (group == '-1')
-        sendMessageOptions.MESSAGE +=
-          '[br][br][b]Данные клиента НЕ находятся в БД и Addy и Grampus. Необходимо выяснить на чьей стороне ожидание и зафиксировать их.[/b]';
-
-      if (['-1', '0'].includes(group)) {
-        sendMessageOptions.KEYBOARD = [
-          {
-            TEXT: 'Определить платеж',
-            COMMAND: 'defineUnknownPayment',
-            COMMAND_PARAMS: JSON.stringify({
-              group: group,
-              paymentId: payment_id,
-              message: this.bitrixBot.encodeText(message),
-            } as ImbotKeyboardDefineUnknownPaymentOptions),
-            DISPLAY: 'BLOCK',
-            BLOCK: 'Y',
-            BG_COLOR_TOKEN: 'primary',
-          },
-        ];
-      }
 
       const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
 

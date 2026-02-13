@@ -106,8 +106,20 @@ export class BitrixBotUseCase {
     return response;
   }
 
-  private checkCanAccessToPushButton(userId: string, userIds: string[]) {
-    return this.bitrixBot.limitAccessByPushButton(userId, userIds);
+  private checkCanAccessToPushButton(
+    userId: string,
+    userIds: string[],
+    notifyUser: boolean = true,
+  ) {
+    const canAccess = this.bitrixBot.limitAccessByPushButton(userId, userIds);
+
+    if (!canAccess && notifyUser)
+      this.bitrixService.callMethod('im.notify.personal.add', {
+        USER_ID: userId,
+        MESSAGE: 'Доступ запрещен',
+      });
+
+    return canAccess;
   }
 
   encodeText(message: string) {
@@ -263,7 +275,6 @@ export class BitrixBotUseCase {
               '27',
               '442',
               '460',
-              '376',
             ])
           ) {
             response = Promise.resolve(
@@ -957,7 +968,7 @@ export class BitrixBotUseCase {
 
       // Остальные чаты
       default:
-        return this.handleApprovePaymentDefault(fields, messageDecoded);
+        return this.handleApprovePaymentDefault(fields);
     }
   }
 
@@ -1143,7 +1154,6 @@ export class BitrixBotUseCase {
    */
   private async handleApprovePaymentDefault(
     fields: ImbotKeyboardPaymentsNoticeWaiting,
-    message: string,
   ) {
     try {
       // Декодируем сообщение
@@ -1201,7 +1211,7 @@ export class BitrixBotUseCase {
     fields: ImbotKeyboardDefineUnknownPaymentOptions,
     messageId: number,
   ) {
-    const { message, group, paymentId } = fields;
+    const { message, paymentId, type } = fields;
 
     Promise.all([
       this.updateMessage({
@@ -1210,7 +1220,7 @@ export class BitrixBotUseCase {
         KEYBOARD: '',
       }),
       this.wikiService.sendRequestDefinePaymentGroup({
-        payment_group: group,
+        payment_group: type == 'grampus' ? '1' : '2',
         payment_id: paymentId,
       }),
     ])
