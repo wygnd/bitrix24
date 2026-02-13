@@ -1796,10 +1796,24 @@ export class BitrixLeadsUseCase {
     });
 
     // Выполняем запросы на получение списка звонков по каждому лиду
-    const responsesActivities =
-      await this.bitrixService.callBatches<Record<string, B24Activity[]>>(
-        commands,
-      );
+    // А так же получаем упорядоченный по возрастанию список менеджеров
+    const [responsesActivities, saleListOrdered] = await Promise.all([
+      this.bitrixService.callBatches<Record<string, B24Activity[]>>(commands),
+      this.bitrixUsers.getMinWorkFlowUsers(saleList),
+    ]);
+
+    if (saleListOrdered.length === 0) {
+      this.logger.error({
+        handler: this.handleDistributeNewLeads.name,
+        data: {
+          userId,
+          saleListOrdered,
+          saleList,
+        },
+        message: 'Не на кого распределять лиды',
+      });
+      throw new UnprocessableEntityException('Не на кого распределять');
+    }
 
     // Добавляем звонки к лидам
     Object.entries(responsesActivities).forEach(([command, result]) => {
@@ -1813,11 +1827,14 @@ export class BitrixLeadsUseCase {
     });
 
     commands = {};
+    let userIndex = 0;
 
     for (const lead of leads.values()) {
-      const userId = await this.bitrixUsers.getMinWorkFlowUser(saleList);
+      let userId: string;
 
-      if (!userId) return;
+      if (userIndex > saleListOrdered.length) userIndex = 0;
+
+      userId = saleListOrdered[userIndex].userId;
 
       commands[`update_lead=${lead.id}`] = {
         method: 'crm.item.update',
@@ -1843,6 +1860,8 @@ export class BitrixLeadsUseCase {
           },
         };
       });
+
+      userIndex++;
     }
 
     this.bitrixService

@@ -18,17 +18,13 @@ export class HttpLoggerMiddleware implements NestMiddleware {
     const userAgent = req.get('user-agent') || '';
     const requestTime = Date.now();
 
-    if (/Prometheus/gi.test(userAgent)) {
-      next();
-      return;
-    }
-
     res.on('close', () => {
       const { statusCode } = res;
 
       let message = `[${statusCode}] ${method} ${url} - ${userAgent} => ${Date.now() - requestTime}ms`;
 
-      this.logger.debug(message);
+      if (!/Prometheus/gi.test(userAgent)) this.logger.debug(message);
+
       this.fileLogger.debug(
         `${message} | params: ${JSON.stringify(params)} | query: ${JSON.stringify(query)} | body: ${JSON.stringify(body)}`,
       );
