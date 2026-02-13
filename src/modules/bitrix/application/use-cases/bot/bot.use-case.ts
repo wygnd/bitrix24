@@ -1213,22 +1213,48 @@ export class BitrixBotUseCase {
   ) {
     const { message, paymentId, type } = fields;
 
+    const commands: B24BatchCommands = {
+      update_message: {
+        method: 'im.message.update',
+        params: {
+          MESSAGE_ID: messageId,
+          MESSAGE: this.decodeText(message),
+          KEYBOARD: '',
+        },
+      },
+    };
+
+    if (type == 'addy')
+      commands['send_message_to_addy_chat'] = {
+        method: 'imbot.message.add',
+        params: {
+          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+          DIALOG_ID:
+            this.bitrixService.getConstant('ADDY').payment.bitrixChatId,
+          MESSAGE: message,
+        },
+      };
+
     Promise.all([
-      this.updateMessage({
-        MESSAGE_ID: messageId,
-        MESSAGE: this.decodeText(message),
-        KEYBOARD: '',
-      }),
+      this.bitrixService.callBatch(commands),
       this.wikiService.sendRequestDefinePaymentGroup({
         payment_group: type == 'grampus' ? '1' : '2',
         payment_id: paymentId,
       }),
     ])
       .then((res) => {
-        this.logger.debug(res);
+        this.logger.debug({
+          handler: this.handleDefineUnknowPayment.name,
+          request: commands,
+          response: res,
+        });
       })
       .catch((err) => {
-        this.logger.error(err);
+        this.logger.error({
+          handler: this.handleDefineUnknowPayment.name,
+          request: commands,
+          error: err,
+        });
       });
 
     return true;
