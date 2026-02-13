@@ -964,19 +964,19 @@ export class BitrixHeadhunterUseCase {
    */
   async getRatioVacancy(vacancyId: string) {
     const vacancyFromCache = await this.redisService.get<HHBitrixVacancyDto>(
-      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY,
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY + vacancyId,
     );
 
     if (vacancyFromCache) return vacancyFromCache;
 
     const findVacancy = (await this.getVacancies()).find(
-      (v) => v.vacancyId === vacancyId,
+      (v) => v.vacancyId == vacancyId,
     );
 
     if (!findVacancy) throw new NotFoundException('Vacancy not found');
 
     this.redisService.set<HHBitrixVacancyDto>(
-      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY,
+      REDIS_KEYS.BITRIX_DATA_RATIO_VACANCY + vacancyId,
       findVacancy,
       600, // 10 minutes
     );
