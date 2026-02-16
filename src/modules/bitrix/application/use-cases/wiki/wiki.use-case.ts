@@ -404,7 +404,7 @@ export class BitrixWikiUseCase {
           TEXT: 'Grampus',
           COMMAND: 'defineUnknownPayment',
           COMMAND_PARAMS: JSON.stringify(keyboardParams),
-          DISPLAY: 'BLOCK',
+          DISPLAY: 'LINE',
           BLOCK: 'Y',
           BG_COLOR_TOKEN: 'primary',
         });
@@ -413,7 +413,7 @@ export class BitrixWikiUseCase {
           TEXT: 'Addy',
           COMMAND: 'defineUnknownPayment',
           COMMAND_PARAMS: JSON.stringify({ ...keyboardParams, type: 'addy' }),
-          DISPLAY: 'BLOCK',
+          DISPLAY: 'LINE',
           BLOCK: 'Y',
           BG_COLOR_TOKEN: 'primary',
         });
