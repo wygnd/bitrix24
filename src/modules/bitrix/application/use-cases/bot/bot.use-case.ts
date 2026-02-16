@@ -245,12 +245,13 @@ export class BitrixBotUseCase {
 
         // Подтвердить платеж ADDY
         case '/approveAddyPaymentOnPay':
-          // Доступно только Иван Ильин, Анастасия Самыловская, Grampus
+          // Доступно только Иван Ильин, Анастасия Самыловская, Grampus, Ирина Наволоцкая
           if (
             !this.checkCanAccessToPushButton(pushButtonUserId, [
               '27',
               '460',
               '376',
+              '220',
             ])
           ) {
             response = Promise.resolve(
