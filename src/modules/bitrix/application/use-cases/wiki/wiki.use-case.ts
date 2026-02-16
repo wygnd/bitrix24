@@ -339,7 +339,7 @@ export class BitrixWikiUseCase {
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ): Promise<B24WikiNPaymentsNoticesResponse> {
     try {
-      const { message, group, payment_id } = fields;
+      const { message, group, payment_id, maybe_mismatch } = fields;
       const [, , , , inn] = message.split(' | ');
       const messageKeyboard: B24ImKeyboardOptions[] = [];
       let resultMessage = '';
@@ -399,7 +399,7 @@ export class BitrixWikiUseCase {
       };
 
       // Если платеж не определен добавляем кнопки для определения платежа
-      if (['-1', '0'].includes(group)) {
+      if (['-1', '0'].includes(group) || maybe_mismatch) {
         messageKeyboard.push({
           TEXT: 'Grampus',
           COMMAND: 'defineUnknownPayment',
@@ -417,6 +417,11 @@ export class BitrixWikiUseCase {
           BLOCK: 'Y',
           BG_COLOR_TOKEN: 'primary',
         });
+
+        if (maybe_mismatch)
+          resultMessage =
+            '[i]Возможно, платеж ошибочно определен, необходим дополнительный контроль[/i][br][br]' +
+            resultMessage;
       }
 
       const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {

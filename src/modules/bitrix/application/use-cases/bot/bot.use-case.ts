@@ -286,6 +286,7 @@ export class BitrixBotUseCase {
           response = this.handleDefineUnknowPayment(
             commandParamsDecoded as ImbotKeyboardDefineUnknownPaymentOptions,
             MESSAGE_ID,
+            DIALOG_ID,
           );
           status = true;
           break;
@@ -1205,11 +1206,13 @@ export class BitrixBotUseCase {
    * Обработка кнопки "Определить платеж"
    * @param fields
    * @param messageId
+   * @param dialogId
    * @private
    */
   private async handleDefineUnknowPayment(
     fields: ImbotKeyboardDefineUnknownPaymentOptions,
     messageId: number,
+    dialogId: string,
   ) {
     const { message, paymentId, type } = fields;
 
@@ -1224,16 +1227,36 @@ export class BitrixBotUseCase {
       },
     };
 
-    if (type == 'addy')
-      commands['send_message_to_addy_chat'] = {
-        method: 'imbot.message.add',
-        params: {
-          BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-          DIALOG_ID:
-            this.bitrixService.getConstant('ADDY').payment.bitrixChatId,
-          MESSAGE: message,
-        },
-      };
+    // Формируем отправку сообщения, если неправильно был определен платеж и если платеж не из этого же чата
+    switch (true) {
+      // Отправляем в Addy Pay
+      case type == 'addy' &&
+        dialogId !==
+          this.bitrixService.getConstant('ADDY').payment.bitrixChatId:
+        commands['send_message_to_addy_chat'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID:
+              this.bitrixService.getConstant('ADDY').payment.bitrixChatId,
+            MESSAGE: message,
+          },
+        };
+        break;
+
+      // Отправляем в G Pay
+      case type == 'grampus' &&
+        dialogId !== this.bitrixService.getConstant('GRAMPUS').GPayChatId:
+        commands['send_message_to_grampus_chat'] = {
+          method: 'imbot.message.add',
+          params: {
+            BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+            DIALOG_ID: this.bitrixService.getConstant('GRAMPUS').GPayChatId,
+            MESSAGE: message,
+          },
+        };
+        break;
+    }
 
     Promise.all([
       this.bitrixService.callBatch(commands),

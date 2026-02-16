@@ -1,6 +1,7 @@
 import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-receive.inteface';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeReceiveOptions {
   @ApiProperty({
@@ -33,4 +34,10 @@ export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeRec
   @IsNotEmpty()
   @IsString()
   payment_id: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  maybe_mismatch: boolean = false;
 }
