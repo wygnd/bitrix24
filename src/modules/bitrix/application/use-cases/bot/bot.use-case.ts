@@ -692,16 +692,15 @@ export class BitrixBotUseCase {
             KEYBOARD: '',
           },
         },
-      };
 
-      // Закрываем задачу
-      if (category !== 'seo')
-        commands['complete_task'] = {
+        // Завершаем задачу
+        complete_task: {
           method: 'tasks.task.complete',
           params: {
             taskId: taskId,
           },
-        };
+        },
+      };
 
       this.bitrixService
         .callBatch(commands)
