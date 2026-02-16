@@ -198,7 +198,7 @@ export class BitrixApiService {
     const { accessToken, refreshToken, expires } = tokens;
 
     // Если время действия токена больше 10 минут: возвращаем токены
-    if (tokens.expires <= datetimeNow.getTime()) {
+    if (tokens.expires >= datetimeNow.getTime()) {
       return {
         access_token: accessToken,
         refresh_token: refreshToken,

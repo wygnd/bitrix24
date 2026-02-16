@@ -1668,219 +1668,232 @@ export class BitrixLeadsUseCase {
    * @param userId {string} - ID пользователя битрикс, с которого распределять лиды
    */
   public async handleDistributeNewLeads(userId: string) {
-    if (!userId) throw new BadRequestException('User id is required');
+    try {
+      if (!userId) throw new BadRequestException('User id is required');
 
-    const getActiveLeadsFilter = {
-      '@stageId': B24LeadNewStages,
-      assignedById: '$result[get_user][0][ID]',
-    };
-    const getActiveLeadsSelect = ['ID'];
+      const getActiveLeadsFilter = {
+        '@stageId': B24LeadNewStages,
+        assignedById: '$result[get_user][0][ID]',
+      };
+      const getActiveLeadsSelect = ['ID'];
 
-    const [
-      {
-        result: {
+      const [
+        {
           result: {
-            get_user: [user],
-            get_active_leads: { items: activeLeads },
-          },
-        },
-      },
-      saleList,
-    ] = await Promise.all([
-      this.bitrixService.callBatch<{
-        get_user: B24User[];
-        get_active_leads: { items: B24Lead[] };
-      }>({
-        // Пытаемся найти пользователя
-        get_user: {
-          method: 'user.get',
-          params: {
-            filter: {
-              ID: userId,
+            result: {
+              get_user: [user],
+              get_active_leads: { items: activeLeads },
             },
           },
         },
-
-        // Получаем все лиды с пользователя
-        get_active_leads: {
-          method: 'crm.item.list',
-          params: {
-            entityTypeId: 1, // LEAD
-            filter: getActiveLeadsFilter,
-            select: getActiveLeadsSelect,
-            start: 0,
+        saleList,
+      ] = await Promise.all([
+        this.bitrixService.callBatch<{
+          get_user: B24User[];
+          get_active_leads: { items: B24Lead[] };
+        }>({
+          // Пытаемся найти пользователя
+          get_user: {
+            method: 'user.get',
+            params: {
+              filter: {
+                ID: userId,
+              },
+            },
           },
-        },
-      }),
-      this.wikiService.getWorkingSales(true),
-    ]);
 
-    if (!user) throw new NotFoundException('User not found');
-
-    if (activeLeads.length === 0)
-      throw new UnprocessableEntityException('Leads not found');
-
-    let leads: Map<string, B24LeadActivities> = new Map<
-      string,
-      B24LeadActivities
-    >();
-    let commands: B24BatchCommands = {};
-
-    if (activeLeads.length > 50) {
-      const queries = Math.ceil(activeLeads.length / BITRIX_LIMIT_REQUESTS); // Кол-во запросов для получения всех лидов
-      let page = 0;
-
-      while (page < queries) {
-        const bitrixPage = (page - 1) * BITRIX_LIMIT_REQUESTS;
-        commands[`get_active_leads=${bitrixPage}`] = {
-          method: 'crm.item.list',
-          params: {
-            entityTypeId: 1, // LEAD
-            filter: getActiveLeadsSelect,
-            select: getActiveLeadsSelect,
-            start: bitrixPage,
+          // Получаем все лиды с пользователя
+          get_active_leads: {
+            method: 'crm.item.list',
+            params: {
+              entityTypeId: 1, // LEAD
+              filter: getActiveLeadsFilter,
+              select: getActiveLeadsSelect,
+              start: 0,
+            },
           },
-        };
-        ++page;
-      }
+        }),
+        this.wikiService.getWorkingSales(true),
+      ]);
 
-      const responses =
-        await this.bitrixService.callBatches<
-          Record<string, { items: B24Lead[] }>
-        >(commands);
+      if (!user) throw new NotFoundException('User not found');
 
-      commands = {};
+      if (activeLeads.length === 0)
+        throw new UnprocessableEntityException('Leads not found');
 
-      // Проходим по результату получения лидов и собираем массив лидов и споском звонков
-      Object.values(responses).forEach(({ items: result }) => {
-        result.forEach((item) => {
-          leads.set(item.id.toString(), {
-            ...item,
+      let leads: Map<string, B24LeadActivities> = new Map<
+        string,
+        B24LeadActivities
+      >();
+      let commands: B24BatchCommands = {};
+
+      if (activeLeads.length > 50) {
+        const queries = Math.ceil(activeLeads.length / BITRIX_LIMIT_REQUESTS); // Кол-во запросов для получения всех лидов
+        let page = 0;
+
+        while (page < queries) {
+          const bitrixPage = (page - 1) * BITRIX_LIMIT_REQUESTS;
+          commands[`get_active_leads=${bitrixPage}`] = {
+            method: 'crm.item.list',
+            params: {
+              entityTypeId: 1, // LEAD
+              filter: getActiveLeadsSelect,
+              select: getActiveLeadsSelect,
+              start: bitrixPage,
+            },
+          };
+          ++page;
+        }
+
+        const responses =
+          await this.bitrixService.callBatches<
+            Record<string, { items: B24Lead[] }>
+          >(commands);
+
+        commands = {};
+
+        // Проходим по результату получения лидов и собираем массив лидов и споском звонков
+        Object.values(responses).forEach(({ items: result }) => {
+          result.forEach((item) => {
+            leads.set(item.id.toString(), {
+              ...item,
+              activities: [],
+            });
+          });
+        });
+      } else {
+        activeLeads.forEach((activeLead) => {
+          leads.set(activeLead.id.toString(), {
+            ...activeLead,
             activities: [],
           });
         });
-      });
-    } else {
-      activeLeads.forEach((activeLead) => {
-        leads.set(activeLead.id.toString(), { ...activeLead, activities: [] });
-      });
-    }
+      }
 
-    if (leads.size === 0)
-      throw new UnprocessableEntityException('Nothing to distribute');
+      if (leads.size === 0)
+        throw new UnprocessableEntityException('Nothing to distribute');
 
-    commands = {};
+      commands = {};
 
-    // Собираем запросы для получения звонков
-    leads.forEach((item) => {
-      commands[`get_lead_activities=${item.id}`] = {
-        method: 'crm.activity.list',
-        params: {
-          filter: {
-            OWNER_ID: item.id,
-            OWNER_TYPE_ID: 1, // LEAD
-            PROVIDER_TYPE_ID: 'CALL',
-            COMPLETED: 'N',
-          },
-          select: [
-            'ID',
-            'RESPONSIBLE_ID',
-            'TYPE_ID',
-            'OWNER_ID',
-            'OWNER_TYPE_ID',
-          ],
-          order: ['CREATED', 'ASC'],
-          start: 0,
-        },
-      };
-    });
-
-    // Выполняем запросы на получение списка звонков по каждому лиду
-    // А так же получаем упорядоченный по возрастанию список менеджеров
-    const [responsesActivities, saleListOrdered] = await Promise.all([
-      this.bitrixService.callBatches<Record<string, B24Activity[]>>(commands),
-      this.bitrixUsers.getMinWorkFlowUsers(saleList),
-    ]);
-
-    if (saleListOrdered.length === 0) {
-      this.logger.error({
-        handler: this.handleDistributeNewLeads.name,
-        data: {
-          userId,
-          saleListOrdered,
-          saleList,
-        },
-        message: 'Не на кого распределять лиды',
-      });
-      throw new UnprocessableEntityException('Не на кого распределять');
-    }
-
-    // Добавляем звонки к лидам
-    Object.entries(responsesActivities).forEach(([command, result]) => {
-      const [, leadId] = command.split('=');
-      const lead = leads.get(leadId);
-
-      if (!lead) return;
-
-      lead.activities.push(...result);
-      leads.set(leadId, lead);
-    });
-
-    commands = {};
-    let userIndex = 0;
-
-    for (const lead of leads.values()) {
-      let userId: string;
-
-      if (userIndex > saleListOrdered.length) userIndex = 0;
-
-      userId = saleListOrdered[userIndex].userId;
-
-      commands[`update_lead=${lead.id}`] = {
-        method: 'crm.item.update',
-        params: {
-          entityTypeId: 1, // LEAD
-          id: lead.id,
-          fields: {
-            assignedById: userId,
-          },
-        },
-      };
-
-      if (lead.activities.length === 0) return;
-
-      lead.activities.forEach((activity) => {
-        commands[`update_lead_activity=${lead.id}=${activity.ID}`] = {
-          method: 'crm.activity.update',
+      // Собираем запросы для получения звонков
+      leads.forEach((item) => {
+        commands[`get_lead_activities=${item.id}`] = {
+          method: 'crm.activity.list',
           params: {
-            id: activity.ID,
-            fields: {
-              RESPONSIBLE_ID: userId,
+            filter: {
+              OWNER_ID: item.id,
+              OWNER_TYPE_ID: 1, // LEAD
+              PROVIDER_TYPE_ID: 'CALL',
+              COMPLETED: 'N',
             },
+            select: [
+              'ID',
+              'RESPONSIBLE_ID',
+              'TYPE_ID',
+              'OWNER_ID',
+              'OWNER_TYPE_ID',
+            ],
+            order: ['CREATED', 'ASC'],
+            start: 0,
           },
         };
       });
 
-      userIndex++;
-    }
+      // Выполняем запросы на получение списка звонков по каждому лиду
+      // А так же получаем упорядоченный по возрастанию список менеджеров
+      const [responsesActivities, saleListOrdered] = await Promise.all([
+        this.bitrixService.callBatches<Record<string, B24Activity[]>>(commands),
+        this.bitrixUsers.getMinWorkFlowUsers(saleList),
+      ]);
 
-    this.bitrixService
-      .callBatches(commands)
-      .then((res) =>
-        this.logger.debug({
-          handler: this.handleDistributeNewLeads.name,
-          request: commands,
-          response: res,
-        }),
-      )
-      .catch((err) =>
+      if (saleListOrdered.length === 0) {
         this.logger.error({
           handler: this.handleDistributeNewLeads.name,
-          request: commands,
-          response: err,
-        }),
-      );
+          data: {
+            userId,
+            saleListOrdered,
+            saleList,
+          },
+          message: 'Не на кого распределять лиды',
+        });
+        throw new UnprocessableEntityException('Не на кого распределять');
+      }
 
-    return { status: true };
+      // Добавляем звонки к лидам
+      Object.entries(responsesActivities).forEach(([command, result]) => {
+        const [, leadId] = command.split('=');
+        const lead = leads.get(leadId);
+
+        if (!lead) return;
+
+        lead.activities.push(...result);
+        leads.set(leadId, lead);
+      });
+
+      commands = {};
+      let userIndex = 0;
+
+      for (const lead of leads.values()) {
+        let userId: string;
+
+        if (userIndex + 1 > saleListOrdered.length) userIndex = 0;
+
+        userId = saleListOrdered[userIndex].userId;
+
+        commands[`update_lead=${lead.id}`] = {
+          method: 'crm.item.update',
+          params: {
+            entityTypeId: 1, // LEAD
+            id: lead.id,
+            fields: {
+              assignedById: userId,
+            },
+          },
+        };
+
+        if (lead.activities.length === 0) return;
+
+        lead.activities.forEach((activity) => {
+          commands[`update_lead_activity=${lead.id}=${activity.ID}`] = {
+            method: 'crm.activity.update',
+            params: {
+              id: activity.ID,
+              fields: {
+                RESPONSIBLE_ID: userId,
+              },
+            },
+          };
+        });
+
+        userIndex++;
+      }
+
+      this.bitrixService
+        .callBatches(commands)
+        .then((res) =>
+          this.logger.debug({
+            handler: this.handleDistributeNewLeads.name,
+            request: commands,
+            response: res,
+          }),
+        )
+        .catch((err) =>
+          this.logger.error({
+            handler: this.handleDistributeNewLeads.name,
+            request: commands,
+            response: err,
+          }),
+        );
+
+      return { status: true };
+    } catch (error) {
+      this.logger.error({
+        handler: this.handleDistributeNewLeads.name,
+        request: userId,
+        response: error,
+      });
+
+      throw error;
+    }
   }
 }
