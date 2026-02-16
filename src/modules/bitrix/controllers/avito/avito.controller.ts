@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  ParseArrayPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -32,7 +33,15 @@ export class BitrixAvitoController {
   })
   @Post('/find-duplicate-leads')
   @HttpCode(HttpStatus.OK)
-  async findDuplicateLeadsByPhone(@Body() body: AvitoFindDuplicateLeadsDto[]) {
+  async findDuplicateLeadsByPhone(
+    @Body(
+      new ParseArrayPipe({
+        items: AvitoFindDuplicateLeadsDto,
+        whitelist: true,
+      }),
+    )
+    body: AvitoFindDuplicateLeadsDto[],
+  ) {
     return this.bitrixAvito.findDuplicatesLeadsByPhones(body);
   }
 
