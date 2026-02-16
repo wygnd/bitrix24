@@ -131,7 +131,10 @@ export class BitrixAddyPaymentsUseCase {
           BG_COLOR_TOKEN: 'base',
           DISPLAY: 'LINE',
           ACTION: 'COPY',
-          ACTION_VALUE: `№ , ${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100))}`,
+          ACTION_VALUE:
+            `№ , ${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100), 'ru-RU', 'RUB', 'code')}`
+              .replace('RUB', '')
+              .trim(),
         },
         {
           TYPE: 'NEWLINE',
