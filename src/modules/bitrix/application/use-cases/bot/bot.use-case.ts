@@ -1218,7 +1218,7 @@ export class BitrixBotUseCase {
 
     const commands: B24BatchCommands = {
       update_message: {
-        method: 'im.message.update',
+        method: 'imbot.message.update',
         params: {
           MESSAGE_ID: messageId,
           MESSAGE: this.decodeText(message),
