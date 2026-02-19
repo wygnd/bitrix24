@@ -137,7 +137,12 @@ export class MetrikaService {
       const responseSendMessage =
         await this.bitrixMessageService.sendPrivateMessage({
           DIALOG_ID: '376',
-          MESSAGE: `[b]Новая заявка[/b][br][br]С сайта ${url}[br]` + message,
+          MESSAGE:
+            '[b]Новая заявка[/b][br][br]' +
+            `С сайта ${url}[br]` +
+            `ID: ${ymId}[br]` +
+            `Счетчик: ${counterId}[br]` +
+            message,
           URL_PREVIEW: 'N',
         });
 
