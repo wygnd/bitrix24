@@ -154,8 +154,7 @@ export class BitrixGrampusUseCase {
     const [managerId] = await Promise.all([
       this.getAssignedManagerId(),
       ym_id
-        ? (this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
-          '[br][br]'
+        ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
         : Promise.resolve(''),
     ]);
 
@@ -555,6 +554,8 @@ export class BitrixGrampusUseCase {
 
     let index = 0;
     return dimensions.reduce((acc, { name }) => {
+      if (!name) return acc;
+
       let dimensionString: string;
       if (name.includes('https')) {
         const sliceIndex = name.indexOf('?');
