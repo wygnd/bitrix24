@@ -7,6 +7,7 @@ import wikiConfig from './wiki.config';
 import avitoConfig from './avito.config';
 import telphinConfig from './telphin.config';
 import grampusConfig from './grampus.config';
+import yandexConfig from './yadnex.config';
 
 export const configList = [
   bitrixConfig,
@@ -18,4 +19,5 @@ export const configList = [
   avitoConfig,
   telphinConfig,
   grampusConfig,
+  yandexConfig,
 ];

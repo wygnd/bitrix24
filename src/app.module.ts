@@ -23,6 +23,7 @@ import { DatabaseModule } from '@/modules/database/database.module';
 import { CronModule } from '@/modules/cron/cron.module';
 import { TokensModule } from '@/modules/tokens/tokens.module';
 import { TelphinModule } from '@/modules/telphin/telphin.module';
+import { MetrikaModule } from '@/modules/metrika/metrika.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { TelphinModule } from '@/modules/telphin/telphin.module';
     CronModule,
     TokensModule,
     TelphinModule,
+    MetrikaModule,
   ],
   controllers: [AppController],
   providers: [

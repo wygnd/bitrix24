@@ -60,6 +60,16 @@ export class BitrixGrampusSiteRequestReceiveDTO implements BitrixGrampusSiteRequ
   @IsOptional()
   @IsJSON()
   extraParams: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'user ID из Я.Метрика',
+    required: false,
+    example: '128762318767263',
+  })
+  @IsOptional()
+  @IsString()
+  ym_id?: string;
 }
 
 export class BitrixGrampusSiteRequestReceiveResponseDTO implements BitrixGrampusSiteRequestReceiveResponse {

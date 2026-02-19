@@ -4,6 +4,7 @@ export interface BitrixGrampusSiteRequestReceive {
   clientName?: string;
   comment?: string;
   extraParams?: string;
+  ym_id?: string;
 }
 
 export interface BitrixGrampusSiteRequestReceiveExtraParamsFieldsDiscount {

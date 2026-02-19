@@ -68,6 +68,7 @@ import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 import { GrampusModule } from '@/modules/grampus/grampus.module';
 import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/widgets.controller';
 import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widgets/widget.use-case';
+import { MetrikaModule } from '@/modules/metrika/metrika.module';
 
 @Module({
   imports: [
@@ -100,6 +101,7 @@ import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widg
       BitrixBotCommandsModel,
     ]),
     GrampusModule,
+    MetrikaModule,
   ],
   controllers: [
     BitrixController,

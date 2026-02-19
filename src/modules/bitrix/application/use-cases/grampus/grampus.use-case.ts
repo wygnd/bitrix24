@@ -28,6 +28,9 @@ import type { BitrixDealsPort } from '@/modules/bitrix/application/ports/deals/d
 import { B24Deal } from '@/modules/bitrix/application/interfaces/deals/deals.interface';
 import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
 import { GrampusService } from '@/modules/grampus/grampus.service';
+import { MetrikaService } from '@/modules/metrika/metrika.service';
+import dayjs from 'dayjs';
+import { ConfigService } from '@nestjs/config';
 
 const { LEADS, BITRIX, USERS, BOT, DEALS, MESSAGES } = B24PORTS;
 
@@ -55,6 +58,7 @@ export class BitrixGrampusUseCase {
   private readonly availableSalesForDistribute = ['496', '714', '114'];
 
   constructor(
+    private readonly configService: ConfigService,
     @Inject(LEADS.LEADS_DEFAULT)
     private readonly bitrixLeads: BitrixLeadsPort,
     @Inject(BITRIX)
@@ -69,6 +73,7 @@ export class BitrixGrampusUseCase {
     @Inject(MESSAGES.MESSAGES_DEFAULT)
     private readonly bitrixMessages: BitrixMessagesPort,
     private readonly grampusService: GrampusService,
+    private readonly metrikaService: MetrikaService,
   ) {}
 
   /**
@@ -87,10 +92,6 @@ export class BitrixGrampusUseCase {
       const { url } = fields;
 
       if (!/grampus/gi.test(url)) {
-        this.grampusService.notifyBadLink({
-          url: url,
-          datetime: new Date().toLocaleString(),
-        });
         return {
           status: true,
           message: 'Successfully handle request',
@@ -129,12 +130,18 @@ export class BitrixGrampusUseCase {
       clientName = '',
       comment = '',
       extraParams = '',
+      ym_id = '',
     } = fields;
     const params = extraParams
       ? (JSON.parse(
           extraParams,
         ) as BitrixGrampusSiteRequestReceiveExtraParamsOptions)
       : null;
+
+    // В зависимости от сайта получаем метрику
+    const metrikaCounterId = url.includes('med.grampus')
+      ? this.configService.getOrThrow('yandex.metrika.counters.med')
+      : this.configService.getOrThrow('yandex.metrika.counters.grampus');
 
     // Ищем дубликаты по номеру клиента
     const duplicateLeads =
@@ -199,6 +206,9 @@ export class BitrixGrampusUseCase {
 
       message +=
         `лид со страницы ${url}[br][br]` +
+        (ym_id
+          ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
+          : '') +
         this.bitrixService.generateLeadUrl(leadId);
 
       // Отправляем сообщение в чат и в личные сообщения ответственному менеджеру
@@ -232,7 +242,12 @@ export class BitrixGrampusUseCase {
     if (!lead) {
       this.bitrixBot.sendMessage({
         DIALOG_ID: trafficsChatId,
-        MESSAGE: `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br]Номер: ${phone}[br][br][b]Не удалось обновить лид[/b]`,
+        MESSAGE:
+          `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br]Номер: ${phone}[br][br]` +
+          (ym_id
+            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
+            : '') +
+          `[b]Не удалось обновить лид[/b]`,
       });
       return {
         message: 'Failed to update lead',
@@ -280,6 +295,9 @@ export class BitrixGrampusUseCase {
 
         updatedMessage =
           `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
+          (ym_id
+            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
+            : '') +
           this.bitrixService.generateLeadUrl(leadId);
 
         if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
@@ -325,6 +343,9 @@ export class BitrixGrampusUseCase {
         let chatId = trafficsChatId;
         updatedMessage =
           `Клиент повторно обратился на сайт ${url}[br][br]` +
+          (ym_id
+            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
+            : '') +
           this.bitrixService.generateLeadUrl(leadId);
 
         if (B24LeadConvertedStages.includes(leadStatusId)) {
@@ -332,6 +353,9 @@ export class BitrixGrampusUseCase {
 
           updatedMessage =
             `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
+            (ym_id
+              ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
+              : '') +
             this.bitrixService.generateLeadUrl(leadId);
 
           chatId = 'chat170426'; // Чат: Действующий клиент обратился
@@ -498,5 +522,55 @@ export class BitrixGrampusUseCase {
 
     // Если по какой-то причине не получили id менеджера возвращаем id Златы Зиминой
     return this.bitrixService.getRandomElement(users) ?? ZLATA_ZIMINA_BITRIX_ID;
+  }
+
+  /**
+   * Get user info by ym_id
+   *
+   * ---
+   *
+   * Получает информацию о пользователе по ym_id
+   * @private
+   */
+  private async getMetrikaInfoByYmId(
+    ymId: string,
+    counterId: string,
+  ): Promise<string> {
+    if (!ymId) return '';
+
+    const dateNow = dayjs();
+    const userData = await this.metrikaService.getMetrikaStatUserInfo({
+      ids: counterId, // ID счетчика
+      metrics: 'ym:s:visits', // Визиты
+      date1: dateNow.format('YYYY-MM-DD'),
+      date2: dateNow.format('YYYY-MM-DD'),
+      dimensions:
+        'ym:s:startURL,ym:s:automaticUTMCampaign,ym:s:automaticUTMContent,ym:s:automaticUTMSource,ym:s:automaticUTMTerm,ym:s:automaticUTMContent',
+      filters: `ym:s:clientID==${ymId}`, // user ID
+    });
+
+    if (!userData) return '';
+
+    const [{ dimensions }] = userData.data;
+    const dimensionList = ['Страница входа', 'utm_campaign', 'utm_term'];
+
+    let index = 0;
+    return dimensions.reduce((acc, { name }) => {
+      let dimensionString: string;
+      if (name.includes('https')) {
+        const sliceIndex = name.indexOf('?');
+
+        dimensionString =
+          sliceIndex == -1
+            ? `${dimensionList[index]}: ${name}`
+            : `${dimensionList[index]}: ${name.slice(0, sliceIndex)}\n`;
+      } else {
+        dimensionString = `${dimensionList[index]}: ${name}[br]`;
+      }
+
+      acc += dimensionString;
+      index++;
+      return acc;
+    }, '');
   }
 }
