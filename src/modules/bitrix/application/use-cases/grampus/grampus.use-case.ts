@@ -148,7 +148,14 @@ export class BitrixGrampusUseCase {
       await this.bitrixLeads.getDuplicateLeadsByPhone(phone);
     const trafficsChatId =
       this.bitrixService.getConstant('GRAMPUS').trafficsChatId;
-    const managerId = await this.getAssignedManagerId();
+
+    const [managerId, metrikaUserInfoString] = await Promise.all([
+      this.getAssignedManagerId(),
+      ym_id
+        ? (await this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
+          '[br][br]'
+        : Promise.resolve(''),
+    ]);
 
     // Если не нашли дубликатов: создаем лид
     if (duplicateLeads.length === 0) {
@@ -206,9 +213,7 @@ export class BitrixGrampusUseCase {
 
       message +=
         `лид со страницы ${url}[br][br]` +
-        (ym_id
-          ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
-          : '') +
+        metrikaUserInfoString +
         this.bitrixService.generateLeadUrl(leadId);
 
       // Отправляем сообщение в чат и в личные сообщения ответственному менеджеру
@@ -244,9 +249,7 @@ export class BitrixGrampusUseCase {
         DIALOG_ID: trafficsChatId,
         MESSAGE:
           `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br]Номер: ${phone}[br][br]` +
-          (ym_id
-            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
-            : '') +
+          metrikaUserInfoString +
           `[b]Не удалось обновить лид[/b]`,
       });
       return {
@@ -295,9 +298,7 @@ export class BitrixGrampusUseCase {
 
         updatedMessage =
           `Заявка с сайта. Ранее лид уже был добавлен. Cо страницы ${url}[br][br]` +
-          (ym_id
-            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
-            : '') +
+          metrikaUserInfoString +
           this.bitrixService.generateLeadUrl(leadId);
 
         if (/razrabotka-sajtov-na-bitriks/i.test(url)) {
@@ -343,9 +344,7 @@ export class BitrixGrampusUseCase {
         let chatId = trafficsChatId;
         updatedMessage =
           `Клиент повторно обратился на сайт ${url}[br][br]` +
-          (ym_id
-            ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
-            : '') +
+          metrikaUserInfoString +
           this.bitrixService.generateLeadUrl(leadId);
 
         if (B24LeadConvertedStages.includes(leadStatusId)) {
@@ -353,9 +352,7 @@ export class BitrixGrampusUseCase {
 
           updatedMessage =
             `${B24Emoji.SUCCESS} Действующий клиент обратился на сайт ${url}[br][br]` +
-            (ym_id
-              ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
-              : '') +
+            metrikaUserInfoString +
             this.bitrixService.generateLeadUrl(leadId);
 
           chatId = 'chat170426'; // Чат: Действующий клиент обратился
