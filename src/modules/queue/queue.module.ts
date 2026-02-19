@@ -11,6 +11,7 @@ import { QueueMiddleService } from '@/modules/queue/queue-middle.service';
 import { WikiModule } from '@/modules/wiki/wiki.module';
 import { QueueHeavyService } from '@/modules/queue/queue-heavy.service';
 import { QueueBitrixHeavyProcessor } from '@/modules/queue/processors/queue-bitrix-heavy.processor';
+import { MetrikaModule } from '@/modules/metrika/metrika.module';
 
 @Global()
 @Module({
@@ -51,6 +52,7 @@ import { QueueBitrixHeavyProcessor } from '@/modules/queue/processors/queue-bitr
     }),
     BitrixModule,
     WikiModule,
+    MetrikaModule,
   ],
   controllers: [],
   providers: [

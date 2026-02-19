@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { IYandexMetrikaConfig } from '@/common/interfaces/yandex-config.interface';
 import { MetrikaApiService } from '@/modules/metrika/metrika-api.service';
 import { MetrikaService } from '@/modules/metrika/metrika.service';
+import { BitrixModule } from '@/modules/bitrix/bitrix.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { MetrikaService } from '@/modules/metrika/metrika.service';
         };
       },
     }),
+    BitrixModule,
   ],
   providers: [MetrikaApiService, MetrikaService],
   exports: [MetrikaService],

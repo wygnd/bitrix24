@@ -4,6 +4,7 @@ import { QUEUE_NAMES, QUEUE_TASKS } from '@/modules/queue/queue.constants';
 import { JobsOptions, Queue } from 'bullmq';
 import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/queue-light.interface';
 import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/application/interfaces/webhooks/webhook-voximplant-calls.interface';
+import { IMetrikaStatUserInfoOptions } from '@/modules/metrika/interfaces/metrika-stat.interface';
 
 @Injectable()
 export class QueueLightService {
@@ -36,6 +37,17 @@ export class QueueLightService {
   ) {
     return this.queueBitrixLight.add(
       QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT,
+      fields,
+      options,
+    );
+  }
+
+  async addTaskGetMetrikaUserInfo(
+    fields: IMetrikaStatUserInfoOptions,
+    options?: JobsOptions,
+  ) {
+    return this.queueBitrixLight.add(
+      QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_METRIKA_USER_INFO,
       fields,
       options,
     );

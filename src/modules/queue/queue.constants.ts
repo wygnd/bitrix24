@@ -16,6 +16,7 @@ export const QUEUE_TASKS = {
       'bitrix:webhook:voximplant:call:start',
     QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
       'bitrix:webhook:voximplant:call:init',
+    QUEUE_BX_HANDLE_METRIKA_USER_INFO: 'bitrix:yandex:metrika:user:info',
   },
   MIDDLE: {
     QUEUE_BX_TASK_UPDATE: 'bxTaskUpdate',

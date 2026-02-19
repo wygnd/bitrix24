@@ -11,6 +11,8 @@ import { QueueLightAddTaskHandleUpsellDeal } from '@/modules/queue/interfaces/qu
 import { B24WebhookVoxImplantCallInitTaskOptions } from '@/modules/bitrix/application/interfaces/webhooks/webhook-voximplant-calls.interface';
 import { BitrixLeadsUpsellUseCase } from '@/modules/bitrix/application/use-cases/leads/leads-upsell.use-case';
 import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
+import { MetrikaService } from '@/modules/metrika/metrika.service';
+import { IMetrikaStatUserInfoOptions } from '@/modules/metrika/interfaces/metrika-stat.interface';
 
 @Processor(QUEUE_NAMES.QUEUE_BITRIX_LIGHT, { concurrency: 10 })
 export class QueueBitrixLightProcessor extends WorkerHost {
@@ -23,6 +25,7 @@ export class QueueBitrixLightProcessor extends WorkerHost {
     private readonly wikiService: WikiService,
     private readonly bitrixLeadUpsell: BitrixLeadsUpsellUseCase,
     private readonly bitrixWebhooks: BitrixWebhooksUseCase,
+    private readonly metrikaService: MetrikaService,
   ) {
     super();
   }
@@ -58,6 +61,12 @@ export class QueueBitrixLightProcessor extends WorkerHost {
       case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_WEBHOOK_VOXIMPLANT_CALL_INIT:
         response.data = await this.bitrixWebhooks.handleVoxImplantCallInit(
           data as B24WebhookVoxImplantCallInitTaskOptions,
+        );
+        break;
+
+      case QUEUE_TASKS.LIGHT.QUEUE_BX_HANDLE_METRIKA_USER_INFO:
+        response.data = await this.metrikaService.getMetrikaStringInfoByYmId(
+          data as IMetrikaStatUserInfoOptions,
         );
         break;
 
