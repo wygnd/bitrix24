@@ -123,10 +123,10 @@ export class MetrikaService {
 
           dimensionString =
             sliceIndex == -1
-              ? `${dimensionsKeys[index]}: ${name}`
-              : `${dimensionsKeys[index]}: ${name.slice(0, sliceIndex)}\n`;
+              ? `[b]${dimensionsKeys[index]}[/b]: ${name}`
+              : `[b]${dimensionsKeys[index]}[/b]: ${name.slice(0, sliceIndex)}\n`;
         } else {
-          dimensionString = `${dimensionsKeys[index]}: ${name}[br]`;
+          dimensionString = `[b]${dimensionsKeys[index]}[/b]: ${name}[br]`;
         }
 
         acc += dimensionString;
@@ -136,12 +136,12 @@ export class MetrikaService {
 
       const responseSendMessage =
         await this.bitrixMessageService.sendPrivateMessage({
-          DIALOG_ID: '376',
+          DIALOG_ID: '560', // Любовь Боровикова
           MESSAGE:
             '[b]Новая заявка[/b][br][br]' +
-            `С сайта ${url}[br]` +
-            `ID: ${ymId}[br]` +
-            `Счетчик: ${counterId}[br]` +
+            `[b]С сайта:[/b] ${url}[br]` +
+            `[b]ID:[/b] ${ymId}[br]` +
+            `[b]Счетчик:[/b] ${counterId}[br]` +
             message,
           URL_PREVIEW: 'N',
         });

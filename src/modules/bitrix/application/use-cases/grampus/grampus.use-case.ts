@@ -109,7 +109,7 @@ export class BitrixGrampusUseCase {
             url: url,
           },
           {
-            delay: 900000,
+            delay: 600000, // Задержка в 10 минут
           },
         );
 
