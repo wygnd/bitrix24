@@ -149,14 +149,22 @@ export class BitrixGrampusUseCase {
     const trafficsChatId =
       this.bitrixService.getConstant('GRAMPUS').trafficsChatId;
 
-    const metrikaUserInfoString = '';
-
-    const [managerId] = await Promise.all([
+    const [managerId, metrikaUserInfoString] = await Promise.all([
       this.getAssignedManagerId(),
       ym_id
         ? this.getMetrikaInfoByYmId(ym_id, metrikaCounterId) + '[br][br]'
         : Promise.resolve(''),
     ]);
+
+    this.logger.debug({
+      handler: this.handleRequestFromSiteToHandleLead.name,
+      message: 'Check metrika info',
+      data: {
+        ym_id,
+        metrikaUserInfoString,
+        metrikaCounterId,
+      },
+    });
 
     // Если не нашли дубликатов: создаем лид
     if (duplicateLeads.length === 0) {
@@ -534,7 +542,7 @@ export class BitrixGrampusUseCase {
     ymId: string,
     counterId: string,
   ): Promise<string> {
-    if (!ymId) return '';
+    if (!ymId || !counterId) return '';
 
     const dateNow = dayjs();
     const userData = await this.metrikaService.getMetrikaStatUserInfo({
