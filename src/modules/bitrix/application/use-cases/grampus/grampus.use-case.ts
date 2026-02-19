@@ -31,6 +31,8 @@ import { GrampusService } from '@/modules/grampus/grampus.service';
 import { MetrikaService } from '@/modules/metrika/metrika.service';
 import dayjs from 'dayjs';
 import { ConfigService } from '@nestjs/config';
+import { isString } from 'class-validator';
+import { isAxiosError } from 'axios';
 
 const { LEADS, BITRIX, USERS, BOT, DEALS, MESSAGES } = B24PORTS;
 
@@ -542,43 +544,67 @@ export class BitrixGrampusUseCase {
     ymId: string,
     counterId: string,
   ): Promise<string> {
-    if (!ymId || !counterId) return '';
+    try {
+      if (!ymId || !counterId) return '';
 
-    const dateNow = dayjs();
-    const userData = await this.metrikaService.getMetrikaStatUserInfo({
-      ids: counterId, // ID счетчика
-      metrics: 'ym:s:visits', // Визиты
-      date1: dateNow.format('YYYY-MM-DD'),
-      date2: dateNow.format('YYYY-MM-DD'),
-      dimensions:
-        'ym:s:startURL,ym:s:automaticUTMCampaign,ym:s:automaticUTMContent,ym:s:automaticUTMSource,ym:s:automaticUTMTerm,ym:s:automaticUTMContent',
-      filters: `ym:s:clientID==${ymId}`, // user ID
-    });
+      const dateNow = dayjs();
+      const userData = await this.metrikaService.getMetrikaStatUserInfo({
+        ids: counterId, // ID счетчика
+        metrics: 'ym:s:visits', // Визиты
+        date1: dateNow.format('YYYY-MM-DD'),
+        date2: dateNow.format('YYYY-MM-DD'),
+        dimensions:
+          'ym:s:startURL,ym:s:automaticUTMCampaign,ym:s:automaticUTMContent,ym:s:automaticUTMSource,ym:s:automaticUTMTerm,ym:s:automaticUTMContent',
+        filters: `ym:s:clientID==${ymId}`, // user ID
+      });
 
-    if (!userData) return '';
+      if (!userData) return '';
 
-    const [{ dimensions }] = userData.data;
-    const dimensionList = ['Страница входа', 'utm_campaign', 'utm_term'];
+      const [{ dimensions }] = userData.data;
+      const dimensionList = ['Страница входа', 'utm_campaign', 'utm_term'];
 
-    let index = 0;
-    return dimensions.reduce((acc, { name }) => {
-      if (!name) return acc;
+      let index = 0;
+      return dimensions.reduce((acc, { name }) => {
+        if (!name || !isString(name)) return acc;
 
-      let dimensionString: string;
-      if (name.includes('https')) {
-        const sliceIndex = name.indexOf('?');
+        let dimensionString: string;
+        if (name.includes('https')) {
+          const sliceIndex = name.indexOf('?');
 
-        dimensionString =
-          sliceIndex == -1
-            ? `${dimensionList[index]}: ${name}`
-            : `${dimensionList[index]}: ${name.slice(0, sliceIndex)}\n`;
+          dimensionString =
+            sliceIndex == -1
+              ? `${dimensionList[index]}: ${name}`
+              : `${dimensionList[index]}: ${name.slice(0, sliceIndex)}\n`;
+        } else {
+          dimensionString = `${dimensionList[index]}: ${name}[br]`;
+        }
+
+        acc += dimensionString;
+        index++;
+        return acc;
+      }, '');
+    } catch (error) {
+      let errorData;
+
+      if (isAxiosError(error) && error.response?.data) {
+        errorData = error.response.data;
+      } else if (isAxiosError(error)) {
+        errorData = error.response;
+      } else if (error instanceof Error) {
+        errorData = error.message;
       } else {
-        dimensionString = `${dimensionList[index]}: ${name}[br]`;
+        errorData = 'Непредвиденная ошибка';
       }
 
-      acc += dimensionString;
-      index++;
-      return acc;
-    }, '');
+      this.logger.error({
+        handler: this.getMetrikaInfoByYmId.name,
+        request: {
+          ymId,
+          counterId,
+        },
+        error: errorData,
+      });
+      return '';
+    }
   }
 }
