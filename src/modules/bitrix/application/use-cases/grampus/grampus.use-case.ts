@@ -153,10 +153,10 @@ export class BitrixGrampusUseCase {
 
     const [managerId] = await Promise.all([
       this.getAssignedManagerId(),
-      // ym_id
-      //   ? (await this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
-      //     '[br][br]'
-      //   : Promise.resolve(''),
+      ym_id
+        ? (this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
+          '[br][br]'
+        : Promise.resolve(''),
     ]);
 
     // Если не нашли дубликатов: создаем лид
