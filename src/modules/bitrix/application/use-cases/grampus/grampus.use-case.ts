@@ -149,12 +149,14 @@ export class BitrixGrampusUseCase {
     const trafficsChatId =
       this.bitrixService.getConstant('GRAMPUS').trafficsChatId;
 
-    const [managerId, metrikaUserInfoString] = await Promise.all([
+    const metrikaUserInfoString = '';
+
+    const [managerId] = await Promise.all([
       this.getAssignedManagerId(),
-      ym_id
-        ? (await this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
-          '[br][br]'
-        : Promise.resolve(''),
+      // ym_id
+      //   ? (await this.getMetrikaInfoByYmId(ym_id, metrikaCounterId)) +
+      //     '[br][br]'
+      //   : Promise.resolve(''),
     ]);
 
     // Если не нашли дубликатов: создаем лид
