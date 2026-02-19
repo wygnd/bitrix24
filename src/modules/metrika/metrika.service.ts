@@ -112,7 +112,10 @@ export class MetrikaService {
 
       let index = 0;
       const message = dimensions.reduce((acc, { name }) => {
-        if (!name) return acc;
+        if (!name) {
+          index++;
+          return acc;
+        }
 
         let dimensionString: string;
         if (name.includes('https')) {
@@ -134,7 +137,8 @@ export class MetrikaService {
       const responseSendMessage =
         await this.bitrixMessageService.sendPrivateMessage({
           DIALOG_ID: '376',
-          MESSAGE: `[b]Новая заявка с сайта ${url}[/b][br]` + message,
+          MESSAGE: `[b]Новая заявка[/b][br][br]С сайта ${url}[br]` + message,
+          URL_PREVIEW: 'N',
         });
 
       this.logger.debug({
