@@ -557,7 +557,7 @@ export class BitrixGrampusUseCase {
         filters: `ym:s:clientID==${ymId}`, // user ID
       });
 
-      if (!userData) return '';
+      if (!userData || userData.data.length === 0) return '';
 
       const [{ dimensions }] = userData.data;
       const dimensionList = ['Страница входа', 'utm_campaign', 'utm_term'];
