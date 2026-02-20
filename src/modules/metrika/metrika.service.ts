@@ -10,6 +10,7 @@ import {
 } from '@/modules/metrika/interfaces/metrika-stat.interface';
 import { IMetrikaResponse } from '@/modules/metrika/interfaces/metrika.interface';
 import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { B24ImSendMessage } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 
 @Injectable()
 export class MetrikaService {
@@ -134,23 +135,26 @@ export class MetrikaService {
         return acc;
       }, '');
 
+      const sendMessageParams: B24ImSendMessage = {
+        DIALOG_ID: '560', // Любовь Боровикова
+        MESSAGE:
+          '[b]Новая заявка[/b][br][br]' +
+          `[b]С сайта:[/b] ${url}[br]` +
+          `[b]ID:[/b] ${ymId}[br]` +
+          `[b]Счетчик:[/b] ${counterId}[br]` +
+          message,
+        URL_PREVIEW: 'N',
+      };
+
       const responseSendMessage =
-        await this.bitrixMessageService.sendPrivateMessage({
-          DIALOG_ID: '560', // Любовь Боровикова
-          MESSAGE:
-            '[b]Новая заявка[/b][br][br]' +
-            `[b]С сайта:[/b] ${url}[br]` +
-            `[b]ID:[/b] ${ymId}[br]` +
-            `[b]Счетчик:[/b] ${counterId}[br]` +
-            message,
-          URL_PREVIEW: 'N',
-        });
+        await this.bitrixMessageService.sendPrivateMessage(sendMessageParams);
 
       this.logger.debug({
         handler: this.getMetrikaStatUserInfo.name,
         request: fields,
         response: {
           message,
+          sendMessageParams,
           responseSendMessage,
         },
       });
