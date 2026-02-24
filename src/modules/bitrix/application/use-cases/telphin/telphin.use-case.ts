@@ -136,6 +136,7 @@ export class BitrixTelphinUseCase {
           fields: {
             ASSIGNED_BY_ID: userId,
             STATUS_ID: B24LeadActiveStages[0], // Новый в работе
+            UF_CRM_1651577716: '6854', // Тип лида: Звонок ответил сразу
             PHONE: [
               {
                 VALUE: phone,
