@@ -37,10 +37,7 @@ import { B24DealHRRejectedStages } from '@/modules/bitrix/application/constants/
 import { B24Emoji, B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import { TokensServices } from '@/modules/tokens/interfaces/tokens-serivces.interface';
 import { HeadhunterRedirectDto } from '@/modules/bitrix/application/dtos/headhunter/headhunter-redirect.dto';
-import {
-  HeadHunterAuthData,
-  HeadHunterAuthTokens,
-} from '@/modules/bitrix/application/interfaces/headhunter/headhunter-auth.interface';
+import { HeadHunterAuthData } from '@/modules/bitrix/application/interfaces/headhunter/headhunter-auth.interface';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
@@ -95,17 +92,8 @@ export class BitrixHeadhunterUseCase {
         },
       );
 
-      const now = new Date();
       // Save tokens in redis
-      const resUpdateTokens = await Promise.all([
-        this.redisService.set<HeadHunterAuthTokens>(
-          REDIS_KEYS.HEADHUNTER_AUTH_DATA,
-          {
-            ...res,
-            expires: now.setDate(now.getDate() + 14),
-          },
-          res.expires_in,
-        ),
+      await Promise.all([
         this.tokensService.updateToken(TokensServices.HH, {
           accessToken: res.access_token,
           refreshToken: res.refresh_token,
@@ -113,10 +101,8 @@ export class BitrixHeadhunterUseCase {
         }),
       ]);
 
-      console.log(resUpdateTokens);
-
       // update token on url
-      this.headHunterApi.updateToken().then((res) => console.log(res));
+      this.headHunterApi.updateToken();
 
       this.bitrixBot.sendMessage({
         DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
@@ -893,6 +879,9 @@ export class BitrixHeadhunterUseCase {
     const removeVacancies = new Set<number>();
     const trueVacancies: HHBitrixVacancyDto[] = [];
 
+    // Если не получилось достать вакансии с HH, возвращаем вакансии с БД, если они есть
+    if (vacanciesHH.length === 0) return vacanciesDB;
+
     // Проходим по активным вакансиям и сверяем их со списком из БД
     // Если не нашли в списке из БД: добавляем в список для создания
     // Если нашли: добавляем в список пройденных - нужно, чтобы потом убрать лишние из БД
@@ -916,7 +905,7 @@ export class BitrixHeadhunterUseCase {
       if (!visitedVacancies.has(vacancy.vacancyId)) {
         removeVacancies.add(vacancy.id);
       } else {
-        trueVacancies.push(Object.assign({}, vacancy));
+        trueVacancies.push({ ...vacancy });
       }
     });
 
@@ -928,7 +917,7 @@ export class BitrixHeadhunterUseCase {
 
       // Добавляем в итоговый массив новые вакансии
       newDBVacancies.forEach((vacancy) => {
-        trueVacancies.push(Object.assign({}, vacancy));
+        trueVacancies.push({ ...vacancy });
       });
     }
 
