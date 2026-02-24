@@ -1215,13 +1215,14 @@ export class BitrixBotUseCase {
     dialogId: string,
   ) {
     const { message, paymentId, type } = fields;
+    const decodedMessage = this.decodeText(message);
 
     const commands: B24BatchCommands = {
       update_message: {
         method: 'imbot.message.update',
         params: {
           MESSAGE_ID: messageId,
-          MESSAGE: this.decodeText(message),
+          MESSAGE: decodedMessage,
           KEYBOARD: '',
         },
       },
@@ -1239,7 +1240,7 @@ export class BitrixBotUseCase {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
             DIALOG_ID:
               this.bitrixService.getConstant('ADDY').payment.bitrixChatId,
-            MESSAGE: message,
+            MESSAGE: decodedMessage,
           },
         };
         break;
@@ -1252,7 +1253,7 @@ export class BitrixBotUseCase {
           params: {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
             DIALOG_ID: this.bitrixService.getConstant('GRAMPUS').GPayChatId,
-            MESSAGE: message,
+            MESSAGE: decodedMessage,
           },
         };
         break;
