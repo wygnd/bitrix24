@@ -29,6 +29,7 @@ import {
   B24LeadConvertedStages,
   B24LeadNewStages,
   B24LeadRejectStages,
+  B24LeadStagesMap,
 } from '@/modules/bitrix/application/constants/leads/lead.constants';
 import { B24StageHistoryItem } from '@/modules/bitrix/interfaces/bitrix-stagehistory.interface';
 import {
@@ -55,7 +56,6 @@ import isBetween from 'dayjs/plugin/isBetween';
 import utc from 'dayjs/plugin/utc';
 import { RedisService } from '@/modules/redis/redis.service';
 import { REDIS_KEYS } from '@/modules/redis/redis.constants';
-import { getNoun } from '@/common/functions/get-noun';
 import { TelphinCallOptions } from '@/modules/telphin/interfaces/telpgin-calls.interface';
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
@@ -1227,11 +1227,10 @@ export class BitrixLeadsUseCase {
       const dateNowSubtract1Hour = dateNow.subtract(1, 'hour');
 
       // Лимит запросов битрикс
-      const limit = 50;
+      const limit = BITRIX_LIMIT_REQUESTS;
 
-      // Фильтруем лиды по статусу Новый в работе и дата перехода в стадию со вчера 17:00
+      // Фильтруем лиды по дате перехода в стадию со вчера 17:00 или с 00:00
       const filterGetLeadList = {
-        STATUS_ID: B24LeadActiveStages[0], // Новый в работе
         // Если текущий час 9 утра, то мы выбираем со вчерашнего дня иначе с сегодняшнего дня
         '>=MOVED_TIME':
           dateNow.get('h') <= 9
@@ -1240,13 +1239,17 @@ export class BitrixLeadsUseCase {
         // До текущего времени -1 час
         '<=MOVED_TIME': dateNowSubtract1Hour.format('YYYY-MM-DD HH:mm:ss'),
       };
-      const selectGetLeadList = [
+
+      // Поля, которые вернет битрикс24
+      const selectGetLeadList: (keyof B24Lead)[] = [
         'ID',
         'TITLE',
         'MOVED_TIME',
         'PHONE',
         'ASSIGNED_BY_ID',
+        'STATUS_ID',
       ];
+
       const [response, calls] = await Promise.all([
         // Отправляем запрос на получения лидов и их общего кол-ва
         this.bitrixService.callMethod<B24ListParams<B24Lead>, B24Lead[]>(
@@ -1259,6 +1262,7 @@ export class BitrixLeadsUseCase {
 
         // Получение списка звонков с Telphin
         this.telphinService.getCallList({
+          // Начальная дата и время: если утро, получить за вчерашний вечер
           start_datetime:
             dateNow.get('h') <= 9
               ? dateFilterStart.format('YYYY-MM-DD [14:00:00]')
@@ -1283,26 +1287,18 @@ export class BitrixLeadsUseCase {
       const leads: B24Lead[] = [];
 
       // Проверяем общее кол-во записей, если оно больше 50(лимит битрикс)
-      // надо сделать n батч запросов для получения всех лидов
+      // надо сделать total / 50 батч запросов для получения всех лидов
       if (totalLeads && totalLeads > limit) {
         // Для начала формируем запросы
         // Общее кол-во запросов
         const totalRequests = Math.ceil(totalLeads / limit);
         // Место, куда будем записывать запросы
-        const commandsMap = new Map<number, B24BatchCommands>();
+        const batchCommands: B24BatchCommands = {};
         // Итератор
         let index = 1;
-        let mapIndex = 0;
 
         while (index <= totalRequests) {
-          let commands = commandsMap.get(mapIndex) ?? {};
-
-          if (Object.keys(commands).length === 50) {
-            mapIndex++;
-            commands = commandsMap.get(mapIndex) ?? {};
-          }
-
-          commands[`get_lead=${index}`] = {
+          batchCommands[`get_lead=${index}`] = {
             method: 'crm.lead.list',
             params: {
               filter: filterGetLeadList,
@@ -1310,35 +1306,18 @@ export class BitrixLeadsUseCase {
               start: (index - 1) * 50,
             },
           };
-
-          commandsMap.set(mapIndex, commands);
-
           index++;
         }
 
-        // Проходим по всем запросам и выполняем их
-        const responses = await Promise.all(
-          Object.values(commandsMap).map((commands) =>
-            this.bitrixService.callBatch(commands),
-          ),
-        );
-
-        // Проверяем в каждом результате поле result_error
-        const hasErrors = responses.reduce<string[]>((acc, response) => {
-          const errors = Object.keys(response.result.result_error);
-          if (errors.length === 0) return acc;
-
-          errors.forEach((err) => acc.push(err));
-
-          return acc;
-        }, []);
-
-        // Если в итоге массив ошибок не пустой: возвращаем ошибку
-        if (hasErrors.length > 0) throw new BadRequestException(hasErrors);
+        // Отправляем пакеты запросов
+        const responses =
+          await this.bitrixService.callBatches<Record<string, B24Lead[]>>(
+            batchCommands,
+          );
 
         // проходим по результату и добавляем лиды к общему числу лидов
-        responses.forEach((res) => {
-          leads.push(...Object.values(res.result.result));
+        Object.values(responses).forEach((res) => {
+          leads.push(...res);
         });
       } else {
         result && leads.push(...result);
@@ -1356,6 +1335,7 @@ export class BitrixLeadsUseCase {
           PHONE: leadPhones,
           ASSIGNED_BY_ID: leadAssignedById,
           MOVED_TIME: leadMovedTime,
+          STATUS_ID: leadStatusId,
         }) => {
           const phones =
             leadPhones.length > 0
@@ -1376,67 +1356,34 @@ export class BitrixLeadsUseCase {
             return acc;
           }, []);
 
-          // Если не нашли звонок
-          if (findCalls.length === 0) {
-            leadsNeedNotifyAboutCall.set(leadId, {
-              leadId: leadId,
-              assignedId: leadAssignedById,
-              movedAt: leadMovedTime,
-              lastCallAt: '',
-              assignedHeadId: '',
-            });
-            return;
-          }
+          // Если нашли звонок выходим
+          if (findCalls.length !== 0) return;
 
-          const callInitAt = dayjs(findCalls[0]).add(3, 'h');
-          const leadMovedAt = dayjs(leadMovedTime);
-
-          // Если звонок был в течение часа с момента перехода на стадию
-          // Или после перехода был звонок: выходим
-          if (
-            callInitAt.isBetween(
-              // дата перехода на стадию -15 минут
-              leadMovedAt.subtract(15, 'm'),
-              // дата перехода на стадию +1 час
-              leadMovedAt.add(1, 'h'),
-              'm',
-            ) ||
-            callInitAt.isSameOrAfter(leadMovedAt.add(1, 'h'), 'h')
-          )
-            return;
-
-          // Если звонка не было
+          // Добавляем к общему числу лидов лид, о котором надо уведомить
           leadsNeedNotifyAboutCall.set(leadId, {
             leadId: leadId,
             assignedId: leadAssignedById,
             movedAt: leadMovedTime,
-            lastCallAt: dayjs(findCalls[0]).local().format(),
+            lastCallAt: '',
             assignedHeadId: '',
+            statusId: leadStatusId,
           });
         },
       );
 
-      // Если нет лидов, по которым не было звонков в течение часа
+      // Если нет лидов, по которым не было звонков в течение часа: выходим
       if (leadsNeedNotifyAboutCall.size === 0)
         return {
           status: true,
           message: 'Not found leads',
         };
 
-      let index = 0;
-      const batchCommandsGetAssignedHeads = new Map<number, B24BatchCommands>();
+      const batchCommandsGetAssignedHeads: B24BatchCommands = {};
 
       // Проходимся по лидам и составляем батч запросы для получения Руководителя менеджера
-      leadsNeedNotifyAboutCall.forEach(({ leadId, assignedId }) => {
-        let commands = batchCommandsGetAssignedHeads.get(index) ?? {};
-
-        if (Object.keys(commands).length === 50) {
-          index++;
-          commands = batchCommandsGetAssignedHeads.get(index) ?? {};
-        }
-
+      leadsNeedNotifyAboutCall.forEach(({ leadId, assignedId, statusId }) => {
         // Формируем запрос на получениие пользователя
-        commands[`get_user=${leadId}`] = {
+        batchCommandsGetAssignedHeads[`get_user=${leadId}=${statusId}`] = {
           method: 'user.get',
           params: {
             filter: {
@@ -1445,139 +1392,91 @@ export class BitrixLeadsUseCase {
           },
         };
 
-        if (Object.keys(commands).length === 50) {
-          batchCommandsGetAssignedHeads.set(index, commands);
-          index++;
-          commands = batchCommandsGetAssignedHeads.get(index) ?? {};
-        }
-
         // Формируем запрос на получения подразделение пользователя
-        commands[`get_user_department=${leadId}`] = {
+        batchCommandsGetAssignedHeads[
+          `get_user_department=${leadId}=${statusId}`
+        ] = {
           method: 'department.get',
           params: {
-            ID: `$result[get_user=${leadId}][0][UF_DEPARTMENT][0]`,
+            ID: `$result[get_user=${leadId}=${statusId}][0][UF_DEPARTMENT][0]`,
           },
         };
-
-        batchCommandsGetAssignedHeads.set(index, commands);
       });
 
-      // Выполняем запросы на получение руководителей
-      const batchResponsesGetAssignedHead = await Promise.all(
-        Array.from(batchCommandsGetAssignedHeads.values()).map((commands) =>
-          this.bitrixService.callBatch(commands),
-        ),
-      );
+      // // Выполняем запросы на получение руководителей
+      const batchResponsesGetAssignedHead =
+        await this.bitrixService.callBatches<
+          Record<string, B24User[] | B24Department[]>
+        >(batchCommandsGetAssignedHeads);
 
-      // Проверяем на ошибки в каждом запросе
-      const errorsGetAssignedHead = batchResponsesGetAssignedHead.reduce<
-        string[]
-      >((acc, response) => {
-        const errors = Object.keys(response.result.result_error);
-        if (errors.length === 0) return acc;
-        acc.push(...errors);
-        return acc;
-      }, []);
-
-      if (errorsGetAssignedHead.length > 0)
-        throw new BadRequestException(errorsGetAssignedHead);
-
-      const headLeads: Record<string, string[]> = {};
+      const headLeads: Record<string, { leadId: string; statusId: string }[]> =
+        {};
 
       // Проходим по результатам и получаем ID руководителя из запросов get_user_department
-      batchResponsesGetAssignedHead.forEach(
-        ({ result: { result: response } }) => {
-          Object.entries(response).forEach(([commandName, commandResponse]) => {
-            const [command, leadId] = commandName.split('=');
+      Object.entries(batchResponsesGetAssignedHead).forEach(
+        ([commandName, response]) => {
+          const [command, leadId, leadStatusId] = commandName.split('=');
 
-            if (command !== 'get_user_department') return;
+          if (
+            command !== 'get_user_department' ||
+            response.length === 0 ||
+            'ACTIVE' in response[0]
+          )
+            return;
 
-            const leadFields = leadsNeedNotifyAboutCall.get(leadId);
+          const leadFields = leadsNeedNotifyAboutCall.get(leadId);
 
-            if (!leadFields) return;
+          if (!leadFields) return;
 
-            const assignedHeadId = commandResponse[0].UF_HEAD;
+          const assignedHeadId = response[0].UF_HEAD;
 
-            if (assignedHeadId in headLeads) {
-              headLeads[assignedHeadId].push(leadId);
-            } else {
-              headLeads[assignedHeadId] = [leadId];
-            }
-          });
+          if (assignedHeadId in headLeads) {
+            headLeads[assignedHeadId].push({
+              leadId: leadId,
+              statusId: leadStatusId,
+            });
+          } else {
+            headLeads[assignedHeadId] = [
+              { leadId: leadId, statusId: leadStatusId },
+            ];
+          }
         },
       );
 
       // Объект для итоговых запросов
       const batchCommandsNotifyHeads: B24BatchCommands = {};
-      // Словарь, где ключ - id лида, значение - счетчик уведомлений
-      const leadsNotified =
-        (await this.redisService.get<Record<string, number>>(
-          REDIS_KEYS.BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL_COUNTER,
-        )) ?? {};
 
-      index = 0;
       // Проходим по словарю и формируем запросы на отправку уведомлений
-      await Promise.all(
-        Object.entries(headLeads).map(async ([assignedHeadId, leads]) => {
-          // Если нет лидов: выходим
-          if (leads.length === 0) return;
+      Object.entries(headLeads).map(([assignedHeadId, leads]) => {
+        // Если нет лидов: выходим
+        if (leads.length === 0) return;
 
-          await Promise.all(
-            leads.map(async (leadId) => {
-              const leadFromCache = await this.redisService.get<string>(
-                REDIS_KEYS.BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL + leadId,
-              );
+        leads.map(({ leadId, statusId }) => {
+          // Начинаем формировать сообщение для руководителя
+          let notifyMessage =
+            `${leads.length > 1 ? 'Найдены лиды, по которым' : 'Найден лид, по которому'} менеджер не звонил клиенту за последний час с момента перехода на стадию` +
+            (statusId in B24LeadStagesMap
+              ? ` [b]${B24LeadStagesMap[statusId]}[/b]`
+              : '') +
+            '[br][br]';
 
-              // Если лид есть в кеше выходим
-              if (leadFromCache) return;
+          notifyMessage += this.bitrixService.generateLeadUrl(leadId) + '[br]';
 
-              // Счетчик уведомлений за день по одному лиду
-              const leadNotifyCounter =
-                leadId in leadsNotified ? leadsNotified[leadId] : 0;
-              // Начинаем формировать сообщение для руководителя
-              let notifyMessage = `${leads.length > 1 ? 'Найдены лиды, по которым' : 'Найден лид, по которому'} менеджер не звонил клиенту за последний час с момента перехода на стадию [b]Новый в работе[/b][br][br]`;
-
-              notifyMessage +=
-                this.bitrixService.generateLeadUrl(leadId) +
-                (leadNotifyCounter > 1
-                  ? ` [b]${getNoun(leadNotifyCounter, ['раз', 'раза', 'раз'])}[/b]`
-                  : '') +
-                '[br]';
-
-              // Собираем запрос
-              batchCommandsNotifyHeads[
-                `notify_about_expires_call=${assignedHeadId}`
-              ] = {
-                method: 'imbot.message.add',
-                params: {
-                  BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-                  DIALOG_ID:
-                    this.bitrixService.getConstant('SALE').frodSaleChatId,
-                  MESSAGE:
-                    `[user=${assignedHeadId || this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID')}][/user][br]` +
-                    notifyMessage,
-                },
-              };
-
-              leadsNotified[leadId] = leadNotifyCounter + 1;
-
-              // Сохраняем в кеш лид
-              this.redisService.set<string>(
-                REDIS_KEYS.BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL + leadId,
-                leadId,
-                28800, // 8 hours
-              );
-            }),
-          );
-        }),
-      );
-
-      // Сохраняем счетчик уведомлений лидов
-      this.redisService.set<Record<string, number>>(
-        REDIS_KEYS.BITRIX_DATA_OBSERVE_ACTIVE_LEADS_CALL_COUNTER,
-        leadsNotified,
-        28800, // 8 hours
-      );
+          // Собираем запрос
+          batchCommandsNotifyHeads[
+            `notify_about_expires_call=${assignedHeadId}`
+          ] = {
+            method: 'imbot.message.add',
+            params: {
+              BOT_ID: this.bitrixService.getConstant('BOT_ID'),
+              DIALOG_ID: this.bitrixService.getConstant('SALE').frodSaleChatId,
+              MESSAGE:
+                `[user=${assignedHeadId || this.bitrixService.getConstant('ZLATA_ZIMINA_BITRIX_ID')}][/user][br]` +
+                notifyMessage,
+            },
+          };
+        });
+      });
 
       this.bitrixService.callBatch(batchCommandsNotifyHeads).then((res) =>
         this.logger.debug({

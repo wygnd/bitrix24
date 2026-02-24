@@ -92,7 +92,7 @@ export class BitrixLeadController {
   @ApiAuthHeader()
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)
-  @Post('/calls/observe_active')
+  @Post('/calls/observe/all')
   async observeActiveLeadsCalls() {
     return this.bitrixLeadService.handleObserveActiveLeadsCalls();
   }

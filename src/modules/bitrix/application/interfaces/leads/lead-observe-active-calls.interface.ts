@@ -4,4 +4,5 @@ export interface BitrixLeadsObserveActiveCallsLeadsNotFoundOptions {
   movedAt: string;
   lastCallAt: string;
   assignedHeadId: string;
+  statusId: string;
 }
