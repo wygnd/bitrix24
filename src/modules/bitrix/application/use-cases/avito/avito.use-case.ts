@@ -369,7 +369,7 @@ export class BitrixAvitoUseCase {
       UF_CRM_1651577716: 6856, // Тип лида: пропущенный
       UF_CRM_1692711658572: handledFiles, // Скрины и документы из сообщения Авито
       STATUS_ID: '', // Стадия сделки: Лид сообщение
-      NAME: client_name,
+      // NAME: client_name,
       UF_CRM_1598441630: AvitoClientRequestsType[service_text], // С чем обратился
       UF_CRM_1715671150: new Date(), // дата последнего обращения
     };
