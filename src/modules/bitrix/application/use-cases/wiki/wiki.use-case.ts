@@ -269,6 +269,8 @@ export class BitrixWikiUseCase {
 
       if (!chatId) throw new UnprocessableEntityException('Invalid user_role');
 
+      const [, , , , , , inn] = message.split(' | ');
+      const clearInn = inn.trim();
       let leadId = lead_id;
       let dealId = deal_id;
       const isBudget = /бюджет/gi.test(message);
@@ -304,6 +306,56 @@ export class BitrixWikiUseCase {
         userId: userId,
         userRole: user_role as keyof typeof B24_WIKI_PAYMENTS_ROLES_CHAT_IDS,
       };
+
+      // Добавляем в базу ИНН клиента и его отдел, если он есть
+      if (clearInn.length > 0) {
+        const {
+          result: {
+            result: { get_user_department: departmentInfo },
+          },
+        } = await this.bitrixService.callBatch<{
+          get_user: B24User[];
+          get_user_department: B24Department[];
+        }>({
+          get_user: {
+            method: 'user.get',
+            params: {
+              filter: {
+                ID: userId,
+              },
+            },
+          },
+          get_user_department: {
+            method: 'department.get',
+            params: {
+              ID: '$result[get_user][0][UF_DEPARTMENT][0]',
+            },
+          },
+        });
+
+        if (departmentInfo.length > 0) {
+          this.bitrixWikiClientPayments
+            .addPayment({
+              inn: clearInn,
+              departmentId: Number(departmentInfo[0].ID),
+              departmentName: departmentInfo[0].NAME,
+            })
+            .then((res) =>
+              this.logger.debug({
+                handler: this.sendNoticeWaitingPayment.name,
+                message: 'Success add inn in database',
+                response: res,
+              }),
+            )
+            .catch((err) =>
+              this.logger.error({
+                handler: this.sendNoticeWaitingPayment.name,
+                message: 'Invalid add inn in database',
+                error: err,
+              }),
+            );
+        }
+      }
 
       // Отправляем сообщение
       const messageId = await this.bitrixBot.sendMessage({
