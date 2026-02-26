@@ -88,25 +88,17 @@ export class BitrixDealsUseCase {
       if (total === 0)
         throw new UnprocessableEntityException('Сделок не найдено');
 
-      if (total > BITRIX_LIMIT_REQUESTS) {
-        let batchCommandsIndex = 0;
-        const batchCommandsMap = new Map<number, B24BatchCommands>();
+      let batchCommands: B24BatchCommands = {};
 
+      if (total > BITRIX_LIMIT_REQUESTS) {
         // Получаем кол-во запросов
         const queries = Math.ceil(total / BITRIX_LIMIT_REQUESTS);
         let page = 1;
 
         while (page <= queries) {
-          let commands = batchCommandsMap.get(batchCommandsIndex) ?? {};
-
-          if (Object.keys(commands).length === BITRIX_LIMIT_REQUESTS) {
-            batchCommandsIndex++;
-            commands = batchCommandsMap.get(batchCommandsIndex) ?? {};
-          }
-
           const start = (page - 1) * BITRIX_LIMIT_REQUESTS;
 
-          commands[`get_deals=${start}`] = {
+          batchCommands[`get_deals=${start}`] = {
             method: 'crm.deal.list',
             params: {
               filter: dealsListFilter,
@@ -115,29 +107,18 @@ export class BitrixDealsUseCase {
             },
           };
 
-          batchCommandsMap.set(batchCommandsIndex, commands);
-
           page += 1;
         }
 
-        if (batchCommandsMap.size > 0) {
-          const responses = await Promise.all(
-            Array.from(batchCommandsMap.values()).map((commands) =>
-              this.bitrixService.callBatch<Record<string, B24Deal[]>>(commands),
-            ),
+        const responses =
+          await this.bitrixService.callBatches<Record<string, B24Deal[]>>(
+            batchCommands,
           );
 
-          const errors = this.bitrixService.checkBatchErrors(responses);
-
-          // Валидация ошибок
-          if (errors.length > 0) throw new UnprocessableEntityException(errors);
-
-          responses.forEach(({ result: { result } }) => {
-            Object.values(result).forEach((responseDeals) =>
-              deals.push(...responseDeals),
-            );
-          });
-        }
+        // Добавляем сделки к общему массиву сделок
+        Object.values(responses).forEach((responseDeals) =>
+          deals.push(...responseDeals),
+        );
       } else {
         deals.push(...data);
       }
@@ -145,7 +126,15 @@ export class BitrixDealsUseCase {
       if (deals.length === 0)
         throw new UnprocessableEntityException('Сделок не найдено');
 
-      const batchCommands: B24BatchCommands = {};
+      this.logger.debug({
+        handler: this.handleCheckSiteDealsField.name,
+        message: 'check getting deals',
+        handler_request: fields,
+        batch_request: batchCommands,
+        deals: deals,
+      });
+
+      batchCommands = {};
 
       let notifyZagoskinaMessage = '';
 
@@ -157,17 +146,21 @@ export class BitrixDealsUseCase {
         }) => {
           const message = `По проекту [b]${this.bitrixService.generateDealUrl(dealId, dealTitle)}[/b] до сих пор не подписан договор. Необходимо связаться с клиентом и запросить подписанный договор.`;
 
-          batchCommands[`notify_manager=${dealProjectManager}=${dealId}`] = {
-            method: 'im.message.add',
-            params: {
-              DIALOG_ID: dealProjectManager,
-              MESSAGE: message,
-            },
-          };
+          if (dealProjectManager) {
+            batchCommands[`notify_manager=${dealProjectManager}=${dealId}`] = {
+              method: 'im.message.add',
+              params: {
+                DIALOG_ID: dealProjectManager,
+                MESSAGE: message,
+              },
+            };
+          }
 
           notifyZagoskinaMessage +=
             message +
-            `[br]Ответственный: [user=${dealProjectManager}][/user][br][br]`;
+            (dealProjectManager
+              ? `[br]Ответственный: [user=${dealProjectManager}][/user][br][br]`
+              : '');
         },
       );
 
