@@ -25,6 +25,7 @@ export interface B24ImSendMessage {
   SYSTEM?: string;
   URL_PREVIEW?: BoolString;
   KEYBOARD?: B24ImKeyboardOptions[];
+  ATTACH?: B24ImSendMessageAttach | B24ImSendMessageAttach[];
 }
 
 export interface B24ImRemoveMessage {
@@ -42,4 +43,15 @@ export interface B24ImUpdateMessage {
 export interface B24ImSendMessageResponseOptions {
   status: boolean;
   messageId: number;
+}
+
+export interface B24ImSendMessageAttach {
+  ID: number;
+  COLOR_TOKEN: string;
+  COLOR?: string;
+  BLOCKS?: B24ImSendMessageAttachBlockFile[];
+}
+
+export interface B24ImSendMessageAttachBlockFile {
+  FILE: { LINK: string; NAME: string; SIZE?: number };
 }

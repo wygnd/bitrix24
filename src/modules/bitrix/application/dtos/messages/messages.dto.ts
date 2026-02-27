@@ -1,6 +1,46 @@
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { B24ImSendMessageResponseOptions } from '../../interfaces/messages/messages.interface';
+import { Type } from 'class-transformer';
+
+export class B24SendMessageAttachFileDto {
+  @ApiProperty({
+    type: String,
+    description: 'file link',
+    required: true,
+    example: 'https://example.com/file.png',
+  })
+  @IsNotEmpty()
+  @IsString()
+  link: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'filename',
+    required: true,
+    example: 'file.png',
+  })
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    type: Number,
+    description: 'File size in bytes',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  size?: number;
+}
 
 export class B24SendMessageDto {
   @ApiProperty({
@@ -32,6 +72,16 @@ export class B24SendMessageDto {
   @IsOptional()
   @IsBoolean()
   system: boolean = false;
+
+  @ApiProperty({
+    type: B24SendMessageAttachFileDto,
+    isArray: true,
+    description: 'Files',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  files: B24SendMessageAttachFileDto[] = [];
 }
 
 export class B24SendMessageResponse implements B24ImSendMessageResponseOptions {

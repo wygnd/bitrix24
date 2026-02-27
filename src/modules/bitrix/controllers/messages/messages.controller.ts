@@ -9,6 +9,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { BitrixMessagesUseCase } from '@/modules/bitrix/application/use-cases/messages/messages.use-case';
+import { B24ImSendMessage } from '@/modules/bitrix/application/interfaces/messages/messages.interface';
 
 @ApiTags(B24ApiTags.IM)
 @ApiExceptions()
@@ -43,11 +44,28 @@ export class BitrixMessageControllerV1 {
   @Post('/message/add')
   async sendMessage(@Body() body: B24SendMessageDto) {
     try {
-      const response = await this.bitrixMessages.sendPrivateMessage({
+      const sendMessageOptions: B24ImSendMessage = {
         DIALOG_ID: body.userId,
         MESSAGE: body.message,
         SYSTEM: body.system ? 'Y' : 'N',
-      });
+      };
+
+      if (body.files && body.files.length > 0) {
+        sendMessageOptions.ATTACH = {
+          ID: 1,
+          COLOR_TOKEN: 'primary',
+          BLOCKS: body.files.map((file) => ({
+            FILE: {
+              LINK: file.link,
+              NAME: file.name,
+              SIZE: file.size,
+            },
+          })),
+        };
+      }
+
+      const response =
+        await this.bitrixMessages.sendPrivateMessage(sendMessageOptions);
       this.logger.debug(response);
       return {
         status: true,
