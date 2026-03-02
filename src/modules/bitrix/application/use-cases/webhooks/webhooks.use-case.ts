@@ -1151,7 +1151,7 @@ export class BitrixWebhooksUseCase {
         throw new UnprocessableEntityException('Invalid get brief data');
 
       let taskDescription =
-        '[b]Ссылка на на сайт(Тестовый)[/b]' + testSiteLink + '\n\n';
+        '[b]Ссылка на на сайт(Тестовый)[/b] ' + testSiteLink + '\n\n';
 
       briefData.forEach((data) => {
         const [[label, value]] = Object.entries(data);
