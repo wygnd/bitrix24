@@ -949,10 +949,18 @@ export class BitrixBotUseCase {
         throw new BadRequestException('Invalid dealId');
       }
 
-      const dealFields = await this.bitrixDeals.getDealById(dealId);
+      const dealFields = await this.bitrixDeals.getDealById(dealId, 'force');
 
-      if (!dealFields)
+      if (!dealFields) {
+        this.bitrixBot.sendMessage({
+          MESSAGE:
+            'Не удалось обработать платеж: в лиде не было указан id сделки[br]' +
+            message,
+          DIALOG_ID: dialogId,
+          SYSTEM: 'Y',
+        });
         throw new NotFoundException(`Deal was not found: ${dealId}`);
+      }
 
       /**
        * UF_CRM_1638351463: Поле "Кто ведет"
