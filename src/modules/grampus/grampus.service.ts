@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { WinstonLogger } from '@/config/winston.logger';
-import type { AxiosRequestConfig, AxiosResponse } from 'axios';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { IGrampusBadLink } from '@/modules/grampus/interfaces/grampus-bad-link.interface';
+import { ConfigService } from '@nestjs/config';
+import { IGrampusBriefResponse } from '@/modules/grampus/interfaces/grampus-brief.interface';
+import { maybeCatchError } from '@/common/utils/catch-error';
 
 @Injectable()
 export class GrampusService {
@@ -11,7 +14,10 @@ export class GrampusService {
     'grampus'.split(':'),
   );
 
-  constructor(private readonly http: HttpService) {}
+  constructor(
+    private readonly http: HttpService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * Realize base POST request
@@ -68,5 +74,49 @@ export class GrampusService {
   public async notifyBadLink(data: IGrampusBadLink) {
     return Promise.resolve('Mock implementation');
     // return this.post('/', data);
+  }
+
+  /**
+   * Get brief data by id
+   *
+   * ---
+   *
+   * Получает данные брифа по id
+   * @param briefId
+   */
+  public async getBriefData(briefId: string) {
+    try {
+      const { data } = await this.http.axiosRef.post<
+        any,
+        AxiosResponse<IGrampusBriefResponse<Record<string, any>[]>>
+      >(
+        '/wp-json/brief/data/get',
+        {},
+        {
+          baseURL: this.configService.getOrThrow('grampusConfig.briefUrl'),
+          params: new URLSearchParams({
+            brief_id: briefId,
+          }),
+          headers: {
+            Accept: 'application/json',
+          },
+        },
+      );
+      this.logger.debug({
+        handler: this.getBriefData.name,
+        request: briefId,
+        response: data,
+      });
+
+      return data;
+    } catch (error) {
+      this.logger.error({
+        handler: this.getBriefData.name,
+        request: briefId,
+        message: maybeCatchError(error),
+      });
+
+      throw error;
+    }
   }
 }

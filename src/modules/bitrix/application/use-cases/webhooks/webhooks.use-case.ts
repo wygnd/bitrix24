@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { IncomingWebhookDistributeDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-distribute-deal.dto';
 import { IncomingWebhookApproveSiteDealDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-approve-site-deal.dto';
@@ -60,6 +61,9 @@ import {
 import { BitrixDepartmentsUseCase } from '@/modules/bitrix/application/use-cases/departments/departments.use-case';
 import type { BitrixTasksPort } from '@/modules/bitrix/application/ports/tasks/tasks.port';
 import dayjs from 'dayjs';
+import { B24WebhookFillableSiteBrief } from '@/modules/bitrix/application/interfaces/webhooks/webhook-fillable-site-brief.interface';
+import { maybeCatchError } from '@/common/utils/catch-error';
+import { GrampusService } from '@/modules/grampus/grampus.service';
 
 @Injectable()
 export class BitrixWebhooksUseCase {
@@ -140,6 +144,7 @@ export class BitrixWebhooksUseCase {
     private readonly bitrixLeads: BitrixLeadsPort,
     @Inject(B24PORTS.TASKS.TASKS_DEFAULT)
     private readonly bitrixTasks: BitrixTasksPort,
+    private readonly grampusService: GrampusService,
   ) {}
 
   /**
@@ -1118,5 +1123,85 @@ export class BitrixWebhooksUseCase {
       status: true,
       message: 'successfully handle call init for sale managers',
     };
+  }
+
+  async handleFillableSite(fields: B24WebhookFillableSiteBrief) {
+    try {
+      const {
+        assigned_id: assignedId,
+        deal_id: dealId,
+        test_site: testSiteLink,
+        brief_link: briefLink,
+      } = fields;
+
+      if (!briefLink.includes('brief.grampus-server.ru'))
+        throw new UnprocessableEntityException('Invalid brief link', {
+          cause: 'Invalid brief link',
+        });
+
+      const [, briefId] = briefLink.split('/').reverse();
+
+      if (!briefId)
+        throw new UnprocessableEntityException('Invalid get brief uuid');
+
+      const { status, data: briefData } =
+        await this.grampusService.getBriefData(briefId);
+
+      if (!status)
+        throw new UnprocessableEntityException('Invalid get brief data');
+
+      let taskDescription =
+        '[b]Ссылка на на сайт(Тестовый)[/b]' + testSiteLink + '\n\n';
+
+      briefData.forEach((data) => {
+        const [[label, value]] = Object.entries(data);
+
+        if (Array.isArray(value)) {
+          taskDescription +=
+            `[b]${label}[/b]\n` +
+            value.map((v) => {
+              if (typeof v == 'object') {
+                return Object.entries(v).map(([v_name, v_val]) => {
+                  return `[b]${v_name}:[/b] ${v_val}\n`;
+                });
+              } else {
+                return (v ? v : '') + '\n';
+              }
+            }) +
+            '\n';
+        } else {
+          taskDescription += `[b]${label}[/b]\n ${value ? value + '\n' : ''}\n`;
+        }
+      });
+
+      const task = await this.bitrixTasks.createTask({
+        TITLE: 'Тест Бриф',
+        DESCRIPTION: taskDescription,
+        RESPONSIBLE_ID: assignedId,
+        UF_CRM_TASK: [`D_${dealId}`],
+      });
+
+      if (!task) throw new BadRequestException('Invalid create task');
+
+      this.logger.debug({
+        handler: this.handleFillableSite.name,
+        message: 'Result create task',
+        request: fields,
+        response: task,
+      });
+
+      return {
+        status: true,
+        task_id: task.id,
+      };
+    } catch (error) {
+      this.logger.error({
+        handler: this.handleFillableSite.name,
+        request: fields,
+        message: maybeCatchError(error),
+      });
+
+      throw error;
+    }
   }
 }

@@ -12,6 +12,7 @@ import { RedisService } from '@/modules/redis/redis.service';
 import { WinstonLogger } from '@/config/winston.logger';
 import { B24PORTS } from '@/modules/bitrix/bitrix.constants';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
+import { maybeCatchError } from '@/common/utils/catch-error';
 
 export class BitrixTasksAdapter implements BitrixTasksPort {
   private readonly logger = new WinstonLogger(
@@ -86,7 +87,10 @@ export class BitrixTasksAdapter implements BitrixTasksPort {
 
       return taskExtended;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.getTaskById.name,
+        error: maybeCatchError(error),
+      });
       return null;
     }
   }
@@ -110,7 +114,10 @@ export class BitrixTasksAdapter implements BitrixTasksPort {
 
       return result ? result.task : null;
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error({
+        handler: this.createTask.name,
+        error: maybeCatchError(error),
+      });
       return null;
     }
   }

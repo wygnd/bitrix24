@@ -19,6 +19,7 @@ import { B24EventVoxImplantCallInitDto } from '@/modules/bitrix/application/dtos
 import { WinstonLogger } from '@/config/winston.logger';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { BitrixWebhooksUseCase } from '@/modules/bitrix/application/use-cases/webhooks/webhooks.use-case';
+import { IncomingWebhookFillableSiteBriefDto } from '@/modules/bitrix/application/dtos/webhooks/incoming-webhook-fillable-site-brief.dto';
 
 @ApiTags(B24ApiTags.WEBHOOK)
 @ApiExceptions()
@@ -108,5 +109,19 @@ export class BitrixWebhookController {
       body,
     });
     return this.bitrixWebhooks.handleVoxImplantCallInitTask(body);
+  }
+
+  @ApiOperation({ summary: 'Триггер при переходе сделки на стадию Наполнение' })
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(BitrixWebhookGuard)
+  @Post('/bitrix/sites/fillable')
+  async handleFillableSite(
+    @Body() body: IncomingWebhookDto,
+    @Query() query: IncomingWebhookFillableSiteBriefDto,
+  ) {
+    return this.bitrixWebhooks.handleFillableSite({
+      ...query,
+      deal_id: body.document_id[2],
+    });
   }
 }
