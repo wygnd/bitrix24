@@ -1159,16 +1159,18 @@ export class BitrixWebhooksUseCase {
         if (Array.isArray(value)) {
           taskDescription +=
             `[b]${label}[/b]\n` +
-            value.map((v) => {
-              if (typeof v == 'object') {
-                return Object.entries(v).map(([v_name, v_val]) => {
-                  return `[b]${v_name}:[/b] ${v_val}\n`;
-                });
-              } else {
-                return (v ? v : '') + '\n';
-              }
-            }) +
-            '\n';
+            value
+              .map((v) => {
+                if (typeof v == 'object') {
+                  return Object.entries(v).map(
+                    ([v_name, v_val]) => `[b]${v_name}:[/b] ${v_val}`,
+                  );
+                } else {
+                  return (v ? v : '');
+                }
+              })
+              .join('\n') +
+            '\n\n';
         } else {
           taskDescription += `[b]${label}[/b]\n ${value ? value + '\n' : ''}\n`;
         }
