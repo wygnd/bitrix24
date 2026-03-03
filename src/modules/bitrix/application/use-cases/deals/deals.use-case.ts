@@ -136,7 +136,9 @@ export class BitrixDealsUseCase {
 
       batchCommands = {};
 
-      let notifyZagoskinaMessage = '';
+      let notifyZagoskinaMessage: string[] = [];
+      let notifyZagoskinaMessageIndex = 0;
+      let dealNotifiedCount = 0;
 
       deals.forEach(
         ({
@@ -144,7 +146,8 @@ export class BitrixDealsUseCase {
           TITLE: dealTitle,
           UF_CRM_1589349464: dealProjectManager,
         }) => {
-          const message = `По проекту [b]${this.bitrixService.generateDealUrl(dealId, dealTitle)}[/b] до сих пор не подписан договор. Необходимо связаться с клиентом и запросить подписанный договор.`;
+          // const message = `По проекту [b]${this.bitrixService.generateDealUrl(dealId, dealTitle)}[/b] до сих пор не подписан договор. Необходимо связаться с клиентом и запросить подписанный договор.`;
+          const message = dealTitle;
 
           if (dealProjectManager) {
             batchCommands[`notify_manager=${dealProjectManager}=${dealId}`] = {
@@ -156,21 +159,34 @@ export class BitrixDealsUseCase {
             };
           }
 
-          notifyZagoskinaMessage +=
+          if (dealNotifiedCount == 70) {
+            notifyZagoskinaMessageIndex++;
+            dealNotifiedCount = 1;
+          }
+
+          if (!(notifyZagoskinaMessageIndex in notifyZagoskinaMessage))
+            notifyZagoskinaMessage[notifyZagoskinaMessageIndex] = '';
+
+          notifyZagoskinaMessage[notifyZagoskinaMessageIndex] +=
             message +
             (dealProjectManager
               ? `[br]Ответственный: [user=${dealProjectManager}][/user][br][br]`
               : '');
+
+          dealNotifiedCount++;
         },
       );
 
-      batchCommands[`notify_${chatId}`] = {
-        method: 'im.message.add',
-        params: {
-          DIALOG_ID: chatId,
-          MESSAGE: notifyZagoskinaMessage,
-        },
-      };
+      notifyZagoskinaMessage.forEach(
+        (message, index) =>
+          (batchCommands[`notify_${chatId}_${index}`] = {
+            method: 'im.message.add',
+            params: {
+              DIALOG_ID: chatId,
+              MESSAGE: message,
+            },
+          }),
+      );
 
       this.bitrixService.callBatches(batchCommands).then((response) =>
         this.logger.debug({
