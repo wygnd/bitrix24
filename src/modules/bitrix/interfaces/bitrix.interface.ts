@@ -54,7 +54,11 @@ export type B24AvailableMethods =
   | 'crm.activity.todo.update'
   | 'crm.activity.todo.updateResponsibleUser'
   | 'crm.category.list'
-  | 'crm.dealcategory.stage.list';
+  | 'crm.dealcategory.stage.list'
+  | 'disk.folder.uploadfile'
+  | 'disk.folder.getchildren'
+  | 'disk.storage.getchildren'
+  | 'disk.storage.getlist';
 
 // REST 3.0
 export type B24AvailableMethodsV2 = 'tasks.task.get' | 'main.eventlog.list' | 'main.eventlog.tail';

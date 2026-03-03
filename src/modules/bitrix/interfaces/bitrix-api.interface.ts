@@ -28,7 +28,7 @@ export interface B24Timestamp {
 }
 
 export interface B24SuccessResponse<T> {
-  result?: T;
+  result: T;
   total?: number;
   time: B24Timestamp;
 }

@@ -68,6 +68,8 @@ import { BitrixConfig } from '@/common/interfaces/bitrix-config.interface';
 import { GrampusModule } from '@/modules/grampus/grampus.module';
 import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/widgets.controller';
 import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widgets/widget.use-case';
+import { storageProviders } from '@/modules/bitrix/providers/storage.providers';
+import { BitrixStorageUseCase } from '@/modules/bitrix/application/use-cases/storage/storage.use-case';
 
 @Module({
   imports: [
@@ -224,6 +226,10 @@ import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widg
 
     // GRAMPUS
     BitrixGrampusUseCase,
+
+    // STORAGE
+    ...storageProviders,
+    BitrixStorageUseCase,
   ],
   exports: [
     BitrixUseCase,
