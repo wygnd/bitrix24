@@ -854,7 +854,7 @@ export class BitrixWikiUseCase {
           method: 'imbot.message.add',
           params: {
             BOT_ID: this.bitrixService.getConstant('BOT_ID'),
-            DIALOG_ID: this.bitrixService.getConstant('TEST_CHAT_ID'),
+            DIALOG_ID: this.bitrixService.getConstant('SALE').headSaleChatId,
             MESSAGE: message,
           },
         };

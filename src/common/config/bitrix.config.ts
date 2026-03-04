@@ -51,6 +51,7 @@ export default (): BitrixOptions => ({
     },
     SALE: {
       frodSaleChatId: process.env.BITRIX_DATA_SALES_FROD_SALE_CHAT_ID ?? '',
+      headSaleChatId: process.env.BITRIX_DATA_HEAD_SALES_CHAT_ID ?? '',
     },
   },
 });

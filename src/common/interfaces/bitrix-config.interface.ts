@@ -70,4 +70,5 @@ export interface BitrixGrampusOptions {
 
 export interface BitrixSaleOptions {
   frodSaleChatId: string;
+  headSaleChatId: string;
 }
