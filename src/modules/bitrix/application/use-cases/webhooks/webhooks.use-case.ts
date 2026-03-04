@@ -1153,49 +1153,59 @@ export class BitrixWebhooksUseCase {
       let taskDescription =
         '[b]Ссылка на на сайт(Тестовый)[/b] ' + testSiteLink + '\n\n';
 
-      briefData.forEach((data) => {
-        const [[label, value]] = Object.entries(data);
+      // todo: Изначально надо пройтись по результату и везде, где есть картини скачать их и добавить в задачу, а после указывать в описании
 
-        if (Array.isArray(value)) {
-          taskDescription +=
-            `[b]${label}[/b]\n` +
-            value
-              .map((v) => {
-                if (typeof v == 'object') {
-                  return Object.entries(v).map(
-                    ([v_name, v_val]) => `[b]${v_name}:[/b] ${v_val}`,
-                  );
-                } else {
-                  return (v ? v : '');
-                }
-              })
-              .join('\n') +
-            '\n\n';
-        } else {
-          taskDescription += `[b]${label}[/b]\n ${value ? value + '\n' : ''}\n`;
-        }
+      return briefData.map((d) => {
+        const [[label, value], imageArray] = Object.entries(d);
+
+        if (!imageArray) return;
+
+        return imageArray[1];
       });
 
-      const task = await this.bitrixTasks.createTask({
-        TITLE: 'Тест Бриф',
-        DESCRIPTION: taskDescription,
-        RESPONSIBLE_ID: assignedId,
-        UF_CRM_TASK: [`D_${dealId}`],
-      });
-
-      if (!task) throw new BadRequestException('Invalid create task');
-
-      this.logger.debug({
-        handler: this.handleFillableSite.name,
-        message: 'Result create task',
-        request: fields,
-        response: task,
-      });
-
-      return {
-        status: true,
-        task_id: task.id,
-      };
+      // briefData.forEach((data) => {
+      //   const [[label, value]] = Object.entries(data);
+      //
+      //   if (Array.isArray(value)) {
+      //     taskDescription +=
+      //       `[b]${label}[/b]\n` +
+      //       value
+      //         .map((v) => {
+      //           if (typeof v == 'object') {
+      //             return Object.entries(v).map(
+      //               ([v_name, v_val]) => `[b]${v_name}:[/b] ${v_val}`,
+      //             );
+      //           } else {
+      //             return v ? v : '';
+      //           }
+      //         })
+      //         .join('\n') +
+      //       '\n\n';
+      //   } else {
+      //     taskDescription += `[b]${label}[/b]\n ${value ? value + '\n' : ''}\n`;
+      //   }
+      // });
+      //
+      // const task = await this.bitrixTasks.createTask({
+      //   TITLE: 'Тест Бриф',
+      //   DESCRIPTION: taskDescription,
+      //   RESPONSIBLE_ID: assignedId,
+      //   UF_CRM_TASK: [`D_${dealId}`],
+      // });
+      //
+      // if (!task) throw new BadRequestException('Invalid create task');
+      //
+      // this.logger.debug({
+      //   handler: this.handleFillableSite.name,
+      //   message: 'Result create task',
+      //   request: fields,
+      //   response: task,
+      // });
+      //
+      // return {
+      //   status: true,
+      //   task_id: task.id,
+      // };
     } catch (error) {
       this.logger.error({
         handler: this.handleFillableSite.name,

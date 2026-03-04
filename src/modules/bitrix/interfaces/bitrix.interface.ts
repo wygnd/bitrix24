@@ -16,6 +16,7 @@ export type B24AvailableMethods =
   | 'tasks.task.disapprove'
   | 'tasks.task.approve'
   | 'tasks.task.update'
+  | 'tasks.task.files.attach'
   | 'department.get'
   | 'crm.deal.list'
   | 'crm.deal.add'
