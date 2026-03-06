@@ -187,6 +187,7 @@ export class BitrixTelphinUseCase {
     return {
       status: true,
       message: 'Successfully handled start call',
+      request: batchCommands,
       response: await this.bitrixService.callBatch(batchCommands),
     };
   }
