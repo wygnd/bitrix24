@@ -18,9 +18,12 @@ import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitri
 import type { BitrixLeadsPort } from '@/modules/bitrix/application/ports/leads/leads.port';
 import type { BitrixMessagesPort } from '@/modules/bitrix/application/ports/messages/messages.port';
 import { AvitoPhoneList } from '@/modules/bitrix/application/constants/avito/avito.constants';
+import { WinstonLogger } from '@/config/winston.logger';
 
 @Injectable()
 export class BitrixTelphinUseCase {
+  private readonly logger = new WinstonLogger(BitrixTelphinUseCase.name, 'bitrix:telphin'.split(':'))
+
   constructor(
     private readonly telphinService: TelphinService,
     @Inject(B24PORTS.BITRIX)
@@ -89,6 +92,16 @@ export class BitrixTelphinUseCase {
       throw new NotFoundException(
         `Extension group was not found: ${extensionGroupId}`,
       );
+
+    this.logger.debug({
+      handler: this.handleAnswerCall.name,
+      message: 'Check data before distribute by department',
+      data: {
+        fields,
+        extensionData,
+        extensionGroupData,
+      }
+    });
 
     // Распределяем в зависимости от группы
     switch (true) {
