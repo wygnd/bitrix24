@@ -6,20 +6,20 @@ import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    ClientsModule.registerAsync([
-      {
-        name: MICROSERVICES.USERS,
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.TCP,
-          options: {
-            port: parseInt(
-              configService.getOrThrow('microservices.users.port'),
-            ),
-          },
-        }),
-        inject: [ConfigService],
-      },
-    ]),
+    // ClientsModule.registerAsync([
+    //   {
+    //     name: MICROSERVICES.USERS,
+    //     useFactory: (configService: ConfigService) => ({
+    //       transport: Transport.TCP,
+    //       options: {
+    //         port: parseInt(
+    //           configService.getOrThrow('microservices.users.port'),
+    //         ),
+    //       },
+    //     }),
+    //     inject: [ConfigService],
+    //   },
+    // ]),
   ],
   providers: [NeuroService],
   exports: [NeuroService],

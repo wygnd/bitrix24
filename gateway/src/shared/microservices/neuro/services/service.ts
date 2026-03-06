@@ -14,7 +14,7 @@ export class NeuroService {
   );
 
   constructor(
-    @Inject(MICROSERVICES.USERS) private readonly neuroClient: ClientProxy,
+    // @Inject(MICROSERVICES.USERS) private readonly neuroClient: ClientProxy,
   ) {}
   /**
    * Base realization sending request to microservice
@@ -27,9 +27,10 @@ export class NeuroService {
    */
   private async sendRequest<R = any>(request: INeuroRequestData) {
     try {
-      return await firstValueFrom<R>(
-        this.neuroClient.send({ cmd: request.command }, request.data ?? {}),
-      );
+      return {status: true}
+      // return await firstValueFrom<R>(
+      //   this.neuroClient.send({ cmd: request.command }, request.data ?? {}),
+      // );
     } catch (error) {
       this.logger.error({
         handler: this.sendRequest.name,
