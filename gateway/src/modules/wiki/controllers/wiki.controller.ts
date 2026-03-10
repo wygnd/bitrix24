@@ -37,11 +37,11 @@ export class WikiController {
       new ValidationPipe({
         whitelist: true,
         forbidNonWhitelisted: true,
+        stopAtFirstError: true,
       }),
     )
     body: WikiAnalyzeManagerCallsDTO,
   ) {
-    return body;
-    // return this.wikiService.analyzeManagerCalling();
+    return this.wikiService.analyzeManagerCalling(body);
   }
 }
