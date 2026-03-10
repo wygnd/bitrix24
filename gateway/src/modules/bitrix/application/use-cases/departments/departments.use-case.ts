@@ -137,6 +137,7 @@ export class BitrixDepartmentsUseCase {
             method: 'crm.deal.list',
             params: {
               filter: {
+                '!@ID': ['55472'],
                 '>=UF_CRM_1741670426': `${dayjs(Date.now()).format('YYYY-MM')}`, // Дата перехода в Ожидает звонка клинету (РК настройка)
                 '@UF_CRM_1638351463': userIds, // Кто ведет: Любой из сотрудников отдела
               },
