@@ -384,7 +384,7 @@ export class WikiService {
 
       // await this.redisService.set<number>(redisPostIdKey, fields.post_id, 300);
 
-      return this.neuroService.maybeAnalyzeCall(fields);
+      this.neuroService.maybeAnalyzeCall(fields);
 
       return {
         status: true,

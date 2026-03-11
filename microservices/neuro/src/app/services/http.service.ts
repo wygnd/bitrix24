@@ -9,11 +9,11 @@ import { maybeCatchError } from '../../share/utils/maybe-catch-error';
 export class AppHttpService implements OnModuleInit {
   private readonly requestLogger = new WinstonLogger(
     `${AppHttpService.name}_requests`,
-    'axios',
+    'axios/requests',
   );
   private readonly responseLogger = new WinstonLogger(
     `${AppHttpService.name}_responses`,
-    'axios',
+    'axios/responses',
   );
   private http: AxiosInstance;
 

@@ -24,7 +24,8 @@ export class NeuroService {
    * ---
    *
    * Базовая реализация отправки данных в микросервис
-   * @param request
+   * @param {string} request.command - command name
+   * @param {any} [request.data] - payload
    * @private
    */
   private async sendRequest<R = any>(request: INeuroRequestData) {
@@ -42,6 +43,13 @@ export class NeuroService {
     }
   }
 
+  /**
+   * Health check
+   *
+   * ---
+   *
+   * Проверка работоспособности сервиса
+   */
   public async checkHealth() {
     try {
       return this.sendRequest<{ status: boolean }>({
@@ -61,9 +69,10 @@ export class NeuroService {
    * @param data
    */
   public async maybeAnalyzeCall(data: IAnalyzeManagerCallRequest) {
-    return this.sendRequest({
-      command: NEURO_COMMANDS.ANALYZE_MANAGER_CALLING,
-      data: data,
-    });
+    this.neuroClient.emit('test_create', data);
+    // return this.sendRequest({
+    //   command: NEURO_COMMANDS.ANALYZE_MANAGER_CALLING,
+    //   data: data,
+    // });
   }
 }
