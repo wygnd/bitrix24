@@ -6,7 +6,7 @@ services:
       dockerfile: ./Dockerfile
     container_name: bitrix-server-backend
     ports:
-      - "3000:3000"
+      - "${GATEWAY_PORT}:3000"
     environment:
       - NODE_ENV=production
     env_file:
@@ -33,7 +33,7 @@ services:
       dockerfile: ./Dockerfile
     container_name: bitrix-server-addy
     ports:
-      - "3010:3000"
+      - "${ADDY_GATEWAY_PORT}:3000"
     environment:
       - NODE_ENV=production
     env_file:
@@ -69,7 +69,7 @@ services:
     image: postgres:latest
     container_name: bitrix-server-postgres
     ports:
-      - "3005:5432"
+      - "${DB_PORT_INTERNAL}:5432"
     environment:
       POSTGRES_USER: ${DB_USERNAME_PRODUCTION}
       POSTGRES_PASSWORD: ${DB_PASSWORD_PRODUCTION}
@@ -87,7 +87,7 @@ services:
     env_file:
       - .env
     ports:
-      - "3001:6379"
+      - "${REDIS_PORT_INTERNAL}:6379"
     volumes:
       - /var/lib/bitrix24/redis/data:/data
     networks:
@@ -100,7 +100,7 @@ services:
     image: grafana/loki:latest
     container_name: bitrix-server-grafana_loki
     ports:
-      - "3002:3100"
+      - "${LOKI_PORT_INTERNAL}:3100"
     volumes:
       - loki_data:/loki
     networks:
@@ -118,7 +118,7 @@ services:
     image: prom/prometheus:latest
     container_name: bitrix-server-prometheus
     ports:
-      - "3003:9090"
+      - "${PROMETHEUS_PORT_INTERNAL}:9090"
     volumes:
       - ./config/prometheus:/etc/prometheus-config
       - prometheus_data:/prometheus
@@ -135,7 +135,7 @@ services:
     image: grafana/grafana:latest
     container_name: bitrix-server-grafana
     ports:
-      - "3004:3000"
+      - "${GRAFANA_PORT_INTERNAL}:3000"
     environment:
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
