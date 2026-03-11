@@ -57,8 +57,6 @@ services:
       context: ./microservices/neuro
       dockerfile: ./Dockerfile
     container_name: bitrix-microservice-neuro
-    ports:
-      - "${MICROSERVICES_NEURO_PORT}:${MICROSERVICES_NEURO_PORT}"
     env_file:
       - .env
     volumes:
