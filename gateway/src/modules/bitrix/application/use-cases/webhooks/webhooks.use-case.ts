@@ -568,6 +568,7 @@ export class BitrixWebhooksUseCase {
       case 'seo':
         relatedDealCategory = ['7', '16', '34']; // Воронки: внутренняя, внешняя, базовая оптимизация
         selectRelatedDealCategory.push('UF_CRM_1760519929'); // Комментарий к сделке SEO
+        selectRelatedDealCategory.push('UF_CRM_1703764564'); // Ответственный SEO Проект менеджер
         break;
     }
 
@@ -601,6 +602,7 @@ export class BitrixWebhooksUseCase {
       batchResponseGetInfo.result;
 
     let taskDescription: string;
+    let accomplicesList: string[] = [];
 
     // В зависимости от категории собираем комментарий из сделки
     switch (category) {
@@ -623,6 +625,8 @@ export class BitrixWebhooksUseCase {
           'Если есть правки, то:\n' +
           '- Пропиши в комментариях задачи список правок\n' +
           `- Отправь задачу в ЛС [user=${department.UF_HEAD}]Степану Комягину[/user]`;
+
+        accomplicesList.push(deal.UF_CRM_1703764564);
         break;
     }
 
@@ -635,7 +639,8 @@ export class BitrixWebhooksUseCase {
       UF_CRM_TASK: [`D_${dealId}`],
       ACCOMPLICES: departments
         .filter((d) => d.ID !== department.ID)
-        .map((d) => d.UF_HEAD),
+        .map((d) => d.UF_HEAD)
+        .push(...accomplicesList),
       AUDITORS: [projectManagerId],
     });
 
