@@ -3,7 +3,7 @@ services:
   backend:
     build:
       context: ./gateways/grampus
-      dockerfile: ./gateways/grampus/Dockerfile
+      dockerfile: ./Dockerfile
     container_name: bitrix-server-backend
     ports:
       - "3000:3000"
@@ -30,7 +30,7 @@ services:
   addy:
     build:
       context: ./gateways/addy
-      dockerfile: /gateways/addy/Dockerfile
+      dockerfile: ./Dockerfile
     container_name: bitrix-server-addy
     ports:
       - "3100:3000"
@@ -55,7 +55,7 @@ services:
   neuro:
     build:
       context: ./microservices/neuro
-      dockerfile: /microservices/neuro/Dockerfile
+      dockerfile: ./Dockerfile
     container_name: bitrix-microservice-neuro
     ports:
       - "${MICROSERVICES_NEURO_PORT}:${MICROSERVICES_NEURO_PORT}"
