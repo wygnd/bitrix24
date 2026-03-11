@@ -1166,7 +1166,7 @@ export class BitrixWebhooksUseCase {
                     ([v_name, v_val]) => `[b]${v_name}:[/b] ${v_val}`,
                   );
                 } else {
-                  return (v ? v : '');
+                  return v ? v : '';
                 }
               })
               .join('\n') +

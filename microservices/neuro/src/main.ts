@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app/app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { config } from 'dotenv';
 import { join } from 'path';
+import { LoggerInterceptor } from './share/interceptors/logger.interceptor';
+import { AllExceptionsFilter } from './share/filters/all-exception.filter';
 
 config({
   debug: process.env.NODE_ENV !== 'production',
@@ -23,6 +25,12 @@ async function bootstrap() {
       },
     },
   );
+
+  // Interceptors
+  app.useGlobalInterceptors(new LoggerInterceptor());
+
+  // Filters
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   await app.listen();
 }

@@ -1,4 +1,8 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/services/wiki-api-new.service';
 import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
@@ -18,6 +22,8 @@ import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wi
 import { WikiCheckMissDays } from '@/modules/wiki/interfaces/wiki-check-miss-days.interface';
 import { isAxiosError } from 'axios';
 import { NeuroService } from '@/shared/microservices/neuro/services/service';
+import { IAnalyzeManagerCallRequest } from '@/shared/microservices/neuro/interfaces/interface';
+import { maybeCatchError } from '@/common/utils/catch-error';
 
 @Injectable()
 export class WikiService {
@@ -356,7 +362,43 @@ export class WikiService {
     }
   }
 
-  public async analyzeManagerCalling() {
-    return this.neuroService.maybeAnalyzeCall()
+  /**
+   * Send request on analyze manager calling
+   *
+   * ---
+   *
+   * Отправляет запрос на анализ звонка
+   */
+  public async analyzeManagerCalling(fields: IAnalyzeManagerCallRequest) {
+    try {
+      // const redisPostIdKey =
+      //   REDIS_KEYS.MICROSERVICES_NEURO_ANALYZE_MANAGER_CALL + fields.post_id;
+      // const postId = await this.redisService.get<string>(redisPostIdKey);
+      //
+      // if (postId)
+      //   throw new ConflictException({
+      //     status: false,
+      //     post_id: fields.post_id,
+      //     message: 'Звонок анализируется',
+      //   });
+
+      // await this.redisService.set<number>(redisPostIdKey, fields.post_id, 300);
+
+      this.neuroService.maybeAnalyzeCall(fields);
+
+      return {
+        status: true,
+        post_id: fields.post_id,
+        message: 'Запрос в обработке',
+      };
+    } catch (error) {
+      console.log('error in service');
+      this.logger.debug({
+        handler: this.analyzeManagerCalling.name,
+        error: maybeCatchError(error),
+      });
+
+      throw error;
+    }
   }
 }

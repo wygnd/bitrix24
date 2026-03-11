@@ -12,6 +12,7 @@ import EventEmitter from 'node:events';
 import helmet from 'helmet';
 import { config } from 'dotenv';
 import { join } from 'path';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 config({
   debug: process.env.NODE_ENV !== 'production',
@@ -29,7 +30,7 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   const PORT = config.get<number>('GATEWAY_PORT') ?? 3000;
-  console.log(PORT);
+
   // global interceptors
   app.useGlobalInterceptors(new TimeoutInterceptor());
 
