@@ -76,6 +76,7 @@ services:
       - .env
     volumes:
       - /var/lib/bitrix24/microservices/robots:/app/logs
+      - /srv/bitrix24/microservices/robots/sessions:/app/sessions
 
     networks:
       - private
