@@ -66,3 +66,30 @@ export interface IB24Timestamp {
   operating_reset_at: number;
   operating: number;
 }
+
+export type TB24CRMMultiFieldTypeIds =
+  | 'PHONE'
+  | 'EMAIL'
+  | 'WEB'
+  | 'IM'
+  | 'LINK';
+
+export interface IB24CRMMultiField {
+  ID: string;
+  TYPE_ID: TB24CRMMultiFieldTypeIds;
+  VALUE: string;
+  VALUE_TYPE: string;
+}
+
+export type TB24ListOrder = 'ASC' | 'DESC';
+
+export interface IB24ListParams<
+  TFilter extends Record<string, any> = Record<string, any>,
+  TOrder extends Record<string, TB24ListOrder> = Record<string, TB24ListOrder>,
+  TSelect = keyof TFilter,
+> {
+  filter?: Partial<TFilter>;
+  order?: TOrder;
+  select?: TSelect[];
+  start?: number;
+}

@@ -22,11 +22,11 @@ export class BitrixApiService {
   );
   private readonly requestInterceptorLogger = new WinstonLogger(
     'Requests',
-    'bitrix/api/interceptors/request',
+    'bitrix/api/interceptors',
   );
   private readonly responseInterceptorLogger = new WinstonLogger(
     'Responses',
-    'bitrix/api/interceptors/response',
+    'bitrix/api/interceptors',
   );
   private http: AxiosInstance;
   private bitrixSecrets: IBitrixAuthSecrets;
@@ -52,7 +52,6 @@ export class BitrixApiService {
           data: {
             body: config.data,
             params: config.params,
-            headers: config.headers,
           },
         });
         return config;
