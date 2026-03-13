@@ -1,12 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { Injectable } from '@nestjs/common';
 import { INeuroRequestData } from '@/shared/microservices/interfaces/interface';
 import { WinstonLogger } from '@/config/winston.logger';
 import { maybeCatchError } from '@/common/utils/catch-error';
-import { firstValueFrom } from 'rxjs';
 import { IAnalyzeManagerCallRequest } from '../interfaces/interface';
-import { MICROSERVICES } from '@/shared/microservices/constants/constants';
-import { NEURO_COMMANDS } from '@/shared/microservices/neuro/constants/constants';
+import { NEURO_COMMANDS } from '@/shared/microservices/modules/neuro/constants/constants';
 
 @Injectable()
 export class NeuroService {
@@ -15,8 +12,7 @@ export class NeuroService {
     'microservices:neuro'.split(':'),
   );
 
-  constructor() // @Inject(MICROSERVICES.NEURO) private readonly neuroClient: ClientProxy,
-  {}
+  constructor() {}
   /**
    * Base realization sending request to microservice
    *

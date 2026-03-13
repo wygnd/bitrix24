@@ -7,10 +7,21 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiExtraModels,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { B24ApiTags } from '@/modules/bitrix/interfaces/bitrix-api.interface';
 import { AuthGuard } from '@/common/guards/auth.guard';
-import { BitrixAddyPaymentsSendMessageQueryDTO } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
+import {
+  BitrixAddyPaymentsSendMessageNoticeDTO,
+  BitrixAddyPaymentsSendMessagePaymentDto,
+  BitrixAddyPaymentsSendMessageQueryDTO,
+} from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
 import { ApiExceptions } from '@/common/decorators/api-exceptions.decorator';
 import { ApiAuthHeader } from '@/common/decorators/api-authorization-header.decorator';
 import { B24AddyPaymentsSendMessageResponseDto } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message-response.dto';
@@ -33,6 +44,22 @@ export class BitrixAddyPaymentsControllerV1 {
     description: 'Ответ об успешной отправки сообщения',
     status: HttpStatus.OK,
     type: B24AddyPaymentsSendMessageResponseDto,
+  })
+  @ApiExtraModels(
+    BitrixAddyPaymentsSendMessageNoticeDTO,
+    BitrixAddyPaymentsSendMessagePaymentDto,
+  )
+  @ApiBody({
+    schema: {
+      oneOf: [
+        {
+          $ref: getSchemaPath(BitrixAddyPaymentsSendMessageNoticeDTO),
+        },
+        {
+          $ref: getSchemaPath(BitrixAddyPaymentsSendMessagePaymentDto),
+        },
+      ],
+    },
   })
   @UseGuards(AuthGuard)
   @HttpCode(HttpStatus.OK)

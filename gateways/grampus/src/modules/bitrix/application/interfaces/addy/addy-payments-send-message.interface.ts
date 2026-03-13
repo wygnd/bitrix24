@@ -4,6 +4,7 @@ export interface BitrixAddyPaymentsSendMessagePaymentOptions {
   price: number;
   contract: string;
   client: string;
+  payment_id: string;
 }
 
 export interface BitrixAddyPaymentsSendMessageResponse {

@@ -61,6 +61,16 @@ export class BitrixAddyPaymentsSendMessagePaymentDto implements BitrixAddyPaymen
   @IsNotEmpty()
   @IsString()
   client: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'ID платежа на стороне addy backend',
+    required: true,
+    example: '12334',
+  })
+  @IsNotEmpty()
+  @IsString()
+  payment_id: string;
 }
 
 export class BitrixAddyPaymentsSendMessageResponseDto implements BitrixAddyPaymentsSendMessageResponse {
@@ -96,6 +106,12 @@ export class BitrixAddyPaymentsSendMessageQueryDTO implements BitrixAddyPayments
 }
 
 export class BitrixAddyPaymentsSendMessageNoticeDTO implements BitrixAddyPaymentsSendMessageNoticeOptions {
+  @ApiProperty({
+    type: String,
+    description: 'Сообщение',
+    required: true,
+    example: 'some message',
+  })
   @IsNotEmpty()
   @IsString()
   message: string;

@@ -5,5 +5,8 @@ export default (): { microservices: IMicroservicesConfig } => ({
     users: {
       port: process.env.MICROSERVICES_NEURO_PORT,
     },
+    robots: {
+      host: process.env.MICROSERVICES_ROBOTS_HOST
+    }
   },
 });

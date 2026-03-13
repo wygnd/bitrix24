@@ -52,6 +52,8 @@ services:
       timeout: 5s
       retries: 3
 
+  # MICROSERVICES
+  # NEURO
   neuro:
     build:
       context: ./microservices/neuro
@@ -60,10 +62,26 @@ services:
     env_file:
       - .env
     volumes:
-      - /var/lib/bitrix24/logs/neuro:/app/logs
+      - /var/lib/bitrix24/microservices/neuro:/app/logs
     networks:
       - monitoring
 
+  # ROBOTS
+  robots:
+    build:
+      context: ./microservices/robots
+      dockerfile: ./Dockerfile
+    container_name: bitrix-microservice-robots
+    env_file:
+      - .env
+    volumes:
+      - /var/lib/bitrix24/microservices/robots:/app/logs
+
+    networks:
+      - private
+
+  # OTHER SERVICES
+  # RabbitMQ
   # Database
   postgres:
     image: postgres:latest
@@ -172,6 +190,9 @@ services:
 networks:
   monitoring:
     driver: bridge
+  private:
+    driver: bridge
+    internal: true
 
 volumes:
   loki_data:

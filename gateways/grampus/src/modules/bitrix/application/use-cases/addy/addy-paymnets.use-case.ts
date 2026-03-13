@@ -18,6 +18,7 @@ import {
   BitrixAddyPaymentsSendMessagePaymentDto,
 } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
 import { NDS_PERCENT } from '@/modules/bitrix/application/constants/common/bitrix.constants';
+import { RobotsService } from '@/shared/microservices/modules/robots/services/service';
 
 @Injectable()
 export class BitrixAddyPaymentsUseCase {
@@ -33,6 +34,7 @@ export class BitrixAddyPaymentsUseCase {
     private readonly bitrixService: BitrixPort,
     @Inject(B24PORTS.BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
+    private readonly robotsYandexDirectService: RobotsService,
   ) {
     const addySupportOptions = this.configService.get<BitrixAddyPaymentOptions>(
       'bitrixConstants.ADDY.payment',
@@ -110,10 +112,24 @@ export class BitrixAddyPaymentsUseCase {
     fields: BitrixAddyPaymentsSendMessagePaymentOptions,
   ): Promise<BitrixAddyPaymentsSendMessageResponse> {
     const { user_id, contract, price, client, link } = fields;
-    const priceInRubbles = price / 100;
-    const message =
+    const priceInRubbles = price / 100; // от ADDY приходит сумма в копейках
+    let invoiceTemplateHead: string;
+    let message =
       `Счет на оплату[br]${link}[br]${user_id} ${contract}[br]` +
       `${this.bitrixService.formatPrice(priceInRubbles)}[br]${client}`;
+
+    // Отправляем запрос на получение номера счета
+    const { status, invoice_number } =
+      await this.robotsYandexDirectService.sendRequestForGetInvoiceNumber({
+        invoice_url: link,
+      });
+
+    if (!status || !invoice_number) {
+      message += '[br][br][b][i]Не удалось сгенерировать номер счета[/i][/b]';
+      invoiceTemplateHead = '№ , ';
+    } else {
+      invoiceTemplateHead = `№ ${invoice_number}, `;
+    }
 
     const messageId = await this.bitrixBot.sendMessage({
       DIALOG_ID: this.paymentOptions.bitrixChatId,
@@ -132,7 +148,8 @@ export class BitrixAddyPaymentsUseCase {
           DISPLAY: 'LINE',
           ACTION: 'COPY',
           ACTION_VALUE:
-            `№ , ${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100), 'ru-RU', 'RUB', 'code')}`
+            invoiceTemplateHead +
+            `${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100), 'ru-RU', 'RUB', 'code')}`
               .replace('RUB', '')
               .trim(),
         },
