@@ -1,5 +1,3 @@
-import { BoolString } from '@bitrix24/b24jssdk';
-
 export type KeyboardBgColorToken = 'primary' | 'secondary' | 'alert' | 'base';
 
 export interface B24ImKeyboardOptions {
@@ -9,8 +7,8 @@ export interface B24ImKeyboardOptions {
   COMMAND_PARAMS?: any;
   BG_COLOR_TOKEN?: KeyboardBgColorToken;
   BG_COLOR?: string;
-  BLOCK?: BoolString;
-  DISABLED?: BoolString;
+  BLOCK?: string;
+  DISABLED?: string;
   TEXT_COLOR?: string;
   DISPLAY?: 'BLOCK' | 'LINE';
   WIDTH?: string;
@@ -23,7 +21,7 @@ export interface B24ImSendMessage {
   DIALOG_ID: string;
   MESSAGE: string;
   SYSTEM?: string;
-  URL_PREVIEW?: BoolString;
+  URL_PREVIEW?: string;
   KEYBOARD?: B24ImKeyboardOptions[];
   ATTACH?: B24ImSendMessageAttach | B24ImSendMessageAttach[];
 }
@@ -36,7 +34,7 @@ export interface B24ImUpdateMessage {
   MESSAGE_ID: string | number;
   MESSAGE: string;
   ATTACH?: string;
-  URL_PREVIEW?: BoolString;
+  URL_PREVIEW?: string;
   KEYBOARD?: B24ImKeyboardOptions[];
 }
 

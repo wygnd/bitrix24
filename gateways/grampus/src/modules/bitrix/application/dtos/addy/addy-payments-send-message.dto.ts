@@ -70,7 +70,7 @@ export class BitrixAddyPaymentsSendMessagePaymentDto implements BitrixAddyPaymen
   })
   @IsNotEmpty()
   @IsString()
-  payment_id: string;
+  invoice_id: string;
 }
 
 export class BitrixAddyPaymentsSendMessageResponseDto implements BitrixAddyPaymentsSendMessageResponse {

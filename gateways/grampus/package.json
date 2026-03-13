@@ -1,6 +1,6 @@
 {
   "name": "bitrix24",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": "",
   "type": "commonjs",
@@ -22,7 +22,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@bitrix24/b24jssdk": "^0.4.10",
     "@bull-board/api": "^6.13.0",
     "@bull-board/express": "^6.13.0",
     "@nestjs/axios": "^4.0.1",
