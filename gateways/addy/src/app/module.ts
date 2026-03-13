@@ -25,7 +25,7 @@ import { HttpLoggerMiddleware } from '@shared/middlewares/http-logger.middleware
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     consumer.apply(HttpLoggerMiddleware).forRoutes({
-      path: '*',
+      path: '/*path',
       method: RequestMethod.ALL,
     });
   }
