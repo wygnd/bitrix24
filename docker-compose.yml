@@ -112,6 +112,7 @@ services:
       - /var/lib/bitrix24/redis/data:/data
     networks:
       - monitoring
+      - private
     command: redis-server --requirepass  ${REDIS_PASSWORD}
     restart: always
 
