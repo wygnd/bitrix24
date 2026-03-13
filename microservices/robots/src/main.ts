@@ -27,6 +27,7 @@ async function bootstrap() {
       options: {
         host: host,
         port: 6379,
+        password: process.env.REDIS_PASSWORD ?? '',
       },
     },
   );
