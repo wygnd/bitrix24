@@ -15,6 +15,7 @@ services:
       - redis
       - postgres
       - neuro
+      - robots
     volumes:
       - /var/lib/bitrix24/logs/grampus:/app/logs
     networks:
