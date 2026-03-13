@@ -1,0 +1,4 @@
+
+export const B24PORTS = {
+  BITRIX_DEFAULT: 'BITRIX_DEFAULT_PORT',
+};

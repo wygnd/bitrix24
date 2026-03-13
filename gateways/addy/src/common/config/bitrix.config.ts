@@ -1,0 +1,9 @@
+import { IEnvironmentBitrixOptions } from '../../shared/interfaces/config/main';
+
+export default (): { bitrix: IEnvironmentBitrixOptions } => ({
+  bitrix: {
+    base_url: process.env.ADDY_GATEWAY_BITRIX_BASE_URL ?? '',
+    client_id: process.env.ADDY_GATEWAY_BITRIX_CLIENT_ID ?? '',
+    client_secret: process.env.ADDY_GATEWAY_BITRIX_CLIENT_SECRET ?? '',
+  },
+});
