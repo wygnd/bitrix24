@@ -11,7 +11,7 @@ import { catchError, throwError, timeout, TimeoutError } from 'rxjs';
 export class TimeoutInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>) {
     return next.handle().pipe(
-      timeout(30000),
+      timeout(60000), // 60 секунд
       catchError((err) => {
         if (err instanceof TimeoutError)
           return throwError(

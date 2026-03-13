@@ -1,8 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { WikiApiServiceNew } from '@/modules/wiki/services/wiki-api-new.service';
 import { DepartmentHeadDealCount } from '@/modules/bitrix/application/interfaces/departments/departments-api.interface';
 import { DistributeAdvertDealWikiResponse } from '@/modules/wiki/interfaces/wiki-distribute-deal.interface';
@@ -21,8 +17,8 @@ import qs from 'qs';
 import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wiki-send-defin-payment-group.interface';
 import { WikiCheckMissDays } from '@/modules/wiki/interfaces/wiki-check-miss-days.interface';
 import { isAxiosError } from 'axios';
-import { NeuroService } from '@/shared/microservices/neuro/services/service';
-import { IAnalyzeManagerCallRequest } from '@/shared/microservices/neuro/interfaces/interface';
+import { NeuroService } from '@/shared/microservices/modules/neuro/services/service';
+import { IAnalyzeManagerCallRequest } from '@/shared/microservices/modules/neuro/interfaces/interface';
 import { maybeCatchError } from '@/common/utils/catch-error';
 
 @Injectable()

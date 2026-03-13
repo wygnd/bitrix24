@@ -14,6 +14,7 @@ export enum B24ApiTags {
   WIKI = 'Wiki',
   ADDY = 'Addy',
   GRAMPUS = 'Grampus',
+  ROBOTS = 'Robots',
 }
 
 export interface B24Timestamp {

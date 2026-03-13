@@ -1,6 +1,6 @@
 import { Controller, Get, Redirect } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { NeuroService } from '@/shared/microservices/neuro/services/service';
+import { NeuroService } from '@/shared/microservices/modules/neuro/services/service';
 
 @ApiExcludeController()
 @Controller()

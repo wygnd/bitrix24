@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IAnalyzeManagerCallRequest } from '@/shared/microservices/neuro/interfaces/interface';
+import { IAnalyzeManagerCallRequest } from '@/shared/microservices/modules/neuro/interfaces/interface';
 
 export class WikiAnalyzeManagerCallsDTO implements IAnalyzeManagerCallRequest {
   @ApiProperty({

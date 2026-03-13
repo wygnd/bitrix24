@@ -12,11 +12,15 @@ import EventEmitter from 'node:events';
 import helmet from 'helmet';
 import { config } from 'dotenv';
 import { join } from 'path';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { IS_PROD } from '@/common/config';
+import {
+  BitrixAddyPaymentsSendMessageNoticeDTO,
+  BitrixAddyPaymentsSendMessagePaymentDto,
+} from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
 
 config({
-  debug: process.env.NODE_ENV !== 'production',
-  path: join(process.cwd(), '..', '.env'),
+  debug: !IS_PROD,
+  path: join(process.cwd(), '..', '..', '.env'),
   encoding: 'utf8',
 });
 
@@ -117,7 +121,13 @@ async function bootstrap() {
   SwaggerModule.setup(
     'docs',
     app,
-    () => SwaggerModule.createDocument(app, swaggerConfig),
+    () =>
+      SwaggerModule.createDocument(app, swaggerConfig, {
+        extraModels: [
+          BitrixAddyPaymentsSendMessageNoticeDTO,
+          BitrixAddyPaymentsSendMessagePaymentDto,
+        ],
+      }),
     {
       swaggerOptions: {
         filter: true,

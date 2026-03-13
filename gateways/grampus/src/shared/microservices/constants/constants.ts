@@ -1,3 +1,4 @@
 export const MICROSERVICES = {
   NEURO: 'NEURO_SERVICE',
+  ROBOTS: 'ROBOTS_SERVICE',
 };
