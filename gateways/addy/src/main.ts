@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { IEnvironmentOptions } from '@shared/interfaces/config/main';
 import { Logger } from '@nestjs/common';
 import { setupAppFilters } from './common/filters/main';
+import { setupAppPipes } from './common/pipes/main';
 
 config({
   debug: !IS_PROD,
@@ -45,6 +46,9 @@ async function bootstrap() {
 
   // Запросы /api/*
   app.setGlobalPrefix('api');
+
+  // Добавляем валидацию
+  setupAppPipes(app);
 
   const PORT = config.getOrThrow<string>('application.port', { infer: true });
 

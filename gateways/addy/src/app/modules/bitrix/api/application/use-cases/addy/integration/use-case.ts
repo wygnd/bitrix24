@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { IB24AddyIntegrationRegisterClientRequest } from '../../../interfaces/addy/integration/clients/registration/requests/interface';
 import { B24PORTS } from '../../../../constants/ports/constant';
 import type { IB24Port } from '../../../ports/port';
@@ -6,6 +11,10 @@ import { WinstonLogger } from '@shared/logger/winston.logger';
 import { maybeCatchError } from '@shared/utils/catch-error';
 import { TB24BatchCommands } from '../../../../../interfaces/api/interface';
 import dayjs from 'dayjs';
+import { IB24AddyIntegrationRegisterClientResponse } from '../../../interfaces/addy/integration/clients/registration/responses/interface';
+import { IB24AddyIntegrationAddClientPaymentRequest } from '../../../interfaces/addy/integration/clients/payments/requests/interface';
+import type { IB24LeadsPort } from '../../../ports/leads/port';
+import { B24AddyPaymentMethods } from '../../../constants/addy/integration/payments/constants';
 
 @Injectable()
 export class B24AddyIntegrationUseCase {
@@ -16,6 +25,8 @@ export class B24AddyIntegrationUseCase {
 
   constructor(
     @Inject(B24PORTS.BITRIX_DEFAULT) private readonly bitrixService: IB24Port,
+    @Inject(B24PORTS.LEADS.LEADS_DEFAULT)
+    private readonly leadsService: IB24LeadsPort,
   ) {}
 
   /**
@@ -28,7 +39,7 @@ export class B24AddyIntegrationUseCase {
    */
   public async handleEmitRegisterEvent(
     data: IB24AddyIntegrationRegisterClientRequest,
-  ) {
+  ): Promise<IB24AddyIntegrationRegisterClientResponse> {
     try {
       const { phone, email, name, last_name, user_id } = data;
 
@@ -140,6 +151,80 @@ export class B24AddyIntegrationUseCase {
     } catch (error) {
       this.logger.error({
         handler: this.handleEmitRegisterEvent.name,
+        error: maybeCatchError(error),
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Handle client send payment
+   *
+   * ---
+   *
+   * Обработка оплаты клиента
+   */
+  public async handleEmitClientAddPayment(
+    data: IB24AddyIntegrationAddClientPaymentRequest,
+  ) {
+    try {
+      const {
+        user_email,
+        method_type,
+        payment_time,
+        amount_without_commission,
+        amount,
+      } = data;
+      const methodType =
+        method_type in B24AddyPaymentMethods
+          ? B24AddyPaymentMethods[method_type]
+          : 'Не определен';
+
+      const leadIds = await this.leadsService.getDuplicateLeads(
+        'email',
+        user_email,
+      );
+
+      if (leadIds.length === 0) throw new NotFoundException('Клиент не найден');
+
+      const [leadId] = leadIds;
+
+      const comment = [
+        `[b]Новый платеж[/b] от ${payment_time}`,
+        `[b]Тип платежа:[/b] ${methodType}`,
+        `[b]Сумма[/b]: ${this.bitrixService.formatPrice(amount)}`,
+        `[b]Сумма без комиссии[/b]: ${this.bitrixService.formatPrice(amount_without_commission)}`,
+      ];
+
+      const response = await this.bitrixService.callMethod(
+        'crm.timeline.comment.add',
+        {
+          fields: {
+            ENTITY_ID: leadId,
+            ENTITY_TYPE: 'lead',
+            COMMENT: comment.join('\n'),
+          },
+        },
+      );
+
+      this.logger.debug({
+        handler: this.handleEmitClientAddPayment.name,
+        request: data,
+        response,
+      });
+
+      if (!response.result)
+        throw new UnprocessableEntityException(
+          'Ошибка отправки данных в Битрикс24',
+        );
+
+      return { status: true, message: 'Данные отправлены в Битрикс24' };
+    } catch (error) {
+      console.log(error);
+      this.logger.error({
+        handler: this.handleEmitClientAddPayment.name,
+        request: data,
         error: maybeCatchError(error),
       });
 
