@@ -48,6 +48,7 @@ export type IB24AvailableMethods =
   | 'crm.contact.list'
   | 'crm.item.list'
   | 'crm.item.update'
+  | 'crm.item.add'
   | 'crm.company.list'
   | 'crm.activity.list'
   | 'crm.activity.update'
@@ -93,3 +94,33 @@ export interface IB24ListParams<
   select?: TSelect[];
   start?: number;
 }
+
+export type TB24BatchCommands = Record<string, IB24BatchCommand>;
+
+interface IB24BatchCommand<T = any> {
+  method: IB24AvailableMethods;
+  params: Record<string, T>;
+}
+
+export type TB24ErrorType =
+  | 'invalid_client'
+  | 'invalid_request'
+  | 'insufficient_scope'
+  | 'invalid_grant'
+  | 'invalid_scope'
+  | 'INTERNAL_SERVER_ERROR'
+  | 'ERROR_UNEXPECTED_ANSWER'
+  | 'QUERY_LIMIT_EXCEEDED'
+  | 'ERROR_BATCH_METHOD_NOT_ALLOWED'
+  | 'ERROR_BATCH_LENGTH_EXCEEDED'
+  | 'NO_AUTH_FOUND'
+  | 'INVALID_REQUEST'
+  | 'OVERLOAD_LIMIT'
+  | 'ACCESS_DENIED'
+  | 'INVALID_CREDENTIALS'
+  | 'ERROR_MANIFEST_IS_NOT_AVAILABLE'
+  | 'expired_token'
+  | 'user_access_error'
+  | 'ERROR_CORE'
+  | 'BOT_ID_ERROR'
+  | 'ERR_BAD_RESPONSE';

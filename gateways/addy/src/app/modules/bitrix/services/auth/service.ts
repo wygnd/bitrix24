@@ -11,8 +11,15 @@ import {
 } from '../../interfaces/auth/interface';
 import { RedisService } from '../../../redis/services/service';
 import { REDIS_KEYS } from '../../../redis/constants/constants';
-import { IB24AvailableMethods } from '../../interfaces/api/interface';
-import { IB24Response } from '../../interfaces/api/responses/interface';
+import {
+  IB24AvailableMethods,
+  TB24BatchCommands,
+} from '../../interfaces/api/interface';
+import {
+  IB24BatchResponseMap,
+  IB24Response,
+} from '../../interfaces/api/responses/interface';
+import qs from 'qs';
 
 @Injectable()
 export class BitrixApiService {
@@ -80,6 +87,7 @@ export class BitrixApiService {
           handler: 'response error',
           error: maybeCatchError(err),
         });
+
         return Promise.reject(err);
       },
     );
@@ -93,7 +101,7 @@ export class BitrixApiService {
   }
 
   /**
-   * Send request to bitrix24
+   * Send request to Bitrix24
    *
    * ---
    *
@@ -110,6 +118,48 @@ export class BitrixApiService {
       ...params,
       auth: access_token,
     });
+  }
+
+  /**
+   * Send batch reqeust to Bitrix24
+   *
+   * ---
+   *
+   * Отправка пакета запросов в Битрикс24
+   * @param commands
+   * @param halt
+   */
+  public async callBatch<T extends Record<string, any>>(
+    commands: TB24BatchCommands,
+    halt = false,
+  ) {
+    const { access_token } = await this.getTokens();
+
+    const cmd = Object.entries(commands).reduce(
+      (acc, [key, { method, params }]) => {
+        acc[key] = `${method}?${qs.stringify(params)}`;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    const response = (await this.post('/rest/batch', {
+      cmd: cmd,
+      halt: halt,
+      auth: access_token,
+    })) as IB24BatchResponseMap;
+
+    const errors = Object.entries(response.result.result_error).reduce(
+      (acc, [command, errorData]) => {
+        acc += `${command}: ${errorData.error_description}\n`;
+        return acc;
+      },
+      '' as string,
+    );
+
+    if (errors && halt) throw new Error(errors);
+
+    return response as IB24BatchResponseMap<T>;
   }
 
   /**
@@ -158,6 +208,9 @@ export class BitrixApiService {
       '',
       {},
       {
+        baseURL: this.configService.getOrThrow('bitrix.oauth_base_url', {
+          infer: true,
+        }),
         params: {
           refresh_token: refreshToken,
           grant_type: 'refresh_token',

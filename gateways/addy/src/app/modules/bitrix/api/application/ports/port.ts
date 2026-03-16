@@ -1,16 +1,21 @@
-import { IB24AvailableMethods } from '../../../interfaces/api/interface';
-import { IB24Response } from '../../../interfaces/api/responses/interface';
+import {
+  IB24AvailableMethods,
+  TB24BatchCommands,
+} from '../../../interfaces/api/interface';
+import {
+  IB24BatchResponseMap,
+  IB24Response,
+} from '../../../interfaces/api/responses/interface';
 
 export interface IB24Port {
   callMethod<T extends Record<string, any> = Record<string, any>, U = any>(
     method: IB24AvailableMethods,
     params?: Partial<T>,
   ): Promise<IB24Response<U>>;
-  // callBatch<T extends Record<string, any>>(
-  //   commands: B24BatchCommands,
-  //   halt?: boolean,
-  // ): Promise<B24BatchResponseMap<T>>;
-  // updateTokens(): Promise<BitrixTokens>;
+  callBatch<T extends Record<string, any>>(
+    commands: TB24BatchCommands,
+    halt?: boolean,
+  ): Promise<IB24BatchResponseMap<T>>;
   generateLeadUrl(leadId: number | string, label?: string): string;
   generateDealUrl(dealId: number | string, label?: string): string;
   generateTaskUrl(userId: string, taskId: string, label?: string): string;

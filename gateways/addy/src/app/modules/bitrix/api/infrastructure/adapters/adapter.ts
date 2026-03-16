@@ -1,7 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { IB24Port } from '../../application/ports/port';
-import { IB24AvailableMethods } from '../../../interfaces/api/interface';
-import { IB24Response } from '../../../interfaces/api/responses/interface';
+import {
+  IB24AvailableMethods,
+  TB24BatchCommands,
+} from '../../../interfaces/api/interface';
+import {
+  IB24BatchResponseMap,
+  IB24Response,
+} from '../../../interfaces/api/responses/interface';
 import emojiStrip from 'emoji-strip';
 import { BitrixApiService } from '../../../services/auth/service';
 import { ConfigService } from '@nestjs/config';
@@ -173,5 +179,21 @@ export class BitrixAdapter implements IB24Port {
     params: Partial<T> = {},
   ): Promise<IB24Response<U>> {
     return this.bitrixApiService.callMethod(method, params);
+  }
+
+  /**
+   * Like callMethod but send batch request
+   *
+   * ---
+   *
+   * Похож на callMethod, но отправляет сразу пакет запросов
+   * @param commands
+   * @param halt
+   */
+  public async callBatch<T extends Record<string, any>>(
+    commands: TB24BatchCommands,
+    halt: boolean = false,
+  ): Promise<IB24BatchResponseMap<T>> {
+    return this.bitrixApiService.callBatch(commands, halt);
   }
 }
