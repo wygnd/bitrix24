@@ -88,6 +88,8 @@ services:
   postgres:
     image: postgres:latest
     container_name: bitrix-server-postgres
+    env_file:
+      - .env
     ports:
       - "${DB_PORT_INTERNAL}:5432"
     environment:
