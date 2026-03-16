@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { IB24AddyIntegrationRegisterClientRequest } from '../../../interfaces/addy/integration/clients/registration/requests/interface';
 import { B24PORTS } from '../../../../constants/ports/constant';
 import type { IB24Port } from '../../../ports/port';
@@ -186,38 +181,59 @@ export class B24AddyIntegrationUseCase {
         user_email,
       );
 
-      if (leadIds.length === 0) throw new NotFoundException('Клиент не найден');
+      const batchCommands: TB24BatchCommands = {};
+      const chatMessage: string[] = [payment_time, methodType, amount];
 
-      const [leadId] = leadIds;
+      if (leadIds.length > 0) {
+        const lead = await this.leadsService.getLeadById(leadIds[0].toString());
+        let additionalChatMessage: string;
 
-      const comment = [
-        `[b]Новый платеж[/b] от ${payment_time}`,
-        `[b]Тип платежа:[/b] ${methodType}`,
-        `[b]Сумма[/b]: ${this.bitrixService.formatPrice(amount)}`,
-        `[b]Сумма без комиссии[/b]: ${this.bitrixService.formatPrice(amount_without_commission)}`,
-      ];
+        // Если не Иван Ильин
+        if (lead && lead.assignedById !== '1') {
+          additionalChatMessage = `[user=${lead.assignedById}][/user]`;
+        } else {
+          additionalChatMessage = 'Оплатил самостоятельно';
+        }
 
-      const response = await this.bitrixService.callMethod(
-        'crm.timeline.comment.add',
-        {
-          fields: {
-            ENTITY_ID: leadId,
-            ENTITY_TYPE: 'lead',
-            COMMENT: comment.join('\n'),
+        chatMessage.unshift(additionalChatMessage);
+
+        const [leadId] = leadIds;
+        const comment = [
+          `[b]Новый платеж[/b] от ${payment_time}`,
+          `[b]Тип платежа:[/b] ${methodType}`,
+          `[b]Сумма[/b]: ${this.bitrixService.formatPrice(amount)}`,
+          `[b]Сумма без комиссии[/b]: ${this.bitrixService.formatPrice(amount_without_commission)}`,
+        ];
+
+        batchCommands['addComment'] = {
+          method: 'crm.timeline.comment.add',
+          params: {
+            fields: {
+              ENTITY_ID: leadId,
+              ENTITY_TYPE: 'lead',
+              COMMENT: comment.join('\n'),
+            },
           },
+        };
+      } else {
+        chatMessage.push('Оплатил самостоятельно');
+      }
+
+      batchCommands['sendMessage'] = {
+        method: 'im.message.add',
+        params: {
+          DIALOG_ID: 'chat104', // Addy pay
+          MESSAGE: chatMessage.join(' | '),
         },
-      );
+      };
+
+      const response = await this.bitrixService.callBatch(batchCommands, true);
 
       this.logger.debug({
         handler: this.handleEmitClientAddPayment.name,
         request: data,
         response,
       });
-
-      if (!response.result)
-        throw new UnprocessableEntityException(
-          'Ошибка отправки данных в Битрикс24',
-        );
 
       return { status: true, message: 'Данные отправлены в Битрикс24' };
     } catch (error) {

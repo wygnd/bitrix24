@@ -49,6 +49,7 @@ export type IB24AvailableMethods =
   | 'crm.item.list'
   | 'crm.item.update'
   | 'crm.item.add'
+  | 'crm.item.get'
   | 'crm.company.list'
   | 'crm.activity.list'
   | 'crm.activity.update'
