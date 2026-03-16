@@ -1,4 +1,4 @@
-import { IEnvironmentAppOptions } from '../../shared/interfaces/config/main';
+import { IEnvironmentAppOptions } from '@shared/interfaces/config/main';
 
 export default (): { application: IEnvironmentAppOptions } => ({
   application: {
@@ -11,6 +11,9 @@ export default (): { application: IEnvironmentAppOptions } => ({
         username: process.env.ADDY_GATEWAY_APP_DOCS_SWAGGER_USERNAME,
         password: process.env.ADDY_GATEWAY_APP_DOCS_SWAGGER_PASSWORD,
       },
+    },
+    auth: {
+      token: process.env.ADDY_GATEWAY_APP_AUTH_TOKEN ?? '',
     },
   },
 });

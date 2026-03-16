@@ -48,7 +48,7 @@ services:
       - monitoring
     restart: always
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:3100/health || exit 1
+      test: wget --no-verbose --tries=1 --spider http://localhost:3100/api/v1/health || exit 1
       interval: 30s
       timeout: 5s
       retries: 3

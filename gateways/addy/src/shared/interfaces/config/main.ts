@@ -11,6 +11,11 @@ export interface IEnvironmentAppOptions {
   docs: {
     swagger: Partial<IEnvironmentAppSwaggerOptions>;
   };
+  auth: IEnvironmentAppAuthOptions;
+}
+
+export interface IEnvironmentAppAuthOptions {
+  token: string;
 }
 
 export interface IEnvironmentAppSwaggerOptions {
