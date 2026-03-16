@@ -67,7 +67,9 @@ scrape_configs:
         refresh_interval: 5s
     relabel_configs:
       - source_labels: [ __meta_docker_container_name ]
-        regex: 'bitrix-server-addy'
+        regex: .*bitrix-server-addy*
         action: keep
       - source_labels: [ __meta_docker_container_log_path ]
-        target_label: addy-console
+        target_label: __path__
+      - target_label: job
+        replacement: addy-console
