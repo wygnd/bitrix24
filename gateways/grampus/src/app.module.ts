@@ -25,6 +25,8 @@ import { TokensModule } from '@/modules/tokens/tokens.module';
 import { TelphinModule } from '@/modules/telphin/telphin.module';
 import { MetrikaModule } from '@/modules/metrika/metrika.module';
 import { SharedModule } from '@/shared/module';
+import { AddyModule } from '@/modules/addy/module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -58,11 +60,15 @@ import { SharedModule } from '@/shared/module';
         enabled: true,
       },
     }),
+    EventEmitterModule.forRoot({
+      wildcard: true,
+    }),
     CronModule,
     TokensModule,
     TelphinModule,
     MetrikaModule,
     SharedModule,
+    AddyModule,
   ],
   controllers: [AppController],
   providers: [

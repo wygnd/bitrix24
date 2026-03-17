@@ -9,6 +9,7 @@ import telphinConfig from './telphin.config';
 import grampusConfig from './grampus.config';
 import yandexConfig from './yadnex.config';
 import microservicesConfig from './microservices.config';
+import addyInternalConfig from './addy-internal.config';
 
 export const IS_PROD = process.env.NODE_ENV == 'production';
 
@@ -24,4 +25,5 @@ export const configList = [
   grampusConfig,
   yandexConfig,
   microservicesConfig,
+  addyInternalConfig,
 ];

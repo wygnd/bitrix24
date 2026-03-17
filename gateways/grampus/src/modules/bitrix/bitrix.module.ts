@@ -69,6 +69,8 @@ import { GrampusModule } from '@/modules/grampus/grampus.module';
 import { BitrixWidgetController } from '@/modules/bitrix/controllers/placements/widgets.controller';
 import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widgets/widget.use-case';
 import { SharedModule } from '@/shared/module';
+import { BitrixAddyYandexDirectListener } from '@/modules/bitrix/infrastructure/listeners/addy/payments/yandex/listener';
+import { AddyModule } from '@/modules/addy/module';
 
 @Module({
   imports: [
@@ -102,6 +104,7 @@ import { SharedModule } from '@/shared/module';
     ]),
     GrampusModule,
     SharedModule,
+    AddyModule,
   ],
   controllers: [
     BitrixController,
@@ -208,6 +211,7 @@ import { SharedModule } from '@/shared/module';
     // ADDY
     BitrixAddySupportUseCase,
     BitrixAddyPaymentsUseCase,
+    BitrixAddyYandexDirectListener,
 
     // AVITO
     BitrixAvitoUseCase,
