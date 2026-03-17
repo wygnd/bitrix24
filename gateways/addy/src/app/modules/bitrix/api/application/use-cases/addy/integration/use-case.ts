@@ -182,7 +182,12 @@ export class B24AddyIntegrationUseCase {
       );
 
       const batchCommands: TB24BatchCommands = {};
-      const chatMessage: string[] = [payment_time, methodType, amount];
+      const chatMessage: string[] = [
+        payment_time,
+        methodType,
+        this.bitrixService.formatPrice(amount),
+        user_email
+      ];
 
       if (leadIds.length > 0) {
         const lead = await this.leadsService.getLeadById(leadIds[0].toString());
