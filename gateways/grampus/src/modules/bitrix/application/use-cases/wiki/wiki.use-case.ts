@@ -372,7 +372,7 @@ export class BitrixWikiUseCase {
         ],
       });
 
-      return { message_id: messageId ?? null };
+      return { message_id: messageId };
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -390,6 +390,15 @@ export class BitrixWikiUseCase {
   public async sendNoticeReceivePayment(
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ): Promise<B24WikiNPaymentsNoticesResponse> {
+    // todo: ЕСЛИ СБП!!!
+    //  - Cтавить лайк
+    //  - Дублировать сообщение в чат (если реклама так же создавать задачу(без ссылки) и завершать ее)
+    //  - Убрать сообщение о том, что нужно зайти в баланс и забрать номер счета
+    //  - Сгенерировать счет
+    //  - Отправить запрос в wiki с номером счета
+
+    // todo: ЕСЛИ РС!!!
+    //  - Делать так же, как в СБП но только после нажатия кнопки в Битрикс24
     try {
       const { message, group, payment_id, maybe_mismatch } = fields;
       const [, , , , inn] = message.split(' | ');
