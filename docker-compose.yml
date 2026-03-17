@@ -81,6 +81,7 @@ services:
       - /srv/bitrix24/microservices/robots/sessions:/app/sessions
     restart: always
     networks:
+      - monitoring
       - private
 
   # OTHER SERVICES
