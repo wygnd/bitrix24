@@ -48,6 +48,7 @@ export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeRec
     example: true,
   })
   @IsOptional()
+  @Type(() => Boolean)
   @IsBoolean()
   is_sbp: boolean = false;
 }
