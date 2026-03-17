@@ -66,11 +66,12 @@ export class BitrixAddyPaymentsSendMessagePaymentDto implements BitrixAddyPaymen
     type: String,
     description: 'ID платежа на стороне addy backend',
     required: true,
-    example: '12334',
+    example: 12334,
   })
   @IsNotEmpty()
-  @IsString()
-  invoice_id: string;
+  @Type(() => Number)
+  @IsInt()
+  invoice_id: number;
 }
 
 export class BitrixAddyPaymentsSendMessageResponseDto implements BitrixAddyPaymentsSendMessageResponse {
