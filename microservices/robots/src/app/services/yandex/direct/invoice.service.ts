@@ -32,7 +32,7 @@ export class YandexDirectInvoiceService {
       const browser = await chromium.launch({
         headless: true,
         slowMo: 936,
-        args: ['--no-sandbox', '--disable-blink-features=AutomationControlled'],
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
       });
       const context = await browser.newContext({
         storageState: join(process.cwd(), 'sessions', 'yandex_auth.json'),
