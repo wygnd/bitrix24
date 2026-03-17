@@ -31,6 +31,7 @@ export type B24AvailableMethods =
   | 'imbot.unregister'
   | 'imbot.message.add'
   | 'imbot.message.update'
+  | 'imbot.message.like'
   | 'imbot.bot.list'
   | 'placement.bind'
   | 'placement.unbind'

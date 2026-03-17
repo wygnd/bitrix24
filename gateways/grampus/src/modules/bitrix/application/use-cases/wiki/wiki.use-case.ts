@@ -15,7 +15,7 @@ import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
 import { UnloadLostCallingResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-unload-lost-calling.interface';
 import { UnloadLostCallingDto } from '@/modules/bitrix/application/dtos/wiki/wiki-unload-lost-calling.dto';
 import { B24WikiPaymentsNoticeWaitingOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-waiting.inteface';
-import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-payments-notice-waiting.interface';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/payments/grampus/imbot-keyboard-payments-notice-waiting.interface';
 import { B24WikiPaymentsNoticeReceiveOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-receive.inteface';
 import { B24User } from '@/modules/bitrix/application/interfaces/users/user.interface';
 import { B24Department } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
@@ -25,7 +25,7 @@ import {
   B24_WIKI_PAYMENTS_ROLES_CHAT_IDS,
 } from '@/modules/bitrix/application/constants/wiki/wiki-payments.constants';
 import { B24ImbotSendMessageOptions } from '@/modules/bitrix/application/interfaces/bot/imbot.interface';
-import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
+import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/payments/grampus/imbot-keyboard-define-unknown-payment.interface';
 import { B24WikiNPaymentsNoticesResponse } from '@/modules/bitrix/application/interfaces/wiki/wiki-response.interface';
 import { BitrixWikiPaymentsNoticeExpenseOptions } from '@/modules/bitrix/application/interfaces/wiki/wiki-payments-notice-expense.interface';
 import { BitrixWikiDistributeLeadWishManager } from '@/modules/bitrix/application/interfaces/wiki/wiki-distribute-lead-wish-manager.interface';
@@ -391,16 +391,18 @@ export class BitrixWikiUseCase {
     fields: B24WikiPaymentsNoticeReceiveOptions,
   ): Promise<B24WikiNPaymentsNoticesResponse> {
     // todo: ЕСЛИ СБП!!!
-    //  - Cтавить лайк
     //  - Дублировать сообщение в чат (если реклама так же создавать задачу(без ссылки) и завершать ее)
-    //  - Убрать сообщение о том, что нужно зайти в баланс и забрать номер счета
+    //    - Нужно определеить чат
     //  - Сгенерировать счет
     //  - Отправить запрос в wiki с номером счета
+    //
+    // Cтавить лайк
+    // Убрать сообщение о том, что нужно зайти в баланс и забрать номер счета
 
     // todo: ЕСЛИ РС!!!
     //  - Делать так же, как в СБП но только после нажатия кнопки в Битрикс24
     try {
-      const { message, group, payment_id, maybe_mismatch } = fields;
+      const { message, group, payment_id, maybe_mismatch, is_sbp } = fields;
       const [, , , , inn] = message.split(' | ');
       const messageKeyboard: B24ImKeyboardOptions[] = [];
       let resultMessage = '';
@@ -452,15 +454,15 @@ export class BitrixWikiUseCase {
       // Складываем пришедшее сообщение со сформированным
       resultMessage = message + resultMessage;
 
-      const keyboardParams: ImbotKeyboardDefineUnknownPaymentOptions = {
-        group: group,
-        paymentId: payment_id,
-        message: this.bitrixBot.encodeText(resultMessage),
-        type: 'grampus',
-      };
-
       // Если платеж не определен добавляем кнопки для определения платежа
       if (['-1', '0'].includes(group) || maybe_mismatch) {
+        const keyboardParams: ImbotKeyboardDefineUnknownPaymentOptions = {
+          group: group,
+          paymentId: payment_id,
+          message: this.bitrixBot.encodeText(resultMessage),
+          type: 'grampus',
+        };
+
         messageKeyboard.push({
           TEXT: 'Grampus',
           COMMAND: 'defineUnknownPayment',
@@ -485,22 +487,42 @@ export class BitrixWikiUseCase {
             resultMessage;
       }
 
-      const sendMessageOptions: Omit<B24ImbotSendMessageOptions, 'BOT_ID'> = {
-        DIALOG_ID: chatId,
-        MESSAGE: resultMessage,
-        KEYBOARD: messageKeyboard,
+      const botId = this.bitrixService.getConstant('BOT_ID');
+      const commands: B24BatchCommands = {
+        send_message: {
+          method: 'imbot.message.add',
+          params: {
+            BOD_ID: botId,
+            DIALOG_ID: chatId,
+            MESSAGE: resultMessage,
+            KEYBOARD: messageKeyboard,
+          },
+        },
       };
 
-      const messageId = await this.bitrixBot.sendMessage(sendMessageOptions);
+      if (is_sbp) {
+        commands['like_message'] = {
+          method: 'imbot.message.like',
+          params: {
+            BOT_ID: botId,
+            MESSAGE_ID: '$result[send_message]',
+            ACTION: 'plus',
+          },
+        };
+      }
+
+      const response = await this.bitrixService.callBatch<{
+        send_message: number;
+      }>(commands);
 
       this.logger.debug({
         handler: this.sendNoticeReceivePayment.name,
         body: fields,
-        commands: sendMessageOptions,
-        response: messageId,
+        commands,
+        response,
       });
 
-      return { message_id: messageId };
+      return { message_id: response.result.result.send_message };
     } catch (error) {
       this.logger.error({
         handler: this.sendNoticeReceivePayment.name,

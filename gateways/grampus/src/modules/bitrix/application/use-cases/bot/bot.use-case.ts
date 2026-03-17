@@ -23,8 +23,8 @@ import {
 } from '@/modules/bitrix/application/interfaces/bot/imbot-handle.interface';
 import { ImbotKeyboardApproveSiteForCase } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-site-for-case.interface';
 import { ImbotApproveDistributeLeadFromAvitoByAi } from '@/modules/bitrix/application/interfaces/bot/imbot-approve-distribute-lead-from-avito-by-ai.interface';
-import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-payments-notice-waiting.interface';
-import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-addy-payments-approve.interface';
+import { ImbotKeyboardPaymentsNoticeWaiting } from '@/modules/bitrix/application/interfaces/bot/payments/grampus/imbot-keyboard-payments-notice-waiting.interface';
+import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/payments/addy/imbot-keyboard-addy-payments-approve.interface';
 import { B24EventParams } from '@/modules/bitrix/application/interfaces/bot/imbot-events.interface';
 import { B24DepartmentTypeId } from '@/modules/bitrix/application/interfaces/departments/departments.interface';
 import { B24BatchCommands } from '@/modules/bitrix/interfaces/bitrix.interface';
@@ -40,7 +40,7 @@ import { WikiService } from '@/modules/wiki/services/wiki.service';
 import { AvitoService } from '@/modules/avito/avito.service';
 import { BitrixAvitoUseCase } from '@/modules/bitrix/application/use-cases/avito/avito.use-case';
 import type { BitrixPort } from '@/modules/bitrix/application/ports/common/bitrix.port';
-import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-define-unknown-payment.interface';
+import { ImbotKeyboardDefineUnknownPaymentOptions } from '@/modules/bitrix/application/interfaces/bot/payments/grampus/imbot-keyboard-define-unknown-payment.interface';
 import { ImbotKeyboardApproveCreateHrDealByRequestCandidate } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-approve-create-hr-deal-by-request-candidate.interface';
 
 @Injectable()
@@ -912,7 +912,8 @@ export class BitrixBotUseCase {
 
       // Остальные чаты
       default:
-        return this.handleApprovePaymentDefault(fields);
+        return true;
+      // return this.handleApprovePaymentDefault(fields);
     }
   }
 
@@ -1108,7 +1109,6 @@ export class BitrixBotUseCase {
     fields: ImbotKeyboardPaymentsNoticeWaiting,
   ) {
     try {
-      // Декодируем сообщение
       // Получаем руководителя менеджера
       const batchCommands: B24BatchCommands = {
         get_user: {
@@ -1140,6 +1140,16 @@ export class BitrixBotUseCase {
       return false;
     }
   }
+
+  /**
+   * Generate invoice number and send in wiki service
+   *
+   * ---
+   *
+   * Генерация счета и отправка в wiki
+   * @param fields
+   */
+  public async generateInvoiceNumber(fields: any) {}
 
   private async handleApproveAddyPaymentOnPay(
     fields: B24ImboKeyboardAddyPaymentsApprove,
