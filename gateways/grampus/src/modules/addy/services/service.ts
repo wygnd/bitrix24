@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { maybeCatchError } from '@/common/utils/catch-error';
+import { IAddyInvoiceRequestData } from '@/modules/addy/interface/invoice/requests/interface';
 
 @Injectable()
 export class AddyService {
@@ -83,7 +84,7 @@ export class AddyService {
    *
    * Отправляет данные о платеже в Addy сервис
    */
-  public async sendInvoiceData(data: any) {
+  public async sendInvoiceData(data: IAddyInvoiceRequestData) {
     try {
       const response = await this.post(
         '/v1/bx24/set-client-invoice-number',

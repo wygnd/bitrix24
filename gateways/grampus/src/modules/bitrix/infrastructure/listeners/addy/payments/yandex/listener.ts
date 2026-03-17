@@ -20,7 +20,10 @@ export class BitrixAddyYandexDirectListener {
     payload: YandexDirectInvoiceGeneratedEvent,
   ) {
     try {
-      const response = await this.addyService.sendInvoiceData(payload);
+      const response = await this.addyService.sendInvoiceData({
+        client_invoice_id: payload.invoice_id,
+        invoice_number: payload.invoice_number,
+      });
 
       this.logger.debug({
         handler: this.handleInvoiceGeneratedEvent.name,
