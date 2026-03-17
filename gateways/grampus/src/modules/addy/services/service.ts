@@ -7,19 +7,27 @@ import { maybeCatchError } from '@/common/utils/catch-error';
 @Injectable()
 export class AddyService {
   private readonly logger = new WinstonLogger(AddyService.name, ['addy']);
-  private readonly responseInterceptorLogger = new WinstonLogger(AddyService.name, ['addy']);
-  private readonly requestInterceptorLogger = new WinstonLogger(AddyService.name, ['addy']);
+  private readonly responseInterceptorLogger = new WinstonLogger(
+    `${AddyService.name}_Responses`,
+    ['addy'],
+  );
+  private readonly requestInterceptorLogger = new WinstonLogger(
+    `${AddyService.name}_Requests`,
+    ['addy'],
+  );
   private readonly http: AxiosInstance;
 
   constructor(private readonly configService: ConfigService) {
+    const authData = btoa(
+      `${this.configService.getOrThrow('addy_internal.auth.login')}:${this.configService.getOrThrow('addy_internal.auth.password')}`,
+    );
+
     this.http = axios.create({
       baseURL: this.configService.getOrThrow<string>('addy_internal.baseUrl'),
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        Authorization: btoa(
-          `Basic ${this.configService.getOrThrow('addy_internal.auth.login')}:${this.configService.getOrThrow('addy_internal.auth.password')}`,
-        ),
+        Authorization: `Basic ${authData}`,
       },
     });
 
@@ -31,6 +39,9 @@ export class AddyService {
           data: {
             body: config.data,
             params: config.params,
+            headers: {
+              authorization: config.headers.authorization,
+            },
           },
         });
         return config;
