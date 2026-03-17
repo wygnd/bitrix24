@@ -73,3 +73,16 @@ scrape_configs:
         target_label: __path__
       - target_label: job
         replacement: addy-console
+
+  - job_name: microservice-robots-console
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: [ __meta_docker_container_name ]
+        regex: .*bitrix-microservice-robots*
+        action: keep
+      - source_labels: [ __meta_docker_container_log_path ]
+        target_label: __path__
+      - target_label: job
+        replacement: microservice-robots-console
