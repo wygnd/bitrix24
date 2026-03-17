@@ -77,7 +77,7 @@ services:
     env_file:
       - .env
     volumes:
-      - /var/lib/bitrix24/microservices/logs/robots:/app/logs
+      - /var/lib/bitrix24/logs/microservices/robots:/app/logs
       - /srv/bitrix24/microservices/robots/sessions:/app/sessions
     restart: always
     networks:

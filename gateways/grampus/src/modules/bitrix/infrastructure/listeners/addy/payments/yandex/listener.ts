@@ -10,7 +10,7 @@ import { maybeCatchError } from '@/common/utils/catch-error';
 export class BitrixAddyYandexDirectListener {
   private readonly logger = new WinstonLogger(
     BitrixAddyYandexDirectListener.name,
-    'integration:addy:payments:listeners'.split(':'),
+    'bitrix:addy:payments:listeners'.split(':'),
   );
 
   constructor(private readonly addyService: AddyService) {}
