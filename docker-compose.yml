@@ -16,8 +16,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      - neuro
-      - robots
+      neuro
+      robots
     volumes:
       - /var/lib/bitrix24/logs/grampus:/app/logs
     networks:
