@@ -40,4 +40,14 @@ export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeRec
   @Type(() => Boolean)
   @IsBoolean()
   maybe_mismatch: boolean = false;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Совершен ли платеж через СБП',
+    required: false,
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_sbp: boolean = false;
 }
