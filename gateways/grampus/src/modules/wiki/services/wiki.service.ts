@@ -16,10 +16,10 @@ import { WinstonLogger } from '@/config/winston.logger';
 import qs from 'qs';
 import { WikiSendDefinPaymentGroupInterface } from '@/modules/wiki/interfaces/wiki-send-defin-payment-group.interface';
 import { WikiCheckMissDays } from '@/modules/wiki/interfaces/wiki-check-miss-days.interface';
-import { isAxiosError } from 'axios';
 import { NeuroService } from '@/shared/microservices/modules/neuro/services/service';
 import { IAnalyzeManagerCallRequest } from '@/shared/microservices/modules/neuro/interfaces/interface';
 import { maybeCatchError } from '@/common/utils/catch-error';
+import { IWikiReceivedPaymentRequestOptions } from '@/modules/wiki/interfaces/payments/received/request/interface';
 
 @Injectable()
 export class WikiService {
@@ -66,19 +66,9 @@ export class WikiService {
       });
       return response;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.sendRejectDistributeNewDeal.name,
-        error: errorData,
+        error: maybeCatchError(error),
         body: data,
       });
       throw error;
@@ -118,19 +108,9 @@ export class WikiService {
 
       return sales;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.getWorkingSales.name,
-        error: errorData,
+        error: maybeCatchError(error),
       });
       throw error;
     }
@@ -162,19 +142,9 @@ export class WikiService {
       });
       return response;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.sendResultReceiveClientRequestFromAvitoToWiki.name,
-        error: errorData,
+        error: maybeCatchError(error),
       });
       return {
         wiki_lead_id: 0,
@@ -203,18 +173,9 @@ export class WikiService {
       });
       return response;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
       this.logger.error({
         handler: this.sendNotifyAboutDeleteLead.name,
-        errors: errorData,
+        errors: maybeCatchError(error),
       });
       return {
         message: 'Invalid remove lead',
@@ -248,19 +209,9 @@ export class WikiService {
       });
       return true;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.notifyWikiAboutReceivePayment.name,
-        error: errorData,
+        error: maybeCatchError(error),
         data,
       });
       return false;
@@ -293,20 +244,10 @@ export class WikiService {
       });
       return true;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.sendRequestDefinePaymentGroup.name,
         data: fields,
-        error: errorData,
+        error: maybeCatchError(error),
       });
       return false;
     }
@@ -340,19 +281,9 @@ export class WikiService {
 
       return response.bitrix_ids;
     } catch (error) {
-      let errorData: any;
-
-      if (isAxiosError(error)) {
-        errorData = error.response?.data;
-      } else if (error instanceof Error) {
-        errorData = error.message;
-      } else {
-        errorData = error;
-      }
-
       this.logger.error({
         handler: this.getMissDaysWorkers.name,
-        error: errorData,
+        error: maybeCatchError(error),
       });
       return [];
     }
@@ -395,6 +326,40 @@ export class WikiService {
       });
 
       throw error;
+    }
+  }
+
+  /**
+   * Send received payment data to wiki
+   *
+   * ---
+   *
+   * Отправляет данные о пришедшем платеже в wiki
+   */
+  public async sendReceivedPaymentData(
+    data: IWikiReceivedPaymentRequestOptions,
+  ) {
+    try {
+      // const response = await this.wikiApiServiceOld.post(
+      //   '',
+      //   qs.stringify({
+      //     action: '',
+      //     ...data,
+      //   }),
+      // );
+      // this.logger.debug({
+      //   handler: this.sendRequestDefinePaymentGroup.name,
+      //   data: data,
+      //   response,
+      // });
+      return true;
+    } catch (error) {
+      this.logger.error({
+        handler: this.sendRequestDefinePaymentGroup.name,
+        data: data,
+        error: maybeCatchError(error),
+      });
+      return false;
     }
   }
 }
