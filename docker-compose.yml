@@ -55,18 +55,18 @@ services:
 
   # MICROSERVICES
   # NEURO
-  neuro:
-    build:
-      context: ./microservices/neuro
-      dockerfile: ./Dockerfile
-    container_name: bitrix-microservice-neuro
-    env_file:
-      - .env
-    volumes:
-      - /var/lib/bitrix24/logs/microservices/neuro:/app/logs
-    restart: always
-    networks:
-      - monitoring
+#  neuro:
+#    build:
+#      context: ./microservices/neuro
+#      dockerfile: ./Dockerfile
+#    container_name: bitrix-microservice-neuro
+#    env_file:
+#      - .env
+#    volumes:
+#      - /var/lib/bitrix24/logs/microservices/neuro:/app/logs
+#    restart: always
+#    networks:
+#      - monitoring
 
   # ROBOTS
   robots:
@@ -79,6 +79,7 @@ services:
     volumes:
       - /var/lib/bitrix24/logs/microservices/robots:/app/logs
       - /srv/bitrix24/microservices/robots/sessions:/app/sessions
+      - /srv/bitrix24/microservices/robots/screenshots:/app/screenshots
     restart: always
     networks:
       - monitoring

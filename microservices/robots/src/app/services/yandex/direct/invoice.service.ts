@@ -6,6 +6,7 @@ import {
 import { Page } from 'playwright';
 import { chromium } from 'playwright-extra';
 import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { maybeCatchError } from '../../../../shared/utils/catch-error';
 import { IYandexDirectQueryParams } from '../../../interfaces/yandex/direct/request/invoice.interface';
@@ -17,8 +18,13 @@ export class YandexDirectInvoiceService {
     YandexDirectInvoiceService.name,
     'yandex/direct',
   );
+  private readonly saveScreenshotsPath = join(process.cwd(), 'screenshots');
 
-  constructor() {}
+  constructor() {
+    if (!existsSync(this.saveScreenshotsPath)) {
+      mkdirSync(this.saveScreenshotsPath);
+    }
+  }
 
   /**
    * Генерирует
@@ -26,13 +32,18 @@ export class YandexDirectInvoiceService {
    */
   public async getInvoiceNumber(fields: IYandexDirectQueryParams) {
     try {
+      const uuid = Date.now().toString();
       const { invoice_url } = fields;
 
       chromium.use(stealth());
       const browser = await chromium.launch({
         headless: true,
         slowMo: 936,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-blink-features=AutomationControlled',
+        ],
       });
       const context = await browser.newContext({
         storageState: join(process.cwd(), 'sessions', 'yandex_auth.json'),
@@ -56,6 +67,10 @@ export class YandexDirectInvoiceService {
 
       await page.mouse.move(326, 124);
       await page.waitForTimeout(3000);
+
+      await page.screenshot({
+        path: join(this.saveScreenshotsPath, uuid, 'main-page.png'),
+      });
 
       if (this.checkSession(page)) {
         throw new UnprocessableEntityException('Сессия истекла');
@@ -111,15 +126,22 @@ export class YandexDirectInvoiceService {
         throw new NotFoundException('Номер счета не найден');
       }
 
+      await page.screenshot({
+        path: join(this.saveScreenshotsPath, uuid, 'modal.png'),
+      });
+
       return {
         status: true,
         invoice_number: await invoiceNumber.textContent(),
       };
     } catch (error) {
+      const errorData = maybeCatchError(error);
+
+      this.logger.log(`Invalid get invoice number: ${errorData}`, 'error');
       this.logger.error({
         handler: this.getInvoiceNumber.name,
         request: fields,
-        error: maybeCatchError(error),
+        error: errorData,
       });
       throw error;
     }
