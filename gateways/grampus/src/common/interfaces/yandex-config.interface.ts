@@ -1,5 +1,6 @@
 export interface IYandexConfig {
   metrika: IYandexMetrikaConfig;
+  direct: IYandexDirectConfig;
 }
 
 export interface IYandexMetrikaConfig {
@@ -9,4 +10,11 @@ export interface IYandexMetrikaConfig {
     grampus: string;
     med: string;
   };
+}
+
+export interface IYandexDirectConfig {
+  baseUrl: string;
+  authToken: string;
+  masterToken: string;
+  login: string;
 }

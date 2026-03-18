@@ -58,6 +58,10 @@ export const REDIS_KEYS = {
 
   // MICROSERVICES
   MICROSERVICES_NEURO_ANALYZE_MANAGER_CALL: 'microservices:neuro:calls:analyze:',
+
+  // YANDEX
+  // YANDEX DIRECT
+  YANDEX_DIRECT_ACCOUNT_MANAGEMENT_LIST: 'yandex:direct:account:management:list'
 };
 
 export const REDIS_MAX_RETRY_DURATION = 5 * 60 * 1000;

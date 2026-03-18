@@ -10,5 +10,11 @@ export default (): { yandex: IYandexConfig } => ({
         med: process.env.YANDEX_METRIKA_COUNTERS_MED_GRAMPUS ?? '',
       },
     },
+    direct: {
+      baseUrl: process.env.YANDEX_DIREKT_URL ?? '',
+      authToken: process.env.YANDEX_DIREKT_AUTH_TOKEN ?? '',
+      masterToken: process.env.YANDEX_DIREKT_MASTER_TOKEN ?? '',
+      login: process.env.YANDEX_DIREKT_LOGIN ?? '',
+    },
   },
 });

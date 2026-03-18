@@ -27,6 +27,7 @@ import { MetrikaModule } from '@/modules/metrika/metrika.module';
 import { SharedModule } from '@/shared/module';
 import { AddyModule } from '@/modules/addy/module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { YandexModule } from '@/modules/yandex/module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     MetrikaModule,
     SharedModule,
     AddyModule,
+    YandexModule,
   ],
   controllers: [AppController],
   providers: [

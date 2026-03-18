@@ -71,6 +71,7 @@ import { BitrixWidgetUseCase } from '@/modules/bitrix/application/use-cases/widg
 import { SharedModule } from '@/shared/module';
 import { BitrixAddyYandexDirectListener } from '@/modules/bitrix/infrastructure/listeners/addy/payments/yandex/listener';
 import { AddyModule } from '@/modules/addy/module';
+import { YandexModule } from '@/modules/yandex/module';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { AddyModule } from '@/modules/addy/module';
     GrampusModule,
     SharedModule,
     AddyModule,
+    YandexModule,
   ],
   controllers: [
     BitrixController,
