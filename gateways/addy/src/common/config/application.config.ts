@@ -1,4 +1,4 @@
-import { IEnvironmentAppOptions } from '@shared/interfaces/config/main';
+import { IEnvironmentAppOptions } from '@shared/interfaces/config/app/main';
 
 export default (): { application: IEnvironmentAppOptions } => ({
   application: {

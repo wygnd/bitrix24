@@ -6,10 +6,10 @@ import { bitrixProviders } from './api/providers/provider';
 import { BitrixApiService } from './services/auth/service';
 import { B24UseCase } from './api/application/use-cases/use-case';
 import { BitrixController } from './controllers/controller';
-import { B24IntegrationAddyController } from './api/controllers/addy/controller';
-import { B24AddyIntegrationUseCase } from './api/application/use-cases/addy/integration/use-case';
+import { B24AddyIntegrationUseCase } from './api/application/use-cases/addy/integration/clients/use-case';
 import { bitrixLeadsProviders } from './api/providers/leads/provider';
 import { B24LeadsUseCase } from './api/application/use-cases/leads/use-case';
+import { B24IntegrationAddyClientsController } from './api/controllers/addy/clients/controller';
 
 @Module({
   imports: [ConfigModule, HttpModule, RedisModule],
@@ -18,7 +18,7 @@ import { B24LeadsUseCase } from './api/application/use-cases/leads/use-case';
     BitrixController,
 
     // ADDY
-    B24IntegrationAddyController,
+    B24IntegrationAddyClientsController,
   ],
   providers: [
     // DEFAULT

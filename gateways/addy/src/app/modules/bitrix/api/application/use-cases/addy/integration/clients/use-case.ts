@@ -1,15 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IB24AddyIntegrationRegisterClientRequest } from '../../../interfaces/addy/integration/clients/registration/requests/interface';
-import { B24PORTS } from '../../../../constants/ports/constant';
-import type { IB24Port } from '../../../ports/port';
+import { IB24AddyIntegrationRegisterClientRequest } from '../../../../interfaces/addy/integration/clients/registration/requests/interface';
+import { B24PORTS } from '../../../../../constants/ports/constant';
+import type { IB24Port } from '../../../../ports/port';
 import { WinstonLogger } from '@shared/logger/winston.logger';
 import { maybeCatchError } from '@shared/utils/catch-error';
-import { TB24BatchCommands } from '../../../../../interfaces/api/interface';
+import { TB24BatchCommands } from '../../../../../../interfaces/api/interface';
 import dayjs from 'dayjs';
-import { IB24AddyIntegrationRegisterClientResponse } from '../../../interfaces/addy/integration/clients/registration/responses/interface';
-import { IB24AddyIntegrationAddClientPaymentRequest } from '../../../interfaces/addy/integration/clients/payments/requests/interface';
-import type { IB24LeadsPort } from '../../../ports/leads/port';
-import { B24AddyPaymentMethods } from '../../../constants/addy/integration/payments/constants';
+import { IB24AddyIntegrationRegisterClientResponse } from '../../../../interfaces/addy/integration/clients/registration/responses/interface';
+import { IB24AddyIntegrationAddClientPaymentRequest } from '../../../../interfaces/addy/integration/clients/payments/requests/interface';
+import type { IB24LeadsPort } from '../../../../ports/leads/port';
+import { B24AddyPaymentMethods } from '../../../../constants/addy/integration/payments/constants';
 
 @Injectable()
 export class B24AddyIntegrationUseCase {
@@ -186,7 +186,7 @@ export class B24AddyIntegrationUseCase {
         payment_time,
         methodType,
         this.bitrixService.formatPrice(amount),
-        user_email
+        user_email,
       ];
 
       if (leadIds.length > 0) {
@@ -245,6 +245,28 @@ export class B24AddyIntegrationUseCase {
       console.log(error);
       this.logger.error({
         handler: this.handleEmitClientAddPayment.name,
+        request: data,
+        error: maybeCatchError(error),
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Handle request from site
+   *
+   * ---
+   *
+   * Обработка заявки с сайта
+   * @param data
+   */
+  public async handleEmitClientSiteRequest(data: any) {
+    try {
+
+    } catch (error) {
+      this.logger.error({
+        handler: this.handleEmitClientSiteRequest.name,
         request: data,
         error: maybeCatchError(error),
       });

@@ -1,4 +1,4 @@
-import { IEnvironmentRedisOptions } from '@shared/interfaces/config/main';
+import { IEnvironmentRedisOptions } from '@shared/interfaces/config/redis/main';
 
 export default (): { redis: IEnvironmentRedisOptions } => ({
   redis: {

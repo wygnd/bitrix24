@@ -1,4 +1,4 @@
-import { IEnvironmentBitrixOptions } from '@shared/interfaces/config/main';
+import { IEnvironmentBitrixOptions } from '@shared/interfaces/config/bitrix/main';
 
 export default (): { bitrix: IEnvironmentBitrixOptions } => ({
   bitrix: {
