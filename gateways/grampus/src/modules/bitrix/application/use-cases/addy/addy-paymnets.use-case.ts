@@ -11,7 +11,7 @@ import { WinstonLogger } from '@/config/winston.logger';
 import type { BitrixBotPort } from '@/modules/bitrix/application/ports/bot/bot.port';
 import { BitrixAddyPaymentOptions } from '@/common/interfaces/bitrix-config.interface';
 import { ConfigService } from '@nestjs/config';
-import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/imbot-keyboard-addy-payments-approve.interface';
+import { B24ImboKeyboardAddyPaymentsApprove } from '@/modules/bitrix/application/interfaces/bot/payments/addy/imbot-keyboard-addy-payments-approve.interface';
 import { validateField } from '@/common/validators/validate-field.validator';
 import {
   BitrixAddyPaymentsSendMessageNoticeDTO,
