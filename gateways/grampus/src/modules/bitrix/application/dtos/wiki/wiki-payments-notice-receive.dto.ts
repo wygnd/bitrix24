@@ -49,9 +49,11 @@ export class B24WikiPaymentsNoticeReceiveDto implements B24WikiPaymentsNoticeRec
   })
   @IsOptional()
   @Transform(({ value }) => {
-    if (typeof value !== 'string') return false;
+    // todo
+    return false;
+    // if (typeof value !== 'string') return false;
 
-    return value == '1';
+    // return value == '1';
   })
   is_sbp: boolean = false;
 }
