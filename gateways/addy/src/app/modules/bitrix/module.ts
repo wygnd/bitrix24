@@ -12,6 +12,8 @@ import { B24AddyClientsModel } from './api/infrastructure/persistence/models/add
 import { CqrsModule } from '@nestjs/cqrs';
 import { bitrixAddyProviders } from './api/application/providers/addy/provider';
 import { B24IntegrationAddyClientsContractsController } from './api/presetation/controllers/addy/clients/contracts/controller';
+import { B24JivoWebhooksController } from './api/presetation/controllers/jivo/webhooks/controller';
+import { bitrixJivoProviders } from './api/application/providers/jivo/providers';
 
 @Module({
   imports: [
@@ -28,6 +30,9 @@ import { B24IntegrationAddyClientsContractsController } from './api/presetation/
     // ADDY
     B24IntegrationAddyClientsEventsController,
     B24IntegrationAddyClientsContractsController,
+
+    // JIVO
+    B24JivoWebhooksController,
   ],
   providers: [
     // DEFAULT
@@ -39,6 +44,9 @@ import { B24IntegrationAddyClientsContractsController } from './api/presetation/
 
     // ADDY
     ...bitrixAddyProviders,
+
+    // JIVO
+    ...bitrixJivoProviders,
   ],
 })
 export class BitrixModule {}

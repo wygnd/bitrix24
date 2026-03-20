@@ -14,6 +14,7 @@ import { IEnvironmentOptions } from '@shared/interfaces/config/main';
 import { Logger } from '@nestjs/common';
 import { setupAppFilters } from './common/filters/main';
 import { setupAppPipes } from './common/pipes/main';
+import EventEmitter from 'node:events';
 
 config({
   debug: !IS_PROD,
@@ -55,5 +56,7 @@ async function bootstrap() {
   await app.listen(parseInt(PORT));
   logger.log(`Application started: http://localhost:${PORT}`);
 }
+
+EventEmitter.setMaxListeners(100);
 
 bootstrap();

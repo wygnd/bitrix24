@@ -81,6 +81,8 @@ services:
       - /srv/bitrix24/microservices/robots/sessions:/app/sessions
       - /srv/bitrix24/microservices/robots/screenshots:/app/screenshots
     restart: always
+    depends_on:
+      - redis
     networks:
       - monitoring
       - private
