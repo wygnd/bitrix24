@@ -16,6 +16,8 @@ import { AuthGuard } from '@shared/guards/auth.guard';
 import { B24AddyApiTag } from '../../../../../application/constants/addy/constant';
 import { B24AddyClientContractsAddDTO } from '../../../../dtos/addy/integration/clients/contracts/add/requests/dto';
 import { B24AddyIntegrationAddClientSiteRequestDTO } from '../../../../dtos/addy/integration/clients/site/requests/dto';
+import { B24AddyIntegrationClientPaymentAddResponseDTO } from '../../../../dtos/addy/integration/clients/payments/responses/dto';
+import { B24AddyIntegrationClientSiteFormSendResponseDTO } from '../../../../dtos/addy/integration/clients/site/responses/dto';
 
 @ApiTags(B24AddyApiTag)
 @UseGuards(AuthGuard)
@@ -42,6 +44,10 @@ export class B24IntegrationAddyClientsEventsController {
   }
 
   @ApiOperation({ summary: 'Обработка пополнение клиента в Addy сервисе' })
+  @ApiOkResponse({
+    type: B24AddyIntegrationClientPaymentAddResponseDTO,
+    description: 'Успешная обработка',
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/payments/add')
   public async emitClientPayment(
@@ -51,6 +57,10 @@ export class B24IntegrationAddyClientsEventsController {
   }
 
   @ApiOperation({ summary: 'Обработка заявок с сайта' })
+  @ApiOkResponse({
+    type: B24AddyIntegrationClientSiteFormSendResponseDTO,
+    description: 'Успешная обработка',
+  })
   @HttpCode(HttpStatus.OK)
   @Post('/form/send')
   public async emitClientSiteRequest(
