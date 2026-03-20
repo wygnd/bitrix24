@@ -29,6 +29,9 @@ import { B24AddyClientsGetClientByEmailQuery } from '../../../../queries/addy/cl
 import { B24AddyClientsUpdateClientCommandHandler } from '../../../../commands/addy/clients/update/handler';
 import { B24AddyClientBulkUpdateClientsCommand } from '../../../../commands/addy/clients/update/bulk/command';
 import { IB24Lead } from '../../../../interfaces/leads/interface';
+import { IB24AddyIntegrationAddClientSiteRequest } from '../../../../interfaces/addy/integration/clients/site/requests/interface';
+import { IB24CRMDuplicateRequest } from '../../../../../../interfaces/api/requests/crm/duplicate/requests/interface';
+import { TB24CRMDuplicateResponse } from '../../../../../../interfaces/api/requests/crm/duplicate/responses/interface';
 
 @Injectable()
 export class B24AddyIntegrationUseCase {
@@ -70,8 +73,8 @@ export class B24AddyIntegrationUseCase {
         },
       ] = await Promise.all([
         this.bitrixService.callBatch<{
-          duplicatesByPhone: { LEAD: number[] };
-          duplicatesByEmail: { LEAD: number[] };
+          duplicatesByPhone: TB24CRMDuplicateResponse;
+          duplicatesByEmail: TB24CRMDuplicateResponse;
         }>({
           duplicatesByPhone: {
             method: 'crm.duplicate.findbycomm',
@@ -309,8 +312,57 @@ export class B24AddyIntegrationUseCase {
    * Обработка заявки с сайта
    * @param data
    */
-  public async handleEmitClientSiteRequest(data: any) {
+  public async handleEmitClientSiteRequest(
+    data: IB24AddyIntegrationAddClientSiteRequest,
+  ) {
     try {
+      const { phone, name = '' } = data;
+      const { result: responseFindLead } = await this.bitrixService.callMethod<
+        IB24CRMDuplicateRequest,
+        TB24CRMDuplicateResponse
+      >('crm.duplicate.findbycomm', {
+        type: 'EMAIL',
+        values: [phone],
+        entity_type: 'LEAD',
+      });
+      const assignedId = 26;
+      let leadId: number;
+
+      // Если не нашли
+      if (Array.isArray(responseFindLead)) {
+        const response = await this.leadsService.createLead({
+          name: name,
+          assignedById: assignedId,
+          fm: [
+            {
+              valueType: 'WORK',
+              value: phone,
+              typeId: 'PHONE',
+            },
+          ],
+        });
+
+        if (!response)
+          throw new UnprocessableEntityException(
+            'Не удалось обработать заявку',
+          );
+
+        leadId = response.id;
+      } else {
+        leadId = responseFindLead.LEAD[0];
+      }
+
+      await this.bitrixService.callMethod('im.message.add', {
+        DIALOG_ID: assignedId,
+        MESSAGE:
+          '[b]Заявка с сайта[/b][br]' +
+          this.bitrixService.generateLeadUrl(leadId),
+      });
+
+      return {
+        status: true,
+        message: 'Заявка обработана',
+      };
     } catch (error) {
       this.logger.error({
         handler: this.handleEmitClientSiteRequest.name,
@@ -348,44 +400,44 @@ export class B24AddyIntegrationUseCase {
         }),
       );
 
-      // const { result: lead } = await this.bitrixService.callMethod<
-      //   object,
-      //   { LEAD: number[] } | []
-      // >('crm.duplicate.findbycomm', {
-      //   type: 'EMAIL',
-      //   values: [email],
-      //   entity_type: 'LEAD',
-      // });
-      //
-      // if (Array.isArray(lead))
-      //   throw new UnprocessableEntityException('Клиент не найден');
-      //
-      // const {
-      //   LEAD: [leadId],
-      // } = lead;
-      //
-      // this.bitrixService
-      //   .callMethod('crm.timeline.comment.add', {
-      //     fields: {
-      //       ENTITY_ID: leadId,
-      //       ENTITY_TYPE: 'lead',
-      //       COMMENT: `Создан договор [b]${contract_number}[/b]`,
-      //     },
-      //   })
-      //   .then((res) =>
-      //     this.logger.debug({
-      //       handler: this.handleEmitClientAddContract.name,
-      //       request: { fields, wasUpdated },
-      //       response: res,
-      //     }),
-      //   )
-      //   .catch((err) =>
-      //     this.logger.error({
-      //       handler: this.handleEmitClientAddContract.name,
-      //       request: { fields, wasUpdated },
-      //       response: err,
-      //     }),
-      //   );
+      const { result: lead } = await this.bitrixService.callMethod<
+        object,
+        TB24CRMDuplicateResponse
+      >('crm.duplicate.findbycomm', {
+        type: 'EMAIL',
+        values: [email],
+        entity_type: 'LEAD',
+      });
+
+      if (Array.isArray(lead))
+        throw new UnprocessableEntityException('Клиент не найден');
+
+      const {
+        LEAD: [leadId],
+      } = lead;
+
+      this.bitrixService
+        .callMethod('crm.timeline.comment.add', {
+          fields: {
+            ENTITY_ID: leadId,
+            ENTITY_TYPE: 'lead',
+            COMMENT: `Создан договор [b]${contract_number}[/b]`,
+          },
+        })
+        .then((res) =>
+          this.logger.debug({
+            handler: this.handleEmitClientAddContract.name,
+            request: { fields, wasUpdated },
+            response: res,
+          }),
+        )
+        .catch((err) =>
+          this.logger.error({
+            handler: this.handleEmitClientAddContract.name,
+            request: { fields, wasUpdated },
+            response: err,
+          }),
+        );
 
       return {
         status: true,

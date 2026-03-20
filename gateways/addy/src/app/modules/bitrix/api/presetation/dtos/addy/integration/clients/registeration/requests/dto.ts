@@ -33,7 +33,7 @@ export class B24AddyIntegrationRegisterClientRequestDTO implements IB24AddyInteg
   @ApiProperty({
     type: String,
     description: 'Фамилия клиента',
-    required: true,
+    required: false,
     example: 'Новиков',
   })
   @IsOptional()

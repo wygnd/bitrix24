@@ -21,8 +21,24 @@ export class B24LeadsAdapter implements IB24LeadsPort {
     private readonly bitrixService: IB24Port,
   ) {}
 
-  createLead(fields: Partial<IB24Lead>): Promise<number> {
-    return Promise.resolve(0);
+  async createLead(fields: Partial<IB24Lead>): Promise<IB24Lead | null> {
+    try {
+      const { result: {item} } = await this.bitrixService.callMethod<
+        object,
+        { item: IB24Lead }
+      >('crm.item.add', {
+        entityTypeId: '1',
+        fields: fields,
+      });
+      return item
+    } catch (error) {
+      this.logger.error({
+        handler: this.createLead.name,
+        request: fields,
+        error: maybeCatchError(error),
+      });
+      return null;
+    }
   }
 
   /**

@@ -15,6 +15,7 @@ import { B24AddyIntegrationAddClientPaymentRequestDTO } from '../../../../dtos/a
 import { AuthGuard } from '@shared/guards/auth.guard';
 import { B24AddyApiTag } from '../../../../../application/constants/addy/constant';
 import { B24AddyClientContractsAddDTO } from '../../../../dtos/addy/integration/clients/contracts/add/requests/dto';
+import { B24AddyIntegrationAddClientSiteRequestDTO } from '../../../../dtos/addy/integration/clients/site/requests/dto';
 
 @ApiTags(B24AddyApiTag)
 @UseGuards(AuthGuard)
@@ -52,8 +53,10 @@ export class B24IntegrationAddyClientsEventsController {
   @ApiOperation({ summary: 'Обработка заявок с сайта' })
   @HttpCode(HttpStatus.OK)
   @Post('/form/send')
-  public async emitClientSiteRequest(@Body() body: any) {
-    throw new MethodNotAllowedException();
+  public async emitClientSiteRequest(
+    @Body() body: B24AddyIntegrationAddClientSiteRequestDTO,
+  ) {
+    return this.addyIntegrationUseCase.handleEmitClientSiteRequest(body);
   }
 
   @ApiOperation({
