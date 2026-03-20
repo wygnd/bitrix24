@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { IEnvironmentOptions } from '@shared/interfaces/config/main';
@@ -161,6 +165,73 @@ export class BitrixApiService {
 
     return response as IB24BatchResponseMap<T>;
   }
+
+  /**
+   * Form batch batches request and return form response of object result
+   *
+   * ---
+   *
+   * Формирует пакет с пакетами запросов и возвращает отформатированный объект результата
+   * @param commands
+   * @param halt
+   */
+  async callBatches<T extends Record<string, any> = Record<string, any>>(
+    commands: TB24BatchCommands,
+    halt = false,
+  ): Promise<Record<string, T[keyof T]>> {
+    let index = 0;
+    let errors: string[] = [];
+    const batchCommandsMap = new Map<number, TB24BatchCommands>();
+
+    Object.entries(commands).forEach(([cmdName, cmd]) => {
+      let cmds = batchCommandsMap.get(index) ?? {};
+
+      if (Object.keys(cmds).length === 50) {
+        batchCommandsMap.set(index, cmds);
+        index++;
+        cmds = batchCommandsMap.get(index) ?? {};
+      }
+
+      cmds[cmdName] = cmd;
+
+      batchCommandsMap.set(index, cmds);
+    });
+
+    const batchResponses = await Promise.all(
+      Array.from(batchCommandsMap.values()).map((commands) => {
+        return this.callBatch<Record<keyof T, T[keyof T]>>(commands, halt);
+      }),
+    );
+
+    batchResponses.forEach((response) => {
+      if (
+        (Array.isArray(response.result.result_error) &&
+          response.result.result_error.length === 0) ||
+        Object.keys(response.result.result_error).length === 0
+      )
+        return;
+
+      Object.entries(response.result.result_error).forEach(
+        ([cmdName, { error, error_description }]) => {
+          errors.push(`${cmdName}: ${error}, ${error_description}`);
+        },
+      );
+    });
+
+    if (errors.length > 0) throw new BadRequestException(errors);
+
+    return batchResponses.reduce<Record<string, T[keyof T]>>(
+      (acc, { result: { result } }) => {
+        Object.entries(result).forEach(([commandName, response]) => {
+          acc[commandName] = response;
+        });
+
+        return acc;
+      },
+      {},
+    );
+  }
+
 
   /**
    * Get access and refresh bitrix tokens

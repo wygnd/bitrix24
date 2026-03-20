@@ -196,4 +196,20 @@ export class BitrixAdapter implements IB24Port {
   ): Promise<IB24BatchResponseMap<T>> {
     return this.bitrixApiService.callBatch(commands, halt);
   }
+
+  /**
+   * Like callBatch but send any batch size request
+   *
+   * ---
+   *
+   * Похож на callBatch, только отправляет запрос с любым кол-вом пакетов запросов
+   * @param commands
+   * @param halt
+   */
+  public async callBatches<T extends Record<string, any> = Record<string, any>>(
+    commands: TB24BatchCommands,
+    halt = false,
+  ): Promise<Record<string, T[keyof T]>> {
+    return this.bitrixApiService.callBatches(commands, halt);
+  }
 }

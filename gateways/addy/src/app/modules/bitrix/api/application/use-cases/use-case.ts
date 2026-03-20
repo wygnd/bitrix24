@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { B24PORTS } from '../../constants/ports/constant';
+import { B24PORTS } from '../../../constants/ports/constant';
 import type { IB24Port } from '../ports/port';
 import { IB24AvailableMethods } from '../../../interfaces/api/interface';
 

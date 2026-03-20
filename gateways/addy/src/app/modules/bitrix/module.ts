@@ -2,36 +2,43 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from '../redis/module';
-import { bitrixProviders } from './api/providers/provider';
+import { bitrixProviders } from './api/application/providers/provider';
 import { BitrixApiService } from './services/auth/service';
-import { B24UseCase } from './api/application/use-cases/use-case';
 import { BitrixController } from './controllers/controller';
-import { B24AddyIntegrationUseCase } from './api/application/use-cases/addy/integration/clients/use-case';
-import { bitrixLeadsProviders } from './api/providers/leads/provider';
-import { B24LeadsUseCase } from './api/application/use-cases/leads/use-case';
-import { B24IntegrationAddyClientsController } from './api/controllers/addy/clients/controller';
+import { bitrixLeadsProviders } from './api/application/providers/leads/provider';
+import { B24IntegrationAddyClientsEventsController } from './api/presetation/controllers/addy/clients/events/controller';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { B24AddyClientsModel } from './api/infrastructure/persistence/models/addy/clients/model';
+import { CqrsModule } from '@nestjs/cqrs';
+import { bitrixAddyProviders } from './api/application/providers/addy/provider';
+import { B24IntegrationAddyClientsContractsController } from './api/presetation/controllers/addy/clients/contracts/controller';
 
 @Module({
-  imports: [ConfigModule, HttpModule, RedisModule],
+  imports: [
+    ConfigModule,
+    HttpModule,
+    RedisModule,
+    SequelizeModule.forFeature([B24AddyClientsModel]),
+    CqrsModule.forRoot(),
+  ],
   controllers: [
     // DEFAULT
     BitrixController,
 
     // ADDY
-    B24IntegrationAddyClientsController,
+    B24IntegrationAddyClientsEventsController,
+    B24IntegrationAddyClientsContractsController,
   ],
   providers: [
     // DEFAULT
     BitrixApiService,
     ...bitrixProviders,
-    B24UseCase,
 
     // LEADS
     ...bitrixLeadsProviders,
-    B24LeadsUseCase,
 
     // ADDY
-    B24AddyIntegrationUseCase,
+    ...bitrixAddyProviders,
   ],
 })
 export class BitrixModule {}

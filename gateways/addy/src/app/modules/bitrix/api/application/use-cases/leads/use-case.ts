@@ -1,6 +1,6 @@
 import { WinstonLogger } from '@shared/logger/winston.logger';
 import { Inject } from '@nestjs/common';
-import { B24PORTS } from '../../../constants/ports/constant';
+import { B24PORTS } from '../../../../constants/ports/constant';
 import type { IB24LeadsPort } from '../../ports/leads/port';
 import { TB24LeadDuplicateType } from '../../interfaces/leads/duplicates/interface';
 

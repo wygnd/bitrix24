@@ -1,6 +1,6 @@
 {
   "name": "addy",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "description": "",
   "author": "",
   "private": true,
@@ -24,6 +24,7 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/cqrs": "^11.0.3",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/sequelize": "^11.0.1",
     "@nestjs/serve-static": "^5.0.4",
@@ -90,5 +91,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core"
+    ]
   }
 }

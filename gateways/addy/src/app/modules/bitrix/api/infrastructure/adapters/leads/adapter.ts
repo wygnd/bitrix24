@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { IB24LeadsPort } from '../../../application/ports/leads/port';
-import { B24PORTS } from '../../../constants/ports/constant';
+import { B24PORTS } from '../../../../constants/ports/constant';
 import type { IB24Port } from '../../../application/ports/port';
 import { IB24Lead } from '../../../application/interfaces/leads/interface';
 import { IB24ListParams } from '../../../../interfaces/api/interface';

@@ -32,16 +32,7 @@ export interface IB24Port {
   clearNumber(str: string): string;
   getRandomElement<T>(items: T[]): T;
   isAvailableToDistributeOnManager(): boolean;
-  // callBatches<T extends Record<string, any>>(
-  //   commands: B24BatchCommands,
-  // ): Promise<Record<string, T[keyof T]>>;
-  // checkBatchErrors<T extends Record<string, any> = Record<string, any>>(
-  //   responses: B24BatchResponseMap<T>[],
-  // ): string[];
-
-  // rest 3.0
-  // callMethodV2<T extends Record<string, any> = Record<string, any>, U = any>(
-  //   method: B24AvailableMethodsV2,
-  //   params?: Partial<T>,
-  // ): any;
+  callBatches<T extends Record<string, any>>(
+    commands: TB24BatchCommands,
+  ): Promise<Record<string, T[keyof T]>>;
 }

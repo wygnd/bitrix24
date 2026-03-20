@@ -7,6 +7,7 @@ import { RedisModule } from './modules/redis/module';
 import { HttpLoggerMiddleware } from '@shared/middlewares/http-logger.middleware';
 import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { DatabaseModule } from './modules/database/module';
 
 @Module({
   imports: [
@@ -21,8 +22,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
       },
       serveRoot: '/public',
     }),
-    BitrixModule,
     RedisModule,
+    DatabaseModule,
+    BitrixModule,
   ],
   controllers: [AppController],
   providers: [],
