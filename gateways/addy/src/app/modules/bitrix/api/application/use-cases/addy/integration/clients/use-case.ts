@@ -20,13 +20,12 @@ import { B24AddyClientsAddClientCommand } from '../../../../commands/addy/client
 import { IB24AddyClientsContractAddRequest } from '../../../../interfaces/addy/integration/clients/contracts/add/requests/interface';
 import { B24AddyClientUpdateClientCommand } from '../../../../commands/addy/clients/update/command';
 import { B24AddyClientsGetClientsQuery } from '../../../../queries/addy/clients/query';
-import { Op, Sequelize, WhereOptions } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import {
   IB24AddyClientBulkUpdate,
   IB24AddyClientEntity,
 } from '../../../../interfaces/addy/integration/clients/entities/entity';
 import { B24AddyClientsGetClientByEmailQuery } from '../../../../queries/addy/clients/get-client/by-email/query';
-import { B24AddyClientsUpdateClientCommandHandler } from '../../../../commands/addy/clients/update/handler';
 import { B24AddyClientBulkUpdateClientsCommand } from '../../../../commands/addy/clients/update/bulk/command';
 import { IB24Lead } from '../../../../interfaces/leads/interface';
 import { IB24AddyIntegrationAddClientSiteRequest } from '../../../../interfaces/addy/integration/clients/site/requests/interface';

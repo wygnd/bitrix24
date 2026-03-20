@@ -10,7 +10,7 @@ export default (): { database: IEnvironmentDatabaseOptions } => ({
     password: process.env.ADDY_DATABASE_PASSWORD,
     database: process.env.ADDY_DATABASE_NAME,
     logging: process.env.ADDY_DATABASE_LOGGING
-      ? Boolean(process.env.ADDY_DATABASE_LOGGING)
+      ? process.env.ADDY_DATABASE_LOGGING == 'true'
       : false,
   },
 });
