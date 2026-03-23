@@ -1,8 +1,0 @@
-import { Query } from '@nestjs/cqrs';
-import { IB24AddyClientEntity } from '../../../../../interfaces/addy/integration/clients/entities/entity';
-
-export class B24AddyClientsGetClientByEmailQuery extends Query<IB24AddyClientEntity> {
-  constructor(public readonly email: string) {
-    super();
-  }
-}
