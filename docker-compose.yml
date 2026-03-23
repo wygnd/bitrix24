@@ -1,7 +1,7 @@
 services:
   backend:
     build:
-      context: ./grampus
+      context: ./gateway
       dockerfile: ./Dockerfile
     container_name: bitrix-server-backend
     ports:
@@ -26,20 +26,6 @@ services:
       retries: 3
 
   # MICROSERVICES
-  # NEURO
-#  neuro:
-#    build:
-#      context: ./microservices/neuro
-#      dockerfile: ./Dockerfile
-#    container_name: bitrix-microservice-neuro
-#    env_file:
-#      - .env
-#    volumes:
-#      - /var/lib/bitrix24/logs/microservices/neuro:/app/logs
-#    restart: always
-#    networks:
-#      - monitoring
-
   # ROBOTS
   robots:
     build:
