@@ -18,11 +18,6 @@ import {
   BitrixAddyPaymentsSendMessagePaymentDto,
 } from '@/modules/bitrix/application/dtos/addy/addy-payments-send-message.dto';
 import { NDS_PERCENT } from '@/modules/bitrix/application/constants/common/bitrix.constants';
-import { RobotsService } from '@/shared/microservices/modules/robots/services/service';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { YandexDirectInvoiceEvent } from '@/modules/bitrix/application/constants/events/addy/yandex/direct/constants';
-import { YandexDirectInvoiceGeneratedEvent } from '@/modules/bitrix/application/events/addy/payments/yandex/direct/invoice-generated.event';
-import { maybeCatchError } from '@/common/utils/catch-error';
 
 @Injectable()
 export class BitrixAddyPaymentsUseCase {
@@ -38,8 +33,6 @@ export class BitrixAddyPaymentsUseCase {
     private readonly bitrixService: BitrixPort,
     @Inject(B24PORTS.BOT.BOT_DEFAULT)
     private readonly bitrixBot: BitrixBotPort,
-    private readonly robotsYandexDirectService: RobotsService,
-    private readonly emitter: EventEmitter2,
   ) {
     const addySupportOptions = this.configService.get<BitrixAddyPaymentOptions>(
       'bitrixConstants.ADDY.payment',
@@ -116,95 +109,62 @@ export class BitrixAddyPaymentsUseCase {
   public async sendPaymentMessage(
     fields: BitrixAddyPaymentsSendMessagePaymentOptions,
   ): Promise<BitrixAddyPaymentsSendMessageResponse> {
-    const { user_id, contract, price, client, link, invoice_id } = fields;
+    const { user_id, contract, price, client, link } = fields;
     const priceInRubbles = price / 100; // от ADDY приходит сумма в копейках
-    let invoiceTemplateHead: string;
     let message =
       `Счет на оплату[br]${link}[br]${user_id} ${contract}[br]` +
       `${this.bitrixService.formatPrice(priceInRubbles)}[br]${client}`;
 
-    // Отправляем запрос на получение номера счета
-    this.robotsYandexDirectService
-      .sendRequestForGetInvoiceNumber({
-        invoice_url: link,
-        need_file: false,
-      })
-      .then(async ({ status, invoice_number }) => {
-        if (!status || !invoice_number) {
-          message +=
-            '[br][br][b][i]Не удалось сгенерировать номер счета[/i][/b]';
-          invoiceTemplateHead = '№ , ';
-        } else {
-          invoiceTemplateHead = `№ ${invoice_number}, `;
+    const messageId = await this.bitrixBot.sendMessage({
+      DIALOG_ID: this.paymentOptions.bitrixChatId,
+      MESSAGE: message,
+      KEYBOARD: [
+        {
+          TEXT: 'Копировать ссылку',
+          BG_COLOR_TOKEN: 'base',
+          DISPLAY: 'LINE',
+          ACTION: 'COPY',
+          ACTION_VALUE: link,
+        },
+        {
+          TEXT: 'Копировать шаблон',
+          BG_COLOR_TOKEN: 'base',
+          DISPLAY: 'LINE',
+          ACTION: 'COPY',
+          ACTION_VALUE:
+            `№ , ${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100), 'ru-RU', 'RUB', 'code')}`
+              .replace('RUB', '')
+              .trim(),
+        },
+        {
+          TYPE: 'NEWLINE',
+        },
+        {
+          TEXT: 'Подтвердить платеж',
+          COMMAND: 'approveAddyPaymentOnPay',
+          COMMAND_PARAMS: JSON.stringify({
+            message: this.bitrixBot.encodeText(
+              message
+                .replace(`${link}[br]`, '')
+                .replace('Счет на оплату', '[b]Счет оплачен[/b]'),
+            ),
+          } as B24ImboKeyboardAddyPaymentsApprove),
+          BG_COLOR_TOKEN: 'primary',
+          DISPLAY: 'LINE',
+        },
+      ],
+    });
 
-          this.emitter.emit(
-            YandexDirectInvoiceEvent,
-            new YandexDirectInvoiceGeneratedEvent(invoice_number, invoice_id),
-          );
-        }
-
-        const messageId = await this.bitrixBot.sendMessage({
-          DIALOG_ID: this.paymentOptions.bitrixChatId,
-          MESSAGE: message,
-          KEYBOARD: [
-            {
-              TEXT: 'Копировать ссылку',
-              BG_COLOR_TOKEN: 'base',
-              DISPLAY: 'LINE',
-              ACTION: 'COPY',
-              ACTION_VALUE: link,
-            },
-            {
-              TEXT: 'Копировать шаблон',
-              BG_COLOR_TOKEN: 'base',
-              DISPLAY: 'LINE',
-              ACTION: 'COPY',
-              ACTION_VALUE:
-                invoiceTemplateHead +
-                `${user_id} ${contract}, ADDY PAY, В т.ч. НДС 22% - ${this.bitrixService.formatPrice((priceInRubbles / 1.22) * (NDS_PERCENT / 100), 'ru-RU', 'RUB', 'code')}`
-                  .replace('RUB', '')
-                  .trim(),
-            },
-            {
-              TYPE: 'NEWLINE',
-            },
-            {
-              TEXT: 'Подтвердить платеж',
-              COMMAND: 'approveAddyPaymentOnPay',
-              COMMAND_PARAMS: JSON.stringify({
-                message: this.bitrixBot.encodeText(
-                  message
-                    .replace(`${link}[br]`, '')
-                    .replace('Счет на оплату', '[b]Счет оплачен[/b]'),
-                ),
-              } as B24ImboKeyboardAddyPaymentsApprove),
-              BG_COLOR_TOKEN: 'primary',
-              DISPLAY: 'LINE',
-            },
-          ],
-        });
-
-        if (!messageId)
-          throw new BadRequestException('Invalid send message', {
-            cause: messageId,
-          });
-
-        this.logger.debug({
-          handler: this.sendPaymentMessage.name,
-          request: fields,
-          response: {
-            invoiceNumber: invoice_number,
-            messageId,
-          },
-        });
-      })
-      .catch((error) => {
-        this.logger.error({
-          handler: this.sendPaymentMessage.name,
-          request: fields,
-          error: maybeCatchError(error),
-        });
+    if (!messageId)
+      throw new BadRequestException('Invalid send message', {
+        cause: messageId,
       });
+
+    this.logger.debug({
+      handler: this.sendPaymentMessage.name,
+      request: fields,
+      response: messageId,
+    });
 
     return {
       status: true,

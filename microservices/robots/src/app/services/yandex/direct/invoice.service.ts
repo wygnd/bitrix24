@@ -8,9 +8,11 @@ import { chromium } from 'playwright-extra';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import stealth from 'puppeteer-extra-plugin-stealth';
-import { maybeCatchError } from '../../../../shared/utils/catch-error';
+import { maybeCatchError } from '@shared/utils/catch-error';
 import { IYandexDirectQueryParams } from '../../../interfaces/yandex/direct/request/invoice.interface';
-import { WinstonLogger } from '../../../../shared/logger/main';
+import { WinstonLogger } from '@shared/logger/main';
+import { base64Encode } from '@shared/utils/base64-encode';
+import { IS_PROD } from '@common/config/main';
 
 @Injectable()
 export class YandexDirectInvoiceService {
@@ -18,11 +20,19 @@ export class YandexDirectInvoiceService {
     YandexDirectInvoiceService.name,
     'yandex/direct',
   );
-  private readonly saveScreenshotsPath = join(process.cwd(), 'screenshots');
+  private readonly saveScreenshotsPath = join(
+    process.cwd(),
+    'uploads',
+    'screenshots',
+  );
+  private readonly saveFilesPath = join(process.cwd(), 'uploads', 'files');
 
   constructor() {
     if (!existsSync(this.saveScreenshotsPath)) {
-      mkdirSync(this.saveScreenshotsPath);
+      mkdirSync(this.saveScreenshotsPath, { recursive: true });
+    }
+    if (!existsSync(this.saveFilesPath)) {
+      mkdirSync(this.saveFilesPath, { recursive: true });
     }
   }
 
@@ -33,11 +43,11 @@ export class YandexDirectInvoiceService {
   public async getInvoiceNumber(fields: IYandexDirectQueryParams) {
     try {
       const uuid = Date.now().toString();
-      const { invoice_url } = fields;
+      const { invoice_url, need_file = false } = fields;
 
       chromium.use(stealth());
       const browser = await chromium.launch({
-        headless: true,
+        headless: IS_PROD,
         slowMo: 936,
         args: [
           '--no-sandbox',
@@ -126,13 +136,58 @@ export class YandexDirectInvoiceService {
         throw new NotFoundException('Номер счета не найден');
       }
 
+      let fileData: string | null = null;
       await page.screenshot({
         path: join(this.saveScreenshotsPath, uuid, 'modal.png'),
       });
 
+      if (need_file) {
+        const downloadElement = await page.waitForSelector(
+          '.yb-paystep-success__download',
+          {
+            timeout: 30000,
+            state: 'visible',
+          },
+        );
+
+        if (downloadElement) {
+          try {
+            const downloadPromise = page.waitForEvent('download');
+            await downloadElement.click();
+
+            const download = await downloadPromise;
+            const filePath = join(
+              this.saveFilesPath,
+              uuid,
+              download.suggestedFilename(),
+            );
+
+            await download.saveAs(filePath);
+            fileData = base64Encode(filePath);
+          } catch (error) {
+            this.logger.error({
+              handler: this.getInvoiceNumber.name,
+              message: 'Ошибка получения файла',
+              error: maybeCatchError(error),
+            });
+
+            fileData = null;
+          }
+        }
+      }
+
+      page
+        .waitForSelector('.yb-user-popup__btn-close')
+        .then(async (element) => {
+          await page.waitForTimeout(2000);
+          await element.click();
+          await browser.close();
+        });
+
       return {
         status: true,
         invoice_number: await invoiceNumber.textContent(),
+        file_data: fileData,
       };
     } catch (error) {
       const errorData = maybeCatchError(error);

@@ -65,10 +65,10 @@ export class BitrixAddyPaymentsSendMessagePaymentDto implements BitrixAddyPaymen
   @ApiProperty({
     type: String,
     description: 'ID платежа на стороне addy backend',
-    required: true,
+    required: false,
     example: 12334,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   invoice_id: number;
